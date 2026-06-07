@@ -14,6 +14,7 @@ import (
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/health"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/matches"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/markets"
+	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/orders"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/watchlist"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/routes"
 )
@@ -34,7 +35,10 @@ func main() {
 	watchlistRepo := watchlist.NewMemoryRepository()
 	watchlistService := watchlist.NewService(watchlistRepo, marketsRepo)
 	watchlistHandler := watchlist.NewHandler(watchlistService)
-	handler := routes.NewRouter(healthHandler, matchesHandler, marketsHandler, watchlistHandler)
+	ordersRepo := orders.NewMemoryRepository()
+	ordersService := orders.NewService(ordersRepo, marketsRepo)
+	ordersHandler := orders.NewHandler(ordersService)
+	handler := routes.NewRouter(healthHandler, matchesHandler, marketsHandler, watchlistHandler, ordersHandler)
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,

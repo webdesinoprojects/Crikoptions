@@ -6,10 +6,11 @@ import (
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/health"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/matches"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/markets"
+	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/orders"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/watchlist"
 )
 
-func NewRouter(healthHandler *health.Handler, matchesHandler *matches.Handler, marketsHandler *markets.Handler, watchlistHandler *watchlist.Handler) http.Handler {
+func NewRouter(healthHandler *health.Handler, matchesHandler *matches.Handler, marketsHandler *markets.Handler, watchlistHandler *watchlist.Handler, ordersHandler *orders.Handler) http.Handler {
 	mux := http.NewServeMux()
 
 	if healthHandler != nil {
@@ -26,6 +27,10 @@ func NewRouter(healthHandler *health.Handler, matchesHandler *matches.Handler, m
 
 	if watchlistHandler != nil {
 		watchlist.RegisterRoutes(mux, watchlistHandler)
+	}
+
+	if ordersHandler != nil {
+		orders.RegisterRoutes(mux, ordersHandler)
 	}
 
 	return mux
