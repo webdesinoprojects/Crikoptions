@@ -12,6 +12,7 @@ import (
 
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/config"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/health"
+	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/matches"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/routes"
 )
 
@@ -22,7 +23,10 @@ func main() {
 	}
 
 	healthHandler := health.NewHandler()
-	handler := routes.NewRouter(healthHandler)
+	matchesRepo := matches.NewMemoryRepository()
+	matchesService := matches.NewService(matchesRepo)
+	matchesHandler := matches.NewHandler(matchesService)
+	handler := routes.NewRouter(healthHandler, matchesHandler)
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,
