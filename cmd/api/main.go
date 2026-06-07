@@ -14,6 +14,7 @@ import (
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/health"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/matches"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/markets"
+	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/watchlist"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/routes"
 )
 
@@ -30,7 +31,10 @@ func main() {
 	marketsRepo := markets.NewMemoryRepository()
 	marketsService := markets.NewService(marketsRepo)
 	marketsHandler := markets.NewHandler(marketsService)
-	handler := routes.NewRouter(healthHandler, matchesHandler, marketsHandler)
+	watchlistRepo := watchlist.NewMemoryRepository()
+	watchlistService := watchlist.NewService(watchlistRepo, marketsRepo)
+	watchlistHandler := watchlist.NewHandler(watchlistService)
+	handler := routes.NewRouter(healthHandler, matchesHandler, marketsHandler, watchlistHandler)
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,
