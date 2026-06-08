@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CricTrade Pro | PitchSide Analytics Terminal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Hanken+Grotesk:wght@600;700;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "on-error-container": "#93000a",
+                "on-error": "#ffffff",
+                "surface-container-highest": "#e1e2ec",
+                "secondary-fixed-dim": "#ffb86f",
+                "on-primary-fixed": "#001848",
+                "on-secondary-container": "#643900",
+                "bear-red": "#E63946",
+                "on-surface-variant": "#434654",
+                "surface-bright": "#faf8ff",
+                "inverse-surface": "#2e3038",
+                "surface-container-low": "#f3f3fd",
+                "on-primary-container": "#c4d2ff",
+                "premium-gold": "#FFD700",
+                "on-tertiary-fixed-variant": "#00513c",
+                "on-secondary": "#ffffff",
+                "on-primary-fixed-variant": "#0040a2",
+                "on-background": "#191b23",
+                "surface": "#faf8ff",
+                "surface-container": "#ededf8",
+                "on-tertiary-container": "#60ebbc",
+                "on-tertiary": "#ffffff",
+                "primary-container": "#0052cc",
+                "inverse-on-surface": "#f0f0fb",
+                "on-surface": "#191b23",
+                "ipl-blue-dark": "#001D4A",
+                "primary-fixed-dim": "#b2c5ff",
+                "secondary-fixed": "#ffdcbd",
+                "surface-container-high": "#e7e7f2",
+                "outline-variant": "#c3c6d6",
+                "surface-dim": "#d9d9e4",
+                "error": "#ba1a1a",
+                "on-secondary-fixed": "#2c1600",
+                "tertiary-container": "#00684e",
+                "inverse-primary": "#b2c5ff",
+                "surface-tint": "#0c56d0",
+                "on-primary": "#ffffff",
+                "tertiary-fixed-dim": "#50ddaf",
+                "primary": "#003d9b",
+                "bull-green": "#00B388",
+                "secondary": "#8a5100",
+                "primary-fixed": "#dae2ff",
+                "error-container": "#ffdad6",
+                "outline": "#737685",
+                "neutral-bg": "#F4F7FA",
+                "on-secondary-fixed-variant": "#693c00",
+                "background": "#faf8ff",
+                "tertiary": "#004e39",
+                "surface-container-lowest": "#ffffff",
+                "surface-variant": "#e1e2ec",
+                "on-tertiary-fixed": "#002116",
+                "tertiary-fixed": "#71faca",
+                "secondary-container": "#fe9800"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+            },
+            "spacing": {
+                "container-max": "1440px",
+                "base": "8px",
+                "margin-mobile": "16px",
+                "gutter": "24px",
+                "widget-padding": "20px",
+                "margin-desktop": "40px"
+            },
+            "fontFamily": {
+                "body-md": ["Inter"],
+                "label-sm": ["Inter"],
+                "headline-md": ["Hanken Grotesk"],
+                "headline-lg": ["Hanken Grotesk"],
+                "display-xl": ["Hanken Grotesk"],
+                "body-lg": ["Inter"],
+                "data-tabular": ["JetBrains Mono"]
+            },
+            "fontSize": {
+                "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+                "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                "display-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                "data-tabular": ["14px", {"lineHeight": "20px", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      ::-webkit-scrollbar { width: 4px; height: 4px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+      .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(8px); }
+      .candlestick-green { height: 60%; width: 4px; background: #00B388; border-radius: 2px; }
+      .candlestick-red { height: 40%; width: 4px; background: #E63946; border-radius: 2px; }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-hidden">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-margin-desktop h-16 bg-background dark:bg-ipl-blue-dark border-b border-outline-variant dark:border-outline">
+<div class="flex items-center gap-8">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary">CricTrade Pro</h1>
+<div class="hidden md:flex items-center gap-6">
+<a class="text-primary dark:text-inverse-primary border-b-2 border-primary pb-1 font-body-md text-body-md" href="#">Markets</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-variant transition-colors px-2 py-1 font-body-md text-body-md" href="#">Trading</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-variant transition-colors px-2 py-1 font-body-md text-body-md" href="#">Analysis</a>
+</div>
+</div>
+<!-- Live Market Ticker Integration -->
+<div class="flex-1 max-w-xl mx-8 px-4 py-2 bg-surface-container rounded-lg flex items-center gap-4 overflow-hidden">
+<span class="flex items-center gap-2 text-bull-green whitespace-nowrap">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+<span class="font-data-tabular text-data-tabular">MS Dhoni: 154.5 (+4.2%)</span>
+</span>
+<div class="w-px h-4 bg-outline-variant"></div>
+<span class="flex items-center gap-2 text-bear-red whitespace-nowrap">
+<span class="material-symbols-outlined text-sm">trending_down</span>
+<span class="font-data-tabular text-data-tabular">Virat Kohli: 182.1 (-1.8%)</span>
+</span>
+<div class="w-px h-4 bg-outline-variant"></div>
+<span class="flex items-center gap-2 text-on-surface-variant whitespace-nowrap">
+<span class="material-symbols-outlined text-sm">stadium</span>
+<span class="font-data-tabular text-data-tabular">CSK vs MI: OVR 14.2</span>
+</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex gap-2">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer p-2 hover:bg-surface-container rounded-full">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer p-2 hover:bg-surface-container rounded-full">history</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer p-2 hover:bg-surface-container rounded-full">help</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-primary-fixed-dim overflow-hidden ring-2 ring-primary">
+<img alt="Professional Trader Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQ3xQFS_6g_Dkogez5RM9c5yfKwTQWc9gL7jafUcbrGXmKNx-1wRmLaorZy2Wo38aNTFKThk_ABDfIHjieIeLklT2Rrx3bZy71i0EXkAHggmeHg58xU2MkKwqkQgXCxDl_UfQnvxiYknZhH2VkHI29DDuNtb8Z5EKXhTji7BCoPK_1vm-esa-HAWTOAtS9Q216Ied_tqKanImgXAHjA2nQf2YtR3NEuYB4x-Ps1kQX0kyN0ZPpqpwhXMt7Ope7nnTDcEJOk8i88j1R"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar (Left) -->
+<nav class="fixed left-0 top-16 bottom-0 w-64 flex flex-col py-widget-padding z-40 bg-surface-container-low dark:bg-ipl-blue-dark border-r border-outline-variant dark:border-outline">
+<div class="px-4 mb-6">
+<div class="flex items-center gap-3 p-3 bg-surface-container-highest rounded-xl">
+<div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container" style="font-variation-settings: 'FILL' 1;">terminal</span>
+</div>
+<div>
+<div class="font-label-sm text-label-sm font-bold text-on-surface">Pro Terminal</div>
+<div class="text-[10px] text-bull-green flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-bull-green animate-pulse"></span> Active Session
+                    </div>
+</div>
+</div>
+</div>
+<div class="flex-1 px-2 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high transition-all font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 bg-primary-container text-on-primary-container font-bold rounded-lg font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">query_stats</span> Markets
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high transition-all font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined">analytics</span> Match Analysis
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high transition-all font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span> Portfolio
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high transition-all font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined">star</span> Watchlists
+            </a>
+</div>
+<div class="px-4 pb-4">
+<button class="w-full py-3 bg-primary text-on-primary rounded-lg font-bold flex items-center justify-center gap-2 shadow-lg">
+<span class="material-symbols-outlined text-sm">bolt</span> Quick Trade
+            </button>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="ml-64 mr-72 mt-16 p-4 h-[calc(100vh-64px)] overflow-hidden grid grid-cols-12 gap-4 bg-neutral-bg">
+<!-- Left Column: Analytics (3/12) -->
+<div class="col-span-3 flex flex-col gap-4 overflow-y-auto pr-1"><div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-xl shadow-sm"><div class="flex justify-between items-center mb-3"><span class="font-label-sm text-label-sm font-bold text-primary uppercase">Match Intelligence Engine</span><span class="px-2 py-0.5 bg-bear-red text-white text-[10px] rounded font-bold animate-pulse">LIVE</span></div><div class="flex items-center justify-between mb-4"><div class="flex items-center gap-2"><img alt="CSK" class="w-6 h-6 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDe3bceqn3HQ03OYsEL8hSxtepthBnzTo0tb5Yuzh0f3wTlHKtzB9e3WKHqbxcEclh0xzzl8rKce1IjDO9-k4OiGaXiVz12iiHvfFQnfSeNA6f6KKn_V6MbYULwlrf8Y5vzTsziNW4cVVRsG4s_kJ9GJWUbPYzikKaEkb6iOqkwsFoPYT970yoZ1jnfbhZs5R_gReIuK2CbG670WR_XLXThIKIdakOVHMp8lIRavnEMJSxvTqcYyutv6322-OzfZeyQL2l6aXZVXqVb"/><span class="font-bold text-sm">154/4</span></div><div class="text-[10px] text-on-surface-variant font-data-tabular">16.2 OVR</div><div class="flex items-center gap-2"><span class="font-bold text-sm text-on-surface-variant">MI</span><img alt="MI" class="w-6 h-6 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJHZNzU2M-BLe7Veah2i4OfQ9AHOyFd_bMCC_3SnxfUFu3jCLLfYgy6NAyzm_34KKGsN6LoFweWzrGLulEeFNgOQA3t_uPWDteq9ilFHQKCxaOmqOzTpQV_CVyzclxcBtWpZ4ePExMwERsSc-1vWZpRYODJ2mzLEBdLkiuM4Rdx33UJ_-nsSOec9d3H0rnyO47h7ppLocDP_CwmS2u-2zUO0gJhe6Yyfb-j6AEqT0I0WdIpUD_CRforhmm9DmYqUpdtArpwUO54Wgi"/></div></div><div class="space-y-3 relative before:content-[''] before:absolute before:left-[7px] before:top-2 before:bottom-2 before:w-px before:bg-outline-variant"><div class="relative pl-6 flex justify-between items-start"><div class="absolute left-0 top-1.5 w-3.5 h-3.5 bg-bull-green rounded-full ring-4 ring-bull-green/20"></div><div><div class="text-xs font-bold">4 runs - MS Dhoni</div><div class="text-[10px] text-on-surface-variant">16.2 OVR • Mid-wicket</div></div><div class="text-[10px] font-bold text-bull-green">+1.2% LTP</div></div><div class="relative pl-6 flex justify-between items-start"><div class="absolute left-0 top-1.5 w-3.5 h-3.5 bg-bear-red rounded-full ring-4 ring-bear-red/20"></div><div><div class="text-xs font-bold">Wicket - Ruturaj</div><div class="text-[10px] text-on-surface-variant">15.5 OVR • Bumrah</div></div><div class="text-[10px] font-bold text-bear-red">-4.8% LTP</div></div></div></div><div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-xl"><h3 class="font-label-sm text-label-sm font-bold mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-primary text-sm">bolt</span> Catalyst Detection</h3><div class="space-y-2"><div class="p-2 bg-bull-green/5 border border-bull-green/20 rounded-lg"><div class="flex justify-between items-center mb-1"><span class="text-[10px] font-bold text-bull-green uppercase">Death Overs Start</span><span class="text-[9px] text-on-surface-variant">IMPACT: HIGH</span></div><p class="text-[11px]">CSK batting volatility expected to spike. Predicted LTP range: ₹162-175.</p></div><div class="p-2 bg-surface-container rounded-lg opacity-80"><div class="flex justify-between items-center mb-1"><span class="text-[10px] font-bold text-on-surface-variant uppercase">Target Calculation</span><span class="text-[9px] text-on-surface-variant">IMPACT: MED</span></div><p class="text-[11px]">Adjusted DLS par at 16.2 overs: 148 runs.</p></div></div></div><div class="bg-primary-container p-4 rounded-xl text-on-primary-container"><h3 class="font-label-sm text-label-sm font-bold mb-2 flex items-center gap-2"><span class="material-symbols-outlined text-sm">psychology</span> AI Signal</h3><p class="text-xs leading-relaxed mb-3">Bullish momentum on CSK player stocks following Dhoni's boundary surge. Market sentiment shift: 68% Buy interest detected in last 2 mins.</p><div class="flex items-center gap-2"><span class="px-2 py-0.5 bg-white/20 rounded text-[10px] font-bold">RECOM: BUY</span><span class="text-[10px] opacity-70">Confidence: 84%</span></div></div><div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-xl flex-grow overflow-y-auto"><h3 class="font-label-sm text-label-sm font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-primary text-sm">compare_arrows</span> Market Correlation</h3><div class="space-y-4"><div><div class="flex justify-between text-[11px] mb-1"><span class="font-bold">Dhoni LTP Correlation</span><span class="text-bull-green text-[10px]">+2.4% shift post-6</span></div><div class="flex h-2 w-full bg-surface-container rounded-full overflow-hidden"><div class="w-[82%] bg-premium-gold"></div><div class="w-[18%] bg-ipl-blue-dark"></div></div></div><div><div class="flex justify-between text-[11px] mb-1"><span class="font-bold">Bumrah Econ Volatility</span><span class="text-bear-red text-[10px]">-1.1% shift post-wide</span></div><div class="flex h-2 w-full bg-surface-container rounded-full overflow-hidden"><div class="w-[45%] bg-premium-gold"></div><div class="w-[55%] bg-ipl-blue-dark"></div></div></div></div></div></div>
+<!-- Center Column: Terminal Core (6/12) -->
+<div class="col-span-6 flex flex-col gap-4">
+<!-- Charting Area -->
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-xl flex-grow flex flex-col">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<span class="font-headline-md text-headline-md font-bold">MS Dhoni</span>
+<span class="text-bull-green font-data-tabular">+12.45 (8.2%)</span>
+</div>
+<div class="flex bg-surface-container rounded-lg p-0.5">
+<button class="px-3 py-1 text-xs font-bold bg-white shadow-sm rounded-md">1D</button>
+<button class="px-3 py-1 text-xs text-on-surface-variant">1W</button>
+<button class="px-3 py-1 text-xs text-on-surface-variant">1M</button>
+<button class="px-3 py-1 text-xs text-on-surface-variant">ALL</button>
+</div>
+</div>
+<!-- Mock Chart Canvas -->
+<div class="flex-grow flex items-end gap-1.5 relative">
+<div class="absolute inset-0 grid grid-rows-4 pointer-events-none">
+<div class="border-b border-outline-variant/30"></div>
+<div class="border-b border-outline-variant/30"></div>
+<div class="border-b border-outline-variant/30"></div>
+<div class="border-b border-outline-variant/30"></div>
+</div>
+<!-- Sample Candle sticks -->
+<div class="flex-1 flex flex-col justify-end items-center gap-1">
+<div class="w-full bg-bull-green/10 rounded-t-sm" style="height: 40%;"></div>
+<div class="w-full bg-bull-green" style="height: 2px;"></div>
+</div>
+<div class="flex-1 flex flex-col justify-end items-center gap-1">
+<div class="w-full bg-bull-green/10 rounded-t-sm" style="height: 55%;"></div>
+<div class="w-full bg-bull-green" style="height: 2px;"></div>
+</div>
+<div class="flex-1 flex flex-col justify-end items-center gap-1">
+<div class="w-full bg-bear-red/10 rounded-t-sm" style="height: 45%;"></div>
+<div class="w-full bg-bear-red" style="height: 2px;"></div>
+</div>
+<div class="flex-1 flex flex-col justify-end items-center gap-1">
+<div class="w-full bg-bull-green/20 rounded-t-sm" style="height: 70%;"></div>
+<div class="w-full bg-bull-green h-4 shadow-[0_0_10px_rgba(0,179,136,0.5)]"></div>
+</div>
+<div class="flex-1 flex flex-col justify-end items-center gap-1">
+<div class="w-full bg-bull-green/10 rounded-t-sm" style="height: 60%;"></div>
+<div class="w-full bg-bull-green" style="height: 2px;"></div>
+</div>
+<div class="flex-1 flex flex-col justify-end items-center gap-1">
+<div class="w-full bg-bear-red/10 rounded-t-sm" style="height: 50%;"></div>
+<div class="w-full bg-bear-red" style="height: 2px;"></div>
+</div>
+<div class="flex-1 flex flex-col justify-end items-center gap-1">
+<div class="w-full bg-bull-green/10 rounded-t-sm" style="height: 85%;"></div>
+<div class="w-full bg-bull-green" style="height: 2px;"></div>
+</div>
+</div>
+</div>
+<!-- Order Book & Trade History Row -->
+<div class="grid grid-cols-2 gap-4 h-48">
+<!-- Market Depth (Order Book) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col">
+<div class="bg-surface px-3 py-2 border-b border-outline-variant flex justify-between items-center">
+<span class="font-label-sm text-label-sm font-bold">Order Book</span>
+<span class="text-[10px] text-on-surface-variant">Depth 10</span>
+</div>
+<div class="flex-1 overflow-y-auto p-2">
+<table class="w-full text-[11px] font-data-tabular">
+<thead>
+<tr class="text-on-surface-variant border-b border-outline-variant">
+<th class="text-left font-normal pb-1">Price</th>
+<th class="text-right font-normal pb-1">Qty</th>
+</tr>
+</thead>
+<tbody>
+<tr class="text-bear-red bg-bear-red/5"><td>155.20</td><td class="text-right">1,240</td></tr>
+<tr class="text-bear-red bg-bear-red/5"><td>154.95</td><td class="text-right">845</td></tr>
+<tr class="text-bear-red bg-bear-red/5"><td>154.80</td><td class="text-right">2,100</td></tr>
+<tr class="bg-surface-container h-1"><td></td><td></td></tr>
+<tr class="text-bull-green bg-bull-green/5"><td>154.45</td><td class="text-right">1,500</td></tr>
+<tr class="text-bull-green bg-bull-green/5"><td>154.30</td><td class="text-right">450</td></tr>
+<tr class="text-bull-green bg-bull-green/5"><td>154.25</td><td class="text-right">920</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Recent History -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col">
+<div class="bg-surface px-3 py-2 border-b border-outline-variant flex justify-between items-center">
+<span class="font-label-sm text-label-sm font-bold">Trade History</span>
+<span class="text-[10px] text-on-surface-variant">Recent</span>
+</div>
+<div class="flex-1 overflow-y-auto p-2">
+<table class="w-full text-[11px] font-data-tabular">
+<thead>
+<tr class="text-on-surface-variant border-b border-outline-variant">
+<th class="text-left font-normal pb-1">Price</th>
+<th class="text-center font-normal pb-1">Qty</th>
+<th class="text-right font-normal pb-1">Time</th>
+</tr>
+</thead>
+<tbody>
+<tr><td class="text-bull-green">154.45</td><td class="text-center">20</td><td class="text-right text-on-surface-variant">14:22:10</td></tr>
+<tr><td class="text-bear-red">154.40</td><td class="text-center">150</td><td class="text-right text-on-surface-variant">14:22:08</td></tr>
+<tr><td class="text-bull-green">154.45</td><td class="text-center">5</td><td class="text-right text-on-surface-variant">14:22:05</td></tr>
+<tr><td class="text-bull-green">154.45</td><td class="text-center">45</td><td class="text-right text-on-surface-variant">14:21:58</td></tr>
+<tr><td class="text-bear-red">154.35</td><td class="text-center">210</td><td class="text-right text-on-surface-variant">14:21:52</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Execution (3/12) -->
+<div class="col-span-3 flex flex-col gap-4">
+<!-- Execution Panel -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col">
+<div class="flex">
+<button class="flex-1 py-3 text-sm font-bold bg-bull-green text-white">BUY</button>
+<button class="flex-1 py-3 text-sm font-bold bg-surface-container text-on-surface-variant border-l border-outline-variant">SELL</button>
+</div>
+<div class="p-4 space-y-4">
+<!-- Order Type -->
+<div class="flex gap-1 bg-surface-container p-1 rounded-lg">
+<button class="flex-1 text-[11px] py-1 bg-white rounded shadow-sm">Market</button>
+<button class="flex-1 text-[11px] py-1 text-on-surface-variant">Limit</button>
+<button class="flex-1 text-[11px] py-1 text-on-surface-variant">Stop</button>
+</div>
+<!-- Input Fields -->
+<div class="space-y-3">
+<div>
+<label class="text-[10px] uppercase font-bold text-on-surface-variant block mb-1">Quantity</label>
+<div class="relative">
+<input class="w-full bg-surface-container border-none rounded-lg font-data-tabular px-3 py-2 text-sm" type="number" value="100"/>
+<span class="absolute right-3 top-2 text-[10px] text-on-surface-variant">LOTS</span>
+</div>
+<div class="flex justify-between gap-1 mt-2">
+<button class="flex-1 py-1 text-[10px] border border-outline-variant rounded hover:bg-surface-container transition-colors">25%</button>
+<button class="flex-1 py-1 text-[10px] border border-outline-variant rounded hover:bg-surface-container transition-colors">50%</button>
+<button class="flex-1 py-1 text-[10px] border border-outline-variant rounded hover:bg-surface-container transition-colors">75%</button>
+<button class="flex-1 py-1 text-[10px] border border-outline-variant rounded hover:bg-surface-container transition-colors">MAX</button>
+</div>
+</div>
+<div>
+<label class="text-[10px] uppercase font-bold text-on-surface-variant block mb-1">Price</label>
+<input class="w-full bg-surface-container-high border-none rounded-lg font-data-tabular px-3 py-2 text-sm opacity-60" disabled="" placeholder="At Market" type="number"/>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant">
+<div class="flex justify-between text-xs mb-2">
+<span class="text-on-surface-variant">Margin Req.</span>
+<span class="font-data-tabular font-bold">₹15,445.00</span>
+</div>
+<button class="w-full py-3 bg-primary text-white font-bold rounded-lg shadow-lg active:scale-95 transition-transform">PLACE BUY ORDER</button>
+</div>
+</div>
+</div>
+<!-- Position Summary -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex-1">
+<h3 class="font-label-sm text-label-sm font-bold mb-3 flex items-center justify-between">
+                    Positions
+                    <span class="material-symbols-outlined text-sm cursor-pointer">open_in_new</span>
+</h3>
+<div class="p-3 bg-surface-container rounded-lg mb-4">
+<div class="flex justify-between items-start mb-2">
+<div>
+<div class="text-[11px] font-bold">MSDHONI24JUN</div>
+<div class="text-[9px] text-on-surface-variant">100 Lots @ 142.50</div>
+</div>
+<div class="text-right">
+<div class="text-bull-green font-bold text-sm">+₹1,200.00</div>
+<div class="text-[9px] text-bull-green">+8.42%</div>
+</div>
+</div>
+<div class="w-full bg-outline-variant h-1 rounded-full overflow-hidden">
+<div class="bg-bull-green h-full w-[80%]"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-[11px]">
+<span class="text-on-surface-variant">Total Investment</span>
+<span class="font-data-tabular">₹14,250.00</span>
+</div>
+<div class="flex justify-between text-[11px]">
+<span class="text-on-surface-variant">Current Value</span>
+<span class="font-data-tabular">₹15,450.00</span>
+</div>
+<div class="flex justify-between text-[11px] pt-2 border-t border-outline-variant">
+<span class="font-bold">Account Balance</span>
+<span class="font-data-tabular font-bold">₹2,45,820.00</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- SideNavBar (Utility Right) -->
+<aside class="fixed right-0 top-16 bottom-0 w-72 flex flex-col p-4 z-40 bg-surface-container-lowest dark:bg-surface-container border-l border-outline-variant dark:border-outline">
+<div class="mb-6">
+<h2 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-bull-green">show_chart</span> Utility Rail
+            </h2>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-tighter">Live Data Feed</p>
+</div>
+<div class="flex-1 space-y-4 overflow-y-auto">
+<div class="p-3 border border-outline-variant rounded-lg hover:bg-surface-container transition-all cursor-pointer">
+<div class="flex justify-between mb-1">
+<span class="font-bold text-xs">Live Tickers</span>
+<span class="material-symbols-outlined text-xs text-on-surface-variant">expand_more</span>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between items-center text-[11px]">
+<span>Ruturaj Gaikwad</span>
+<span class="text-bull-green">+2.4%</span>
+</div>
+<div class="flex justify-between items-center text-[11px]">
+<span>Jasprit Bumrah</span>
+<span class="text-bear-red">-1.2%</span>
+</div>
+</div>
+</div>
+<div class="p-3 border border-outline-variant rounded-lg">
+<div class="flex justify-between mb-2">
+<span class="font-bold text-xs">Active Alerts</span>
+<span class="material-symbols-outlined text-xs text-bear-red" style="font-variation-settings: 'FILL' 1;">error</span>
+</div>
+<div class="p-2 bg-bear-red/10 border-l-2 border-bear-red rounded text-[10px]">
+                    Price alert: MSDHONI crossed ₹154.00
+                </div>
+</div>
+<div class="p-3 bg-ipl-blue-dark text-white rounded-lg">
+<div class="text-[10px] uppercase font-bold opacity-70 mb-2">Portfolio allocation</div>
+<div class="flex items-center gap-4">
+<div class="relative w-16 h-16">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-white/10" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-bull-green" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" stroke-dasharray="175" stroke-dashoffset="40" stroke-width="8"></circle>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center text-[10px] font-bold">78%</div>
+</div>
+<div class="text-[10px]">
+<div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-bull-green"></span> CSK Asset</div>
+<div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-white/20"></span> Others</div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-4 pt-4 border-t border-outline-variant">
+<button class="w-full py-2 flex items-center justify-center gap-2 text-xs font-bold text-on-surface-variant hover:bg-surface-container-low transition-colors rounded">
+<span class="material-symbols-outlined text-sm">settings</span> Configure Terminal
+            </button>
+</div>
+</aside>
+<script>
+      // Micro-interactions for live terminal feel
+      setInterval(() => {
+        const prices = document.querySelectorAll('.font-data-tabular');
+        prices.forEach(p => {
+            if (Math.random() > 0.7) {
+                p.classList.add('opacity-50');
+                setTimeout(() => p.classList.remove('opacity-50'), 150);
+            }
+        });
+      }, 2000);
+    </script>
+</body></html>
