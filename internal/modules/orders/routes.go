@@ -13,7 +13,7 @@ func RegisterRoutes(mux *http.ServeMux, handler *Handler) {
 		handler.CreateOrder(w, r)
 	})
 
-	mux.HandleFunc("PATCH /api/v1/orders/{orderId}/cancel", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("PATCH /api/v1/orders/{id}/cancel", func(w http.ResponseWriter, r *http.Request) {
 		handler.CancelOrder(w, r)
 	})
 }

@@ -9,7 +9,7 @@ func RegisterRoutes(mux *http.ServeMux, handler *Handler) {
 		handler.GetHomeMatches(w, r)
 	})
 
-	mux.HandleFunc("GET /api/v1/matches/{matchId}", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("GET /api/v1/matches/{id}", func(w http.ResponseWriter, r *http.Request) {
 		handler.GetMatchDetail(w, r)
 	})
 
@@ -17,7 +17,7 @@ func RegisterRoutes(mux *http.ServeMux, handler *Handler) {
 		handler.CreateMatch(w, r)
 	})
 
-	mux.HandleFunc("PATCH /api/v1/admin/matches/{matchId}/score", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("PATCH /api/v1/admin/matches/{id}/score", func(w http.ResponseWriter, r *http.Request) {
 		handler.UpdateMatchScore(w, r)
 	})
 }

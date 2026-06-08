@@ -2,8 +2,8 @@ export interface Market {
   id: string;
   matchId: string;
   title: string;
-  type: "PLAYER_RUNS" | "MATCH_WINNER" | "PLAYER_WICKETS" | "TEAM_TOTAL";
-  status: "ACTIVE" | "SUSPENDED" | "SETTLED";
+  type: "PLAYER_RUNS" | "MATCH_WINNER" | "PLAYER_WICKETS" | "TEAM_TOTAL" | "match_depth" | "future" | "technical" | string;
+  status: "ACTIVE" | "SUSPENDED" | "SETTLED" | "active" | "closed" | string;
 }
 
 export interface MarketDepth {

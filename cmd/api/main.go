@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/config"
+	"github.com/webdesinoprojects/Crikoptions/backend/internal/middleware"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/health"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/matches"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/markets"
@@ -38,7 +39,8 @@ func main() {
 	ordersRepo := orders.NewMemoryRepository()
 	ordersService := orders.NewService(ordersRepo, marketsRepo)
 	ordersHandler := orders.NewHandler(ordersService)
-	handler := routes.NewRouter(healthHandler, matchesHandler, marketsHandler, watchlistHandler, ordersHandler)
+	router := routes.NewRouter(healthHandler, matchesHandler, marketsHandler, watchlistHandler, ordersHandler)
+	handler := middleware.Chain(router, middleware.Recover, middleware.Logger, middleware.CORS)
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,

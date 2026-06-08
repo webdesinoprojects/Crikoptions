@@ -16,7 +16,7 @@ func NewHandler(service *Service) *Handler {
 }
 
 func (h *Handler) GetMarketsByMatchID(w http.ResponseWriter, r *http.Request) {
-	matchID := r.PathValue("matchId")
+	matchID := r.PathValue("id")
 	if matchID == "" {
 		httpjson.Write(w, http.StatusBadRequest, map[string]any{
 			"success": false,
@@ -38,7 +38,7 @@ func (h *Handler) GetMarketsByMatchID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetMarketDetail(w http.ResponseWriter, r *http.Request) {
-	marketID := r.PathValue("marketId")
+	marketID := r.PathValue("id")
 	if marketID == "" {
 		httpjson.Write(w, http.StatusBadRequest, map[string]any{
 			"success": false,
@@ -64,7 +64,7 @@ func (h *Handler) GetMarketDetail(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CalculatePrice(w http.ResponseWriter, r *http.Request) {
-	marketID := r.PathValue("marketId")
+	marketID := r.PathValue("id")
 	if marketID == "" {
 		httpjson.Write(w, http.StatusBadRequest, map[string]any{
 			"success": false,

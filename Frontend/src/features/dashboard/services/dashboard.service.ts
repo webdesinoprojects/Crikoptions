@@ -1,3 +1,5 @@
+import { apiClient } from "@/lib/api/client";
+import { adaptMatches, adaptMatch, BackendMatch } from "@/lib/adapters/match.adapter";
 import {
   PortfolioSummary,
   TickerItem,
@@ -8,10 +10,18 @@ import {
 } from "@/types";
 
 /**
- * Mock Service layer for the Dashboard.
- * These methods simulate backend API calls.
+ * Service layer for the Dashboard. Handles mock and live integrations.
  */
 export const dashboardService = {
+  fetchHomeMatches: async (): Promise<Match[]> => {
+    const response = await apiClient.get<{ success: boolean; data: BackendMatch[] }>("/v1/matches/home");
+    return adaptMatches(response.data.data);
+  },
+
+  fetchMatchDetails: async (matchId: string): Promise<Match> => {
+    const response = await apiClient.get<{ success: boolean; data: BackendMatch }>(`/v1/matches/${matchId}`);
+    return adaptMatch(response.data.data);
+  },
   getFinancialOverview: async (): Promise<PortfolioSummary> => {
     // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, 500));
@@ -64,28 +74,7 @@ export const dashboardService = {
   },
 
   getLiveMatches: async (): Promise<Match[]> => {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    return [
-      {
-        id: "m1",
-        title: "CSK vs MI",
-        status: "LIVE",
-        homeTeam: { id: "t1", name: "Chennai Super Kings", shortName: "CSK" },
-        awayTeam: { id: "t2", name: "Mumbai Indians", shortName: "MI" },
-        homeScore: "154/4",
-        awayScore: "",
-        currentOver: "16.2",
-        startTime: new Date().toISOString(),
-      },
-      {
-        id: "m2",
-        title: "RCB vs KKR",
-        status: "UPCOMING",
-        homeTeam: { id: "t3", name: "Royal Challengers Bengaluru", shortName: "RCB" },
-        awayTeam: { id: "t4", name: "Kolkata Knight Riders", shortName: "KKR" },
-        startTime: new Date(Date.now() + 3600000).toISOString(),
-      },
-    ];
+    return dashboardService.fetchHomeMatches();
   },
 
   getMarketMovers: async (): Promise<MarketMover[]> => {

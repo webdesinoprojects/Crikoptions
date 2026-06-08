@@ -138,8 +138,8 @@ func (h *Handler) UpdateMatchScore(w http.ResponseWriter, r *http.Request) {
 }
 
 func extractMatchID(r *http.Request) string {
-	if len(r.PathValue("matchId")) > 0 {
-		return r.PathValue("matchId")
+	if len(r.PathValue("id")) > 0 {
+		return r.PathValue("id")
 	}
 	return ""
 }

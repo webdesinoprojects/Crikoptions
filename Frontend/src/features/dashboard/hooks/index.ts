@@ -16,11 +16,25 @@ export const useLiveTicker = () => {
   });
 };
 
-export const useLiveMatches = () => {
+export const useHomeMatches = () => {
   return useQuery({
-    queryKey: ["dashboard", "matches"],
-    queryFn: dashboardService.getLiveMatches,
+    queryKey: ["homeMatches"],
+    queryFn: dashboardService.fetchHomeMatches,
+    refetchInterval: 5000, // Poll every 5s for live score updates
   });
+};
+
+export const useMatchDetails = (matchId: string) => {
+  return useQuery({
+    queryKey: ["matchDetails", matchId],
+    queryFn: () => dashboardService.fetchMatchDetails(matchId),
+    enabled: !!matchId,
+    refetchInterval: 5000,
+  });
+};
+
+export const useLiveMatches = () => {
+  return useHomeMatches();
 };
 
 export const useMarketMovers = () => {

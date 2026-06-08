@@ -4,7 +4,7 @@ import { LiveMarketTicker } from "@/features/dashboard/components/LiveMarketTick
 
 export default function TopNavBar() {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 h-14 bg-[#000d1a] border-b border-white/10">
+    <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 h-14 bg-background border-b border-outline/10">
       <div className="flex items-center gap-10">
         <h1 className="font-headline-md text-headline-md font-bold text-primary-container flex items-center gap-2">
           <span className="material-symbols-outlined text-primary-container text-[24px]">

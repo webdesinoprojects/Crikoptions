@@ -1,81 +1,99 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const mainLinks = [
-  { label: "Dashboard", icon: "dashboard", href: "#", active: true },
-  { label: "Market Scanner", icon: "query_stats", href: "#", active: false },
-  { label: "Match Analysis", icon: "analytics", href: "#", active: false },
-  { label: "Portfolio", icon: "account_balance_wallet", href: "#", active: false },
+  { label: "Dashboard", icon: "dashboard", href: "/" },
+  { label: "Trading Terminal", icon: "candlestick_chart", href: "/trading" },
+  { label: "Portfolio Hub", icon: "account_balance_wallet", href: "/portfolio" },
+  { label: "Market Scanner", icon: "query_stats", href: "#" },
+  { label: "Match Analysis", icon: "analytics", href: "#" },
 ];
 
+// Default featured match for Intelligence HQ — replaces with real matchId from context later
+const FEATURED_MATCH_ID = "csk-vs-mi";
+
 const intelligenceLinks = [
-  { label: "Alpha Signals", icon: "psychology", href: "#", active: false },
-  { label: "News Terminal", icon: "newspaper", href: "#", active: false },
+  { label: "Intelligence HQ", icon: "psychology", href: `/insights/${FEATURED_MATCH_ID}` },
+  { label: "DNA Engine", icon: "biotech", href: `/insights/${FEATURED_MATCH_ID}` },
+  { label: "News Terminal", icon: "newspaper", href: "#" },
 ];
 
 export default function SideNavBar() {
-  const [activeMain, setActiveMain] = useState("Dashboard");
+  const pathname = usePathname();
+
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    if (href === "#") return false;
+    return pathname.startsWith(href);
+  };
 
   return (
-    <aside className="fixed left-0 top-14 bottom-0 w-60 flex flex-col py-4 z-40 bg-[#000d1a] border-r border-white/10">
-      <div className="px-4 mb-6">
-        <div className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/10">
-          <div className="w-8 h-8 rounded bg-primary-container/20 flex items-center justify-center">
-            <span className="material-symbols-outlined text-primary-container text-[18px]">
+    <aside className="fixed left-0 top-14 bottom-0 w-[200px] flex flex-col py-2 z-40 bg-surface border-r border-outline/10 select-none">
+      <div className="px-2 mb-4">
+        <div className="flex items-center gap-2 p-1.5 rounded border border-outline/5 bg-surface-dim">
+          <div className="w-6 h-6 rounded bg-primary/20 flex items-center justify-center">
+            <span className="material-symbols-outlined text-primary text-[14px]">
               terminal
             </span>
           </div>
           <div>
-            <p className="font-label-sm text-white">Main Engine</p>
-            <p className="text-[9px] text-bull-green flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-bull-green animate-pulse"></span>{" "}
-              SYSTEM_LIVE
+            <p className="text-[10px] font-bold text-on-surface leading-tight">Pro Engine</p>
+            <p className="text-[8px] text-bull-green flex items-center gap-1 font-bold leading-none">
+              <span className="w-1 h-1 rounded-full bg-bull-green animate-pulse"></span>{" "}
+              LIVE_SYNC
             </p>
           </div>
         </div>
       </div>
 
-      <nav className="flex-1 flex flex-col gap-0.5 px-2">
-        <p className="px-4 py-2 text-[10px] font-bold text-outline uppercase tracking-widest">
-          Main
+      <nav className="flex-1 flex flex-col gap-0.5 px-1 overflow-y-auto">
+        <p className="px-3 py-1 text-[8px] font-bold text-on-surface-variant uppercase tracking-widest">
+          Main Workspace
         </p>
         {mainLinks.map((link) => (
-          <a
+          <Link
             key={link.label}
             href={link.href}
-            onClick={() => setActiveMain(link.label)}
             className={
-              activeMain === link.label
-                ? "bg-primary-container/10 text-primary-container font-bold rounded flex items-center gap-3 px-4 py-2.5"
-                : "text-outline hover:text-white hover:bg-white/5 flex items-center gap-3 px-4 py-2.5 transition-all rounded"
+              isActive(link.href)
+                ? "bg-primary/15 text-primary font-bold rounded flex items-center gap-2 px-3 py-1.5 text-[11px]"
+                : "text-on-surface-variant hover:text-on-surface hover:bg-surface-bright flex items-center gap-2 px-3 py-1.5 transition-all rounded text-[11px]"
             }
           >
-            <span className="material-symbols-outlined text-[20px]">{link.icon}</span>
-            {link.label}
-          </a>
+            <span className="material-symbols-outlined text-[16px]">{link.icon}</span>
+            <span>{link.label}</span>
+          </Link>
         ))}
 
-        <p className="px-4 py-2 mt-4 text-[10px] font-bold text-outline uppercase tracking-widest">
-          Intelligence
+        <p className="px-3 py-1 mt-3 text-[8px] font-bold text-on-surface-variant uppercase tracking-widest">
+          Intelligence HQ
         </p>
         {intelligenceLinks.map((link) => (
-          <a
+          <Link
             key={link.label}
             href={link.href}
-            className="text-outline hover:text-white hover:bg-white/5 flex items-center gap-3 px-4 py-2.5 transition-all rounded"
+            className={
+              isActive(link.href)
+                ? "bg-primary/15 text-primary font-bold rounded flex items-center gap-2 px-3 py-1.5 text-[11px]"
+                : "text-on-surface-variant hover:text-on-surface hover:bg-surface-bright flex items-center gap-2 px-3 py-1.5 transition-all rounded text-[11px]"
+            }
           >
-            <span className="material-symbols-outlined text-[20px]">{link.icon}</span>
-            {link.label}
-          </a>
+            <span className="material-symbols-outlined text-[16px]">{link.icon}</span>
+            <span>{link.label}</span>
+          </Link>
         ))}
       </nav>
 
-      <div className="px-4 mt-auto">
-        <button className="w-full bg-primary-container text-white font-bold py-2.5 rounded flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all">
-          <span className="material-symbols-outlined text-[18px]">rocket_launch</span>
+      <div className="px-2 mt-auto pt-2">
+        <Link
+          href="/trading/market-1"
+          className="w-full bg-primary text-on-primary font-bold py-1.5 rounded flex items-center justify-center gap-1.5 hover:brightness-110 active:scale-[0.98] transition-all text-[11px] uppercase tracking-wider"
+        >
+          <span className="material-symbols-outlined text-[14px]">rocket_launch</span>
           Execute Trade
-        </button>
+        </Link>
       </div>
     </aside>
   );

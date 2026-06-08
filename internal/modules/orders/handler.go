@@ -82,7 +82,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CancelOrder(w http.ResponseWriter, r *http.Request) {
-	orderID := r.PathValue("orderId")
+	orderID := r.PathValue("id")
 
 	if orderID == "" {
 		httpjson.Write(w, http.StatusBadRequest, map[string]any{

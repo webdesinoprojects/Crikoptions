@@ -52,7 +52,7 @@ export default function RootLayout({
             <TopNavBar />
             <div className="flex flex-1 overflow-hidden">
               <SideNavBar />
-              <main className="flex-1 ml-60 mt-14 h-[calc(100vh-56px)] overflow-y-auto bg-[#00050d]">
+              <main className="flex-1 ml-[200px] mt-14 h-[calc(100vh-56px)] overflow-y-auto bg-background">
                 {children}
               </main>
             </div>

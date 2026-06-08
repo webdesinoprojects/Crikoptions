@@ -9,5 +9,6 @@ export interface Match {
   homeScore?: string;
   awayScore?: string;
   currentOver?: string;
+  format?: string;
   startTime: string;
 }
