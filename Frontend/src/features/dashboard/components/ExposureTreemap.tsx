@@ -3,6 +3,7 @@
 import React, { useMemo } from "react";
 import { TerminalPanel } from "@/components/shared/TerminalComponents";
 import { EChartsWrapper } from "@/components/shared/EChartsWrapper";
+import { AssetHeatmapMask } from "./AssetHeatmapMask";
 
 export function ExposureTreemap() {
   const option = useMemo(() => {
@@ -83,6 +84,7 @@ export function ExposureTreemap() {
       className="h-[260px]"
     >
       <div className="flex-1 min-h-0 relative">
+        <AssetHeatmapMask />
         <EChartsWrapper option={option} />
       </div>
     </TerminalPanel>

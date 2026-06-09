@@ -6,6 +6,7 @@ import { TerminalPanel } from "@/components/shared/TerminalComponents";
 import { EChartsWrapper } from "@/components/shared/EChartsWrapper";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DNAHelixFrame } from "./DNAHelixFrame";
 
 interface MatchDNAEngineProps {
   matchId: string;
@@ -71,9 +72,9 @@ export function MatchDNAEngine({ matchId }: MatchDNAEngineProps) {
     <TerminalPanel
       title="[ MATCH DNA ENGINE ]"
       subtitle="Correlation matrix mapping active play state to 10k+ historical games"
-      className="h-[280px] rounded-none font-mono"
+      className="h-[280px] rounded-none font-mono relative overflow-hidden"
     >
-      <div className="flex-1 grid grid-cols-12 gap-4 min-h-0 select-none">
+      <div className="flex-1 grid grid-cols-12 gap-4 min-h-0 select-none pr-8">
         {/* Heatmap */}
         <div className="col-span-8 bg-[#020617]/40 rounded-none p-2 border border-white/10 relative flex flex-col min-h-0">
           <span className="absolute top-2 left-2 z-10 text-[8px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 border border-primary/45 rounded-none">
@@ -137,6 +138,7 @@ export function MatchDNAEngine({ matchId }: MatchDNAEngineProps) {
           )}
         </div>
       </div>
+      <DNAHelixFrame />
     </TerminalPanel>
   );
 }

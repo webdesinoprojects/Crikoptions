@@ -1,6 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { TrendBadge } from "./Primitives";
+import { PrecisionArc } from "@/features/shared/components/PrecisionArc";
 
 interface TerminalPanelProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   title?: React.ReactNode;
@@ -31,13 +32,14 @@ export function TerminalPanel({
   return (
     <div
       className={cn(
-        "bg-surface border border-outline/10 overflow-hidden flex flex-col text-on-surface",
+        "bg-surface border border-outline/10 overflow-hidden flex flex-col text-on-surface relative",
         roundedClass,
         borderClass,
         className
       )}
       {...props}
     >
+      {isRoundedNone && <PrecisionArc />}
       {(title || subtitle || headerActions) && (
         <div
           className={cn(

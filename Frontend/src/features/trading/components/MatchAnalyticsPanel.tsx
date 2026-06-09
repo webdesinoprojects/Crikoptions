@@ -4,6 +4,7 @@ import { useWatchlist, useAddWatchlist, useRemoveWatchlist } from "@/features/wa
 import { Skeleton } from "@/components/ui/skeleton";
 import { Star } from "lucide-react";
 import { toast } from "sonner";
+import { BroadcastInterfaceMask } from "./BroadcastInterfaceMask";
 
 interface MatchAnalyticsPanelProps {
   matchId: string;
@@ -135,11 +136,8 @@ export function MatchAnalyticsPanel({ matchId, marketId }: MatchAnalyticsPanelPr
         </div>
 
         {/* Video simulation placeholder */}
-        <div className="flex-grow bg-black relative flex items-center justify-center">
-          <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: "url('/assets/live-stadium.jpg')" }} />
-          <span className="text-white text-[11px] font-bold z-10 bg-black/60 px-3 py-1.5 rounded-md border border-outline-variant">
-            Broadcast Feed Connected
-          </span>
+        <div className="flex-grow bg-black relative flex items-center justify-center min-h-[160px]">
+          <BroadcastInterfaceMask />
         </div>
       </div>
     </div>

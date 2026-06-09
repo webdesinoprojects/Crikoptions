@@ -5,6 +5,7 @@ import { usePortfolio } from "../hooks";
 import { TerminalPanel } from "@/components/shared/TerminalComponents";
 import { EChartsWrapper } from "@/components/shared/EChartsWrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { RiskGraphWatermark } from "./RiskGraphWatermark";
 
 function RiskGauge({
   label,
@@ -151,14 +152,15 @@ export function RiskMetrics() {
             danger={rm.portfolioVolatility > 20}
           />
 
-          <div className="p-2.5 rounded bg-bear-red/5 border border-bear-red/20">
-            <span className="text-[8px] uppercase tracking-wider text-bear-red font-bold block mb-0.5">
+          <div className="p-2.5 rounded bg-bear-red/5 border border-bear-red/20 relative overflow-hidden">
+            <RiskGraphWatermark />
+            <span className="text-[8px] uppercase tracking-wider text-bear-red font-bold block mb-0.5 relative z-10">
               Stress Test (−20% Scenario)
             </span>
-            <p className="text-sm font-mono font-bold text-bear-red">
+            <p className="text-sm font-mono font-bold text-bear-red relative z-10">
               −₹{rm.stressTestLoss.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </p>
-            <p className="text-[8px] text-on-surface-variant">
+            <p className="text-[8px] text-on-surface-variant relative z-10">
               Est. downside if all exposures decline 20%
             </p>
           </div>
