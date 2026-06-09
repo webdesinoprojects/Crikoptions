@@ -21,7 +21,7 @@ export function OutcomeDistribution({ matchId }: OutcomeDistributionProps) {
 
     return {
       tooltip: {
-        trigger: "axis",
+        trigger: "axis" as const,
         formatter: "Score distribution range density",
       },
       grid: { top: "5%", left: "2%", right: "2%", bottom: "2%", containLabel: false },
@@ -33,7 +33,7 @@ export function OutcomeDistribution({ matchId }: OutcomeDistributionProps) {
           data: bellData,
           smooth: true,
           symbol: "none",
-          lineStyle: { color: "#0ea5e9", width: 1.5 },
+          lineStyle: { color: "#4AF626", width: 1.5 },
           areaStyle: {
             color: {
               type: "linear" as const,
@@ -42,8 +42,8 @@ export function OutcomeDistribution({ matchId }: OutcomeDistributionProps) {
               x2: 0,
               y2: 1,
               colorStops: [
-                { offset: 0, color: "rgba(14, 165, 233, 0.2)" },
-                { offset: 1, color: "rgba(14, 165, 233, 0.01)" }
+                { offset: 0, color: "rgba(74, 246, 38, 0.2)" },
+                { offset: 1, color: "rgba(74, 246, 38, 0.01)" }
               ]
             }
           },
@@ -53,13 +53,13 @@ export function OutcomeDistribution({ matchId }: OutcomeDistributionProps) {
   }, []);
 
   const sentimentColor = (s: string) =>
-    s === "BULLISH" ? "#22c55e" : s === "BEARISH" ? "#ef4444" : "#0ea5e9";
+    s === "BULLISH" ? "#4AF626" : s === "BEARISH" ? "#FF2A2A" : "#0EA5E9";
 
   return (
     <TerminalPanel
-      title="Outcome Distributions"
+      title="[ OUTCOME DISTRIBUTIONS ]"
       subtitle="Score outcome curves computed from similar match states"
-      className="h-[280px]"
+      className="h-[280px] rounded-none font-mono"
     >
       <div className="flex-1 flex flex-col justify-between min-h-0 select-none">
         {/* Bell curve */}
@@ -67,28 +67,28 @@ export function OutcomeDistribution({ matchId }: OutcomeDistributionProps) {
           <EChartsWrapper option={curveOption} />
         </div>
 
-        <div className="text-center text-[9px] font-bold text-primary -mt-1 font-data-tabular">
-          EXPECTED SCORE: 342 RUNS
+        <div className="text-center text-[9px] font-bold text-[#4AF626] -mt-1">
+          [ EXPECTED SCORE: 342 RUNS ]
         </div>
 
         {/* Probability bars */}
-        <div className="space-y-2.5 mt-2">
+        <div className="space-y-2 mt-2">
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-5 w-full bg-white/5 animate-pulse" />
+              <Skeleton key={i} className="h-5 w-full bg-white/5 animate-pulse rounded-none" />
             ))
           ) : (
             outcomes?.map((o) => (
               <div key={o.label}>
                 <div className="flex justify-between items-center text-[10px] mb-0.5 font-bold">
                   <span className="text-on-surface-variant font-medium">{o.range || o.label}</span>
-                  <span className="font-data-tabular font-bold" style={{ color: sentimentColor(o.sentiment) }}>
+                  <span className="font-bold" style={{ color: sentimentColor(o.sentiment) }}>
                     {o.probability}%
                   </span>
                 </div>
-                <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-white/5 rounded-none overflow-hidden border border-white/5">
                   <div
-                    className="h-full rounded-full transition-all duration-700"
+                    className="h-full rounded-none transition-all duration-700"
                     style={{
                       width: `${o.probability}%`,
                       backgroundColor: sentimentColor(o.sentiment),
@@ -103,3 +103,4 @@ export function OutcomeDistribution({ matchId }: OutcomeDistributionProps) {
     </TerminalPanel>
   );
 }
+

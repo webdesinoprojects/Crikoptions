@@ -28,7 +28,7 @@ export function MatchDNAEngine({ matchId }: MatchDNAEngineProps) {
   const heatmapOption = useMemo(() => {
     return {
       tooltip: {
-        trigger: "item",
+        trigger: "item" as const,
         formatter: (p: any) =>
           `Over ${p.data[0] + 1}, Match ${p.data[1] + 1}<br/>Similarity: <b>${p.data[2]}%</b>`,
       },
@@ -53,14 +53,14 @@ export function MatchDNAEngine({ matchId }: MatchDNAEngineProps) {
         calculable: false,
         show: false,
         inRange: {
-          color: ["#020617", "#040d1c", "#081225", "#0ea5e9", "#22c55e"],
+          color: ["#020617", "#052e16", "#15803d", "#22c55e", "#4AF626"],
         },
       },
       series: [
         {
           type: "heatmap" as const,
           data: heatmapData,
-          itemStyle: { borderRadius: 1.5, borderColor: "#020617", borderWidth: 1 },
+          itemStyle: { borderRadius: 0, borderColor: "#020617", borderWidth: 1 },
           progressive: 0,
         },
       ],
@@ -69,19 +69,19 @@ export function MatchDNAEngine({ matchId }: MatchDNAEngineProps) {
 
   return (
     <TerminalPanel
-      title="Match DNA Engine"
+      title="[ MATCH DNA ENGINE ]"
       subtitle="Correlation matrix mapping active play state to 10k+ historical games"
-      className="h-[280px]"
+      className="h-[280px] rounded-none font-mono"
     >
       <div className="flex-1 grid grid-cols-12 gap-4 min-h-0 select-none">
         {/* Heatmap */}
-        <div className="col-span-8 bg-[#020617]/40 rounded p-2 border border-outline/5 relative flex flex-col min-h-0">
-          <span className="absolute top-2 left-2 z-10 text-[8px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">
-            SIMILARITY GRID
+        <div className="col-span-8 bg-[#020617]/40 rounded-none p-2 border border-white/10 relative flex flex-col min-h-0">
+          <span className="absolute top-2 left-2 z-10 text-[8px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 border border-primary/45 rounded-none">
+            [ SIMILARITY GRID ]
           </span>
           {isLoading ? (
             <div className="flex-1 flex items-center justify-center animate-pulse">
-              <Skeleton className="h-full w-full bg-white/5" />
+              <Skeleton className="h-full w-full bg-white/5 rounded-none" />
             </div>
           ) : (
             <div className="flex-1 min-h-0 mt-4 relative">
@@ -93,11 +93,11 @@ export function MatchDNAEngine({ matchId }: MatchDNAEngineProps) {
         {/* Similar Matches */}
         <div className="col-span-4 flex flex-col gap-2 overflow-y-auto">
           <span className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block">
-            Top Fingerprints
+            [ TOP FINGERPRINTS ]
           </span>
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full bg-white/5 animate-pulse" />
+              <Skeleton key={i} className="h-16 w-full bg-white/5 animate-pulse rounded-none" />
             ))
           ) : (
             matches.slice(0, 3).map((m, i) => (
@@ -106,31 +106,31 @@ export function MatchDNAEngine({ matchId }: MatchDNAEngineProps) {
                 initial={{ opacity: 0, x: 8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className={`p-2 rounded border cursor-pointer hover:border-primary/40 transition-colors flex flex-col gap-0.5 ${
-                  i === 0 ? "bg-primary/10 border-primary/30" : "bg-surface-dim border-outline/10"
+                className={`p-2 border cursor-pointer hover:border-[#4AF626]/40 transition-colors flex flex-col gap-0.5 rounded-none ${
+                  i === 0 ? "bg-primary/10 border-primary/45" : "bg-black/30 border-white/5"
                 }`}
               >
                 <div className="flex justify-between items-center text-[9px] font-bold">
-                  <span className={i === 0 ? "text-primary" : "text-on-surface-variant"}>
+                  <span className={i === 0 ? "text-[#4AF626]" : "text-on-surface-variant"}>
                     {m.similarity}% CORRELATION
                   </span>
                   {m.dnaConfirmed && (
-                    <span className="px-1 bg-bull-green/20 text-bull-green rounded text-[8px] font-bold">
-                      DNA✓
+                    <span className="text-[#4AF626] text-[8px] font-bold">
+                      [DNA:OK]
                     </span>
                   )}
                 </div>
                 <div className="text-[11px] font-bold text-white truncate">
-                  {m.teamA} vs {m.teamB}
+                  {m.teamA} v {m.teamB}
                 </div>
                 <div className="text-[9px] text-on-surface-variant truncate">
-                  {m.tournament} • {m.venue}
+                  {m.tournament} // {m.venue}
                 </div>
                 <div
                   className="text-[9px] font-bold mt-0.5"
-                  style={{ color: m.outcome === "CHASED" ? "#22c55e" : "#f59e0b" }}
+                  style={{ color: m.outcome === "CHASED" ? "#4AF626" : "#FFB300" }}
                 >
-                  {m.outcome === "CHASED" ? "CHASED" : "DEFENDED"} • {m.finalScore}
+                  {m.outcome === "CHASED" ? "CHASED" : "DEFENDED"} // {m.finalScore}
                 </div>
               </motion.div>
             ))
@@ -140,3 +140,4 @@ export function MatchDNAEngine({ matchId }: MatchDNAEngineProps) {
     </TerminalPanel>
   );
 }
+

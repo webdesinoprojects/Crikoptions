@@ -21,7 +21,7 @@ function StatRow({
       : "text-on-surface";
 
   return (
-    <div className="flex items-center justify-between py-1.5 border-b border-outline/5 last:border-0 select-none">
+    <div className="flex items-center justify-between py-1 border-b border-outline/5 last:border-0 select-none">
       <span className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">
         {label}
       </span>
@@ -35,7 +35,7 @@ export function PnLBreakdown() {
 
   if (isLoading) {
     return (
-      <TerminalPanel title="PnL Attribution" className="h-[300px]" subtitle="Performance ratios">
+      <TerminalPanel density="dense" title="PnL Attribution" className="h-[300px]" subtitle="Performance ratios">
         <div className="space-y-2 flex-1 flex flex-col justify-center">
           <Skeleton className="h-6 w-full bg-white/5" />
           <Skeleton className="h-6 w-[80%] bg-white/5" />
@@ -56,6 +56,7 @@ export function PnLBreakdown() {
 
   return (
     <TerminalPanel
+      density="dense"
       title="PnL Attribution"
       subtitle="Hedge-fund analytics & efficiency metrics"
       className="h-[300px]"

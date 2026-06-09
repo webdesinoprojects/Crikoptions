@@ -12,16 +12,16 @@ interface PatternArchiveProps {
 }
 
 const categoryColors: Record<IntelligencePattern["category"], string> = {
-  BATTING: "#22c55e",
-  BOWLING: "#0ea5e9",
-  MATCH_STATE: "#f59e0b",
-  PRESSURE: "#ef4444",
+  BATTING: "#4AF626",
+  BOWLING: "#0EA5E9",
+  MATCH_STATE: "#FFB300",
+  PRESSURE: "#FF2A2A",
 };
 
 const matchColor = (pct: number) => {
-  if (pct >= 75) return "#22c55e";
-  if (pct >= 45) return "#0ea5e9";
-  return "#ef4444";
+  if (pct >= 75) return "#4AF626";
+  if (pct >= 45) return "#0EA5E9";
+  return "#FF2A2A";
 };
 
 export function PatternArchive({ matchId }: PatternArchiveProps) {
@@ -29,13 +29,14 @@ export function PatternArchive({ matchId }: PatternArchiveProps) {
 
   return (
     <TerminalPanel
-      title="Pattern Recognition Archive"
+      title="[ PATTERN RECOGNITION ARCHIVE ]"
       subtitle="Identified technical/event play patterns matching historical games"
+      className="rounded-none font-mono"
     >
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 select-none text-[10px]">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 select-none text-[9px] font-mono">
         {isLoading ? (
           Array.from({ length: 7 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 w-full bg-white/5 animate-pulse" />
+            <Skeleton key={i} className="h-24 w-full bg-white/5 animate-pulse rounded-none" />
           ))
         ) : (
           <>
@@ -48,29 +49,29 @@ export function PatternArchive({ matchId }: PatternArchiveProps) {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04 }}
-                  className={`p-2 rounded border cursor-pointer group flex flex-col justify-between ${
+                  className={`p-2 border cursor-pointer group flex flex-col justify-between rounded-none ${
                     p.status === "ACTIVE"
-                      ? "border-primary/20 hover:border-primary/50 bg-primary/5"
-                      : "border-outline/5 opacity-50 bg-surface-dim"
+                      ? "border-primary/45 hover:border-[#4AF626]/50 bg-[#4AF626]/5"
+                      : "border-white/5 opacity-40 bg-black/20"
                   }`}
                 >
                   <div>
-                    <div className="text-[8px] font-bold text-on-surface-variant font-data-tabular mb-0.5">{p.id}</div>
-                    <div className="text-[10px] font-bold text-white mb-0.5 group-hover:text-primary transition-colors leading-tight truncate">
+                    <div className="text-[8px] font-bold text-on-surface-variant mb-0.5">#{p.id}</div>
+                    <div className="text-[10px] font-bold text-white mb-0.5 group-hover:text-[#4AF626] transition-colors leading-tight truncate uppercase">
                       {p.name}
                     </div>
-                    <p className="text-[9px] text-on-surface-variant leading-snug line-clamp-2">{p.description}</p>
+                    <p className="text-[9px] text-on-surface-variant leading-snug line-clamp-2 uppercase">{p.description}</p>
                   </div>
 
-                  <div className="flex items-center justify-between mt-2 pt-1 border-t border-outline/5">
+                  <div className="flex flex-col gap-1 mt-2 pt-1 border-t border-white/5">
                     <span
-                      className="text-[8px] font-bold px-1 py-0.5 rounded font-data-tabular"
-                      style={{ color: mColor, backgroundColor: `${mColor}15` }}
+                      className="text-[8px] font-bold px-1 py-0.5 text-center bg-black/30 border border-white/5"
+                      style={{ color: mColor }}
                     >
-                      {p.matchPct}% Match
+                      {p.matchPct}% MATCH
                     </span>
                     <span
-                      className="text-[8px] font-bold px-1 py-0.5 rounded border"
+                      className="text-[8px] font-bold px-1 py-0.5 text-center border border-white/5"
                       style={{ color: catColor, borderColor: `${catColor}30`, backgroundColor: `${catColor}10` }}
                     >
                       {p.category}
@@ -81,9 +82,9 @@ export function PatternArchive({ matchId }: PatternArchiveProps) {
             })}
 
             {/* Add Pattern CTA */}
-            <div className="flex items-center justify-center border border-dashed border-outline/20 hover:border-primary/50 rounded text-on-surface-variant hover:text-primary transition-all cursor-pointer p-3 min-h-[96px]">
+            <div className="flex items-center justify-center border border-dashed border-white/20 hover:border-[#4AF626]/50 rounded-none text-on-surface-variant hover:text-[#4AF626] transition-all cursor-pointer p-3 min-h-[96px]">
               <span className="text-center font-bold text-[9px] uppercase tracking-wider">
-                + New Pattern
+                [ + NEW PATTERN ]
               </span>
             </div>
           </>
@@ -92,3 +93,4 @@ export function PatternArchive({ matchId }: PatternArchiveProps) {
     </TerminalPanel>
   );
 }
+

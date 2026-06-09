@@ -148,3 +148,68 @@ func isDuplicateKey(err error) bool {
 	}
 	return false
 }
+
+type InMemoryUserRepository struct {
+	users     map[string]userRecord
+	usersByID map[primitive.ObjectID]userRecord
+}
+
+func NewInMemoryUserRepository() *InMemoryUserRepository {
+	return &InMemoryUserRepository{
+		users:     make(map[string]userRecord),
+		usersByID: make(map[primitive.ObjectID]userRecord),
+	}
+}
+
+func (r *InMemoryUserRepository) EnsureIndexes(ctx context.Context) error {
+	return nil
+}
+
+func (r *InMemoryUserRepository) Create(ctx context.Context, rec userRecord) (User, error) {
+	emailKey := strings.ToLower(strings.TrimSpace(rec.Email))
+	if _, exists := r.users[emailKey]; exists {
+		return User{}, errEmailExists
+	}
+	if rec.ID.IsZero() {
+		rec.ID = primitive.NewObjectID()
+	}
+	r.users[emailKey] = rec
+	r.usersByID[rec.ID] = rec
+	return rec.User, nil
+}
+
+func (r *InMemoryUserRepository) FindByEmail(ctx context.Context, email string) (userRecord, bool, error) {
+	emailKey := strings.ToLower(strings.TrimSpace(email))
+	rec, exists := r.users[emailKey]
+	if !exists {
+		return userRecord{}, false, nil
+	}
+	return rec, true, nil
+}
+
+func (r *InMemoryUserRepository) FindByID(ctx context.Context, id primitive.ObjectID) (User, bool, error) {
+	rec, exists := r.usersByID[id]
+	if !exists {
+		return User{}, false, nil
+	}
+	return rec.User, true, nil
+}
+
+func (r *InMemoryUserRepository) UpdateMe(ctx context.Context, id primitive.ObjectID, name *string, phone *string) (User, error) {
+	rec, exists := r.usersByID[id]
+	if !exists {
+		return User{}, errUserNotFound
+	}
+	if name != nil {
+		rec.Name = strings.TrimSpace(*name)
+	}
+	if phone != nil {
+		rec.Phone = strings.TrimSpace(*phone)
+	}
+	rec.UpdatedAt = time.Now().UTC()
+
+	r.users[strings.ToLower(rec.Email)] = rec
+	r.usersByID[id] = rec
+	return rec.User, nil
+}
+

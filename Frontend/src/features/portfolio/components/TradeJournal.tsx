@@ -35,6 +35,7 @@ export function TradeJournal() {
 
   return (
     <TerminalPanel
+      density="dense"
       title="Closed Trades Journal"
       subtitle="Historical realized outcomes"
       className="h-[300px]"
@@ -106,27 +107,27 @@ export function TradeJournal() {
 
                 return (
                   <tr key={`${trade.orderId}-${idx}`} className="hover:bg-white/5 group transition-colors">
-                    <td className="py-2">
+                    <td className="py-1">
                       <div className="flex flex-col">
                         <span className="font-bold text-white">{trade.symbol}</span>
                         <span className="text-[8px] text-on-surface-variant font-sans uppercase font-medium">{trade.matchName}</span>
                       </div>
                     </td>
-                    <td className="py-2 text-center">
+                    <td className="py-1 text-center">
                       <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${sideBg}`}>
                         {trade.side}
                       </span>
                     </td>
-                    <td className="py-2 text-right text-on-surface-variant">₹{trade.entryPrice.toFixed(2)}</td>
-                    <td className="py-2 text-right text-white">₹{trade.exitPrice.toFixed(2)}</td>
-                    <td className="py-2 text-right text-on-surface-variant">{trade.quantity}</td>
-                    <td className={`py-2 text-right font-bold ${pnlColor}`}>
+                    <td className="py-1 text-right text-on-surface-variant">₹{trade.entryPrice.toFixed(2)}</td>
+                    <td className="py-1 text-right text-white">₹{trade.exitPrice.toFixed(2)}</td>
+                    <td className="py-1 text-right text-on-surface-variant">{trade.quantity}</td>
+                    <td className={`py-1 text-right font-bold ${pnlColor}`}>
                       {isWin ? "+" : ""}₹{Math.abs(trade.realizedPnL).toFixed(2)}
                     </td>
-                    <td className={`py-2 text-right font-bold ${pnlColor}`}>
+                    <td className={`py-1 text-right font-bold ${pnlColor}`}>
                       {isWin ? "+" : ""}{trade.realizedPnLPct.toFixed(2)}%
                     </td>
-                    <td className="py-2 text-right text-on-surface-variant font-medium">
+                    <td className="py-1 text-right text-on-surface-variant font-medium">
                       {formatDuration(trade.holdingPeriodMs)}
                     </td>
                   </tr>

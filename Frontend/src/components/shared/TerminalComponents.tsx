@@ -9,6 +9,7 @@ interface TerminalPanelProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 
   borderClass?: string;
   headerClass?: string;
   bodyClass?: string;
+  density?: "default" | "dense";
 }
 
 export function TerminalPanel({
@@ -20,12 +21,18 @@ export function TerminalPanel({
   borderClass,
   headerClass,
   bodyClass,
+  density = "default",
   ...props
 }: TerminalPanelProps) {
+  const isRoundedNone = className?.includes("rounded-none") || borderClass?.includes("rounded-none");
+  const roundedClass = isRoundedNone ? "rounded-none" : "rounded-md";
+  const isDense = density === "dense";
+
   return (
     <div
       className={cn(
-        "bg-surface border border-outline/10 rounded-md overflow-hidden flex flex-col text-on-surface",
+        "bg-surface border border-outline/10 overflow-hidden flex flex-col text-on-surface",
+        roundedClass,
         borderClass,
         className
       )}
@@ -34,7 +41,8 @@ export function TerminalPanel({
       {(title || subtitle || headerActions) && (
         <div
           className={cn(
-            "px-3 py-2 bg-surface-bright/50 border-b border-outline/5 flex items-center justify-between gap-4 select-none",
+            "bg-surface-bright/50 border-b border-outline/5 flex items-center justify-between gap-4 select-none",
+            isDense ? "px-2.5 py-1" : "px-3 py-2",
             headerClass
           )}
         >
@@ -53,7 +61,7 @@ export function TerminalPanel({
           {headerActions && <div className="flex items-center gap-1.5 shrink-0">{headerActions}</div>}
         </div>
       )}
-      <div className={cn("p-3 flex-1 flex flex-col min-h-0", bodyClass)}>{children}</div>
+      <div className={cn("flex-1 flex flex-col min-h-0", isDense ? "p-2" : "p-3", bodyClass)}>{children}</div>
     </div>
   );
 }
@@ -67,6 +75,7 @@ interface TerminalKPIProps {
   progress?: number;
   subText?: string;
   className?: string;
+  density?: "default" | "dense";
 }
 
 export function TerminalKPI({
@@ -78,11 +87,18 @@ export function TerminalKPI({
   progress,
   subText,
   className,
+  density = "default",
 }: TerminalKPIProps) {
+  const isRoundedNone = className?.includes("rounded-none");
+  const roundedClass = isRoundedNone ? "rounded-none" : "rounded-md";
+  const isDense = density === "dense";
+
   return (
     <div
       className={cn(
-        "bg-surface border border-outline/10 p-3 rounded-md flex flex-col justify-between select-none min-h-[84px] text-on-surface",
+        "bg-surface border border-outline/10 flex flex-col justify-between select-none text-on-surface",
+        roundedClass,
+        isDense ? "p-2.5 min-h-[68px]" : "p-3 min-h-[84px]",
         className
       )}
     >
@@ -90,7 +106,7 @@ export function TerminalKPI({
         <span className="text-on-surface-variant text-[9px] uppercase font-bold tracking-wider mb-0.5">
           {label}
         </span>
-        <span className="text-xl font-bold font-data-tabular tracking-tight truncate">
+        <span className={cn("font-bold font-data-tabular tracking-tight truncate", isDense ? "text-base" : "text-xl")}>
           {value}
         </span>
       </div>
@@ -126,3 +142,4 @@ export function TerminalKPI({
     </div>
   );
 }
+

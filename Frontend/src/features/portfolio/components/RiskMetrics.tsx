@@ -57,7 +57,7 @@ export function RiskMetrics() {
 
     return {
       tooltip: {
-        trigger: "item",
+        trigger: "item" as const,
         formatter: "{b}: {c}%",
       },
       legend: { show: false },
@@ -69,7 +69,7 @@ export function RiskMetrics() {
           data: slices,
           label: {
             show: true,
-            position: "outside",
+            position: "outside" as const,
             formatter: "{b}\n{c}%",
             color: "#94a3b8",
             fontSize: 9,
@@ -91,7 +91,7 @@ export function RiskMetrics() {
 
   if (isLoading) {
     return (
-      <TerminalPanel title="Risk Metrics & Concentration" className="h-[300px]" subtitle="Risk metrics">
+      <TerminalPanel density="dense" title="Risk Metrics & Concentration" className="h-[300px]" subtitle="Risk metrics">
         <div className="flex-1 flex items-center justify-center">
           <Skeleton className="h-full w-full bg-white/5 animate-pulse" />
         </div>
@@ -105,6 +105,7 @@ export function RiskMetrics() {
 
   return (
     <TerminalPanel
+      density="dense"
       title="Risk Parameters & Stress Monitor"
       subtitle="Institutional concentration, leverage, and stress scenarios"
       className="h-[300px]"

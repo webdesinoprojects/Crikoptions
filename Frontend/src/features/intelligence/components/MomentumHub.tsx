@@ -14,7 +14,7 @@ interface MomentumHubProps {
 const trendIcon = (t: string) =>
   t === "RISING" ? "↑" : t === "FALLING" ? "↓" : "→";
 const trendColor = (t: string) =>
-  t === "RISING" ? "#22c55e" : t === "FALLING" ? "#ef4444" : "#94a3b8";
+  t === "RISING" ? "#4AF626" : t === "FALLING" ? "#FF2A2A" : "#94a3b8";
 
 export function MomentumHub({ matchId }: MomentumHubProps) {
   const { data: momentum, isLoading } = useMomentum(matchId);
@@ -37,15 +37,15 @@ export function MomentumHub({ matchId }: MomentumHubProps) {
             length: "60%",
             width: 4,
             offsetCenter: [0, 5],
-            itemStyle: { color: "#f8fafc" },
+            itemStyle: { color: "#ffffff" },
           },
           axisLine: {
             lineStyle: {
               width: 6,
               color: [
-                [0.3, "#ef4444"], // Bearish
-                [0.7, "#f59e0b"], // Neutral
-                [1.0, "#22c55e"], // Bullish
+                [0.3, "#FF2A2A"], // Bearish (hazard red)
+                [0.7, "#FFB300"], // Neutral (amber)
+                [1.0, "#4AF626"], // Bullish (terminal green)
               ] as [number, string][],
             },
           },
@@ -53,12 +53,12 @@ export function MomentumHub({ matchId }: MomentumHubProps) {
           splitLine: { show: false },
           axisLabel: { show: false },
           detail: {
-            fontSize: 14,
+            fontSize: 13,
             fontFamily: "JetBrains Mono, monospace",
-            fontWeight: "bold",
-            color: "#f8fafc",
+            fontWeight: "bold" as const,
+            color: "#ffffff",
             offsetCenter: [0, "20%"],
-            formatter: (v: number) => `Index: ${Math.round(v)}`,
+            formatter: (v: number) => `IDX: ${Math.round(v)}`,
           },
           data: [{ value: momentum.score }],
         },
@@ -68,34 +68,33 @@ export function MomentumHub({ matchId }: MomentumHubProps) {
 
   const metrics = momentum
     ? [
-        { label: "Win Prob.", value: `${momentum.winProbability.toFixed(0)}%`, color: "#0ea5e9" },
-        { label: "Pressure", value: `${momentum.pressureIndex.toFixed(0)}`, color: "#ef4444" },
-        { label: "Run Rate", value: momentum.runRate.toFixed(2), color: "#22c55e" },
+        { label: "WIN PROB", value: `${momentum.winProbability.toFixed(0)}%`, color: "#0EA5E9" },
+        { label: "PRESSURE", value: `${momentum.pressureIndex.toFixed(0)}`, color: "#FF2A2A" },
+        { label: "RUN RATE", value: momentum.runRate.toFixed(2), color: "#4AF626" },
         ...(momentum.requiredRunRate
-          ? [{ label: "Req. Rate", value: momentum.requiredRunRate.toFixed(2), color: "#f59e0b" }]
+          ? [{ label: "REQ RATE", value: momentum.requiredRunRate.toFixed(2), color: "#FFB300" }]
           : []),
       ]
     : [];
 
   return (
     <TerminalPanel
-      title="Momentum Engine"
+      title="[ MOMENTUM ENGINE ]"
       subtitle="Win probability & tactical pressure index"
-      className="h-[280px]"
+      className="h-[280px] rounded-none font-mono"
       headerActions={
         momentum && (
           <motion.span
             key={momentum.trend}
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="text-[9px] font-bold px-1.5 py-0.5 rounded border font-mono"
+            className="text-[9px] font-bold px-1.5 py-0.5 border rounded-none font-mono bg-black/40"
             style={{
               color: trendColor(momentum.trend),
-              borderColor: `${trendColor(momentum.trend)}30`,
-              backgroundColor: `${trendColor(momentum.trend)}10`,
+              borderColor: `${trendColor(momentum.trend)}40`,
             }}
           >
-            {trendIcon(momentum.trend)} {momentum.trend}
+            [{trendIcon(momentum.trend)} {momentum.trend}]
           </motion.span>
         )
       }
@@ -103,7 +102,7 @@ export function MomentumHub({ matchId }: MomentumHubProps) {
       <div className="flex-1 flex flex-col justify-between min-h-0 select-none">
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center">
-            <Skeleton className="h-full w-full bg-white/5 animate-pulse" />
+            <Skeleton className="h-full w-full bg-white/5 animate-pulse rounded-none" />
           </div>
         ) : (
           <>
@@ -112,9 +111,9 @@ export function MomentumHub({ matchId }: MomentumHubProps) {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-1">
               {metrics.map((m) => (
-                <div key={m.label} className="bg-surface-dim rounded px-2 py-1 text-center border border-outline/5">
+                <div key={m.label} className="bg-black/30 rounded-none px-2 py-1 text-center border border-white/5">
                   <div className="text-[8px] text-on-surface-variant uppercase tracking-wider mb-0.5">{m.label}</div>
-                  <div className="text-[12px] font-data-tabular font-bold" style={{ color: m.color }}>{m.value}</div>
+                  <div className="text-[12px] font-bold font-mono" style={{ color: m.color }}>{m.value}</div>
                 </div>
               ))}
             </div>
@@ -124,3 +123,4 @@ export function MomentumHub({ matchId }: MomentumHubProps) {
     </TerminalPanel>
   );
 }
+

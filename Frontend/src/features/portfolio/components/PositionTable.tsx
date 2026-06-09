@@ -20,6 +20,7 @@ export function PositionTable() {
 
   return (
     <TerminalPanel
+      density="dense"
       title="Open Positions Monitor"
       subtitle="Active derivatives exposure tracker"
       className="h-[300px]"
@@ -78,27 +79,27 @@ export function PositionTable() {
 
                 return (
                   <tr key={pos.marketId} className="hover:bg-white/5 group transition-colors">
-                    <td className="py-2">
+                    <td className="py-1">
                       <div className="flex flex-col">
                         <span className="font-bold text-white">{pos.symbol}</span>
                         <span className="text-[8px] text-on-surface-variant font-sans uppercase font-medium">{pos.matchName}</span>
                       </div>
                     </td>
-                    <td className="py-2 text-center">
+                    <td className="py-1 text-center">
                       <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${sideBg}`}>
                         {pos.side}
                       </span>
                     </td>
-                    <td className="py-2 text-right text-white font-bold">{pos.quantity}</td>
-                    <td className="py-2 text-right text-on-surface-variant">₹{pos.averageEntryPrice.toFixed(2)}</td>
-                    <td className="py-2 text-right text-white">₹{pos.currentPrice.toFixed(2)}</td>
-                    <td className={`py-2 text-right font-bold ${pnlColor}`}>
+                    <td className="py-1 text-right text-white font-bold">{pos.quantity}</td>
+                    <td className="py-1 text-right text-on-surface-variant">₹{pos.averageEntryPrice.toFixed(2)}</td>
+                    <td className="py-1 text-right text-white">₹{pos.currentPrice.toFixed(2)}</td>
+                    <td className={`py-1 text-right font-bold ${pnlColor}`}>
                       {isUp ? "+" : ""}₹{Math.abs(pos.unrealizedPnL).toFixed(2)}
                     </td>
-                    <td className={`py-2 text-right font-bold ${pnlColor}`}>
+                    <td className={`py-1 text-right font-bold ${pnlColor}`}>
                       {isUp ? "+" : ""}{pos.unrealizedPnLPct.toFixed(2)}%
                     </td>
-                    <td className="py-2">
+                    <td className="py-1">
                       <div className="flex items-center justify-end gap-1.5">
                         <div className="h-1.5 w-12 bg-white/10 rounded-full overflow-hidden">
                           <div

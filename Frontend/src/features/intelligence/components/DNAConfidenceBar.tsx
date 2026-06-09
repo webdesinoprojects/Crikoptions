@@ -10,58 +10,62 @@ interface DNAConfidenceBarProps {
 
 export function DNAConfidenceBar({ confidence, status, latencyMs }: DNAConfidenceBarProps) {
   const statusColor =
-    status === "LIVE" ? "#22c55e" : status === "SYNCING" ? "#ffd700" : "#94a3b8";
+    status === "LIVE" ? "#4AF626" : status === "SYNCING" ? "#FFB300" : "#FF2A2A";
 
   return (
-    <div className="flex items-center gap-4 select-none">
+    <div className="flex items-center gap-4 select-none font-mono">
       {/* Live pulse */}
       <div
-        className="flex items-center gap-2 px-2 py-0.5 rounded border text-[10px]"
+        className="flex items-center gap-1.5 px-2 py-0.5 border text-[9px] rounded-none bg-black/40"
         style={{
-          backgroundColor: `${statusColor}15`,
-          borderColor: `${statusColor}30`,
+          borderColor: `${statusColor}40`,
         }}
       >
         <motion.div
-          className="w-1.5 h-1.5 rounded-full"
+          className="w-1.5 h-1.5 rounded-none"
           style={{ backgroundColor: statusColor }}
-          animate={{ opacity: status === "LIVE" ? [1, 0.3, 1] : 1 }}
-          transition={{ duration: 2, repeat: Infinity }}
+          animate={{ opacity: status === "LIVE" ? [1, 0.2, 1] : 1 }}
+          transition={{ duration: 1.5, repeat: Infinity }}
         />
         <span
-          className="font-bold font-data-tabular tracking-wider"
+          className="font-bold tracking-wider"
           style={{ color: statusColor }}
         >
-          DNA SYNC: {status}
+          [SYNC:{status}]
         </span>
       </div>
 
       {/* Confidence */}
       <div className="flex items-center gap-2">
         <span className="text-[9px] uppercase tracking-wider text-on-surface-variant font-bold">
-          DNA CONFIDENCE
+          CONFIDENCE
         </span>
-        <div className="w-20 h-1 bg-white/5 rounded-full overflow-hidden">
-          <motion.div
-            className="h-full rounded-full"
-            style={{
-              backgroundColor:
-                confidence > 85 ? "#22c55e" : confidence > 70 ? "#ffd700" : "#ef4444",
-            }}
-            initial={{ width: 0 }}
-            animate={{ width: `${confidence}%` }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          />
+        <div className="flex gap-[2px]">
+          {Array.from({ length: 10 }).map((_, i) => {
+            const active = (confidence / 10) > i;
+            const barColor = confidence > 85 ? "#4AF626" : confidence > 70 ? "#FFB300" : "#FF2A2A";
+            return (
+              <div
+                key={i}
+                className="w-1.5 h-3"
+                style={{
+                  backgroundColor: active ? barColor : "rgba(255, 255, 255, 0.05)",
+                  border: `1px solid ${active ? barColor : "rgba(255, 255, 255, 0.1)"}`,
+                }}
+              />
+            );
+          })}
         </div>
-        <span className="text-[11px] font-data-tabular font-bold text-primary">
+        <span className="text-[10px] font-bold text-[#4AF626]">
           {confidence.toFixed(1)}%
         </span>
       </div>
 
       {/* Latency */}
-      <div className="text-[9px] font-data-tabular text-on-surface-variant">
-        {latencyMs}ms
+      <div className="text-[9px] text-on-surface-variant border border-white/5 px-1 bg-black/20 rounded-none">
+        LAT:{latencyMs}MS
       </div>
     </div>
   );
 }
+

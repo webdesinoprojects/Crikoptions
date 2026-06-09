@@ -26,35 +26,41 @@ export function PortfolioOverview() {
     : 0;
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-6 gap-3 select-none">
+    <div className="grid grid-cols-2 md:grid-cols-6 gap-2 select-none">
       <TerminalKPI
+        density="dense"
         label="Total Equity"
         value={`₹${data.totalEquity.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
         subText={`Base: ₹${data.baseCapital.toLocaleString()}`}
       />
       <TerminalKPI
+        density="dense"
         label="Total P&L"
         value={`${isTotalUp ? "+" : ""}₹${Math.abs(data.totalPnL).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
         changePercent={data.totalPnLPct}
         trend={isTotalUp ? "UP" : "DOWN"}
       />
       <TerminalKPI
+        density="dense"
         label="Daily P&L"
         value={`${isDailyUp ? "+" : ""}₹${Math.abs(data.dailyPnL).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
         changePercent={data.dailyPnLPct}
         trend={isDailyUp ? "UP" : "DOWN"}
       />
       <TerminalKPI
+        density="dense"
         label="Win Rate (30D)"
         value={`${data.winRate.toFixed(1)}%`}
         subText={`${data.closedTradesCount} trades closed`}
       />
       <TerminalKPI
+        density="dense"
         label="Margin Usage"
         value={`₹${data.usedMargin.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
         progress={marginPct}
       />
       <TerminalKPI
+        density="dense"
         label="Available Margin"
         value={`₹${data.availableMargin.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
         subText={`Free cash balance`}

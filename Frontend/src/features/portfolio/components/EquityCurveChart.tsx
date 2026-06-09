@@ -28,8 +28,8 @@ export function EquityCurveChart() {
 
     return {
       tooltip: {
-        trigger: "axis",
-        formatter: (params: any[]) => {
+        trigger: "axis" as const,
+        formatter: (params: any) => {
           const eq = params[0];
           const dd = params[1];
           return `
@@ -130,6 +130,7 @@ export function EquityCurveChart() {
 
   return (
     <TerminalPanel
+      density="dense"
       title="Equity Curve & Drawdown Analysis"
       subtitle="Comprehensive performance & downside tracking"
       className="h-[300px]"

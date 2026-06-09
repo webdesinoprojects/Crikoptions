@@ -58,7 +58,7 @@ export function IntelligenceWorkspace({ matchId }: IntelligenceWorkspaceProps) {
       </div>
 
       {/* Right Intelligence Feed rail (fixed 300px) */}
-      <aside className="w-[300px] shrink-0 flex flex-col border-l border-outline/10 pl-4 h-full select-none">
+      <aside className="w-[300px] shrink-0 flex flex-col border-l border-white/10 pl-4 h-full select-none">
         <IntelligenceFeed matchId={matchId} />
       </aside>
     </div>

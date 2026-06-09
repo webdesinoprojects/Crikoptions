@@ -32,19 +32,22 @@ func main() {
 	matchesRepo := matches.NewMemoryRepository()
 	matchesService := matches.NewService(matchesRepo)
 	matchesHandler := matches.NewHandler(matchesService)
+	var authRepo auth.UserRepository
 	mongo, err := database.ConnectMongo(context.Background(), cfg.MongoURI, cfg.MongoDB)
 	if err != nil {
-		log.Fatalf("mongo connect: %v", err)
+		log.Printf("WARNING: MongoDB connect error: %v. Falling back to In-Memory User Repository.", err)
+		authRepo = auth.NewInMemoryUserRepository()
+	} else {
+		defer func() { _ = mongo.Close(context.Background()) }()
+		authRepo = auth.NewMongoUserRepository(mongo.DB)
 	}
-	defer func() { _ = mongo.Close(context.Background()) }()
 
-	authRepo := auth.NewMongoUserRepository(mongo.DB)
 	authService, err := auth.NewService(authRepo, cfg.JWTSecret, time.Duration(cfg.TokenHours)*time.Hour)
 	if err != nil {
 		log.Fatalf("auth service: %v", err)
 	}
 	if err := authService.EnsureIndexes(context.Background()); err != nil {
-		log.Fatalf("auth indexes: %v", err)
+		log.Printf("WARNING: auth indexes: %v", err)
 	}
 	authHandler := auth.NewHandler(authService)
 

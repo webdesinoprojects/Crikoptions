@@ -16,29 +16,29 @@ export function AIScenarioLab({ matchId }: AIScenarioLabProps) {
 
   return (
     <TerminalPanel
-      title="AI Scenario Lab"
+      title="[ AI SCENARIO LAB ]"
       subtitle="Hypothetical DNA branches and projected event impacts"
-      className="h-[280px] border-primary/20 bg-surface relative"
+      className="h-[280px] border-primary/20 bg-surface relative rounded-none font-mono"
     >
       {/* Watermark symbol background */}
       <div className="absolute -bottom-2 -right-2 opacity-[0.03] pointer-events-none select-none text-[120px] text-primary">
-        🧬
+        [🧬]
       </div>
 
       <div className="flex-1 flex flex-col justify-between min-h-0 select-none text-[10px]">
         {/* Selector dropdown */}
-        <div className="p-1.5 rounded bg-surface-dim border border-outline/5">
+        <div className="p-1.5 rounded-none bg-black/40 border border-white/10">
           <label className="block text-[8px] font-bold text-on-surface-variant mb-1 uppercase tracking-wider">
-            IF HYPOTHETICAL DNA BRANCH:
+            [ HYPOTHETICAL DNA BRANCH ]
           </label>
           <select
             value={activeScenarioId}
             onChange={(e) => setActiveScenarioId(e.target.value)}
-            className="w-full bg-surface border border-outline/10 text-white text-[11px] rounded px-2 py-1 focus:outline-none focus:border-primary font-bold font-data-tabular"
+            className="w-full bg-black/80 border border-white/10 text-white text-[11px] rounded-none px-2 py-1 focus:outline-none focus:border-[#4AF626] font-bold font-mono"
           >
             {scenarios.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.label}
+                {s.label.toUpperCase()}
               </option>
             ))}
           </select>
@@ -49,8 +49,8 @@ export function AIScenarioLab({ matchId }: AIScenarioLabProps) {
           <AnimatePresence mode="wait">
             {isLoading ? (
               <div className="space-y-1.5">
-                <Skeleton className="h-10 w-full bg-white/5 animate-pulse" />
-                <Skeleton className="h-6 w-full bg-white/5 animate-pulse" />
+                <Skeleton className="h-10 w-full bg-white/5 animate-pulse rounded-none" />
+                <Skeleton className="h-6 w-full bg-white/5 animate-pulse rounded-none" />
               </div>
             ) : projection ? (
               <motion.div
@@ -58,16 +58,16 @@ export function AIScenarioLab({ matchId }: AIScenarioLabProps) {
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
-                className="bg-primary/5 rounded border border-primary/20 p-2 space-y-2"
+                className="bg-primary/5 border border-primary/45 p-2 space-y-2 rounded-none"
               >
                 {/* Market impacts */}
                 {projection.marketImpacts.map((m) => (
                   <div key={m.market} className="flex justify-between items-center text-[10px]">
-                    <span className="text-on-surface-variant font-medium">{m.market}</span>
+                    <span className="text-on-surface-variant font-medium uppercase">{m.market}</span>
                     <div className="text-right">
                       <span
-                        className="font-data-tabular font-bold"
-                        style={{ color: m.direction === "UP" ? "#22c55e" : "#ef4444" }}
+                        className="font-bold"
+                        style={{ color: m.direction === "UP" ? "#4AF626" : "#FF2A2A" }}
                       >
                         {m.delta}
                       </span>
@@ -79,24 +79,24 @@ export function AIScenarioLab({ matchId }: AIScenarioLabProps) {
                 ))}
 
                 {/* Win probability shift */}
-                <div className="flex justify-between items-center pt-1.5 border-t border-outline/5 text-[10px]">
-                  <span className="text-on-surface-variant font-medium">Win Prob. Shift</span>
+                <div className="flex justify-between items-center pt-1.5 border-t border-white/10 text-[10px]">
+                  <span className="text-on-surface-variant font-medium uppercase">WIN PROB. SHIFT</span>
                   <span
-                    className="font-data-tabular font-bold"
-                    style={{ color: projection.winProbabilityShift > 0 ? "#22c55e" : "#ef4444" }}
+                    className="font-bold"
+                    style={{ color: projection.winProbabilityShift > 0 ? "#4AF626" : "#FF2A2A" }}
                   >
                     {projection.winProbabilityShift > 0 ? "+" : ""}{projection.winProbabilityShift}%
                   </span>
                 </div>
 
                 {/* Player impacts */}
-                <div className="pt-1.5 border-t border-outline/5 space-y-1">
+                <div className="pt-1.5 border-t border-white/10 space-y-1">
                   {projection.playerImpacts.map((p) => (
                     <div key={p.player} className="flex justify-between text-[9px]">
-                      <span className="text-on-surface-variant font-medium">{p.player}</span>
+                      <span className="text-on-surface-variant font-medium uppercase">{p.player}</span>
                       <span
-                        className="font-data-tabular font-bold"
-                        style={{ color: p.delta > 0 ? "#22c55e" : "#ef4444" }}
+                        className="font-bold"
+                        style={{ color: p.delta > 0 ? "#4AF626" : "#FF2A2A" }}
                       >
                         {p.delta > 0 ? "+" : ""}{p.delta.toFixed(1)} PTS
                       </span>
@@ -111,11 +111,12 @@ export function AIScenarioLab({ matchId }: AIScenarioLabProps) {
         {/* Action button */}
         <button
           onClick={() => setActiveScenarioId(activeScenarioId)}
-          className="w-full py-1 rounded bg-primary text-on-primary font-bold text-[9px] hover:brightness-110 active:scale-[0.98] transition-all uppercase tracking-wider shrink-0"
+          className="w-full py-1.5 bg-[#4AF626] text-black font-bold text-[9px] hover:bg-[#3fde1d] active:translate-y-[0.5px] transition-all uppercase tracking-wider shrink-0 rounded-none border border-[#4AF626]"
         >
-          ▶ Run DNA Simulation
+          [ ▶ RUN DNA SIMULATION ]
         </button>
       </div>
     </TerminalPanel>
   );
 }
+

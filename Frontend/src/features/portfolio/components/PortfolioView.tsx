@@ -44,12 +44,12 @@ export function PortfolioView() {
         </button>
       </div>
 
-      <div className="p-4 space-y-4 flex-1 overflow-y-auto">
+      <div className="p-3 space-y-3 flex-1 overflow-y-auto">
         {/* Row 1 — KPI overview strip */}
         <PortfolioOverview />
 
         {/* Row 2 — Equity Curve + PnL Attribution */}
-        <div className="grid grid-cols-1 lg:grid-cols-10 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-10 gap-3">
           <div className="lg:col-span-7">
             <EquityCurveChart />
           </div>

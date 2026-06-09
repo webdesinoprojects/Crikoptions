@@ -8,19 +8,28 @@ export const apiClient = axios.create({
   },
 });
 
-// Interceptor for attaching auth tokens if implemented later
+// Interceptor for attaching auth tokens
 apiClient.interceptors.request.use((config) => {
-  // const token = localStorage.getItem("token");
-  // if (token) {
-  //   config.headers.Authorization = `Bearer ${token}`;
-  // }
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("crik_token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
   return config;
 });
 
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Handle global API errors here (e.g., redirect to login on 401)
+    if (error.response?.status === 401) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("crik_token");
+        if (!window.location.pathname.startsWith("/login")) {
+          window.location.href = "/login";
+        }
+      }
+    }
     return Promise.reject(error);
   }
 );

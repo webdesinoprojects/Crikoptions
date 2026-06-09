@@ -15,20 +15,20 @@ export function MatchContextHeader({ matchId }: MatchContextHeaderProps) {
   const marketId = matchId === "2" || matchId === "rcb-vs-kkr" ? "market-4" : "market-1";
 
   return (
-    <div className="bg-surface border border-outline/10 px-4 py-2.5 rounded flex items-center justify-between gap-4 select-none">
+    <div className="bg-background border border-white/10 px-4 py-2 flex items-center justify-between gap-4 select-none rounded-none font-mono">
       {/* Match title */}
       <div className="flex items-center gap-3 min-w-0">
         {isLoading ? (
-          <div className="h-6 w-36 rounded bg-white/5 animate-pulse" />
+          <div className="h-6 w-36 bg-white/5 animate-pulse rounded-none" />
         ) : (
           <div>
-            <h1 className="text-xs font-bold text-white leading-tight">
-              {intel?.teamA} <span className="text-on-surface-variant font-normal">vs</span> {intel?.teamB}
+            <h1 className="text-xs font-bold text-white uppercase tracking-tight">
+              {intel?.teamA} <span className="text-on-surface-variant font-normal">v</span> {intel?.teamB}
             </h1>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-bear-red animate-pulse" />
-              <span className="text-[9px] text-on-surface-variant font-data-tabular uppercase tracking-wider">
-                LIVE · Over {intel?.currentOvers.toFixed(1)} · {intel?.currentScore}
+              <span className="w-1.5 h-1.5 bg-[#FF2A2A] animate-pulse rounded-none" />
+              <span className="text-[9px] text-on-surface-variant uppercase tracking-wider font-mono">
+                SYS: LIVE · OVERS {intel?.currentOvers.toFixed(1)} · SCORE {intel?.currentScore}
               </span>
             </div>
           </div>
@@ -47,21 +47,21 @@ export function MatchContextHeader({ matchId }: MatchContextHeaderProps) {
       </div>
 
       {/* Context Navigation */}
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2 shrink-0 font-mono text-[9px]">
         <Link
           href={`/trading/${marketId}`}
-          className="flex items-center gap-1 px-2.5 py-1 rounded border border-outline/10 text-[10px] font-bold text-on-surface-variant hover:text-white hover:bg-surface-bright transition-all"
+          className="flex items-center gap-1 px-2 py-1 border border-white/10 text-on-surface-variant hover:text-white hover:bg-white/5 transition-all rounded-none font-bold"
         >
-          <span>⚡</span> TRADING
+          [ TRADING ]
         </Link>
-        <div className="flex items-center gap-1 px-2.5 py-1 rounded border border-primary/20 bg-primary/10 text-primary text-[10px] font-bold">
-          <span>🧬</span> INTELLIGENCE
+        <div className="flex items-center gap-1 px-2 py-1 border border-primary/45 bg-primary/10 text-primary rounded-none font-bold">
+          [🧬 INTEL ]
         </div>
         <Link
           href="/portfolio"
-          className="flex items-center gap-1 px-2.5 py-1 rounded border border-outline/10 text-[10px] font-bold text-on-surface-variant hover:text-white hover:bg-surface-bright transition-all"
+          className="flex items-center gap-1 px-2 py-1 border border-white/10 text-on-surface-variant hover:text-white hover:bg-white/5 transition-all rounded-none font-bold"
         >
-          <span>📊</span> PORTFOLIO
+          [ PORTFOLIO ]
         </Link>
       </div>
     </div>

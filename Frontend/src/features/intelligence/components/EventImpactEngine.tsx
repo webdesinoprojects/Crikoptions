@@ -24,14 +24,14 @@ export function EventImpactEngine({ matchId }: EventImpactEngineProps) {
 
   return (
     <TerminalPanel
-      title="Event Impact Engine"
+      title="[ EVENT IMPACT ENGINE ]"
       subtitle="Estimated volatility delta shifts triggered per game event"
-      className="h-[280px]"
+      className="h-[280px] rounded-none font-mono"
     >
-      <div className="flex-1 overflow-y-auto space-y-1.5 min-h-0 select-none text-[10px]">
+      <div className="flex-1 overflow-y-auto space-y-1 min-h-0 select-none text-[9px]">
         {isLoading ? (
           Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-8 w-full bg-white/5 animate-pulse" />
+            <Skeleton key={i} className="h-8 w-full bg-white/5 animate-pulse rounded-none" />
           ))
         ) : (
           impacts?.map((impact, i) => (
@@ -40,31 +40,33 @@ export function EventImpactEngine({ matchId }: EventImpactEngineProps) {
               initial={{ opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.04 }}
-              className="flex items-center gap-2 px-2 py-1 rounded bg-surface-dim border border-outline/5 hover:border-outline/10 transition-colors"
+              className="flex items-center gap-2 px-2 py-1 bg-black/30 border border-white/5 hover:border-white/15 transition-colors rounded-none"
             >
-              <span className="text-xs w-5 text-center shrink-0">{eventIcons[impact.event]}</span>
-              <span className="flex-1 font-bold text-white truncate">
+              <span className="text-[10px] w-6 text-center shrink-0 border-r border-white/5 mr-1 bg-black/20 py-0.5">
+                {eventIcons[impact.event] || "•"}
+              </span>
+              <span className="flex-1 font-bold text-white truncate uppercase">
                 {impact.label}
               </span>
               <div className="flex items-center gap-1.5 shrink-0">
-                <div className="w-14 h-1 bg-white/10 rounded-full overflow-hidden">
+                <div className="w-14 h-1.5 bg-white/5 border border-white/5 rounded-none overflow-hidden">
                   <div
-                    className="h-full rounded-full"
+                    className="h-full rounded-none"
                     style={{
                       width: `${Math.min(impact.volatilityDelta * 4, 100)}%`,
-                      backgroundColor: impact.direction === "UP" ? "#ef4444" : "#22c55e",
+                      backgroundColor: impact.direction === "UP" ? "#FF2A2A" : "#4AF626",
                     }}
                   />
                 </div>
                 <span
-                  className="font-data-tabular font-bold w-10 text-right text-[10px]"
-                  style={{ color: impact.direction === "UP" ? "#ef4444" : "#22c55e" }}
+                  className="font-bold w-12 text-right text-[10px]"
+                  style={{ color: impact.direction === "UP" ? "#FF2A2A" : "#4AF626" }}
                 >
-                  {impact.direction === "UP" ? "+" : "-"}{impact.volatilityDelta}%
+                  {impact.direction === "UP" ? "▲" : "▼"} {impact.volatilityDelta}%
                 </span>
               </div>
-              <span className="font-data-tabular text-on-surface-variant w-8 text-right text-[9px] font-bold">
-                {impact.confidence}%
+              <span className="text-on-surface-variant w-14 text-right font-bold border-l border-white/5 pl-2">
+                CONF: {impact.confidence}%
               </span>
             </motion.div>
           ))
@@ -73,3 +75,4 @@ export function EventImpactEngine({ matchId }: EventImpactEngineProps) {
     </TerminalPanel>
   );
 }
+
