@@ -22,7 +22,7 @@ func (h *Handler) GetHomeMatches(w http.ResponseWriter, r *http.Request) {
 	httpjson.Write(w, http.StatusOK, map[string]any{
 		"success": true,
 		"message": "Matches fetched successfully",
-		"data":   matches,
+		"data":    matches,
 	})
 }
 
@@ -48,7 +48,7 @@ func (h *Handler) GetMatchDetail(w http.ResponseWriter, r *http.Request) {
 	httpjson.Write(w, http.StatusOK, map[string]any{
 		"success": true,
 		"message": "Match detail fetched successfully",
-		"data":   match,
+		"data":    match,
 	})
 }
 
@@ -82,7 +82,7 @@ func (h *Handler) CreateMatch(w http.ResponseWriter, r *http.Request) {
 	httpjson.Write(w, http.StatusCreated, map[string]any{
 		"success": true,
 		"message": "Match created successfully",
-		"data":   match,
+		"data":    match,
 	})
 }
 
@@ -133,7 +133,7 @@ func (h *Handler) UpdateMatchScore(w http.ResponseWriter, r *http.Request) {
 	httpjson.Write(w, http.StatusOK, map[string]any{
 		"success": true,
 		"message": "Match score updated successfully",
-		"data":   match,
+		"data":    match,
 	})
 }
 

@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/config"
+	"github.com/webdesinoprojects/Crikoptions/backend/internal/database"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/middleware"
+	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/auth"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/health"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/matches"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/markets"
@@ -30,6 +32,22 @@ func main() {
 	matchesRepo := matches.NewMemoryRepository()
 	matchesService := matches.NewService(matchesRepo)
 	matchesHandler := matches.NewHandler(matchesService)
+	mongo, err := database.ConnectMongo(context.Background(), cfg.MongoURI, cfg.MongoDB)
+	if err != nil {
+		log.Fatalf("mongo connect: %v", err)
+	}
+	defer func() { _ = mongo.Close(context.Background()) }()
+
+	authRepo := auth.NewMongoUserRepository(mongo.DB)
+	authService, err := auth.NewService(authRepo, cfg.JWTSecret, time.Duration(cfg.TokenHours)*time.Hour)
+	if err != nil {
+		log.Fatalf("auth service: %v", err)
+	}
+	if err := authService.EnsureIndexes(context.Background()); err != nil {
+		log.Fatalf("auth indexes: %v", err)
+	}
+	authHandler := auth.NewHandler(authService)
+
 	marketsRepo := markets.NewMemoryRepository()
 	marketsService := markets.NewService(marketsRepo)
 	marketsHandler := markets.NewHandler(marketsService)
@@ -39,7 +57,7 @@ func main() {
 	ordersRepo := orders.NewMemoryRepository()
 	ordersService := orders.NewService(ordersRepo, marketsRepo)
 	ordersHandler := orders.NewHandler(ordersService)
-	router := routes.NewRouter(healthHandler, matchesHandler, marketsHandler, watchlistHandler, ordersHandler)
+	router := routes.NewRouter(healthHandler, matchesHandler, marketsHandler, watchlistHandler, ordersHandler, authHandler)
 	handler := middleware.Chain(router, middleware.Recover, middleware.Logger, middleware.CORS)
 
 	srv := &http.Server{
