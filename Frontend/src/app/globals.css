@@ -58,13 +58,9 @@
   --color-premium-gold: #ffd700;
   --color-neutral-bg: #020617;
 
-  --font-display-xl: "Hanken Grotesk", sans-serif;
-  --font-headline-lg: "Hanken Grotesk", sans-serif;
-  --font-headline-md: "Hanken Grotesk", sans-serif;
-  --font-body-lg: "Inter", sans-serif;
-  --font-body-md: "Inter", sans-serif;
-  --font-label-sm: "Inter", sans-serif;
-  --font-data-tabular: "JetBrains Mono", monospace;
+  --font-display: var(--font-display-xl), "Montserrat", sans-serif;
+  --font-sans: var(--font-body-md), "Inter", sans-serif;
+  --font-mono: var(--font-data-tabular), "JetBrains Mono", monospace;
 
   --radius-sm: 0.125rem;
   --radius-default: 0.25rem;
@@ -132,11 +128,9 @@
 }
 
 body {
-  background: #000d1a;
+  background: #000000;
   color: #c4d2ff;
   font-family: "Inter", sans-serif;
-  overflow: hidden;
-  height: 100vh;
 }
 
 @keyframes ticker {

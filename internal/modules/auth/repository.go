@@ -16,7 +16,7 @@ type UserRepository interface {
 	Create(ctx context.Context, rec userRecord) (User, error)
 	FindByEmail(ctx context.Context, email string) (userRecord, bool, error)
 	FindByID(ctx context.Context, id primitive.ObjectID) (User, bool, error)
-	UpdateMe(ctx context.Context, id primitive.ObjectID, name *string, phone *string) (User, error)
+	UpdateMe(ctx context.Context, id primitive.ObjectID, name *string, phone *string, settings *UserSettings) (User, error)
 	EnsureIndexes(ctx context.Context) error
 }
 
@@ -94,13 +94,16 @@ func (r *MongoUserRepository) FindByID(ctx context.Context, id primitive.ObjectI
 	return rec.User, true, nil
 }
 
-func (r *MongoUserRepository) UpdateMe(ctx context.Context, id primitive.ObjectID, name *string, phone *string) (User, error) {
+func (r *MongoUserRepository) UpdateMe(ctx context.Context, id primitive.ObjectID, name *string, phone *string, settings *UserSettings) (User, error) {
 	set := bson.M{}
 	if name != nil {
 		set["name"] = strings.TrimSpace(*name)
 	}
 	if phone != nil {
 		set["phone"] = strings.TrimSpace(*phone)
+	}
+	if settings != nil {
+		set["settings"] = *settings
 	}
 	if len(set) == 0 {
 		return User{}, errNothingToUpdate
@@ -195,7 +198,7 @@ func (r *InMemoryUserRepository) FindByID(ctx context.Context, id primitive.Obje
 	return rec.User, true, nil
 }
 
-func (r *InMemoryUserRepository) UpdateMe(ctx context.Context, id primitive.ObjectID, name *string, phone *string) (User, error) {
+func (r *InMemoryUserRepository) UpdateMe(ctx context.Context, id primitive.ObjectID, name *string, phone *string, settings *UserSettings) (User, error) {
 	rec, exists := r.usersByID[id]
 	if !exists {
 		return User{}, errUserNotFound
@@ -205,6 +208,9 @@ func (r *InMemoryUserRepository) UpdateMe(ctx context.Context, id primitive.Obje
 	}
 	if phone != nil {
 		rec.Phone = strings.TrimSpace(*phone)
+	}
+	if settings != nil {
+		rec.Settings = *settings
 	}
 	rec.UpdatedAt = time.Now().UTC()
 

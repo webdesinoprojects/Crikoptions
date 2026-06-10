@@ -47,7 +47,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   register: async (credentials) => {
     set({ isLoading: true, error: null });
     try {
-      const { token, user } = await authService.register(credentials);
+      // 1. Create the user account
+      await authService.register(credentials);
+      
+      // 2. Perform login immediately to get token and user session
+      const { token, user } = await authService.login({
+        email: credentials.email,
+        password: credentials.password,
+      });
+
       if (typeof window !== "undefined") {
         localStorage.setItem("crik_token", token);
       }
@@ -80,11 +88,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   initializeAuth: async () => {
     let token = get().token;
-    if (!token && typeof window !== "undefined") {
+    if ((!token || token === "undefined") && typeof window !== "undefined") {
       token = localStorage.getItem("crik_token");
     }
-    if (!token) {
-      set({ token: null, isAuthenticated: false, isLoading: false });
+    if (!token || token === "undefined") {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("crik_token");
+      }
+      set({ token: null, user: null, isAuthenticated: false, isLoading: false });
       return;
     }
     set({ token, isLoading: true });

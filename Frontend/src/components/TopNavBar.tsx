@@ -107,19 +107,19 @@ export default function TopNavBar() {
         </div>
 
         {/* User state dropdown / Auth CTA */}
-        <div className="hidden sm:flex items-center">
+        <div className="flex items-center">
           {isAuthenticated && user ? (
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-2 cursor-pointer hover:opacity-90 select-none outline-none bg-transparent border-0 p-0 text-left">
-                <div className="text-right">
+                <div className="text-right hidden sm:block">
                   <p className="text-[10px] text-foreground font-semibold leading-none mb-0.5 truncate max-w-[90px]">
                     {user.name}
                   </p>
                   <p className="text-[8px] text-primary font-bold leading-none tracking-wider">PRO MEMBER</p>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
-                  <span className="text-primary text-xs font-bold font-mono">
-                    {user.name.charAt(0).toUpperCase()}
+                <div className="w-8 h-8 rounded-full bg-[#d4af37]/20 flex items-center justify-center border border-[#d4af37]/30">
+                  <span className="text-[#d4af37] text-xs font-bold font-mono">
+                    {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                   </span>
                 </div>
               </DropdownMenuTrigger>
@@ -147,7 +147,7 @@ export default function TopNavBar() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="flex gap-2">
+            <div className="hidden sm:flex gap-2">
               <Button asChild variant="outline" size="sm" className="h-8 rounded-full text-xs font-bold px-4 hover:bg-muted/50 border-primary/20">
                 <Link href="/login">Log in</Link>
               </Button>

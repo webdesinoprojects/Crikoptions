@@ -1,8 +1,27 @@
+export interface RiskLimits {
+  maxExposure: number;
+  defaultLeverage: number;
+  autoKillSwitch: boolean;
+}
+
+export interface Preferences {
+  theme: string;
+  dataDensity: string;
+  notificationsEnabled: boolean;
+}
+
+export interface UserSettings {
+  riskLimits: RiskLimits;
+  preferences: Preferences;
+}
+
 export interface User {
   id: string;
   email: string;
   name: string;
   phone?: string;
+  tier?: string;
+  settings?: UserSettings;
   createdAt: string;
 }
 

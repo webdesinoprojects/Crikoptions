@@ -27,62 +27,71 @@ export function AIScenarioLab({ matchId }: AIScenarioLabProps) {
 
       <div className="flex-1 flex flex-col justify-between min-h-0 select-none text-[10px]">
         {/* Selector dropdown */}
-        <div className="p-1.5 rounded-none bg-black/40 border border-white/10">
-          <label className="block text-[8px] font-bold text-on-surface-variant mb-1 uppercase tracking-wider">
+        <div className="p-2 rounded-none bg-[#020617] border border-white/20 shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] relative group">
+          <div className="absolute top-0 left-0 w-1 h-full bg-primary/50 group-hover:bg-primary transition-colors"></div>
+          <label className="block text-[8px] font-bold text-on-surface-variant mb-1.5 uppercase tracking-widest pl-2">
             [ HYPOTHETICAL DNA BRANCH ]
           </label>
-          <select
-            value={activeScenarioId}
-            onChange={(e) => setActiveScenarioId(e.target.value)}
-            className="w-full bg-black/80 border border-white/10 text-white text-[11px] rounded-none px-2 py-1 focus:outline-none focus:border-[#4AF626] font-bold font-mono"
-          >
-            {scenarios.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.label.toUpperCase()}
-              </option>
-            ))}
-          </select>
+          <div className="relative pl-2">
+            <select
+              value={activeScenarioId}
+              onChange={(e) => setActiveScenarioId(e.target.value)}
+              className="w-full bg-black/60 border border-white/10 text-white text-[12px] rounded-none px-2 py-1.5 focus:outline-none focus:border-primary font-bold font-mono appearance-none hover:border-white/30 transition-colors cursor-pointer"
+            >
+              {scenarios.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.label.toUpperCase()}
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-primary">
+              ▼
+            </div>
+          </div>
         </div>
 
         {/* Projection results */}
-        <div className="flex-1 overflow-y-auto my-1.5 pr-0.5">
+        <div className="flex-1 overflow-y-auto my-2 pr-0.5">
           <AnimatePresence mode="wait">
             {isLoading ? (
-              <div className="space-y-1.5">
-                <Skeleton className="h-10 w-full bg-white/5 animate-pulse rounded-none" />
-                <Skeleton className="h-6 w-full bg-white/5 animate-pulse rounded-none" />
+              <div className="space-y-2">
+                <Skeleton className="h-12 w-full bg-white/5 animate-pulse rounded-none" />
+                <Skeleton className="h-8 w-full bg-white/5 animate-pulse rounded-none" />
               </div>
             ) : projection ? (
               <motion.div
                 key={activeScenarioId}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                className="bg-primary/5 border border-primary/45 p-2 space-y-2 rounded-none"
+                initial={{ opacity: 0, scale: 0.98, filter: "blur(4px)" }}
+                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, scale: 0.98, filter: "blur(4px)" }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="bg-[#020617]/80 border border-primary/40 p-3 space-y-3 rounded-none relative overflow-hidden"
               >
+                <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(255,255,255,0.02)_2px,rgba(255,255,255,0.02)_4px)] pointer-events-none"></div>
+
                 {/* Market impacts */}
                 {projection.marketImpacts.map((m) => (
-                  <div key={m.market} className="flex justify-between items-center text-[10px]">
-                    <span className="text-on-surface-variant font-medium uppercase">{m.market}</span>
-                    <div className="text-right">
+                  <div key={m.market} className="flex justify-between items-center text-[11px] relative z-10">
+                    <span className="text-on-surface-variant font-medium uppercase tracking-wider">{m.market}</span>
+                    <div className="text-right flex items-center gap-2">
                       <span
-                        className="font-bold"
+                        className="font-bold text-[12px] drop-shadow-[0_0_4px_currentColor]"
                         style={{ color: m.direction === "UP" ? "#4AF626" : "#FF2A2A" }}
                       >
                         {m.delta}
                       </span>
-                      <span className="text-[8px] text-on-surface-variant font-bold ml-1.5">
-                        ({m.confidence}%)
+                      <span className="text-[9px] text-on-surface-variant font-bold border border-white/10 px-1 py-0.5 bg-black/40">
+                        {m.confidence}% CONF
                       </span>
                     </div>
                   </div>
                 ))}
 
                 {/* Win probability shift */}
-                <div className="flex justify-between items-center pt-1.5 border-t border-white/10 text-[10px]">
-                  <span className="text-on-surface-variant font-medium uppercase">WIN PROB. SHIFT</span>
+                <div className="flex justify-between items-center pt-2.5 border-t border-white/10 text-[11px] relative z-10">
+                  <span className="text-on-surface-variant font-medium uppercase tracking-wider">WIN PROB. SHIFT</span>
                   <span
-                    className="font-bold"
+                    className="font-bold text-[13px] drop-shadow-[0_0_6px_currentColor]"
                     style={{ color: projection.winProbabilityShift > 0 ? "#4AF626" : "#FF2A2A" }}
                   >
                     {projection.winProbabilityShift > 0 ? "+" : ""}{projection.winProbabilityShift}%
@@ -90,12 +99,12 @@ export function AIScenarioLab({ matchId }: AIScenarioLabProps) {
                 </div>
 
                 {/* Player impacts */}
-                <div className="pt-1.5 border-t border-white/10 space-y-1">
+                <div className="pt-2.5 border-t border-white/10 space-y-1.5 relative z-10">
                   {projection.playerImpacts.map((p) => (
-                    <div key={p.player} className="flex justify-between text-[9px]">
-                      <span className="text-on-surface-variant font-medium uppercase">{p.player}</span>
+                    <div key={p.player} className="flex justify-between text-[10px]">
+                      <span className="text-on-surface-variant font-medium uppercase tracking-wide">{p.player}</span>
                       <span
-                        className="font-bold"
+                        className="font-bold drop-shadow-[0_0_4px_currentColor]"
                         style={{ color: p.delta > 0 ? "#4AF626" : "#FF2A2A" }}
                       >
                         {p.delta > 0 ? "+" : ""}{p.delta.toFixed(1)} PTS
@@ -111,9 +120,10 @@ export function AIScenarioLab({ matchId }: AIScenarioLabProps) {
         {/* Action button */}
         <button
           onClick={() => setActiveScenarioId(activeScenarioId)}
-          className="w-full py-1.5 bg-[#4AF626] text-black font-bold text-[9px] hover:bg-[#3fde1d] active:translate-y-[0.5px] transition-all uppercase tracking-wider shrink-0 rounded-none border border-[#4AF626]"
+          className="w-full py-2 bg-primary text-on-primary font-bold text-[10px] hover:bg-[#0284c7] hover:shadow-[0_0_15px_rgba(14,165,233,0.5)] active:scale-[0.98] transition-all uppercase tracking-widest shrink-0 rounded-none border border-primary/50 relative overflow-hidden group"
         >
-          [ ▶ RUN DNA SIMULATION ]
+          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none"></div>
+          <span className="relative z-10">[ ▶ RUN DNA SIMULATION ]</span>
         </button>
       </div>
     </TerminalPanel>

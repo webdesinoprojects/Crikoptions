@@ -81,17 +81,17 @@ export function MomentumHub({ matchId }: MomentumHubProps) {
     <TerminalPanel
       title="[ MOMENTUM ENGINE ]"
       subtitle="Win probability & tactical pressure index"
-      className="h-[280px] rounded-none font-mono"
+      className="h-[320px] rounded-none font-mono group"
       headerActions={
         momentum && (
           <motion.span
             key={momentum.trend}
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="text-[9px] font-bold px-1.5 py-0.5 border rounded-none font-mono bg-black/40"
+            className="text-[10px] font-bold px-2 py-1 border rounded-none font-mono bg-black/40 drop-shadow-[0_0_8px_currentColor]"
             style={{
               color: trendColor(momentum.trend),
-              borderColor: `${trendColor(momentum.trend)}40`,
+              borderColor: `${trendColor(momentum.trend)}80`,
             }}
           >
             [{trendIcon(momentum.trend)} {momentum.trend}]
@@ -106,15 +106,22 @@ export function MomentumHub({ matchId }: MomentumHubProps) {
           </div>
         ) : (
           <>
-            <div className="h-28 relative">
+            <div className="h-36 relative group-hover:scale-[1.03] transition-transform duration-700 ease-out origin-center mt-2">
               <EChartsWrapper option={gaugeOption} />
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-1">
-              {metrics.map((m) => (
-                <div key={m.label} className="bg-black/30 rounded-none px-2 py-1 text-center border border-white/5">
-                  <div className="text-[8px] text-on-surface-variant uppercase tracking-wider mb-0.5">{m.label}</div>
-                  <div className="text-[12px] font-bold font-mono" style={{ color: m.color }}>{m.value}</div>
-                </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+              {metrics.map((m, i) => (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1, duration: 0.5, ease: "easeOut" }}
+                  key={m.label} 
+                  className="bg-[#020617]/50 rounded-none px-3 py-2 text-center border border-white/10 group/metric hover:border-white/30 transition-colors cursor-default relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/5 to-transparent opacity-0 group-hover/metric:opacity-100 transition-opacity"></div>
+                  <div className="text-[9px] text-on-surface-variant uppercase tracking-widest mb-1 font-bold group-hover/metric:text-white transition-colors">{m.label}</div>
+                  <div className="text-[14px] font-bold font-mono tracking-wide drop-shadow-[0_0_6px_currentColor]" style={{ color: m.color }}>{m.value}</div>
+                </motion.div>
               ))}
             </div>
           </>

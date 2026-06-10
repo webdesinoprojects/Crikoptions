@@ -1,27 +1,27 @@
 import type { Metadata } from "next";
-import { Hanken_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
+import { Montserrat, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import TopNavBar from "@/components/TopNavBar";
-import SideNavBar from "@/components/SideNavBar";
+import { SessionNavBar } from "@/components/ui/sidebar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Providers from "@/components/Providers";
 
-const hankenGrotesk = Hanken_Grotesk({
+const montserrat = Montserrat({
   variable: "--font-display-xl",
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: ["500", "600", "700", "800", "900"],
 });
 
 const inter = Inter({
   variable: "--font-body-md",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-data-tabular",
   subsets: ["latin"],
-  weight: ["500"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -38,10 +38,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${hankenGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
+      className={`${montserrat.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-[#000d1a] text-on-primary-container overflow-hidden h-screen">
+      <body className="min-h-screen flex flex-col bg-[#000d1a] text-on-primary-container font-sans">
         <Providers>
           <ThemeProvider
             attribute="class"
@@ -49,13 +49,7 @@ export default function RootLayout({
             enableSystem={false}
             disableTransitionOnChange
           >
-            <TopNavBar />
-            <div className="flex flex-1 overflow-hidden">
-              <SideNavBar />
-              <main className="flex-1 ml-[200px] mt-14 h-[calc(100vh-56px)] overflow-y-auto bg-background">
-                {children}
-              </main>
-            </div>
+            {children}
           </ThemeProvider>
         </Providers>
       </body>

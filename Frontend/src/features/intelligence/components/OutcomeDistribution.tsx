@@ -10,6 +10,21 @@ interface OutcomeDistributionProps {
   matchId: string;
 }
 
+import { motion, Variants } from "framer-motion";
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, scaleX: 0, originX: 0 },
+  visible: { opacity: 1, scaleX: 1, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } },
+};
+
 export function OutcomeDistribution({ matchId }: OutcomeDistributionProps) {
   const { data: outcomes, isLoading } = useOutcomeDistribution(matchId);
 
@@ -33,7 +48,7 @@ export function OutcomeDistribution({ matchId }: OutcomeDistributionProps) {
           data: bellData,
           smooth: true,
           symbol: "none",
-          lineStyle: { color: "#4AF626", width: 1.5 },
+          lineStyle: { color: "#4AF626", width: 2 },
           areaStyle: {
             color: {
               type: "linear" as const,
@@ -42,8 +57,8 @@ export function OutcomeDistribution({ matchId }: OutcomeDistributionProps) {
               x2: 0,
               y2: 1,
               colorStops: [
-                { offset: 0, color: "rgba(74, 246, 38, 0.2)" },
-                { offset: 1, color: "rgba(74, 246, 38, 0.01)" }
+                { offset: 0, color: "rgba(74, 246, 38, 0.25)" },
+                { offset: 1, color: "rgba(74, 246, 38, 0.02)" }
               ]
             }
           },
@@ -59,44 +74,48 @@ export function OutcomeDistribution({ matchId }: OutcomeDistributionProps) {
     <TerminalPanel
       title="[ OUTCOME DISTRIBUTIONS ]"
       subtitle="Score outcome curves computed from similar match states"
-      className="h-[280px] rounded-none font-mono"
+      className="h-[320px] rounded-none font-mono group"
     >
       <div className="flex-1 flex flex-col justify-between min-h-0 select-none">
         {/* Bell curve */}
-        <div className="h-16 relative">
+        <div className="h-20 relative group-hover:scale-[1.02] transition-transform duration-700 ease-out origin-bottom">
           <EChartsWrapper option={curveOption} />
         </div>
 
-        <div className="text-center text-[9px] font-bold text-[#4AF626] -mt-1">
+        <div className="text-center text-[12px] font-bold text-[#4AF626] mt-2 tracking-widest drop-shadow-[0_0_8px_rgba(74,246,38,0.4)]">
           [ EXPECTED SCORE: 342 RUNS ]
         </div>
 
         {/* Probability bars */}
-        <div className="space-y-2 mt-2">
+        <div className="space-y-3 mt-4">
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-5 w-full bg-white/5 animate-pulse rounded-none" />
+              <Skeleton key={i} className="h-6 w-full bg-white/5 animate-pulse rounded-none" />
             ))
           ) : (
-            outcomes?.map((o) => (
-              <div key={o.label}>
-                <div className="flex justify-between items-center text-[10px] mb-0.5 font-bold">
-                  <span className="text-on-surface-variant font-medium">{o.range || o.label}</span>
-                  <span className="font-bold" style={{ color: sentimentColor(o.sentiment) }}>
-                    {o.probability}%
-                  </span>
+            <motion.div variants={containerVariants} initial="hidden" animate="visible" className="flex flex-col gap-3">
+              {outcomes?.map((o) => (
+                <div key={o.label}>
+                  <div className="flex justify-between items-center text-[11px] mb-1 font-bold tracking-wide">
+                    <span className="text-white font-medium">{o.range || o.label}</span>
+                    <span className="font-bold drop-shadow-[0_0_4px_currentColor]" style={{ color: sentimentColor(o.sentiment) }}>
+                      {o.probability}%
+                    </span>
+                  </div>
+                  <div className="h-2 bg-black/40 rounded-none overflow-hidden border border-white/10">
+                    <motion.div
+                      variants={itemVariants}
+                      className="h-full rounded-none"
+                      style={{
+                        width: `${o.probability}%`,
+                        backgroundColor: sentimentColor(o.sentiment),
+                        boxShadow: `0 0 10px ${sentimentColor(o.sentiment)}40`
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="h-1.5 bg-white/5 rounded-none overflow-hidden border border-white/5">
-                  <div
-                    className="h-full rounded-none transition-all duration-700"
-                    style={{
-                      width: `${o.probability}%`,
-                      backgroundColor: sentimentColor(o.sentiment),
-                    }}
-                  />
-                </div>
-              </div>
-            ))
+              ))}
+            </motion.div>
           )}
         </div>
       </div>
