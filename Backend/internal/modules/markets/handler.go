@@ -78,6 +78,8 @@ func (h *Handler) CalculatePrice(w http.ResponseWriter, r *http.Request) {
 		CurrentScore int `json:"currentScore"`
 		WicketsLost  int `json:"wicketsLost"`
 		BallsLeft    int `json:"ballsLeft"`
+		BallsBowled  int `json:"ballsBowled"`
+		TargetScore  int `json:"targetScore"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		httpjson.Write(w, http.StatusBadRequest, map[string]any{
@@ -87,27 +89,64 @@ func (h *Handler) CalculatePrice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Placeholder - will be replaced with client's algorithm
-	_, _ = h.service.CalculatePrice(PriceCalculationInput{
+	if req.Innings != 1 && req.Innings != 2 {
+		httpjson.Write(w, http.StatusBadRequest, map[string]any{
+			"success": false,
+			"message": "innings must be 1 or 2",
+		})
+		return
+	}
+	if req.WicketsLost < 0 || req.WicketsLost > 10 {
+		httpjson.Write(w, http.StatusBadRequest, map[string]any{
+			"success": false,
+			"message": "wicketsLost must be between 0 and 10",
+		})
+		return
+	}
+	if req.Innings == 1 && (req.BallsLeft < 0 || req.BallsLeft > 120) {
+		httpjson.Write(w, http.StatusBadRequest, map[string]any{
+			"success": false,
+			"message": "ballsLeft must be between 0 and 120 for 1st innings",
+		})
+		return
+	}
+	if req.Innings == 2 {
+		if req.TargetScore <= 0 {
+			httpjson.Write(w, http.StatusBadRequest, map[string]any{
+				"success": false,
+				"message": "targetScore must be positive for 2nd innings",
+			})
+			return
+		}
+		if req.BallsBowled < 0 || req.BallsBowled > 120 {
+			httpjson.Write(w, http.StatusBadRequest, map[string]any{
+				"success": false,
+				"message": "ballsBowled must be between 0 and 120 for 2nd innings",
+			})
+			return
+		}
+	}
+
+	result, err := h.service.CalculatePrice(PriceCalculationInput{
 		MatchID:      marketID,
 		Innings:      req.Innings,
 		CurrentScore: req.CurrentScore,
 		WicketsLost:  req.WicketsLost,
 		BallsLeft:    req.BallsLeft,
+		BallsBowled:  req.BallsBowled,
+		TargetScore:  req.TargetScore,
 	})
-
-	response := map[string]any{
-		"success": true,
-		"message": "Price calculated successfully (placeholder)",
-		"data": map[string]any{
-			"buyerPrice":  155,
-			"sellerPrice": 157,
-			"ltp":         156,
-			"open":        124,
-			"high":        160,
-			"low":         124,
-		},
+	if err != nil {
+		httpjson.Write(w, http.StatusInternalServerError, map[string]any{
+			"success": false,
+			"message": "Failed to calculate price",
+		})
+		return
 	}
 
-	httpjson.Write(w, http.StatusOK, response)
+	httpjson.Write(w, http.StatusOK, map[string]any{
+		"success": true,
+		"message": "Price calculated successfully",
+		"data":    result,
+	})
 }

@@ -20,12 +20,21 @@ type MarketResponse struct {
 }
 
 type PriceResponse struct {
-	BuyerPrice  float64 `json:"buyerPrice"`
-	SellerPrice float64 `json:"sellerPrice"`
-	LTP         float64 `json:"ltp"`
-	Open        float64 `json:"open"`
-	High        float64 `json:"high"`
-	Low         float64 `json:"low"`
+	BuyerPrice    float64  `json:"buyerPrice"`
+	SellerPrice   float64  `json:"sellerPrice"`
+	LTP           float64  `json:"ltp"`
+	Open          float64  `json:"open"`
+	High          float64  `json:"high"`
+	Low           float64  `json:"low"`
+	StrikeStep    float64  `json:"strikeStep,omitempty"`
+	MaxStrike     float64  `json:"maxStrike,omitempty"`
+	ProjectedS0   float64  `json:"projectedS0,omitempty"`
+	OptionChain   []StrikePremium `json:"optionChain,omitempty"`
+}
+
+type StrikePremium struct {
+	Strike  float64 `json:"strike"`
+	Premium float64 `json:"premium"`
 }
 
 type CreateMarketRequest struct {
