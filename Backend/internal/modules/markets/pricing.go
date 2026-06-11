@@ -32,7 +32,7 @@ type PricingConfig struct {
 func DefaultPricingConfig() PricingConfig {
 	return PricingConfig{
 		Sigma1:         0.30,
-		R1:             0.05, // FIX: was 0.5 in original JS (unrealistic 50% rate)
+		R1:             0.5,
 		MaxProjectedS0: 260,
 		Alpha:          1.0,
 		DefaultRunRate: 1.2,
