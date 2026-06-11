@@ -1,0 +1,25 @@
+import { Navbar1 } from "@/components/ui/navbar-1"
+import { HeroSection } from "@/components/landing/hero"
+import { BentoGrid } from "@/components/landing/bento-grid"
+import { FeatureCascade } from "@/components/landing/feature-cascade"
+import Features from "@/components/ui/features-section"
+import PricingSection from "@/components/ui/pricing-section-4"
+import { DocsSection } from "@/components/landing/docs"
+import { CtaFooter } from "@/components/landing/cta-footer"
+
+export default function Home() {
+  return (
+    <div className="min-h-screen bg-[#000d1a]">
+      <Navbar1 />
+      <main>
+        <HeroSection />
+        <BentoGrid />
+        <FeatureCascade />
+        <Features />
+        <PricingSection />
+        <DocsSection />
+      </main>
+      <CtaFooter />
+    </div>
+  );
+}

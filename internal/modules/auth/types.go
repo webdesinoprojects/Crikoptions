@@ -11,8 +11,27 @@ type User struct {
 	Name      string             `json:"name" bson:"name"`
 	Email     string             `json:"email" bson:"email"`
 	Phone     string             `json:"phone" bson:"phone"`
+	Tier      string             `json:"tier" bson:"tier"` // e.g. "STANDARD", "PRO", "INSTITUTIONAL"
+	Settings  UserSettings       `json:"settings" bson:"settings"`
 	CreatedAt time.Time          `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time          `json:"updatedAt" bson:"updatedAt"`
+}
+
+type UserSettings struct {
+	RiskLimits  RiskLimits  `json:"riskLimits" bson:"riskLimits"`
+	Preferences Preferences `json:"preferences" bson:"preferences"`
+}
+
+type RiskLimits struct {
+	MaxExposure    float64 `json:"maxExposure" bson:"maxExposure"`
+	DefaultLeverage int    `json:"defaultLeverage" bson:"defaultLeverage"`
+	AutoKillSwitch  bool   `json:"autoKillSwitch" bson:"autoKillSwitch"`
+}
+
+type Preferences struct {
+	Theme                string `json:"theme" bson:"theme"`
+	DataDensity          string `json:"dataDensity" bson:"dataDensity"`
+	NotificationsEnabled bool   `json:"notificationsEnabled" bson:"notificationsEnabled"`
 }
 
 type userRecord struct {
@@ -33,8 +52,9 @@ type loginRequest struct {
 }
 
 type updateMeRequest struct {
-	Name  *string `json:"name"`
-	Phone *string `json:"phone"`
+	Name     *string       `json:"name"`
+	Phone    *string       `json:"phone"`
+	Settings *UserSettings `json:"settings"`
 }
 
 type ctxKey string

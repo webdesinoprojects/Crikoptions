@@ -49,6 +49,19 @@ func (s *Service) Register(ctx context.Context, req registerRequest) (User, erro
 			Name:      req.Name,
 			Email:     req.Email,
 			Phone:     req.Phone,
+			Tier:      "STANDARD",
+			Settings: UserSettings{
+				RiskLimits: RiskLimits{
+					MaxExposure:    10000.0,
+					DefaultLeverage: 1,
+					AutoKillSwitch:  false,
+				},
+				Preferences: Preferences{
+					Theme:                "TERMINAL_DARK",
+					DataDensity:          "COMPACT",
+					NotificationsEnabled: true,
+				},
+			},
 			CreatedAt: now,
 			UpdatedAt: now,
 		},
@@ -123,9 +136,9 @@ func (s *Service) UpdateMe(ctx context.Context, userID primitive.ObjectID, req u
 		phone = &v
 	}
 
-	if name == nil && phone == nil {
+	if name == nil && phone == nil && req.Settings == nil {
 		return User{}, errNothingToUpdate
 	}
 
-	return s.repo.UpdateMe(ctx, userID, name, phone)
+	return s.repo.UpdateMe(ctx, userID, name, phone, req.Settings)
 }
