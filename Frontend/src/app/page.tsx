@@ -2,7 +2,8 @@ import { Navbar1 } from "@/components/ui/navbar-1"
 import { HeroSection } from "@/components/landing/hero"
 import { BentoGrid } from "@/components/landing/bento-grid"
 import { FeatureCascade } from "@/components/landing/feature-cascade"
-import { PricingSection } from "@/components/landing/pricing"
+import Features from "@/components/ui/features-section"
+import PricingSection from "@/components/ui/pricing-section-4"
 import { DocsSection } from "@/components/landing/docs"
 import { CtaFooter } from "@/components/landing/cta-footer"
 
@@ -14,6 +15,7 @@ export default function Home() {
         <HeroSection />
         <BentoGrid />
         <FeatureCascade />
+        <Features />
         <PricingSection />
         <DocsSection />
       </main>
