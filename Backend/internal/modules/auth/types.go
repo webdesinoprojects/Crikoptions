@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"net/http"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -12,9 +13,15 @@ type User struct {
 	Email     string             `json:"email" bson:"email"`
 	Phone     string             `json:"phone" bson:"phone"`
 	Tier      string             `json:"tier" bson:"tier"` // e.g. "STANDARD", "PRO", "INSTITUTIONAL"
+	Role      string             `json:"role" bson:"role"` // "user" (default) or "admin"
 	Settings  UserSettings       `json:"settings" bson:"settings"`
 	CreatedAt time.Time          `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time          `json:"updatedAt" bson:"updatedAt"`
+}
+
+// IsAdmin reports whether the user has the admin role.
+func (u *User) IsAdmin() bool {
+	return u != nil && u.Role == "admin"
 }
 
 type UserSettings struct {
@@ -59,4 +66,28 @@ type updateMeRequest struct {
 
 type ctxKey string
 
-const ctxUserID ctxKey = "userID"
+// CtxUserID is the request-context key under which RequireAuth stores the
+// authenticated user's primitive.ObjectID. Exported so that other modules
+// (orders, watchlist, admin match routes) can extract the same value.
+const CtxUserID ctxKey = "userID"
+
+// CtxRole is the request-context key under which RequireAuth stores the
+// authenticated user's role string ("user" or "admin").
+const CtxRole ctxKey = "role"
+
+// UserIDFromContext returns the authenticated user's ObjectID from r's
+// request context. ok is false when the context does not carry a valid ID.
+func UserIDFromContext(r *http.Request) (primitive.ObjectID, bool) {
+	id, ok := r.Context().Value(CtxUserID).(primitive.ObjectID)
+	if !ok || id.IsZero() {
+		return primitive.ObjectID{}, false
+	}
+	return id, true
+}
+
+// RoleFromContext returns the authenticated user's role string. ok is false
+// when the context does not carry a value.
+func RoleFromContext(r *http.Request) (string, bool) {
+	role, ok := r.Context().Value(CtxRole).(string)
+	return role, ok && role != ""
+}

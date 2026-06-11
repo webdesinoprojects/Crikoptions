@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -28,21 +29,26 @@ func main() {
 		log.Fatalf("config load: %v", err)
 	}
 
-	healthHandler := health.NewHandler()
-	matchesRepo := matches.NewMemoryRepository()
-	matchesService := matches.NewService(matchesRepo)
-	matchesHandler := matches.NewHandler(matchesService)
-	var authRepo auth.UserRepository
+	// Try connecting to MongoDB. If it succeeds, all data-bearing modules use
+	// Mongo-backed repositories. If it fails, they fall back to in-memory.
 	mongo, err := database.ConnectMongo(context.Background(), cfg.MongoURI, cfg.MongoDB)
+	useMongo := err == nil
 	if err != nil {
-		log.Printf("WARNING: MongoDB connect error: %v. Falling back to In-Memory User Repository.", err)
-		authRepo = auth.NewInMemoryUserRepository()
+		log.Printf("WARNING: MongoDB connect error: %v. Falling back to In-Memory repositories for all data modules.", err)
 	} else {
 		defer func() { _ = mongo.Close(context.Background()) }()
-		authRepo = auth.NewMongoUserRepository(mongo.DB)
 	}
 
-	authService, err := auth.NewService(authRepo, cfg.JWTSecret, time.Duration(cfg.TokenHours)*time.Hour)
+	// Auth (always needed).
+	var authRepo auth.UserRepository
+	if useMongo {
+		authRepo = auth.NewMongoUserRepository(mongo.DB)
+	} else {
+		authRepo = auth.NewInMemoryUserRepository()
+	}
+
+	adminEmails := parseAdminEmails(os.Getenv("ADMIN_EMAILS"))
+	authService, err := auth.NewService(authRepo, cfg.JWTSecret, time.Duration(cfg.TokenHours)*time.Hour, adminEmails)
 	if err != nil {
 		log.Fatalf("auth service: %v", err)
 	}
@@ -51,16 +57,68 @@ func main() {
 	}
 	authHandler := auth.NewHandler(authService)
 
-	marketsRepo := markets.NewMemoryRepository()
+	// Matches.
+	var matchesRepo matches.Repository
+	if useMongo {
+		matchesRepo = matches.NewMongoRepository(mongo.DB)
+	} else {
+		matchesRepo = matches.NewMemoryRepository()
+	}
+	matchesService := matches.NewService(matchesRepo)
+	if useMongo {
+		if err := matchesRepo.EnsureIndexes(context.Background()); err != nil {
+			log.Printf("WARNING: matches indexes: %v", err)
+		}
+	}
+	matchesHandler := matches.NewHandler(matchesService)
+
+	// Markets.
+	var marketsRepo markets.Repository
+	if useMongo {
+		marketsRepo = markets.NewMongoRepository(mongo.DB)
+	} else {
+		marketsRepo = markets.NewMemoryRepository()
+	}
 	marketsService := markets.NewService(marketsRepo)
+	if useMongo {
+		if err := marketsRepo.EnsureIndexes(context.Background()); err != nil {
+			log.Printf("WARNING: markets indexes: %v", err)
+		}
+	}
 	marketsHandler := markets.NewHandler(marketsService)
-	watchlistRepo := watchlist.NewMemoryRepository()
-	watchlistService := watchlist.NewService(watchlistRepo, marketsRepo)
-	watchlistHandler := watchlist.NewHandler(watchlistService)
-	ordersRepo := orders.NewMemoryRepository()
-	ordersService := orders.NewService(ordersRepo, marketsRepo)
+
+	// Orders.
+	var ordersRepo orders.Repository
+	if useMongo {
+		ordersRepo = orders.NewMongoRepository(mongo.DB)
+	} else {
+		ordersRepo = orders.NewMemoryRepository()
+	}
+	ordersService := orders.NewService(ordersRepo, marketsService)
+	if useMongo {
+		if err := ordersRepo.EnsureIndexes(context.Background()); err != nil {
+			log.Printf("WARNING: orders indexes: %v", err)
+		}
+	}
 	ordersHandler := orders.NewHandler(ordersService)
-	router := routes.NewRouter(healthHandler, matchesHandler, marketsHandler, watchlistHandler, ordersHandler, authHandler)
+
+	// Watchlist.
+	var watchlistRepo watchlist.Repository
+	if useMongo {
+		watchlistRepo = watchlist.NewMongoRepository(mongo.DB)
+	} else {
+		watchlistRepo = watchlist.NewMemoryRepository()
+	}
+	watchlistService := watchlist.NewService(watchlistRepo, marketsService)
+	if useMongo {
+		if err := watchlistRepo.EnsureIndexes(context.Background()); err != nil {
+			log.Printf("WARNING: watchlist indexes: %v", err)
+		}
+	}
+	watchlistHandler := watchlist.NewHandler(watchlistService)
+
+	healthHandler := health.NewHandler()
+	router := routes.NewRouter(healthHandler, matchesHandler, authHandler, marketsHandler, watchlistHandler, ordersHandler)
 	handler := middleware.Chain(router, middleware.Recover, middleware.Logger, middleware.CORS)
 
 	srv := &http.Server{
@@ -84,4 +142,15 @@ func main() {
 	defer cancel()
 
 	_ = srv.Shutdown(ctx)
+}
+
+func parseAdminEmails(s string) []string {
+	var out []string
+	for _, p := range strings.Split(s, ",") {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
 }

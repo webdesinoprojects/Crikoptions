@@ -3,7 +3,6 @@ package matches
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/shared/httpjson"
 )
@@ -17,7 +16,7 @@ func NewHandler(service *Service) *Handler {
 }
 
 func (h *Handler) GetHomeMatches(w http.ResponseWriter, r *http.Request) {
-	matches := h.service.GetHomeMatches()
+	matches := h.service.GetHomeMatches(r.Context())
 
 	httpjson.Write(w, http.StatusOK, map[string]any{
 		"success": true,
@@ -27,16 +26,7 @@ func (h *Handler) GetHomeMatches(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetMatchDetail(w http.ResponseWriter, r *http.Request) {
-	matchID := extractMatchID(r)
-	if matchID == "" {
-		httpjson.Write(w, http.StatusBadRequest, map[string]any{
-			"success": false,
-			"message": "Invalid match ID",
-		})
-		return
-	}
-
-	match, err := h.service.GetMatchByID(matchID)
+	match, err := h.service.GetMatchByID(r.Context(), r.PathValue("id"))
 	if err != nil || match == nil {
 		httpjson.Write(w, http.StatusNotFound, map[string]any{
 			"success": false,
@@ -70,7 +60,7 @@ func (h *Handler) CreateMatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	match, err := h.service.CreateMatch(req)
+	match, err := h.service.CreateMatch(r.Context(), req)
 	if err != nil {
 		httpjson.Write(w, http.StatusInternalServerError, map[string]any{
 			"success": false,
@@ -87,15 +77,6 @@ func (h *Handler) CreateMatch(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) UpdateMatchScore(w http.ResponseWriter, r *http.Request) {
-	matchID := extractMatchID(r)
-	if matchID == "" {
-		httpjson.Write(w, http.StatusBadRequest, map[string]any{
-			"success": false,
-			"message": "Invalid match ID",
-		})
-		return
-	}
-
 	var req UpdateScoreRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		httpjson.Write(w, http.StatusBadRequest, map[string]any{
@@ -121,7 +102,7 @@ func (h *Handler) UpdateMatchScore(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	match, err := h.service.UpdateMatchScore(matchID, req)
+	match, err := h.service.UpdateMatchScore(r.Context(), r.PathValue("id"), req)
 	if err != nil || match == nil {
 		httpjson.Write(w, http.StatusNotFound, map[string]any{
 			"success": false,
@@ -135,15 +116,4 @@ func (h *Handler) UpdateMatchScore(w http.ResponseWriter, r *http.Request) {
 		"message": "Match score updated successfully",
 		"data":    match,
 	})
-}
-
-func extractMatchID(r *http.Request) string {
-	if len(r.PathValue("id")) > 0 {
-		return r.PathValue("id")
-	}
-	return ""
-}
-
-func init() {
-	_ = time.Now()
 }

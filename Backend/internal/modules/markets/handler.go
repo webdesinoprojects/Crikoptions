@@ -25,7 +25,7 @@ func (h *Handler) GetMarketsByMatchID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	markets := h.service.GetMarketsByMatchID(matchID)
+	markets := h.service.GetMarketsByMatchID(r.Context(), matchID)
 	if markets == nil {
 		markets = []Market{}
 	}
@@ -47,7 +47,7 @@ func (h *Handler) GetMarketDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	market, err := h.service.GetMarketByID(marketID)
+	market, err := h.service.GetMarketByID(r.Context(), marketID)
 	if err != nil || market == nil {
 		httpjson.Write(w, http.StatusNotFound, map[string]any{
 			"success": false,

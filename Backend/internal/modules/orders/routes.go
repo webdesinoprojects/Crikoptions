@@ -2,18 +2,13 @@ package orders
 
 import (
 	"net/http"
+
+	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/auth"
 )
 
-func RegisterRoutes(mux *http.ServeMux, handler *Handler) {
-	mux.HandleFunc("GET /api/v1/orders", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetOrders(w, r)
-	})
-
-	mux.HandleFunc("POST /api/v1/orders", func(w http.ResponseWriter, r *http.Request) {
-		handler.CreateOrder(w, r)
-	})
-
-	mux.HandleFunc("PATCH /api/v1/orders/{id}/cancel", func(w http.ResponseWriter, r *http.Request) {
-		handler.CancelOrder(w, r)
-	})
+func RegisterRoutes(mux *http.ServeMux, handler *Handler, authHandler *auth.Handler) {
+	// Read endpoints: RequireAuth sets ctx[CtxUserID] = userID.
+	mux.HandleFunc("GET /api/v1/orders", authHandler.RequireAuth(handler.GetOrders))
+	mux.HandleFunc("POST /api/v1/orders", authHandler.RequireAuth(handler.CreateOrder))
+	mux.HandleFunc("PATCH /api/v1/orders/{id}/cancel", authHandler.RequireAuth(handler.CancelOrder))
 }

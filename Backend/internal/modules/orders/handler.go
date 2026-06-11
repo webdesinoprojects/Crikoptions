@@ -2,8 +2,12 @@ package orders
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/auth"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/shared/httpjson"
 )
 
@@ -16,11 +20,19 @@ func NewHandler(service *Service) *Handler {
 }
 
 func (h *Handler) GetOrders(w http.ResponseWriter, r *http.Request) {
-	userID := "user-1"
+	userID, ok := auth.UserIDFromContext(r)
+	if !ok {
+		httpjson.Write(w, http.StatusUnauthorized, map[string]any{
+			"success": false,
+			"message": "Unauthorized",
+		})
+		return
+	}
+
 	status := r.URL.Query().Get("status")
 	matchID := r.URL.Query().Get("matchId")
 
-	orders := h.service.GetUserOrders(userID, status, matchID)
+	orders := h.service.GetUserOrders(r.Context(), userID, status, matchID)
 
 	httpjson.Write(w, http.StatusOK, map[string]any{
 		"success": true,
@@ -30,7 +42,14 @@ func (h *Handler) GetOrders(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
-	userID := "user-1"
+	userID, ok := auth.UserIDFromContext(r)
+	if !ok {
+		httpjson.Write(w, http.StatusUnauthorized, map[string]any{
+			"success": false,
+			"message": "Unauthorized",
+		})
+		return
+	}
 
 	var req CreateOrderRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -65,12 +84,35 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	order, err := h.service.CreateOrder(userID, req)
+	order, err := h.service.CreateOrder(r.Context(), userID, req)
 	if err != nil {
-		httpjson.Write(w, http.StatusNotFound, map[string]any{
-			"success": false,
-			"message": "Market not found",
-		})
+		switch {
+		case errors.Is(err, errMarketNotFound):
+			httpjson.Write(w, http.StatusNotFound, map[string]any{
+				"success": false,
+				"message": "Market not found",
+			})
+		case errors.Is(err, errInvalidSide):
+			httpjson.Write(w, http.StatusBadRequest, map[string]any{
+				"success": false,
+				"message": "Side must be 'buy' or 'sell'",
+			})
+		case errors.Is(err, errInvalidQuantity):
+			httpjson.Write(w, http.StatusBadRequest, map[string]any{
+				"success": false,
+				"message": "Quantity must be positive",
+			})
+		case errors.Is(err, errInvalidPrice):
+			httpjson.Write(w, http.StatusBadRequest, map[string]any{
+				"success": false,
+				"message": "Price must be positive",
+			})
+		default:
+			httpjson.Write(w, http.StatusInternalServerError, map[string]any{
+				"success": false,
+				"message": "Failed to create order",
+			})
+		}
 		return
 	}
 
@@ -82,9 +124,18 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CancelOrder(w http.ResponseWriter, r *http.Request) {
-	orderID := r.PathValue("id")
+	userID, ok := auth.UserIDFromContext(r)
+	if !ok {
+		httpjson.Write(w, http.StatusUnauthorized, map[string]any{
+			"success": false,
+			"message": "Unauthorized",
+		})
+		return
+	}
 
-	if orderID == "" {
+	orderIDHex := r.PathValue("id")
+	orderID, err := primitive.ObjectIDFromHex(orderIDHex)
+	if err != nil {
 		httpjson.Write(w, http.StatusBadRequest, map[string]any{
 			"success": false,
 			"message": "Invalid order ID",
@@ -92,7 +143,7 @@ func (h *Handler) CancelOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	order, err := h.service.CancelOrder(orderID)
+	order, err := h.service.CancelOrder(r.Context(), orderID, userID)
 	if err != nil || order == nil {
 		httpjson.Write(w, http.StatusNotFound, map[string]any{
 			"success": false,

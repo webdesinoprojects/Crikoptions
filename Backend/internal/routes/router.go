@@ -11,7 +11,14 @@ import (
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/watchlist"
 )
 
-func NewRouter(healthHandler *health.Handler, matchesHandler *matches.Handler, marketsHandler *markets.Handler, watchlistHandler *watchlist.Handler, ordersHandler *orders.Handler, authHandler *auth.Handler) http.Handler {
+func NewRouter(
+	healthHandler *health.Handler,
+	matchesHandler *matches.Handler,
+	authHandler *auth.Handler,
+	marketsHandler *markets.Handler,
+	watchlistHandler *watchlist.Handler,
+	ordersHandler *orders.Handler,
+) http.Handler {
 	mux := http.NewServeMux()
 
 	if healthHandler != nil {
@@ -19,7 +26,7 @@ func NewRouter(healthHandler *health.Handler, matchesHandler *matches.Handler, m
 	}
 
 	if matchesHandler != nil {
-		matches.RegisterRoutes(mux, matchesHandler)
+		matches.RegisterRoutes(mux, matchesHandler, authHandler)
 	}
 
 	if authHandler != nil {
@@ -31,11 +38,11 @@ func NewRouter(healthHandler *health.Handler, matchesHandler *matches.Handler, m
 	}
 
 	if watchlistHandler != nil {
-		watchlist.RegisterRoutes(mux, watchlistHandler)
+		watchlist.RegisterRoutes(mux, watchlistHandler, authHandler)
 	}
 
 	if ordersHandler != nil {
-		orders.RegisterRoutes(mux, ordersHandler)
+		orders.RegisterRoutes(mux, ordersHandler, authHandler)
 	}
 
 	return mux

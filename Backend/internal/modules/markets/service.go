@@ -1,5 +1,15 @@
 package markets
 
+import (
+	"context"
+	"errors"
+	"strings"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+var errMarketNotFound = errors.New("market not found")
+
 type Service struct {
 	repo          Repository
 	pricingConfig PricingConfig
@@ -19,12 +29,36 @@ func NewServiceWithConfig(repo Repository, cfg PricingConfig) *Service {
 	}
 }
 
-func (s *Service) GetMarketsByMatchID(matchID string) []Market {
-	return s.repo.GetByMatchID(matchID)
+func (s *Service) GetMarketsByMatchID(ctx context.Context, matchID string) []Market {
+	return s.repo.GetByMatchID(ctx, matchID)
 }
 
-func (s *Service) GetMarketByID(id string) (*Market, error) {
-	return s.repo.GetByID(id)
+// GetMarketByID accepts either a full hex ObjectID or a short hex tail
+// (matching the seeded fixtures), and resolves it to a primitive.ObjectID.
+func (s *Service) GetMarketByID(ctx context.Context, id string) (*Market, error) {
+	objID, err := resolveMarketID(ctx, s.repo, id)
+	if err != nil {
+		return nil, err
+	}
+	return s.repo.GetByID(ctx, objID)
+}
+
+func resolveMarketID(ctx context.Context, repo Repository, id string) (primitive.ObjectID, error) {
+	id = strings.TrimSpace(id)
+	if objID, err := primitive.ObjectIDFromHex(id); err == nil {
+		return objID, nil
+	}
+
+	// Fallback: scan all markets and look for a hex tail match.
+	// This is only used to keep seeded short IDs working in dev.
+	all := repo.GetAll(ctx)
+	for i := range all {
+		h := all[i].ID.Hex()
+		if h == id || strings.HasSuffix(h, id) {
+			return all[i].ID, nil
+		}
+	}
+	return primitive.ObjectID{}, errMarketNotFound
 }
 
 // CalculatePrice runs the T20 option-chain engine and returns a PriceResponse

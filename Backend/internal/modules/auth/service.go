@@ -10,11 +10,12 @@ import (
 )
 
 type Service struct {
-	repo UserRepository
-	jwt  *jwt
+	repo       UserRepository
+	jwt        *jwt
+	adminEmails map[string]struct{}
 }
 
-func NewService(repo UserRepository, jwtSecret string, tokenTTL time.Duration) (*Service, error) {
+func NewService(repo UserRepository, jwtSecret string, tokenTTL time.Duration, adminEmails []string) (*Service, error) {
 	if repo == nil {
 		return nil, errors.New("repo is required")
 	}
@@ -22,7 +23,22 @@ func NewService(repo UserRepository, jwtSecret string, tokenTTL time.Duration) (
 	if err != nil {
 		return nil, errors.New("JWT_SECRET is required")
 	}
-	return &Service{repo: repo, jwt: j}, nil
+	adminSet := make(map[string]struct{}, len(adminEmails))
+	for _, e := range adminEmails {
+		e = strings.ToLower(strings.TrimSpace(e))
+		if e != "" {
+			adminSet[e] = struct{}{}
+		}
+	}
+	return &Service{repo: repo, jwt: j, adminEmails: adminSet}, nil
+}
+
+// isAdminEmail reports whether email (case-insensitive) is configured as an
+// admin. The default role for new users is "user"; configured admin emails
+// are promoted to "admin" at registration/login time.
+func (s *Service) isAdminEmail(email string) bool {
+	_, ok := s.adminEmails[strings.ToLower(strings.TrimSpace(email))]
+	return ok
 }
 
 func (s *Service) EnsureIndexes(ctx context.Context) error {
@@ -42,6 +58,11 @@ func (s *Service) Register(ctx context.Context, req registerRequest) (User, erro
 		return User{}, err
 	}
 
+	role := "user"
+	if s.isAdminEmail(req.Email) {
+		role = "admin"
+	}
+
 	now := time.Now().UTC()
 	rec := userRecord{
 		User: User{
@@ -50,6 +71,7 @@ func (s *Service) Register(ctx context.Context, req registerRequest) (User, erro
 			Email:     req.Email,
 			Phone:     req.Phone,
 			Tier:      "STANDARD",
+			Role:      role,
 			Settings: UserSettings{
 				RiskLimits: RiskLimits{
 					MaxExposure:    10000.0,
@@ -85,7 +107,7 @@ func (s *Service) Login(ctx context.Context, req loginRequest) (User, string, er
 		return User{}, "", errInvalidCreds
 	}
 
-	token, err := s.jwt.Issue(rec.ID.Hex())
+	token, err := s.jwt.Issue(rec.ID.Hex(), rec.User.Role)
 	if err != nil {
 		return User{}, "", errUnauthorized
 	}
@@ -93,16 +115,17 @@ func (s *Service) Login(ctx context.Context, req loginRequest) (User, string, er
 	return rec.User, token, nil
 }
 
-func (s *Service) ParseToken(token string) (primitive.ObjectID, error) {
-	sub, err := s.jwt.Parse(token)
+// ParseToken verifies a JWT and returns the authenticated user ID and role.
+func (s *Service) ParseToken(token string) (primitive.ObjectID, string, error) {
+	claims, err := s.jwt.Parse(token)
 	if err != nil {
-		return primitive.ObjectID{}, err
+		return primitive.ObjectID{}, "", err
 	}
-	id, err := primitive.ObjectIDFromHex(sub)
+	id, err := primitive.ObjectIDFromHex(claims.Sub)
 	if err != nil {
-		return primitive.ObjectID{}, errInvalidToken
+		return primitive.ObjectID{}, "", errInvalidToken
 	}
-	return id, nil
+	return id, claims.Role, nil
 }
 
 func (s *Service) Me(ctx context.Context, userID primitive.ObjectID) (User, error) {

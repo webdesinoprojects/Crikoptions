@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/auth"
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/shared/httpjson"
 )
 
@@ -16,10 +17,16 @@ func NewHandler(service *Service) *Handler {
 }
 
 func (h *Handler) GetWatchlist(w http.ResponseWriter, r *http.Request) {
-	// For MVP, use hardcoded user ID
-	userID := "user-1"
+	userID, ok := auth.UserIDFromContext(r)
+	if !ok {
+		httpjson.Write(w, http.StatusUnauthorized, map[string]any{
+			"success": false,
+			"message": "Unauthorized",
+		})
+		return
+	}
 
-	items := h.service.GetUserWatchlist(userID)
+	items := h.service.GetUserWatchlist(r.Context(), userID)
 
 	httpjson.Write(w, http.StatusOK, map[string]any{
 		"success": true,
@@ -29,7 +36,14 @@ func (h *Handler) GetWatchlist(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) AddToWatchlist(w http.ResponseWriter, r *http.Request) {
-	userID := "user-1"
+	userID, ok := auth.UserIDFromContext(r)
+	if !ok {
+		httpjson.Write(w, http.StatusUnauthorized, map[string]any{
+			"success": false,
+			"message": "Unauthorized",
+		})
+		return
+	}
 
 	var req AddWatchlistRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -48,11 +62,11 @@ func (h *Handler) AddToWatchlist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	item, err := h.service.AddToWatchlist(userID, req)
+	item, err := h.service.AddToWatchlist(r.Context(), userID, req)
 	if err != nil {
-		httpjson.Write(w, http.StatusNotFound, map[string]any{
+		httpjson.Write(w, http.StatusInternalServerError, map[string]any{
 			"success": false,
-			"message": "Market not found",
+			"message": "Failed to add to watchlist",
 		})
 		return
 	}
@@ -65,9 +79,16 @@ func (h *Handler) AddToWatchlist(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) RemoveFromWatchlist(w http.ResponseWriter, r *http.Request) {
-	userID := "user-1"
-	marketID := r.PathValue("marketId")
+	userID, ok := auth.UserIDFromContext(r)
+	if !ok {
+		httpjson.Write(w, http.StatusUnauthorized, map[string]any{
+			"success": false,
+			"message": "Unauthorized",
+		})
+		return
+	}
 
+	marketID := r.PathValue("marketId")
 	if marketID == "" {
 		httpjson.Write(w, http.StatusBadRequest, map[string]any{
 			"success": false,
@@ -76,11 +97,10 @@ func (h *Handler) RemoveFromWatchlist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.service.RemoveFromWatchlist(userID, marketID)
-	if err != nil {
-		httpjson.Write(w, http.StatusNotFound, map[string]any{
+	if err := h.service.RemoveFromWatchlist(r.Context(), userID, marketID); err != nil {
+		httpjson.Write(w, http.StatusInternalServerError, map[string]any{
 			"success": false,
-			"message": "Watchlist item not found",
+			"message": "Failed to remove from watchlist",
 		})
 		return
 	}

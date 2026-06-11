@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/shared/httpjson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Handler struct {
@@ -27,7 +26,7 @@ func (h *Handler) RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		userID, err := h.service.ParseToken(token)
+		userID, role, err := h.service.ParseToken(token)
 		if err != nil {
 			httpjson.Write(w, http.StatusUnauthorized, map[string]any{
 				"success": false,
@@ -36,8 +35,25 @@ func (h *Handler) RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), ctxUserID, userID)
+		ctx := context.WithValue(r.Context(), CtxUserID, userID)
+		ctx = context.WithValue(ctx, CtxRole, role)
 		next(w, r.WithContext(ctx))
+	}
+}
+
+// RequireAdmin wraps a handler so that only authenticated users with the
+// "admin" role can access it. Must be chained after RequireAuth.
+func (h *Handler) RequireAdmin(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		role, _ := r.Context().Value(CtxRole).(string)
+		if role != "admin" {
+			httpjson.Write(w, http.StatusForbidden, map[string]any{
+				"success": false,
+				"message": "Admin access required",
+			})
+			return
+		}
+		next(w, r)
 	}
 }
 
@@ -99,7 +115,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(ctxUserID).(primitive.ObjectID)
+	userID, ok := UserIDFromContext(r)
 	if !ok || userID.IsZero() {
 		httpjson.Write(w, http.StatusUnauthorized, map[string]any{
 			"success": false,
@@ -126,7 +142,7 @@ func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) UpdateMe(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(ctxUserID).(primitive.ObjectID)
+	userID, ok := UserIDFromContext(r)
 	if !ok || userID.IsZero() {
 		httpjson.Write(w, http.StatusUnauthorized, map[string]any{
 			"success": false,

@@ -22,10 +22,11 @@ func newJWT(secret string, ttl time.Duration) (*jwt, error) {
 	return &jwt{secret: []byte(secret), tokenTTL: ttl}, nil
 }
 
-func (j *jwt) Issue(userID string) (string, error) {
+func (j *jwt) Issue(userID, role string) (string, error) {
 	now := time.Now().UTC()
 	payload := map[string]any{
-		"sub": userID,
+		"sub":  userID,
+		"role": role,
 		"iat": now.Unix(),
 		"exp": now.Add(j.tokenTTL).Unix(),
 	}
@@ -42,10 +43,18 @@ func (j *jwt) Issue(userID string) (string, error) {
 	return signingInput + "." + enc.EncodeToString(sig), nil
 }
 
-func (j *jwt) Parse(token string) (string, error) {
+// Claims is the parsed JWT payload.
+type Claims struct {
+	Sub  string `json:"sub"`
+	Role string `json:"role"`
+	Exp  int64  `json:"exp"`
+	Iat  int64  `json:"iat"`
+}
+
+func (j *jwt) Parse(token string) (Claims, error) {
 	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
-		return "", errInvalidToken
+		return Claims{}, errInvalidToken
 	}
 
 	enc := base64.RawURLEncoding
@@ -53,32 +62,29 @@ func (j *jwt) Parse(token string) (string, error) {
 
 	sig, err := enc.DecodeString(parts[2])
 	if err != nil {
-		return "", errInvalidToken
+		return Claims{}, errInvalidToken
 	}
 	expected := signHS256([]byte(signingInput), j.secret)
 	if !hmac.Equal(sig, expected) {
-		return "", errInvalidToken
+		return Claims{}, errInvalidToken
 	}
 
 	payloadBytes, err := enc.DecodeString(parts[1])
 	if err != nil {
-		return "", errInvalidToken
+		return Claims{}, errInvalidToken
 	}
 
-	var payload struct {
-		Sub string `json:"sub"`
-		Exp int64  `json:"exp"`
-	}
+	var payload Claims
 	if err := json.Unmarshal(payloadBytes, &payload); err != nil {
-		return "", errInvalidToken
+		return Claims{}, errInvalidToken
 	}
 	if payload.Sub == "" {
-		return "", errInvalidToken
+		return Claims{}, errInvalidToken
 	}
 	if payload.Exp > 0 && time.Now().UTC().Unix() > payload.Exp {
-		return "", errTokenExpired
+		return Claims{}, errTokenExpired
 	}
-	return payload.Sub, nil
+	return payload, nil
 }
 
 func signHS256(data, secret []byte) []byte {

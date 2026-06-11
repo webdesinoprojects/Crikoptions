@@ -1,41 +1,55 @@
 package orders
 
 import (
+	"context"
+	"errors"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+
 	"github.com/webdesinoprojects/Crikoptions/backend/internal/modules/markets"
 )
 
+var errMarketNotFound = errors.New("market not found")
+var errInvalidSide = errors.New("invalid side, must be 'buy' or 'sell'")
+var errInvalidQuantity = errors.New("quantity must be positive")
+var errInvalidPrice = errors.New("price must be positive")
+
 type Service struct {
 	repo        Repository
-	marketsRepo markets.Repository
+	marketsSvc *markets.Service
 }
 
-func NewService(repo Repository, marketsRepo markets.Repository) *Service {
-	return &Service{repo: repo, marketsRepo: marketsRepo}
+func NewService(repo Repository, marketsSvc *markets.Service) *Service {
+	return &Service{repo: repo, marketsSvc: marketsSvc}
 }
 
-func (s *Service) GetUserOrders(userID, status, matchID string) []Order {
-	return s.repo.GetByUserID(userID, status, matchID)
+func (s *Service) GetUserOrders(ctx context.Context, userID primitive.ObjectID, status, matchID string) []Order {
+	return s.repo.GetByUserID(ctx, userID, status, matchID)
 }
 
-func (s *Service) GetOrderByID(id string) (*Order, error) {
-	return s.repo.GetByID(id)
+func (s *Service) GetOrderByID(ctx context.Context, id primitive.ObjectID) (*Order, error) {
+	return s.repo.GetByID(ctx, id)
 }
 
-func (s *Service) CreateOrder(userID string, req CreateOrderRequest) (*Order, error) {
+func (s *Service) CreateOrder(ctx context.Context, userID primitive.ObjectID, req CreateOrderRequest) (*Order, error) {
 	// Validate market exists
-	market, err := s.marketsRepo.GetByID(req.MarketID)
+	market, err := s.marketsSvc.GetMarketByID(ctx, req.MarketID)
 	if err != nil || market == nil {
-		return nil, err
+		return nil, errMarketNotFound
 	}
 
 	// Validate side
 	if req.Side != "buy" && req.Side != "sell" {
-		return nil, nil // Will return error
+		return nil, errInvalidSide
 	}
 
 	// Validate quantity and price
-	if req.Quantity <= 0 || req.Price <= 0 {
-		return nil, nil
+	if req.Quantity <= 0 {
+		return nil, errInvalidQuantity
+	}
+	if req.Price <= 0 {
+		return nil, errInvalidPrice
 	}
 
 	order := Order{
@@ -47,9 +61,23 @@ func (s *Service) CreateOrder(userID string, req CreateOrderRequest) (*Order, er
 		Price:    req.Price,
 	}
 
-	return s.repo.Create(order)
+	return s.repo.Create(ctx, order)
 }
 
-func (s *Service) CancelOrder(id string) (*Order, error) {
-	return s.repo.Cancel(id)
+func (s *Service) CancelOrder(ctx context.Context, id, userID primitive.ObjectID) (*Order, error) {
+	existing, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	if existing == nil {
+		return nil, nil
+	}
+	if existing.UserID != userID {
+		return nil, nil
+	}
+
+	return s.repo.Cancel(ctx, id, userID)
 }
