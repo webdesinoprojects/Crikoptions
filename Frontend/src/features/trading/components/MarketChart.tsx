@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { createChart, ColorType, IChartApi, ISeriesApi, CandlestickSeries } from "lightweight-charts";
+import { createChart, ColorType, IChartApi, ISeriesApi, CandlestickSeries, UTCTimestamp } from "lightweight-charts";
 import { useMarketChart } from "../hooks";
+import { DataSourceBadge } from "@/components/shared/DataSourceBadge";
 
 interface MarketChartProps {
   marketId: string;
@@ -66,7 +67,7 @@ export function MarketChart({ marketId }: MarketChartProps) {
       // lightweight-charts expects data sorted by time ascending
       const sortedCandles = [...candles].sort((a, b) => a.timestamp - b.timestamp);
       const chartData = sortedCandles.map((c) => ({
-        time: c.timestamp as any,
+        time: c.timestamp as UTCTimestamp,
         open: c.open,
         high: c.high,
         low: c.low,
@@ -81,6 +82,11 @@ export function MarketChart({ marketId }: MarketChartProps) {
   }
 
   return (
-    <div className="w-full flex-grow relative" ref={chartContainerRef} />
+    <div className="w-full flex-grow relative">
+      <div className="absolute right-2 top-2 z-10">
+        <DataSourceBadge source="simulated" />
+      </div>
+      <div className="h-full w-full" ref={chartContainerRef} />
+    </div>
   );
 }

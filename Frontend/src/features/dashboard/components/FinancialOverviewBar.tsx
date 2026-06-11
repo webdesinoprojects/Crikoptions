@@ -3,6 +3,7 @@
 import { useDashboardOverview } from "@/features/dashboard/hooks";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataSourceBadge } from "@/components/shared/DataSourceBadge";
 
 export function FinancialOverviewBar() {
   const { data, isLoading, isError } = useDashboardOverview();
@@ -31,9 +32,12 @@ export function FinancialOverviewBar() {
       {metrics.map((metric, i) => (
         <Card key={i} className="bg-surface-container-lowest border-outline-variant shadow-sm">
           <CardContent className="p-4 flex flex-col gap-1">
-            <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">
-              {metric.label}
-            </span>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">
+                {metric.label}
+              </span>
+              <DataSourceBadge source="simulated" />
+            </div>
             <div className="flex items-baseline gap-2">
               <span className="text-xl font-headline-md font-bold">{metric.value}</span>
               {metric.trend !== undefined && (

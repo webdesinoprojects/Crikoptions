@@ -49,12 +49,12 @@ export const PricingSection = () => {
              </div>
           </div>
 
-          <div className="rounded-[2rem] bg-gradient-to-b from-[#d4af37] to-[#ebd171]/20 p-1.5 relative group shadow-[0_0_50px_rgba(212,175,55,0.15)]">
+          <div className="rounded-[2rem] bg-gradient-to-b from-[#3131f5] to-[#4d4dff]/20 p-1.5 relative group shadow-[0_0_50px_rgba(49,49,245,0.15)]">
              <div className="h-full w-full rounded-[calc(2rem-0.375rem)] bg-[#0a1428] p-10 flex flex-col relative overflow-hidden transition-colors group-hover:bg-[#0f1d3a]">
-               <div className="absolute top-0 right-10 bg-[#d4af37] text-[#000d1a] px-4 py-1 rounded-b-lg font-mono text-xs font-bold tracking-widest">
+               <div className="absolute top-0 right-10 bg-[#3131f5] text-white px-4 py-1 rounded-b-lg font-mono text-xs font-bold tracking-widest">
                  RECOMMENDED
                </div>
-               <div className="font-mono text-xs text-[#d4af37] mb-6 tracking-[0.2em]">[ TIER_02 / PROP ]</div>
+               <div className="font-mono text-xs text-[#3131f5] mb-6 tracking-[0.2em]">[ TIER_02 / PROP ]</div>
                <h3 className="text-4xl font-display font-black text-white mb-2">Institutional</h3>
                <div className="flex items-baseline gap-2 mb-8">
                  <span className="text-5xl font-sans font-bold text-white">$499</span>
@@ -64,12 +64,12 @@ export const PricingSection = () => {
                <ul className="flex flex-col gap-4 mb-12 flex-grow">
                  {["Direct API / FIX Protocol", "Sub-Millisecond Execution", "Custom Algorithmic Hedging", "Dedicated Account Manager"].map((item, i) => (
                    <li key={i} className="flex items-center gap-3 text-white font-sans">
-                     <Check className="w-5 h-5 text-[#d4af37]" /> {item}
+                     <Check className="w-5 h-5 text-[#3131f5]" /> {item}
                    </li>
                  ))}
                </ul>
 
-               <Link href="/register" className="w-full py-4 rounded-full bg-[#d4af37] text-center text-[#000d1a] font-sans font-black uppercase tracking-wider hover:bg-[#ebd171] transition-colors shadow-[0_0_20px_rgba(212,175,55,0.4)]">
+               <Link href="/register" className="w-full py-4 rounded-full bg-[#3131f5] text-center text-white font-sans font-black uppercase tracking-wider hover:bg-[#4d4dff] transition-colors shadow-[0_0_20px_rgba(49,49,245,0.4)]">
                  Initialize Node
                </Link>
              </div>

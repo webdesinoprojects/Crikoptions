@@ -74,12 +74,12 @@ const Navbar1 = () => {
                 Workspace
               </Link>
               <Link href="/profile" className="flex items-center gap-2 group cursor-pointer">
-                <div className="w-9 h-9 rounded-full bg-[#d4af37]/20 flex items-center justify-center border border-[#d4af37]/30 group-hover:border-[#d4af37]/65 transition-colors">
-                  <span className="text-[#d4af37] text-sm font-bold font-mono">
+                <div className="w-9 h-9 rounded-full bg-[#3131f5]/20 flex items-center justify-center border border-[#3131f5]/30 group-hover:border-[#3131f5]/65 transition-colors">
+                  <span className="text-[#3131f5] text-sm font-bold font-mono">
                     {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                   </span>
                 </div>
-                <span className="text-sm font-bold text-white group-hover:text-[#d4af37] transition-colors">
+                <span className="text-sm font-bold text-white group-hover:text-[#3131f5] transition-colors">
                   {user.name}
                 </span>
               </Link>
@@ -94,7 +94,7 @@ const Navbar1 = () => {
               </Link>
               <Link
                 href="/register"
-                className="inline-flex items-center justify-center px-5 py-2 text-sm text-[#0f172a] bg-[#d4af37] font-bold rounded-full hover:bg-[#ebd171] transition-colors shadow-[0_0_15px_rgba(212,175,55,0.3)]"
+                className="inline-flex items-center justify-center px-5 py-2 text-sm text-white bg-[#3131f5] font-bold rounded-full hover:bg-[#4d4dff] transition-colors shadow-[0_0_15px_rgba(49,49,245,0.3)]"
               >
                 Get Started
               </Link>
@@ -153,8 +153,8 @@ const Navbar1 = () => {
                 {isAuthenticated && user ? (
                   <>
                     <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/10">
-                      <div className="w-10 h-10 rounded-full bg-[#d4af37]/20 flex items-center justify-center border border-[#d4af37]/30">
-                        <span className="text-[#d4af37] text-sm font-bold font-mono">
+                      <div className="w-10 h-10 rounded-full bg-[#3131f5]/20 flex items-center justify-center border border-[#3131f5]/30">
+                        <span className="text-[#3131f5] text-sm font-bold font-mono">
                           {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                         </span>
                       </div>
@@ -165,7 +165,7 @@ const Navbar1 = () => {
                     </div>
                     <Link
                       href="/profile"
-                      className="inline-flex items-center justify-center w-full px-5 py-3 text-base text-[#0f172a] font-bold bg-[#d4af37] rounded-full hover:bg-[#ebd171] transition-colors"
+                      className="inline-flex items-center justify-center w-full px-5 py-3 text-base text-white font-bold bg-[#3131f5] rounded-full hover:bg-[#4d4dff] transition-colors"
                       onClick={toggleMenu}
                     >
                       Customize Profile
@@ -189,7 +189,7 @@ const Navbar1 = () => {
                     </Link>
                     <Link
                       href="/register"
-                      className="inline-flex items-center justify-center w-full px-5 py-3 text-base text-[#0f172a] font-bold bg-[#d4af37] rounded-full hover:bg-[#ebd171] transition-colors"
+                      className="inline-flex items-center justify-center w-full px-5 py-3 text-base text-white font-bold bg-[#3131f5] rounded-full hover:bg-[#4d4dff] transition-colors"
                       onClick={toggleMenu}
                     >
                       Get Started

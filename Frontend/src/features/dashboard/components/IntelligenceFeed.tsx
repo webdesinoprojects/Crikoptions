@@ -3,6 +3,7 @@
 import { useIntelligenceFeed } from "@/features/dashboard/hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BrainCircuit, AlertTriangle, Activity } from "lucide-react";
+import { DataSourceBadge } from "@/components/shared/DataSourceBadge";
 
 export function IntelligenceFeed() {
   const { data: signals, isLoading } = useIntelligenceFeed();
@@ -21,8 +22,9 @@ export function IntelligenceFeed() {
   return (
     <Card className="bg-surface-container-lowest border-outline-variant flex-1">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-bold flex items-center gap-2">
+        <CardTitle className="text-sm font-bold flex items-center justify-between gap-2">
           Intelligence Feed
+          <DataSourceBadge source="simulated" />
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">

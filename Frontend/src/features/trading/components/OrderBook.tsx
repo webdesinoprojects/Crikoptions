@@ -1,6 +1,7 @@
 import React from "react";
 import { useMarketDepth } from "../hooks";
 import { useTerminalStore } from "@/stores/terminal.store";
+import { DataSourceBadge } from "@/components/shared/DataSourceBadge";
 
 interface OrderBookProps {
   marketId: string;
@@ -25,7 +26,7 @@ export const OrderBook = React.memo(({ marketId }: OrderBookProps) => {
     <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col h-full">
       <div className="bg-surface px-3 py-2 border-b border-outline-variant flex justify-between items-center">
         <span className="font-label-sm text-label-sm font-bold text-on-surface">Order Book</span>
-        <span className="text-[10px] text-on-surface-variant font-bold">LADDER DEPTH</span>
+        <DataSourceBadge source="api" />
       </div>
       
       <div className="flex-1 overflow-y-auto p-2 scrollbar-hide">

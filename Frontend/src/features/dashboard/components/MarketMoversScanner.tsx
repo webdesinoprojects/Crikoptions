@@ -3,6 +3,7 @@
 import { useMarketMovers } from "@/features/dashboard/hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendBadge } from "@/components/shared/Primitives";
+import { DataSourceBadge } from "@/components/shared/DataSourceBadge";
 
 export function MarketMoversScanner() {
   const { data: movers, isLoading } = useMarketMovers();
@@ -12,8 +13,9 @@ export function MarketMoversScanner() {
   return (
     <Card className="bg-surface-container-lowest border-outline-variant flex-1">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-bold flex items-center gap-2">
+        <CardTitle className="text-sm font-bold flex items-center justify-between gap-2">
           Market Movers
+          <DataSourceBadge source="simulated" />
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { RefreshCw } from "lucide-react";
+import { DataSourceBadge } from "@/components/shared/DataSourceBadge";
 import {
   PortfolioOverview,
   EquityCurveChart,
@@ -34,14 +35,17 @@ export function PortfolioView() {
             Aggregated exposure, stress monitors, and holding period analytics.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleRefresh}
-          className="flex items-center gap-1.5 text-[9px] font-bold text-on-surface hover:text-white transition-all px-2.5 py-1 rounded border border-outline/10 bg-surface-dim hover:bg-surface-bright"
-        >
-          <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
-          REFRESH
-        </button>
+        <div className="flex items-center gap-2">
+          <DataSourceBadge source="derived" />
+          <button
+            type="button"
+            onClick={handleRefresh}
+            className="flex items-center gap-1.5 text-[9px] font-bold text-on-surface hover:text-white transition-all px-2.5 py-1 rounded border border-outline/10 bg-surface-dim hover:bg-surface-bright"
+          >
+            <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
+            REFRESH
+          </button>
+        </div>
       </div>
 
       <div className="p-3 space-y-3 flex-1 overflow-y-auto">

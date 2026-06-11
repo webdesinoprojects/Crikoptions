@@ -34,7 +34,7 @@ export const DocsSection = () => {
       <div className="max-w-6xl mx-auto px-4 flex flex-col lg:flex-row items-center gap-16">
         
         <div className="w-full lg:w-1/2">
-           <div className="font-mono text-xs text-[#d4af37] mb-6 tracking-[0.2em]">[ DOCS / API_V2 ]</div>
+           <div className="font-mono text-xs text-[#3131f5] mb-6 tracking-[0.2em]">[ DOCS / API_V2 ]</div>
            <h2 className="text-4xl md:text-5xl font-display font-black text-white uppercase tracking-tighter mb-6 leading-[0.9]">
              Developer <br/>Integration
            </h2>
@@ -59,9 +59,9 @@ export const DocsSection = () => {
                 </div>
                 <div className="p-6 font-mono text-sm overflow-x-auto">
                     <pre className="text-gray-300 leading-relaxed">
-<code className="block code-line"><span className="text-[#d4af37]">import</span> {'{'} CrikOptions {'}'} <span className="text-[#d4af37]">from</span> <span className="text-green-400">'@crikoptions/sdk'</span>;</code>
+<code className="block code-line"><span className="text-[#3131f5]">import</span> {'{'} CrikOptions {'}'} <span className="text-[#3131f5]">from</span> <span className="text-green-400">'@crikoptions/sdk'</span>;</code>
 <code className="block code-line"></code>
-<code className="block code-line"><span className="text-blue-400">const</span> client = <span className="text-[#d4af37]">new</span> CrikOptions({'{'}</code>
+<code className="block code-line"><span className="text-blue-400">const</span> client = <span className="text-[#3131f5]">new</span> CrikOptions({'{'}</code>
 <code className="block code-line">  apiKey: process.env.<span className="text-white">CRIK_API_KEY</span>,</code>
 <code className="block code-line">  environment: <span className="text-green-400">'production'</span></code>
 <code className="block code-line">{'}'});</code>

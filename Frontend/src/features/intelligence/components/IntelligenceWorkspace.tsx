@@ -12,6 +12,7 @@ import { MomentumHub } from "./MomentumHub";
 import { IntelligenceFeed } from "./IntelligenceFeed";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DataSourceBadge } from "@/components/shared/DataSourceBadge";
 
 interface IntelligenceWorkspaceProps {
   matchId: string;
@@ -25,6 +26,9 @@ export function IntelligenceWorkspace({ matchId }: IntelligenceWorkspaceProps) {
         {/* Persistent Match Context Header */}
         <div className="shrink-0 p-4 pb-0">
           <MatchContextHeader matchId={matchId} />
+          <div className="mt-2 flex justify-end">
+            <DataSourceBadge source="simulated" />
+          </div>
         </div>
 
         {/* Tabbed Navigation Shell */}

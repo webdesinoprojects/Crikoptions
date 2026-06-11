@@ -57,13 +57,13 @@ export const HeroSection = () => {
           pixelSize={48}
           fadeDuration={800}
           delay={0}
-          pixelClassName="rounded-full bg-[#d4af37]/45 shadow-[0_0_12px_rgba(212,175,55,0.5)]"
+          pixelClassName="rounded-full bg-[#3131f5]/45 shadow-[0_0_12px_rgba(49,49,245,0.5)]"
         />
       </div>
       {/* Radial Gradient Wash */}
       <div aria-hidden className="absolute inset-0 pointer-events-none z-0">
         <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-[radial-gradient(ellipse_at_center,rgba(30,58,138,0.3)_0%,rgba(0,0,0,0)_70%)] opacity-80 mix-blend-screen" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.08)_0%,rgba(0,0,0,0)_70%)] opacity-60 mix-blend-screen" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-[radial-gradient(ellipse_at_center,rgba(49,49,245,0.08)_0%,rgba(0,0,0,0)_70%)] opacity-60 mix-blend-screen" />
       </div>
 
       {/* Grid Lines */}
@@ -89,10 +89,10 @@ export const HeroSection = () => {
         {/* CTAs */}
         <div ref={ctaRef} className="mt-16 flex flex-col sm:flex-row items-center gap-6">
           <Link href="/register" className="group relative inline-flex items-center justify-center rounded-[2rem] bg-white/5 p-1.5 ring-1 ring-white/10 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-white/10 active:scale-[0.98]">
-            <div className="relative flex items-center gap-4 rounded-[calc(2rem-0.375rem)] bg-[#d4af37] px-8 py-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)] transition-colors duration-500 group-hover:bg-[#ebd171]">
-              <span className="font-sans font-black uppercase tracking-widest text-[#000d1a] text-sm">Initialize Workspace</span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#000d1a]/10 transition-transform duration-500 ease-out group-hover:translate-x-1 group-hover:-translate-y-[1px] group-hover:scale-105">
-                <ArrowRight className="h-4 w-4 text-[#000d1a]" />
+            <div className="relative flex items-center gap-4 rounded-[calc(2rem-0.375rem)] bg-[#3131f5] px-8 py-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)] transition-colors duration-500 group-hover:bg-[#4d4dff]">
+              <span className="font-sans font-black uppercase tracking-widest text-white text-sm">Initialize Workspace</span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 transition-transform duration-500 ease-out group-hover:translate-x-1 group-hover:-translate-y-[1px] group-hover:scale-105">
+                <ArrowRight className="h-4 w-4 text-white" />
               </div>
             </div>
           </Link>

@@ -52,8 +52,8 @@ export const CtaFooter = () => {
         </h2>
 
         <Link href="/register" className="group relative inline-flex items-center justify-center rounded-[2rem] bg-white/5 p-2 ring-1 ring-white/10 transition-all duration-700 hover:bg-white/10 active:scale-[0.98]">
-            <div className="relative flex items-center justify-center rounded-[calc(2rem-0.5rem)] bg-[#d4af37] px-16 py-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_0_40px_rgba(212,175,55,0.2)] transition-colors duration-500 group-hover:bg-[#ebd171]">
-              <span className="font-sans font-black uppercase tracking-widest text-[#000d1a] text-xl">Deploy Terminal</span>
+            <div className="relative flex items-center justify-center rounded-[calc(2rem-0.5rem)] bg-[#3131f5] px-16 py-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_0_40px_rgba(49,49,245,0.2)] transition-colors duration-500 group-hover:bg-[#4d4dff]">
+              <span className="font-sans font-black uppercase tracking-widest text-white text-xl">Deploy Terminal</span>
             </div>
         </Link>
       </div>

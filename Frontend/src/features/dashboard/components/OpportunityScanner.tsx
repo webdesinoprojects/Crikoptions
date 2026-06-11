@@ -2,8 +2,8 @@
 
 import { useOpportunityScanner } from "@/features/dashboard/hooks";
 import { TerminalPanel } from "@/components/shared/TerminalComponents";
-import { Zap } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataSourceBadge } from "@/components/shared/DataSourceBadge";
 
 export function OpportunityScanner() {
   const { data: opportunities, isLoading } = useOpportunityScanner();
@@ -23,6 +23,7 @@ export function OpportunityScanner() {
     <TerminalPanel
       title="Opportunity Radar"
       subtitle="Real-time player pricing & Win-DNA setups"
+      headerActions={<DataSourceBadge source="simulated" />}
       className="h-[280px]"
     >
       <div className="flex-1 overflow-y-auto space-y-2.5 min-h-0 select-none">

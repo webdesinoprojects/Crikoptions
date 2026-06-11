@@ -23,7 +23,7 @@ const features = [
     title: "INSTITUTIONAL API",
     desc: "Connect your proprietary quantitative models directly to our matching engine via ultra-low latency FIX and REST APIs.",
     number: "03",
-    color: "from-[#d4af37]/20 to-[#020617]"
+    color: "from-[#3131f5]/20 to-[#020617]"
   }
 ]
 
@@ -122,7 +122,7 @@ export const FeatureCascade = () => {
       <div className="w-full max-w-5xl mx-auto px-4 relative flex flex-col lg:block h-auto lg:h-[70vh] justify-center mt-16 lg:mt-0 gap-10">
         <div className="relative lg:absolute top-0 left-0 w-full lg:w-1/3 z-10 pt-12 pb-8 lg:pb-0 text-center lg:text-left">
             <h2 className="text-4xl md:text-5xl font-display font-black text-white uppercase tracking-tighter drop-shadow-lg">
-              Mechanical <br className="hidden lg:block"/><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-white">Precision</span>
+              Mechanical <br className="hidden lg:block"/><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3131f5] to-white">Precision</span>
             </h2>
             <p className="mt-4 lg:mt-6 text-gray-400 font-sans text-lg">
                 Scroll to initialize system architecture protocols.

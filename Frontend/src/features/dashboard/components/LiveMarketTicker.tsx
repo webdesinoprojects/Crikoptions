@@ -2,6 +2,7 @@
 
 import { useLiveTicker } from "@/features/dashboard/hooks";
 import { TrendBadge } from "@/components/shared/Primitives";
+import { DataSourceBadge } from "@/components/shared/DataSourceBadge";
 
 export function LiveMarketTicker() {
   const { data: tickers, isLoading } = useLiveTicker();
@@ -10,6 +11,7 @@ export function LiveMarketTicker() {
 
   return (
     <div className="flex-1 max-w-xl mx-8 px-4 py-2 bg-surface-container rounded-lg flex items-center gap-4 overflow-hidden">
+      <DataSourceBadge source="simulated" />
       {tickers.map((ticker, index) => (
         <div key={ticker.id} className="flex items-center gap-4">
           <span className="flex items-center gap-2 whitespace-nowrap">
