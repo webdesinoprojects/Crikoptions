@@ -18,6 +18,11 @@ class TradingService {
     return adaptMarkets(response.data.data);
   }
 
+  async fetchMarketDetail(marketId: string): Promise<BackendMarket> {
+    const response = await apiClient.get<{ success: boolean; data: BackendMarket }>(`/v1/markets/${marketId}`);
+    return response.data.data;
+  }
+
   async fetchMarketDepth(marketId: string): Promise<MarketDepth> {
     const response = await apiClient.get<{ success: boolean; data: BackendMarket }>(`/v1/markets/${marketId}`);
     return adaptMarketDepth(response.data.data);
@@ -47,63 +52,54 @@ class TradingService {
     return this.fetchMarketDepth(marketId);
   }
 
-  // Mocked/generated real-time simulations (Go backend lacks trades/candles REST endpoints)
   async getMarketCandles(marketId: string, timeframe: string): Promise<Quote[]> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const candles: Quote[] = [];
-        let basePrice = 150;
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
-        
-        for (let i = 0; i < 60; i++) {
-          const time = new Date(now.getTime() - (60 - i) * 24 * 60 * 60 * 1000).getTime() / 1000;
-          const open = basePrice + (Math.random() - 0.5) * 5;
-          const close = open + (Math.random() - 0.5) * 5;
-          const high = Math.max(open, close) + Math.random() * 2;
-          const low = Math.min(open, close) - Math.random() * 2;
-          
-          candles.push({
-            marketId,
-            symbol: "MSDHONI",
-            timestamp: time,
-            open,
-            high,
-            low,
-            close,
-            volume: Math.floor(Math.random() * 10000)
-          });
-          
-          basePrice = close;
-        }
-        resolve(candles);
-      }, 500);
-    });
+    void timeframe;
+    const market = await this.fetchMarketDetail(marketId);
+    if (!market) return [];
+
+    const timestamp = Math.floor(new Date(market.updatedAt || market.createdAt || Date.now()).getTime() / 1000);
+    const volume = (market.quantityLadder ?? []).reduce(
+      (total, row) => total + (row.buyerQty ?? 0) + (row.sellerQty ?? 0),
+      0
+    );
+
+    return [
+      {
+        marketId: market._id,
+        symbol: symbolFromTitle(market.title),
+        timestamp,
+        open: market.open ?? 0,
+        high: market.high ?? 0,
+        low: market.low ?? 0,
+        close: market.ltp ?? 0,
+        volume,
+      },
+    ];
   }
 
   async getRecentTrades(marketId: string): Promise<Trade[]> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const trades: Trade[] = [];
-        let basePrice = 154.50;
-        const now = new Date();
-        
-        for (let i = 0; i < 20; i++) {
-          const price = basePrice + (Math.random() - 0.5) * 0.2;
-          trades.push({
-            id: `trd_${i}`,
-            marketId,
-            price,
-            quantity: Math.floor(Math.random() * 200) + 10,
-            timestamp: new Date(now.getTime() - i * 5000).toISOString(),
-            makerSide: Math.random() > 0.5 ? "BUY" : "SELL"
-          });
-        }
-        
-        resolve(trades);
-      }, 300);
-    });
+    const orders = await this.fetchOrders(undefined, "executed");
+    return orders
+      .filter((order) => order.marketId === marketId)
+      .map((order) => ({
+        id: order.id,
+        marketId: order.marketId,
+        price: order.price ?? 0,
+        quantity: order.filledQuantity || order.quantity || 0,
+        timestamp: order.createdAt,
+        makerSide: order.side,
+      }));
   }
 }
 
 export const tradingService = new TradingService();
+
+function symbolFromTitle(title: string): string {
+  const words = title
+    .split(/[\s/_-]+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (words.length === 0) return "0";
+  return words.map((word) => word[0]).join("").toUpperCase() || "0";
+}

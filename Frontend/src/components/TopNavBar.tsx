@@ -2,21 +2,22 @@
 
 import React from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
-import { 
-  Menu, 
-  User, 
-  LogOut, 
-  Bell, 
-  History, 
-  Settings, 
-  ChevronDown, 
-  Compass, 
-  LayoutDashboard, 
-  TrendingUp, 
-  Activity 
+import { usePathname, useRouter } from "next/navigation";
+import {
+  Activity,
+  Bell,
+  ChevronDown,
+  Compass,
+  History,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Settings,
+  TrendingUp,
+  User,
 } from "lucide-react";
 import { useAuthStore } from "@/features/auth/hooks/useAuth";
+import { useHomeMatches, useLiveTicker } from "@/features/dashboard/hooks";
 import { LiveMarketTicker } from "@/features/dashboard/components/LiveMarketTicker";
 
 import { Button } from "@/components/ui/button";
@@ -28,18 +29,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 export default function TopNavBar() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
+  const { data: tickers } = useLiveTicker();
+  const { data: matches } = useHomeMatches();
+
+  const primaryMarketHref = tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/dashboard";
+  const primaryInsightHref = matches?.[0]?.id ? `/insights/${matches[0].id}` : "/dashboard";
 
   const handleLogout = () => {
     logout();
@@ -47,22 +47,21 @@ export default function TopNavBar() {
   };
 
   const navItems = [
-    { name: "Dashboard", href: "/", icon: <LayoutDashboard className="w-4 h-4" /> },
-    { name: "Trading Terminal", href: "/trading/market-1", icon: <TrendingUp className="w-4 h-4" /> },
+    { name: "Dashboard", href: "/dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
+    { name: "Trading Terminal", href: primaryMarketHref, icon: <TrendingUp className="w-4 h-4" /> },
     { name: "Portfolio Hub", href: "/portfolio", icon: <Activity className="w-4 h-4" /> },
-    { name: "Intelligence HQ", href: "/insights/csk-vs-mi", icon: <Compass className="w-4 h-4" /> },
+    { name: "Intelligence HQ", href: primaryInsightHref, icon: <Compass className="w-4 h-4" /> },
   ];
 
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/";
+    if (href === "/dashboard") return pathname === "/dashboard";
     return pathname.startsWith(href.split("/").slice(0, 2).join("/"));
   };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 h-14 bg-background border-b border-border/10 select-none">
-      {/* Brand logo & desktop navigation */}
       <div className="flex items-center gap-8">
-        <Link href="/" className="font-headline-md text-base font-bold text-white uppercase tracking-wider flex items-center gap-2 hover:opacity-95 transition-opacity">
+        <Link href="/dashboard" className="font-headline-md text-base font-bold text-white uppercase tracking-wider flex items-center gap-2 hover:opacity-95 transition-opacity">
           <span className="w-5 h-5 rounded bg-primary flex items-center justify-center text-[10px] text-black font-extrabold tracking-normal">
             CO
           </span>
@@ -71,7 +70,7 @@ export default function TopNavBar() {
         <nav className="hidden lg:flex items-center gap-1">
           {navItems.map((item) => (
             <Link
-              key={item.href}
+              key={item.name}
               href={item.href}
               className={`px-3 py-1 rounded text-xs font-semibold tracking-wide transition-all ${
                 isActive(item.href)
@@ -85,14 +84,12 @@ export default function TopNavBar() {
         </nav>
       </div>
 
-      {/* Live Market Ticker center rail */}
       <div className="hidden md:flex items-center gap-4 flex-1 max-w-xl xl:max-w-2xl px-8">
         <div className="w-full">
           <LiveMarketTicker />
         </div>
       </div>
 
-      {/* Right control menu (desktop) */}
       <div className="flex items-center gap-4">
         <div className="hidden sm:flex items-center gap-3 border-r border-border/15 pr-4">
           <button className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all cursor-pointer">
@@ -106,7 +103,6 @@ export default function TopNavBar() {
           </Link>
         </div>
 
-        {/* User state dropdown / Auth CTA */}
         <div className="flex items-center">
           {isAuthenticated && user ? (
             <DropdownMenu>
@@ -115,13 +111,14 @@ export default function TopNavBar() {
                   <p className="text-[10px] text-foreground font-semibold leading-none mb-0.5 truncate max-w-[90px]">
                     {user.name}
                   </p>
-                  <p className="text-[8px] text-primary font-bold leading-none tracking-wider">PRO MEMBER</p>
+                  <p className="text-[8px] text-primary font-bold leading-none tracking-wider">{user.tier || "STANDARD"}</p>
                 </div>
                 <div className="w-8 h-8 rounded-full bg-[#d4af37]/20 flex items-center justify-center border border-[#d4af37]/30">
                   <span className="text-[#d4af37] text-xs font-bold font-mono">
                     {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                   </span>
                 </div>
+                <ChevronDown className="w-3 h-3 text-muted-foreground hidden sm:block" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 bg-surface border border-border/15 text-foreground">
                 <DropdownMenuLabel className="text-[9px] uppercase text-muted-foreground font-bold tracking-wider px-2 py-1.5">
@@ -137,10 +134,7 @@ export default function TopNavBar() {
                   Portfolio Hub
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={handleLogout}
-                  className="text-xs text-destructive focus:text-destructive cursor-pointer hover:bg-destructive/10 py-1.5 px-2.5 rounded"
-                >
+                <DropdownMenuItem onClick={handleLogout} className="text-xs text-destructive focus:text-destructive cursor-pointer hover:bg-destructive/10 py-1.5 px-2.5 rounded">
                   <LogOut className="w-3.5 h-3.5 mr-2" />
                   Sign Out
                 </DropdownMenuItem>
@@ -158,7 +152,6 @@ export default function TopNavBar() {
           )}
         </div>
 
-        {/* Mobile menu trigger sheet drawer */}
         <div className="block lg:hidden">
           <Sheet>
             <SheetTrigger asChild>
@@ -169,7 +162,7 @@ export default function TopNavBar() {
             <SheetContent className="overflow-y-auto bg-background border-l border-border/10 text-foreground w-72">
               <SheetHeader className="text-left">
                 <SheetTitle>
-                  <Link href="/" className="font-bold text-base text-white tracking-wider flex items-center gap-2">
+                  <Link href="/dashboard" className="font-bold text-base text-white tracking-wider flex items-center gap-2">
                     <span className="w-5 h-5 rounded bg-primary flex items-center justify-center text-[10px] text-black font-extrabold">
                       CO
                     </span>
@@ -178,12 +171,11 @@ export default function TopNavBar() {
                 </SheetTitle>
               </SheetHeader>
 
-              {/* Navigation Items (mobile) */}
               <div className="my-8 flex flex-col gap-5">
                 <nav className="flex flex-col gap-2">
                   {navItems.map((item) => (
                     <Link
-                      key={item.href}
+                      key={item.name}
                       href={item.href}
                       className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                         isActive(item.href)
@@ -196,49 +188,6 @@ export default function TopNavBar() {
                     </Link>
                   ))}
                 </nav>
-
-                <div className="border-t border-border/10 pt-5 mt-2 flex flex-col gap-3">
-                  {isAuthenticated && user ? (
-                    <>
-                      <div className="flex items-center gap-3 p-2 bg-muted/20 rounded-lg border border-border/5">
-                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
-                          <span className="text-primary text-sm font-bold">
-                            {user.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-foreground">{user.name}</p>
-                          <p className="text-[10px] text-muted-foreground">{user.email}</p>
-                        </div>
-                      </div>
-                      <Button asChild variant="outline" className="w-full justify-start rounded-full text-xs h-9">
-                        <Link href="/profile">
-                          <Settings className="w-3.5 h-3.5 mr-2" />
-                          Profile Settings
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline" className="w-full justify-start rounded-full text-xs h-9">
-                        <Link href="/portfolio">
-                          <Activity className="w-3.5 h-3.5 mr-2" />
-                          Portfolio Hub
-                        </Link>
-                      </Button>
-                      <Button onClick={handleLogout} variant="destructive" className="w-full justify-start rounded-full text-xs h-9">
-                        <LogOut className="w-3.5 h-3.5 mr-2" />
-                        Sign Out
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button asChild variant="outline" className="w-full rounded-full text-xs h-9 border-primary/25">
-                        <Link href="/login">Log in</Link>
-                      </Button>
-                      <Button asChild className="w-full rounded-full text-xs h-9 bg-primary hover:bg-primary/95 text-black">
-                        <Link href="/register">Sign up</Link>
-                      </Button>
-                    </>
-                  )}
-                </div>
               </div>
             </SheetContent>
           </Sheet>

@@ -1,130 +1,110 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import {
-  generateMatchIntelligence,
-  generateDNAMatches,
-  generateAISignals,
-  generatePatterns,
-  generateMomentum,
-  generateEventImpacts,
-  generateOutcomeDistribution,
-  generateScenarioProjection,
+  fetchAISignals,
+  fetchDNAMatches,
+  fetchEventImpacts,
+  fetchMatchIntelligence,
+  fetchMomentum,
+  fetchOutcomeDistribution,
+  fetchPatterns,
+  fetchScenarioProjection,
   getScenarios,
 } from "../services/intelligence.service";
 
-// ── Master hook — full match intelligence context ─────────────────────────────
 export function useIntelligence(matchId: string) {
   return useQuery({
     queryKey: ["intelligence", matchId],
-    queryFn: () => generateMatchIntelligence(matchId),
+    queryFn: () => fetchMatchIntelligence(matchId),
     enabled: !!matchId,
     staleTime: 30_000,
     refetchInterval: 30_000,
   });
 }
 
-// ── DNA Engine — similar matches + heatmap data ───────────────────────────────
 export function useDNAEngine(matchId: string) {
   const { data, ...rest } = useQuery({
     queryKey: ["dna", matchId],
-    queryFn: () => generateDNAMatches(matchId),
+    queryFn: () => fetchDNAMatches(matchId),
     enabled: !!matchId,
     staleTime: 30_000,
     refetchInterval: 30_000,
   });
 
-  /** Build a 12×8 heatmap matrix from similarity data */
   const heatmapMatrix = useMemo(() => {
-    if (!data) return [];
-    const matrix: number[][] = [];
-    for (let row = 0; row < 8; row++) {
-      const cells: number[] = [];
-      for (let col = 0; col < 12; col++) {
-        const matchIdx = (row + col) % data.length;
-        const base = data[matchIdx].similarity / 100;
-        const noise = (Math.sin(row * 7 + col * 13 + matchIdx) + 1) / 2;
-        cells.push(Math.round(base * noise * 100) / 100);
-      }
-      matrix.push(cells);
-    }
-    return matrix;
+    if (!data || data.length === 0) return [];
+    return data.map((match) => [match.similarity / 100]);
   }, [data]);
 
   return { data: data ?? [], heatmapMatrix, ...rest };
 }
 
-// ── AI Signals ────────────────────────────────────────────────────────────────
 export function useAISignals(matchId: string) {
   return useQuery({
     queryKey: ["ai-signals", matchId],
-    queryFn: () => generateAISignals(matchId, 6),
+    queryFn: () => fetchAISignals(matchId, 0),
     enabled: !!matchId,
     staleTime: 15_000,
     refetchInterval: 15_000,
   });
 }
 
-// ── Momentum ──────────────────────────────────────────────────────────────────
 export function useMomentum(matchId: string) {
   return useQuery({
     queryKey: ["momentum", matchId],
-    queryFn: () => generateMomentum(matchId),
+    queryFn: () => fetchMomentum(matchId),
     enabled: !!matchId,
     staleTime: 10_000,
     refetchInterval: 10_000,
   });
 }
 
-// ── Patterns ──────────────────────────────────────────────────────────────────
 export function usePatterns(matchId: string) {
   return useQuery({
     queryKey: ["patterns", matchId],
-    queryFn: () => generatePatterns(matchId),
+    queryFn: () => fetchPatterns(matchId),
     enabled: !!matchId,
     staleTime: 60_000,
     refetchInterval: 60_000,
   });
 }
 
-// ── Event Impacts ─────────────────────────────────────────────────────────────
 export function useEventImpacts(matchId: string) {
   return useQuery({
     queryKey: ["event-impacts", matchId],
-    queryFn: () => generateEventImpacts(matchId),
+    queryFn: () => fetchEventImpacts(matchId),
     enabled: !!matchId,
     staleTime: 30_000,
     refetchInterval: 30_000,
   });
 }
 
-// ── Outcome Distribution ──────────────────────────────────────────────────────
 export function useOutcomeDistribution(matchId: string) {
   return useQuery({
     queryKey: ["outcomes", matchId],
-    queryFn: () => generateOutcomeDistribution(matchId),
+    queryFn: () => fetchOutcomeDistribution(matchId),
     enabled: !!matchId,
     staleTime: 30_000,
     refetchInterval: 30_000,
   });
 }
 
-// ── Scenario Lab ──────────────────────────────────────────────────────────────
 export function useScenarioLab(matchId: string) {
   const scenarios = getScenarios();
-  const [activeScenarioId, setActiveScenarioId] = useState(scenarios[0]?.id ?? "s1");
+  const [activeScenarioId, setActiveScenarioId] = useState(scenarios[0]?.id ?? "");
 
   const projection = useQuery({
     queryKey: ["scenario", matchId, activeScenarioId],
-    queryFn: () => generateScenarioProjection(matchId, activeScenarioId),
+    queryFn: () => fetchScenarioProjection(matchId, activeScenarioId),
     enabled: !!matchId && !!activeScenarioId,
-    staleTime: Infinity, // manual refresh only via scenario change
+    staleTime: Infinity,
   });
 
   return {
     scenarios,
     activeScenarioId,
     setActiveScenarioId,
-    projection: projection.data,
+    projection: projection.data ?? null,
     isLoading: projection.isLoading,
   };
 }

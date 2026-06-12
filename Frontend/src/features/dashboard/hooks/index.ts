@@ -12,7 +12,7 @@ export const useLiveTicker = () => {
   return useQuery({
     queryKey: ["dashboard", "ticker"],
     queryFn: dashboardService.getLiveTicker,
-    refetchInterval: 5000, // Refetch every 5 seconds for simulated "live" feel if WS isn't active
+    refetchInterval: 5000,
   });
 };
 
@@ -20,7 +20,7 @@ export const useHomeMatches = () => {
   return useQuery({
     queryKey: ["homeMatches"],
     queryFn: dashboardService.fetchHomeMatches,
-    refetchInterval: 5000, // Poll every 5s for live score updates
+    refetchInterval: 5000,
   });
 };
 

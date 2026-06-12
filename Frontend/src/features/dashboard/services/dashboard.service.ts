@@ -1,76 +1,88 @@
 import { apiClient } from "@/lib/api/client";
-import { adaptMatches, adaptMatch, BackendMatch } from "@/lib/adapters/match.adapter";
+import { adaptMatch, adaptMatches, BackendMatch } from "@/lib/adapters/match.adapter";
+import { BackendMarket } from "@/lib/adapters/market.adapter";
+import { BackendOrder } from "@/lib/adapters/order.adapter";
 import {
-  PortfolioSummary,
-  TickerItem,
-  Match,
   MarketMover,
+  Match,
   Opportunity,
+  PortfolioSummary,
   Signal,
+  TickerItem,
 } from "@/types";
 
-/**
- * Service layer for the Dashboard. Handles mock and live integrations.
- */
+interface BackendPosition {
+  _id: string;
+  matchId: string;
+  marketId: string;
+  lots: number;
+  buyPrice: number;
+  sellPrice: number;
+  ltp: number;
+  pnl: number;
+  updatedAt: string;
+}
+
 export const dashboardService = {
   fetchHomeMatches: async (): Promise<Match[]> => {
     const response = await apiClient.get<{ success: boolean; data: BackendMatch[] }>("/v1/matches/home");
-    return adaptMatches(response.data.data);
+    return adaptMatches(response.data.data ?? []);
   },
 
   fetchMatchDetails: async (matchId: string): Promise<Match> => {
     const response = await apiClient.get<{ success: boolean; data: BackendMatch }>(`/v1/matches/${matchId}`);
     return adaptMatch(response.data.data);
   },
+
   getFinancialOverview: async (): Promise<PortfolioSummary> => {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const [openPositions, closedPositions, orders] = await Promise.all([
+      fetchOpenPositions(),
+      fetchClosedPositions(),
+      fetchOrders(),
+    ]);
+
+    const openPnL = openPositions.reduce((sum, position) => sum + numberOrZero(position.pnl), 0);
+    const closedPnL = closedPositions.reduce((sum, position) => sum + numberOrZero(position.pnl), 0);
+    const totalPnL = openPnL + closedPnL;
+    const usedByPositions = openPositions.reduce(
+      (sum, position) => sum + Math.abs(numberOrZero(position.lots)) * numberOrZero(position.ltp),
+      0
+    );
+    const usedByOpenOrders = orders
+      .filter((order) => order.status?.toLowerCase() === "open")
+      .reduce((sum, order) => sum + numberOrZero(order.price) * numberOrZero(order.quantity), 0);
+    const dailyPnL = openPositions
+      .filter((position) => isToday(position.updatedAt))
+      .reduce((sum, position) => sum + numberOrZero(position.pnl), 0);
+
     return {
-      totalEquity: 245820.5,
-      dailyPnL: 12450.75,
-      dailyPnLPercentage: 5.2,
-      marginAvailable: 180000.0,
-      marginUsed: 65820.5,
-      openPositionsCount: 8,
+      totalEquity: round2(totalPnL),
+      dailyPnL: round2(dailyPnL),
+      dailyPnLPercentage: 0,
+      marginAvailable: 0,
+      marginUsed: round2(usedByPositions + usedByOpenOrders),
+      openPositionsCount: openPositions.length,
     };
   },
 
   getLiveTicker: async (): Promise<TickerItem[]> => {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return [
-      {
-        id: "1",
-        symbol: "MSDHONI",
-        lastTradedPrice: 154.5,
-        priceChange: 6.2,
-        percentageChange: 4.2,
-        trend: "UP",
-      },
-      {
-        id: "2",
-        symbol: "VKOHLI",
-        lastTradedPrice: 182.1,
-        priceChange: -3.3,
-        percentageChange: -1.8,
-        trend: "DOWN",
-      },
-      {
-        id: "3",
-        symbol: "CSK_WIN",
-        lastTradedPrice: 65.0,
-        priceChange: 2.1,
-        percentageChange: 3.3,
-        trend: "UP",
-      },
-      {
-        id: "4",
-        symbol: "RSHARMA",
-        lastTradedPrice: 142.8,
-        priceChange: -1.2,
-        percentageChange: -0.8,
-        trend: "DOWN",
-      },
-    ];
+    const markets = await fetchAllMarkets();
+
+    return markets.map((market) => {
+      const ltp = numberOrZero(market.ltp);
+      const open = numberOrZero(market.open);
+      const priceChange = round2(ltp - open);
+      const percentageChange = open > 0 ? round2((priceChange / open) * 100) : 0;
+
+      return {
+        id: market._id,
+        symbol: symbolFromTitle(market.title),
+        lastTradedPrice: ltp,
+        priceChange,
+        percentageChange,
+        trend: priceChange > 0 ? "UP" : priceChange < 0 ? "DOWN" : "NEUTRAL",
+      };
+    });
   },
 
   getLiveMatches: async (): Promise<Match[]> => {
@@ -78,93 +90,94 @@ export const dashboardService = {
   },
 
   getMarketMovers: async (): Promise<MarketMover[]> => {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    return [
-      {
-        id: "1",
-        symbol: "SAYUB",
-        name: "Saim Ayub",
-        price: 88.4,
-        changePercent: 12.5,
-        type: "GAINER",
-        sentiment: "BULLISH",
-        sparkline: [60, 62, 65, 70, 75, 82, 88.4],
-      },
-      {
-        id: "2",
-        symbol: "JBUMRAH",
-        name: "Jasprit Bumrah",
-        price: 210.5,
-        changePercent: 8.2,
-        type: "GAINER",
-        sentiment: "BULLISH",
-        sparkline: [190, 195, 198, 202, 205, 208, 210.5],
-      },
-      {
-        id: "3",
-        symbol: "MAXWELL",
-        name: "Glenn Maxwell",
-        price: 112.0,
-        changePercent: -15.4,
-        type: "LOSER",
-        sentiment: "BEARISH",
-        sparkline: [135, 130, 128, 120, 118, 115, 112],
-      },
-    ];
+    const markets = await fetchAllMarkets();
+
+    return markets
+      .map((market) => {
+        const ltp = numberOrZero(market.ltp);
+        const open = numberOrZero(market.open);
+        const changePercent = open > 0 ? round2(((ltp - open) / open) * 100) : 0;
+
+        return {
+          id: market._id,
+          symbol: symbolFromTitle(market.title),
+          name: market.title || "0",
+          price: ltp,
+          changePercent,
+          type: changePercent > 0 ? "GAINER" : changePercent < 0 ? "LOSER" : "TRENDING",
+          sentiment: changePercent > 0 ? "BULLISH" : changePercent < 0 ? "BEARISH" : "NEUTRAL",
+          sparkline: [
+            numberOrZero(market.open),
+            numberOrZero(market.low),
+            numberOrZero(market.ltp),
+            numberOrZero(market.high),
+          ],
+        } satisfies MarketMover;
+      })
+      .sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent));
   },
 
   getOpportunities: async (): Promise<Opportunity[]> => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    return [
-      {
-        id: "o1",
-        title: "Suryakumar Yadav Breakout",
-        description: "Price approaching resistance at 195. High volume detected.",
-        type: "BREAKOUT",
-        confidence: 85,
-        currentPrice: 192.5,
-        targetPrice: 210.0,
-      },
-      {
-        id: "o2",
-        title: "CSK Win DNA Mismatch",
-        description: "Historical win probability in current state is 75%, market pricing at 65%.",
-        type: "DNA_MISMATCH",
-        confidence: 92,
-        currentPrice: 65.0,
-        targetPrice: 75.0,
-      },
-    ];
+    return [];
   },
 
   getIntelligenceFeed: async (): Promise<Signal[]> => {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    return [
-      {
-        id: "s1",
-        title: "AI Signal: CSK Bullish Momentum",
-        message: "Bullish momentum on CSK player stocks following Dhoni's boundary surge. 68% Buy interest detected.",
-        type: "AI_SIGNAL",
-        impact: "HIGH",
-        recommendation: "BUY",
-        timestamp: new Date().toISOString(),
-      },
-      {
-        id: "s2",
-        title: "Catalyst: Death Overs Start",
-        message: "CSK batting volatility expected to spike. Predicted LTP range: ₹162-175.",
-        type: "CATALYST",
-        impact: "HIGH",
-        timestamp: new Date(Date.now() - 300000).toISOString(),
-      },
-      {
-        id: "s3",
-        title: "Alert: Volatility Spike",
-        message: "Bumrah economy volatility up 12% in the last over.",
-        type: "ALERT",
-        impact: "MEDIUM",
-        timestamp: new Date(Date.now() - 600000).toISOString(),
-      },
-    ];
+    return [];
   },
 };
+
+async function fetchAllMarkets(): Promise<BackendMarket[]> {
+  const response = await apiClient.get<{ success: boolean; data: BackendMatch[] }>("/v1/matches/home");
+  const matches = response.data.data ?? [];
+  const results = await Promise.allSettled(
+    matches.map((match) =>
+      apiClient.get<{ success: boolean; data: BackendMarket[] }>(`/v1/matches/${match._id}/markets`)
+    )
+  );
+
+  return results.flatMap((result) => (result.status === "fulfilled" ? result.value.data.data ?? [] : []));
+}
+
+async function fetchOpenPositions(): Promise<BackendPosition[]> {
+  const response = await apiClient.get<{ success: boolean; data: BackendPosition[] }>("/v1/positions/open");
+  return response.data.data ?? [];
+}
+
+async function fetchClosedPositions(): Promise<BackendPosition[]> {
+  const response = await apiClient.get<{ success: boolean; data: BackendPosition[] }>("/v1/positions/closed");
+  return response.data.data ?? [];
+}
+
+async function fetchOrders(): Promise<BackendOrder[]> {
+  const response = await apiClient.get<{ success: boolean; data: BackendOrder[] }>("/v1/orders");
+  return response.data.data ?? [];
+}
+
+function symbolFromTitle(title: string): string {
+  const words = (title || "0")
+    .split(/[\s/_-]+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (words.length === 0) return "0";
+  return words.map((word) => word[0]).join("").toUpperCase() || "0";
+}
+
+function numberOrZero(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function round2(value: number): number {
+  return Math.round(numberOrZero(value) * 100) / 100;
+}
+
+function isToday(value: string): boolean {
+  if (!value) return false;
+  const date = new Date(value);
+  const now = new Date();
+  return (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
+  );
+}

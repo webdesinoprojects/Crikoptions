@@ -70,7 +70,7 @@ export const CtaFooter = () => {
 
           <div className="flex flex-col gap-4">
             <span className="text-white font-bold mb-2">PLATFORM</span>
-            <Link href="/trading/market-1" className="text-gray-500 hover:text-white transition-colors">Markets</Link>
+            <Link href="/dashboard" className="text-gray-500 hover:text-white transition-colors">Markets</Link>
             <Link href="/insights/1" className="text-gray-500 hover:text-white transition-colors">Intelligence</Link>
             <Link href="/portfolio" className="text-gray-500 hover:text-white transition-colors">Portfolio</Link>
           </div>

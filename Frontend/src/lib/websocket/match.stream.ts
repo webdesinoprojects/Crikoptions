@@ -29,31 +29,17 @@ export const matchStream = {
     matchId: string,
     onScoreUpdate: (event: MatchScoreUpdateEvent) => void
   ): (() => void) => {
-    const socket = socketManager.connect();
+    socketManager.connect();
     const eventName = `match:score:${matchId}`;
-
-    socket.emit("subscribe", { channel: eventName });
-    socket.on(eventName, onScoreUpdate);
-
-    return () => {
-      socket.off(eventName, onScoreUpdate);
-      socket.emit("unsubscribe", { channel: eventName });
-    };
+    return socketManager.subscribe(eventName, onScoreUpdate);
   },
 
   subscribeMatchCommentary: (
     matchId: string,
     onCommentary: (event: MatchCommentaryEvent) => void
   ): (() => void) => {
-    const socket = socketManager.connect();
+    socketManager.connect();
     const eventName = `match:commentary:${matchId}`;
-
-    socket.emit("subscribe", { channel: eventName });
-    socket.on(eventName, onCommentary);
-
-    return () => {
-      socket.off(eventName, onCommentary);
-      socket.emit("unsubscribe", { channel: eventName });
-    };
+    return socketManager.subscribe(eventName, onCommentary);
   },
 };

@@ -30,6 +30,7 @@ export function adaptOrder(backend: BackendOrder): FrontendOrder {
 
   return {
     id: backend._id,
+    matchId: backend.matchId,
     marketId: backend.marketId,
     side,
     type: "LIMIT", // Default to LIMIT since Go backend supports pricing limit orders

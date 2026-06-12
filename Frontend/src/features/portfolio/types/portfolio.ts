@@ -1,7 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Portfolio Domain Model
 // Source of truth for all Portfolio Hub components.
-// Components MUST consume these derived types; never compute PnL in UI code.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface PortfolioPosition {
@@ -12,7 +11,7 @@ export interface PortfolioPosition {
   side: "BUY" | "SELL";
   quantity: number;
   averageEntryPrice: number;
-  /** Live price — substituted from market data or order price fallback */
+  /** Live price from backend market data */
   currentPrice: number;
   unrealizedPnL: number;
   unrealizedPnLPct: number;
@@ -62,7 +61,7 @@ export interface RiskMetrics {
 export interface PortfolioSummary {
   /** Total capital including unrealized P&L */
   totalEquity: number;
-  /** Starting equity or cash deposited (simulated) */
+  /** Starting equity or cash deposited when backend provides it */
   baseCapital: number;
   /** Sum of unrealized P&L across open positions */
   totalUnrealizedPnL: number;
@@ -80,7 +79,7 @@ export interface PortfolioSummary {
   avgWin: number;
   avgLoss: number;
   profitFactor: number;
-  /** Available cash (simulated: baseCapital - sum of open notional) */
+  /** Available cash when backend provides it */
   availableMargin: number;
   usedMargin: number;
   positions: PortfolioPosition[];

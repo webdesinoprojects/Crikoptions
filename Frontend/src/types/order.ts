@@ -1,5 +1,6 @@
 export interface Order {
   id: string;
+  matchId?: string;
   marketId: string;
   side: "BUY" | "SELL";
   type: "MARKET" | "LIMIT" | "STOP";

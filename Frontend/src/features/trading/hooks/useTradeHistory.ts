@@ -5,7 +5,8 @@ export const useTradeHistory = (marketId: string) => {
   return useQuery({
     queryKey: ["tradeHistory", marketId],
     queryFn: () => tradingService.getRecentTrades(marketId),
+    enabled: !!marketId,
     staleTime: 5000,
-    refetchInterval: 2000, // Simulate realtime push by aggressive polling
+    refetchInterval: 5000,
   });
 };

@@ -19,7 +19,7 @@ export const TradeHistory = React.memo(({ marketId }: TradeHistoryProps) => {
     <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col h-full">
       <div className="bg-surface px-3 py-2 border-b border-outline-variant flex justify-between items-center">
         <span className="font-label-sm text-label-sm font-bold">Trade History</span>
-        <DataSourceBadge source="simulated" />
+        <DataSourceBadge source="api" />
       </div>
       
       <div className="flex-1 overflow-y-auto p-2 scrollbar-hide">

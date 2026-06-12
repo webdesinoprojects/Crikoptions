@@ -43,8 +43,10 @@ export function MatchDNAEngine({ matchId }: MatchDNAEngineProps) {
     return {
       tooltip: {
         trigger: "item" as const,
-        formatter: (p: any) =>
-          `Over ${p.data[0] + 1}, Match ${p.data[1] + 1}<br/>Similarity: <b>${p.data[2]}%</b>`,
+        formatter: (p: unknown) => {
+          const data = getHeatmapData(p);
+          return `Over ${data[0] + 1}, Match ${data[1] + 1}<br/>Similarity: <b>${data[2]}%</b>`;
+        },
       },
       grid: { top: "5%", left: "2%", right: "2%", bottom: "2%", containLabel: false },
       xAxis: {
@@ -84,23 +86,27 @@ export function MatchDNAEngine({ matchId }: MatchDNAEngineProps) {
   return (
     <TerminalPanel
       title="[ MATCH DNA ENGINE ]"
-      subtitle="Correlation matrix mapping active play state to 10k+ historical games"
+      subtitle="Backend historical similarity data"
       className="h-[320px] rounded-none font-mono relative overflow-hidden group"
     >
       <div className="flex-1 grid grid-cols-12 gap-4 min-h-0 select-none pr-8">
         {/* Heatmap */}
         <div className="col-span-8 bg-[#020617]/40 rounded-none p-2 border border-white/10 relative flex flex-col min-h-0 overflow-hidden">
           <span className="absolute top-2 left-2 z-10 text-[8px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 border border-primary/45 rounded-none">
-            [ SIMILARITY GRID ]
+            [ BACKEND GRID ]
           </span>
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none"></div>
           {isLoading ? (
             <div className="flex-1 flex items-center justify-center animate-pulse">
               <Skeleton className="h-full w-full bg-white/5 rounded-none" />
             </div>
-          ) : (
+          ) : heatmapData.length > 0 ? (
             <div className="flex-1 min-h-0 mt-4 relative group-hover:scale-[1.01] transition-transform duration-700 ease-out origin-center">
               <EChartsWrapper option={heatmapOption} />
+            </div>
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-xs text-on-surface-variant">
+              No backend DNA grid data
             </div>
           )}
         </div>
@@ -114,7 +120,7 @@ export function MatchDNAEngine({ matchId }: MatchDNAEngineProps) {
             Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-16 w-full bg-white/5 animate-pulse rounded-none" />
             ))
-          ) : (
+          ) : matches.length > 0 ? (
             <motion.div 
               variants={containerVariants}
               initial="hidden"
@@ -144,17 +150,21 @@ export function MatchDNAEngine({ matchId }: MatchDNAEngineProps) {
                     {m.teamA} v {m.teamB}
                   </div>
                   <div className="text-[10px] text-on-surface-variant truncate font-medium">
-                    {m.tournament} // {m.venue}
+                    {m.tournament} - {m.venue}
                   </div>
                   <div
                     className="text-[10px] font-bold mt-1 tracking-wider"
                     style={{ color: m.outcome === "CHASED" ? "#4AF626" : "#FFB300" }}
                   >
-                    {m.outcome === "CHASED" ? "CHASED" : "DEFENDED"} // {m.finalScore}
+                    {m.outcome === "CHASED" ? "CHASED" : "DEFENDED"} - {m.finalScore}
                   </div>
                 </motion.div>
               ))}
             </motion.div>
+          ) : (
+            <div className="flex flex-1 items-center justify-center text-xs text-on-surface-variant">
+              No backend fingerprints
+            </div>
           )}
         </div>
       </div>
@@ -163,3 +173,16 @@ export function MatchDNAEngine({ matchId }: MatchDNAEngineProps) {
   );
 }
 
+function getHeatmapData(params: unknown): [number, number, number] {
+  if (
+    typeof params === "object" &&
+    params !== null &&
+    "data" in params &&
+    Array.isArray(params.data) &&
+    params.data.length >= 3
+  ) {
+    const [x, y, value] = params.data;
+    return [Number(x) || 0, Number(y) || 0, Number(value) || 0];
+  }
+  return [0, 0, 0];
+}

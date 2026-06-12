@@ -22,16 +22,15 @@ export function EquityCurveChart() {
     const equities = curve.map((p) => p.equity);
     const drawdowns = curve.map((p) => -p.drawdown); // Negate for downward representation
 
-    const baseCapital = equities[0] ?? 100000;
+    const baseCapital = equities[0] ?? 0;
     const maxEquity = Math.max(...equities, baseCapital + 1);
     const minEquity = Math.min(...equities, baseCapital - 1);
 
     return {
       tooltip: {
         trigger: "axis" as const,
-        formatter: (params: any) => {
-          const eq = params[0];
-          const dd = params[1];
+        formatter: (params: unknown) => {
+          const [eq, dd] = getAxisTooltipParams(params);
           return `
             <div style="padding:2px 4px">
               <div style="color:#94a3b8;font-size:9px;margin-bottom:2px">${eq.axisValue}</div>
@@ -140,4 +139,20 @@ export function EquityCurveChart() {
       </div>
     </TerminalPanel>
   );
+}
+
+function getAxisTooltipParams(params: unknown): { axisValue: string; data: number }[] {
+  if (!Array.isArray(params)) {
+    return [{ axisValue: "0", data: 0 }];
+  }
+
+  return params.map((param) => {
+    if (typeof param !== "object" || param === null) {
+      return { axisValue: "0", data: 0 };
+    }
+
+    const axisValue = "axisValue" in param ? String(param.axisValue ?? "0") : "0";
+    const data = "data" in param ? Number(param.data) || 0 : 0;
+    return { axisValue, data };
+  });
 }

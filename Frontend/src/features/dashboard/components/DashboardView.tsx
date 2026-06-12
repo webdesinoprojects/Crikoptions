@@ -15,15 +15,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardView() {
   const { data: overview, isLoading } = useDashboardOverview();
+  const marginBase = (overview?.marginUsed ?? 0) + (overview?.marginAvailable ?? 0);
+  const marginUsagePct = marginBase > 0 ? ((overview?.marginUsed ?? 0) / marginBase) * 100 : 0;
+  const riskRating = marginUsagePct > 70 ? "HIGH" : marginUsagePct > 0 ? "ACTIVE" : "0";
 
   return (
     <div className="flex-1 flex overflow-hidden h-full">
-      {/* Center workspace (Fluid width) */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {/* Row 1: KPI strip */}
         {isLoading || !overview ? (
           <div className="grid grid-cols-5 gap-3">
-            {[...Array(5)].map((_, i) => (
+            {Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} className="h-[84px] rounded bg-white/5" />
             ))}
           </div>
@@ -31,34 +32,29 @@ export default function DashboardView() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <TerminalKPI
               label="Portfolio Value"
-              value={`₹${overview.totalEquity.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
-              subText="Base ₹1,00,000"
+              value={`Rs ${overview.totalEquity.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+              subText="Backend-derived mark value"
             />
             <TerminalKPI
               label="Daily P&L"
-              value={`₹${overview.dailyPnL.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+              value={`Rs ${overview.dailyPnL.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
               changePercent={overview.dailyPnLPercentage}
               trend={overview.dailyPnLPercentage >= 0 ? "UP" : "DOWN"}
             />
             <TerminalKPI
               label="Margin Usage"
-              value={`₹${overview.marginUsed.toLocaleString()}`}
-              progress={(overview.marginUsed / overview.totalEquity) * 100}
+              value={`Rs ${overview.marginUsed.toLocaleString()}`}
+              progress={marginUsagePct}
             />
-            <TerminalKPI
-              label="Active Signals"
-              value="12 Signals"
-              subText="4 Live engines running"
-            />
+            <TerminalKPI label="Active Signals" value="0" subText="No backend signal feed" />
             <TerminalKPI
               label="Risk Rating"
-              value="MODERATE"
-              subText="Stress score: 42/100"
+              value={riskRating}
+              subText={`Stress score: ${Math.round(marginUsagePct)}/100`}
             />
           </div>
         )}
 
-        {/* Row 2: Match DNA Chart + Order Book */}
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-4">
           <div className="lg:col-span-7">
             <MatchDNAMomentumChart />
@@ -68,7 +64,6 @@ export default function DashboardView() {
           </div>
         </div>
 
-        {/* Row 3: Treemap + Heatmap + Ticket */}
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-4">
           <div className="lg:col-span-4">
             <ExposureTreemap />
@@ -81,14 +76,12 @@ export default function DashboardView() {
           </div>
         </div>
 
-        {/* Row 4: Watchlist + Opportunity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <DashboardWatchlist />
           <OpportunityScanner />
         </div>
       </div>
 
-      {/* Right Intelligence Rail */}
       <DashboardRightRail />
     </div>
   );

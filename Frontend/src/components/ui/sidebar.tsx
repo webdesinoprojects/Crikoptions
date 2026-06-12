@@ -5,15 +5,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion, Transition } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import {
-  ChevronsUpDown,
   LayoutDashboard,
-  LogOut,
-  Settings,
   UserCircle,
   TrendingUp,
   Wallet,
   Activity,
-  PieChart,
   BrainCircuit,
   Dna,
   Newspaper,
@@ -22,14 +18,8 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
+import { useHomeMatches, useLiveTicker } from "@/features/dashboard/hooks";
 
 const sidebarVariants = {
   open: {
@@ -78,7 +68,10 @@ const staggerVariants = {
 export function SessionNavBar() {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const pathname = usePathname();
-  const FEATURED_MATCH_ID = "csk-vs-mi";
+  const { data: tickers } = useLiveTicker();
+  const { data: matches } = useHomeMatches();
+  const primaryMarketHref = tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/dashboard";
+  const primaryInsightHref = matches?.[0]?.id ? `/insights/${matches[0].id}` : "/dashboard";
 
   return (
     <motion.div
@@ -134,7 +127,7 @@ export function SessionNavBar() {
                     </Link>
 
                     <Link
-                      href="/trading/market-1"
+                      href={primaryMarketHref}
                       className={cn(
                         "flex h-9 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
                         pathname?.includes("/trading") && "bg-primary/15 text-primary font-bold hover:bg-primary/20 hover:text-primary",
@@ -180,7 +173,7 @@ export function SessionNavBar() {
                     )}
 
                     <Link
-                      href={`/insights/${FEATURED_MATCH_ID}`}
+                      href={primaryInsightHref}
                       className={cn(
                         "flex h-9 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
                         pathname?.includes("/insights") && "bg-primary/15 text-primary font-bold hover:bg-primary/20 hover:text-primary",
@@ -200,7 +193,7 @@ export function SessionNavBar() {
                     </Link>
 
                     <Link
-                      href={`/insights/${FEATURED_MATCH_ID}`}
+                      href={primaryInsightHref}
                       className={cn(
                         "flex h-9 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
                       )}
@@ -240,7 +233,7 @@ export function SessionNavBar() {
                 
                 <div className="mt-2">
                   <Link
-                    href="/trading/market-1"
+                    href={primaryMarketHref}
                     className="w-full bg-primary text-on-primary font-bold h-9 rounded flex items-center justify-center gap-1.5 hover:brightness-110 active:scale-[0.98] transition-all text-[11px] uppercase tracking-wider overflow-hidden"
                   >
                     <Rocket className="h-4 w-4 shrink-0" />
