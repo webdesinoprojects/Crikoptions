@@ -1,9 +1,12 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { usePositions } from "@/features/portfolio/hooks";
+import { PortfolioPosition } from "@/features/portfolio/types/portfolio";
 import { cn } from "@/lib/utils";
-import { useMarketDepth, useOrders, useTradeHistory } from "../hooks";
+import { Order } from "@/types";
+import { useCancelOrder, useOrders, useTradeHistory } from "../hooks";
 
 interface TradingActivityPanelProps {
   matchId: string;
@@ -11,40 +14,76 @@ interface TradingActivityPanelProps {
   className?: string;
 }
 
-type ActivityTab = "TRADES" | "EXPOSURE" | "ORDERS" | "DEPTH";
+type ActivityTab = "ORDERS" | "POSITIONS" | "FILLS";
 
 export function TradingActivityPanel({ className, matchId, marketId }: TradingActivityPanelProps) {
   const [tab, setTab] = useState<ActivityTab>("ORDERS");
-  const { data: trades = [] } = useTradeHistory(marketId);
-  const { data: orders = [] } = useOrders(matchId);
-  const { data: depth } = useMarketDepth(marketId);
-  const { data: positions = [] } = usePositions();
+  const { data: orders = [], isLoading: ordersLoading } = useOrders(matchId);
+  const { data: trades = [], isLoading: tradesLoading } = useTradeHistory(marketId);
+  const { data: positions = [], isLoading: positionsLoading } = usePositions();
+  const cancelOrderMutation = useCancelOrder();
 
-  const filteredOrders = useMemo(() => orders.filter((order) => order.marketId === marketId), [marketId, orders]);
-  const filteredPositions = useMemo(
+  const marketOrders = useMemo(() => orders.filter((order) => order.marketId === marketId), [marketId, orders]);
+  const workingOrders = useMemo(
+    () => marketOrders.filter((order) => order.status === "PENDING" || order.status === "PARTIAL"),
+    [marketOrders]
+  );
+  const marketPositions = useMemo(
     () => positions.filter((position) => position.marketId === marketId),
     [marketId, positions]
   );
 
+  const handleCancel = (orderId: string) => {
+    cancelOrderMutation.mutate(orderId, {
+      onSuccess: () => toast.success("Order cancelled"),
+      onError: (error: unknown) => toast.error(getErrorMessage(error, "Unable to cancel order")),
+    });
+  };
+
   return (
     <section
       className={cn(
-        "flex h-[240px] flex-col overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest",
+        "flex min-h-0 flex-col overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest",
         className
       )}
     >
-      <div className="flex border-b border-outline-variant bg-surface px-3">
-        <TabButton active={tab === "TRADES"} onClick={() => setTab("TRADES")}>Trade History</TabButton>
-        <TabButton active={tab === "EXPOSURE"} onClick={() => setTab("EXPOSURE")}>Exposure</TabButton>
-        <TabButton active={tab === "ORDERS"} onClick={() => setTab("ORDERS")}>Open Orders</TabButton>
-        <TabButton active={tab === "DEPTH"} onClick={() => setTab("DEPTH")}>Market Depth</TabButton>
+      <div className="flex shrink-0 items-center justify-between border-b border-outline-variant bg-surface px-2.5 py-1.5">
+        <div className="min-w-0">
+          <h3 className="truncate text-[12px] font-black text-on-surface">Orders & Positions</h3>
+          <p className="truncate text-[10px] text-on-surface-variant">Same-market exposure while placing orders</p>
+        </div>
+        <span className="rounded border border-primary/20 bg-primary/10 px-2 py-0.5 text-[9px] font-black text-primary">
+          LIVE
+        </span>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-3">
-        {tab === "ORDERS" && <OrdersTable orders={filteredOrders} />}
-        {tab === "TRADES" && <TradesTable trades={trades} />}
-        {tab === "EXPOSURE" && <ExposureTable positions={filteredPositions} />}
-        {tab === "DEPTH" && <DepthTable bids={depth?.bids ?? []} asks={depth?.asks ?? []} />}
+      <div className="grid shrink-0 grid-cols-3 gap-1 border-b border-outline-variant bg-surface p-1">
+        <TabButton active={tab === "ORDERS"} count={workingOrders.length} onClick={() => setTab("ORDERS")}>
+          Orders
+        </TabButton>
+        <TabButton active={tab === "POSITIONS"} count={marketPositions.length} onClick={() => setTab("POSITIONS")}>
+          Positions
+        </TabButton>
+        <TabButton active={tab === "FILLS"} count={trades.length} onClick={() => setTab("FILLS")}>
+          Fills
+        </TabButton>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto p-2">
+        {tab === "ORDERS" && (
+          <OrdersTab
+            loading={ordersLoading}
+            orders={workingOrders}
+            cancelling={cancelOrderMutation.isPending}
+            onCancel={handleCancel}
+          />
+        )}
+        {tab === "POSITIONS" && (
+          <PositionsTab loading={positionsLoading} positions={marketPositions} />
+        )}
+        {tab === "FILLS" && (
+          <FillsTab loading={tradesLoading} trades={trades} />
+        )}
       </div>
     </section>
   );
@@ -53,177 +92,174 @@ export function TradingActivityPanel({ className, matchId, marketId }: TradingAc
 function TabButton({
   active,
   children,
+  count,
   onClick,
 }: {
   active: boolean;
   children: React.ReactNode;
+  count: number;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
-        active ? "border-cyan-400 text-cyan-200" : "border-transparent text-on-surface-variant hover:text-on-surface"
+      className={`flex h-7 items-center justify-center gap-1 rounded text-[10px] font-black transition-colors ${
+        active
+          ? "bg-primary/15 text-primary"
+          : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
       }`}
     >
-      {children}
+      <span>{children}</span>
+      <span className="font-data-tabular opacity-80">({count})</span>
     </button>
   );
 }
 
-function OrdersTable({
+function OrdersTab({
+  cancelling,
+  loading,
+  onCancel,
   orders,
 }: {
-  orders: Array<{ id: string; createdAt: string; side: "BUY" | "SELL"; price?: number; quantity: number; status: string }>;
+  cancelling: boolean;
+  loading: boolean;
+  onCancel: (orderId: string) => void;
+  orders: Order[];
 }) {
-  if (orders.length === 0) return <EmptyState label="No open orders" />;
+  if (loading) return <PanelState label="Loading working orders..." />;
+  if (orders.length === 0) return <PanelState label="No working orders for this strike market" />;
 
   return (
-    <table className="w-full text-left font-data-tabular text-[12px]">
-      <thead className="text-[11px] uppercase text-on-surface-variant">
-        <tr>
-          <th className="pb-2">Time</th>
-          <th className="pb-2">Side</th>
-          <th className="pb-2 text-right">Price</th>
-          <th className="pb-2 text-right">Qty</th>
-          <th className="pb-2 text-right">Status</th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-outline-variant/60">
-        {orders.map((order) => (
-          <tr key={order.id}>
-            <td className="py-2 text-on-surface-variant">{formatTime(order.createdAt)}</td>
-            <td className={`py-2 font-black ${order.side === "BUY" ? "text-teal-300" : "text-red-400"}`}>{order.side}</td>
-            <td className="py-2 text-right">{order.price?.toFixed(2) ?? "-"}</td>
-            <td className="py-2 text-right">{order.quantity.toLocaleString()}</td>
-            <td className="py-2 text-right text-cyan-300">{order.status}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="space-y-1.5">
+      {orders.map((order) => (
+        <div key={order.id} className="rounded-md border border-outline-variant/60 bg-surface px-2 py-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <SidePill side={order.side} />
+              <span className="font-data-tabular text-[12px] font-black text-on-surface">
+                Rs {(order.price ?? 0).toFixed(2)}
+              </span>
+            </div>
+            <span className="font-data-tabular text-[11px] font-black text-on-surface">{order.quantity} lots</span>
+          </div>
+          <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-on-surface-variant">
+            <span>{formatTime(order.createdAt)} - {order.status}</span>
+            {order.status === "PENDING" && (
+              <button
+                type="button"
+                onClick={() => onCancel(order.id)}
+                disabled={cancelling}
+                className="rounded border border-bear-red/20 bg-bear-red/10 px-2 py-0.5 font-black text-bear-red disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
-function TradesTable({
+function PositionsTab({ loading, positions }: { loading: boolean; positions: PortfolioPosition[] }) {
+  if (loading) return <PanelState label="Loading positions..." />;
+  if (positions.length === 0) return <PanelState label="No active position in this market" />;
+
+  return (
+    <div className="space-y-1.5">
+      {positions.map((position) => {
+        const positive = position.unrealizedPnL >= 0;
+        return (
+          <div key={position.marketId} className="rounded-md border border-outline-variant/60 bg-surface px-2 py-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <SidePill side={position.side} />
+                <span className="truncate text-[12px] font-black text-on-surface">{position.symbol}</span>
+              </div>
+              <span className={`font-data-tabular text-[12px] font-black ${positive ? "text-bull-green" : "text-bear-red"}`}>
+                {positive ? "+" : "-"}Rs {Math.abs(position.unrealizedPnL).toFixed(2)}
+              </span>
+            </div>
+            <div className="mt-1 grid grid-cols-3 gap-2 font-data-tabular text-[10px] text-on-surface-variant">
+              <span>Qty {position.quantity}</span>
+              <span>Avg {position.averageEntryPrice.toFixed(2)}</span>
+              <span className="text-right">LTP {position.currentPrice.toFixed(2)}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function FillsTab({
+  loading,
   trades,
 }: {
+  loading: boolean;
   trades: Array<{ id: string; timestamp: string; makerSide?: "BUY" | "SELL"; price: number; quantity: number }>;
 }) {
-  if (trades.length === 0) return <EmptyState label="No trades yet" />;
+  if (loading) return <PanelState label="Loading fills..." />;
+  if (trades.length === 0) return <PanelState label="No fills yet for this market" />;
 
   return (
-    <table className="w-full text-left font-data-tabular text-[12px]">
-      <thead className="text-[11px] uppercase text-on-surface-variant">
-        <tr>
-          <th className="pb-2">Time</th>
-          <th className="pb-2">Side</th>
-          <th className="pb-2 text-right">Price</th>
-          <th className="pb-2 text-right">Qty</th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-outline-variant/60">
-        {trades.map((trade) => (
-          <tr key={trade.id}>
-            <td className="py-2 text-on-surface-variant">{formatTime(trade.timestamp)}</td>
-            <td className={`py-2 font-black ${trade.makerSide === "SELL" ? "text-red-400" : "text-teal-300"}`}>
-              {trade.makerSide ?? "BUY"}
-            </td>
-            <td className="py-2 text-right">{trade.price.toFixed(2)}</td>
-            <td className="py-2 text-right">{trade.quantity.toLocaleString()}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
-function ExposureTable({
-  positions,
-}: {
-  positions: Array<{ marketId: string; symbol: string; side: "BUY" | "SELL"; quantity: number; averageEntryPrice: number; unrealizedPnL: number }>;
-}) {
-  if (positions.length === 0) return <EmptyState label="No active exposure" />;
-
-  return (
-    <table className="w-full text-left font-data-tabular text-[12px]">
-      <thead className="text-[11px] uppercase text-on-surface-variant">
-        <tr>
-          <th className="pb-2">Asset</th>
-          <th className="pb-2">Side</th>
-          <th className="pb-2 text-right">Avg</th>
-          <th className="pb-2 text-right">Qty</th>
-          <th className="pb-2 text-right">PnL</th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-outline-variant/60">
-        {positions.map((position) => (
-          <tr key={position.marketId}>
-            <td className="py-2 font-black">{position.symbol}</td>
-            <td className={`py-2 font-black ${position.side === "BUY" ? "text-teal-300" : "text-red-400"}`}>{position.side}</td>
-            <td className="py-2 text-right">{position.averageEntryPrice.toFixed(2)}</td>
-            <td className="py-2 text-right">{position.quantity.toLocaleString()}</td>
-            <td className={`py-2 text-right font-black ${position.unrealizedPnL >= 0 ? "text-teal-300" : "text-red-400"}`}>
-              {position.unrealizedPnL.toFixed(2)}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
-function DepthTable({
-  asks,
-  bids,
-}: {
-  asks: Array<{ price: number; quantity: number }>;
-  bids: Array<{ price: number; quantity: number }>;
-}) {
-  if (asks.length === 0 && bids.length === 0) return <EmptyState label="No market depth" />;
-
-  return (
-    <div className="grid grid-cols-2 gap-4 font-data-tabular text-[12px]">
-      <DepthSide label="Bids" rows={bids.slice(0, 5)} tone="bid" />
-      <DepthSide label="Asks" rows={asks.slice(0, 5)} tone="ask" />
+    <div className="space-y-1">
+      {trades.slice(0, 8).map((trade) => (
+        <div key={trade.id} className="grid grid-cols-[46px_1fr_52px] rounded bg-surface px-2 py-1 font-data-tabular text-[11px]">
+          <span className="text-on-surface-variant">{formatTime(trade.timestamp)}</span>
+          <span className={trade.makerSide === "SELL" ? "font-black text-bear-red" : "font-black text-bull-green"}>
+            {(trade.makerSide ?? "BUY")} @ {trade.price.toFixed(2)}
+          </span>
+          <span className="text-right text-on-surface">{trade.quantity}</span>
+        </div>
+      ))}
     </div>
   );
 }
 
-function DepthSide({
-  label,
-  rows,
-  tone,
-}: {
-  label: string;
-  rows: Array<{ price: number; quantity: number }>;
-  tone: "bid" | "ask";
-}) {
+function PanelState({ label }: { label: string }) {
   return (
-    <div>
-      <div className="mb-2 text-[11px] font-black uppercase text-on-surface-variant">{label}</div>
-      <div className="space-y-1">
-        {rows.map((row, index) => (
-          <div key={`${tone}-${index}`} className="flex justify-between rounded bg-surface px-2 py-1">
-            <span className={tone === "bid" ? "text-teal-300" : "text-red-400"}>{row.price.toFixed(2)}</span>
-            <span className="text-on-surface-variant">{row.quantity.toLocaleString()}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function EmptyState({ label }: { label: string }) {
-  return (
-    <div className="flex h-full min-h-[120px] items-center justify-center rounded border border-dashed border-outline-variant text-sm font-semibold text-on-surface-variant">
+    <div className="flex h-full min-h-[100px] items-center justify-center rounded-md border border-dashed border-outline-variant text-center text-[11px] font-semibold text-on-surface-variant">
       {label}
     </div>
   );
 }
 
+function SidePill({ side }: { side: "BUY" | "SELL" }) {
+  return (
+    <span
+      className={`rounded border px-1.5 py-0.5 text-[9px] font-black ${
+        side === "BUY"
+          ? "border-bull-green/25 bg-bull-green/10 text-bull-green"
+          : "border-bear-red/25 bg-bear-red/10 text-bear-red"
+      }`}
+    >
+      {side}
+    </span>
+  );
+}
+
 function formatTime(value: string) {
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "--:--:--";
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  if (Number.isNaN(date.getTime())) return "--:--";
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function getErrorMessage(error: unknown, defaultMessage: string) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    typeof error.response === "object" &&
+    error.response !== null &&
+    "data" in error.response &&
+    typeof error.response.data === "object" &&
+    error.response.data !== null &&
+    "message" in error.response.data &&
+    typeof error.response.data.message === "string"
+  ) {
+    return error.response.data.message;
+  }
+  return defaultMessage;
 }

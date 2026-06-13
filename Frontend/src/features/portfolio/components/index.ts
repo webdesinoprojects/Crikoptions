@@ -4,3 +4,4 @@ export { PnLBreakdown } from "./PnLBreakdown";
 export { PositionTable } from "./PositionTable";
 export { RiskMetrics } from "./RiskMetrics";
 export { TradeJournal } from "./TradeJournal";
+export { TradeOperationsWorkspace } from "./TradeOperationsWorkspace";

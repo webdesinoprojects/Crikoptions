@@ -80,11 +80,11 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex h-fit self-start flex-col gap-2.5 overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest p-3"
+      className="flex h-fit self-start flex-col gap-2 overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest p-2.5"
     >
       <div className="flex shrink-0 items-start justify-between gap-2">
         <div className="min-w-0">
-          <h3 className="text-base font-black text-on-surface">Order Ticket</h3>
+          <h3 className="text-sm font-black text-on-surface">Order Ticket</h3>
           <p className="truncate text-[11px] text-on-surface-variant">
             {selectedRow ? `Strike ${selectedRow.strike.toFixed(0)} selected` : market?.title ?? "Select a strike"}
           </p>
@@ -100,8 +100,8 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
         </span>
       </div>
 
-      <div className="shrink-0 rounded-md border border-outline-variant bg-surface-container-high/70 p-2 text-[11px]">
-        <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+      <div className="shrink-0 rounded-md border border-outline-variant bg-surface-container-high/70 p-1.5 text-[10px]">
+        <div className="grid grid-cols-2 gap-x-2 gap-y-1">
           <TicketMetric label="Projected final" value={projectedRange(calculated?.projectedS0 ?? market?.ltp)} highlight />
           <TicketMetric label="Fair LTP" value={fairLtp.toFixed(2)} />
           <TicketMetric
@@ -119,7 +119,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
             key={option}
             type="button"
             onClick={() => setSelectedSide(option)}
-            className={`h-8 rounded text-[12px] font-black transition-all ${
+            className={`h-6 rounded text-[11px] font-black transition-all ${
               side === option
                 ? option === "BUY"
                   ? "bg-bull-green text-white shadow"
@@ -138,7 +138,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
             key={option}
             type="button"
             onClick={() => setType(option)}
-            className={`border-b-2 pb-2 text-[11px] font-black transition-all ${
+            className={`border-b-2 pb-1 text-[10px] font-black transition-all ${
               type === option ? "border-primary text-primary" : "border-transparent text-on-surface-variant hover:text-on-surface"
             }`}
           >
@@ -147,18 +147,18 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
         ))}
       </div>
 
-      <div className="grid shrink-0 gap-2">
+      <div className="grid shrink-0 grid-cols-2 gap-2">
         {type === "LIMIT" && (
           <div className="grid gap-1">
             <label className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant">
-              Limit price (Rs)
+              Limit (Rs)
             </label>
             <input
               type="number"
               step="0.05"
               value={displayPrice}
               onChange={(e) => setPriceOverride({ key: priceKey, value: e.target.value })}
-              className="h-9 rounded-md border border-outline-variant bg-surface px-2.5 font-data-tabular text-[13px] text-on-surface focus:border-primary focus:outline-none"
+              className="h-7 rounded-md border border-outline-variant bg-surface px-2 font-data-tabular text-[12px] text-on-surface focus:border-primary focus:outline-none"
             />
           </div>
         )}
@@ -171,36 +171,37 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
             type="number"
             value={qty}
             onChange={(e) => setQty(e.target.value)}
-            className="h-9 rounded-md border border-outline-variant bg-surface px-2.5 font-data-tabular text-[13px] text-on-surface focus:border-primary focus:outline-none"
+            className="h-7 rounded-md border border-outline-variant bg-surface px-2 font-data-tabular text-[12px] text-on-surface focus:border-primary focus:outline-none"
           />
-          <div className="grid grid-cols-4 gap-1 pt-0.5">
-            {[5, 10, 25, 50].map((size) => (
-              <button
-                key={size}
-                type="button"
-                onClick={() => {
-                  setOrderSize(size);
-                  setQty(String(size));
-                }}
-                className={`h-7 rounded border text-[10px] font-black transition-colors ${
-                  qtyValue === size
-                    ? "border-primary/40 bg-primary/15 text-primary"
-                    : "border-outline-variant bg-surface text-on-surface-variant hover:text-on-surface"
-                }`}
-              >
-                {size}
-              </button>
-            ))}
-          </div>
+        </div>
+
+        <div className="col-span-2 grid grid-cols-4 gap-1">
+          {[5, 10, 25, 50].map((size) => (
+            <button
+              key={size}
+              type="button"
+              onClick={() => {
+                setOrderSize(size);
+                setQty(String(size));
+              }}
+              className={`h-5 rounded border text-[10px] font-black transition-colors ${
+                qtyValue === size
+                  ? "border-primary/40 bg-primary/15 text-primary"
+                  : "border-outline-variant bg-surface text-on-surface-variant hover:text-on-surface"
+              }`}
+            >
+              {size}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="mt-2 shrink-0 rounded-md border border-outline-variant bg-surface p-2 text-[11px]">
+      <div className="shrink-0 rounded-md border border-outline-variant bg-surface p-1.5 text-[10px]">
         <div className="flex justify-between text-on-surface-variant">
           <span>Estimated Price</span>
           <span className="font-data-tabular text-on-surface">Rs {priceValue.toFixed(2)}</span>
         </div>
-        <div className="mt-1 flex justify-between text-on-surface-variant">
+        <div className="mt-0.5 flex justify-between text-on-surface-variant">
           <span>Required Margin</span>
           <span className="font-data-tabular font-black text-on-surface">
             Rs {marginRequired.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -211,7 +212,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
       <button
         type="submit"
         disabled={createOrderMutation.isPending || !matchId || !marketId}
-        className={`h-11 shrink-0 rounded-md text-[13px] font-black text-white shadow-lg transition-all hover:shadow-xl ${
+        className={`h-9 shrink-0 rounded-md text-[12px] font-black text-white shadow-lg transition-all hover:shadow-xl ${
           side === "BUY" ? "bg-bull-green hover:bg-bull-green/90" : "bg-bear-red hover:bg-bear-red/90"
         } disabled:opacity-50`}
       >

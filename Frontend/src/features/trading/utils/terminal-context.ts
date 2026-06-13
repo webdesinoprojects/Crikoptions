@@ -50,10 +50,10 @@ export function buildPricePayload(match?: Match, market?: BackendMarket): Calcul
 }
 
 export function buildOptionRows(calculated?: CalculatedPrice, market?: BackendMarket): ChainRow[] {
-  const chain = calculated?.optionChain?.length ? calculated.optionChain : fallbackChain(market);
+  const chain = calculated?.optionChain ?? [];
   if (!chain.length) return [];
 
-  const projected = calculated?.projectedS0 ?? market?.ltp ?? chain[Math.floor(chain.length / 2)]?.strike ?? 0;
+  const projected = calculated?.projectedS0 ?? chain[Math.floor(chain.length / 2)]?.strike ?? 0;
   const atmStrike = nearestStrike(chain, projected);
   const ladder = market?.quantityLadder ?? [];
 
@@ -62,16 +62,14 @@ export function buildOptionRows(calculated?: CalculatedPrice, market?: BackendMa
     const spread = item.premium >= 20 ? 1 : item.premium >= 5 ? 0.5 : 0.1;
     const bid = round2(Math.max(0, item.premium - spread / 2));
     const ask = round2(item.premium + spread / 2);
-    const distance = Math.abs(item.strike - projected);
-    const liquidity = Math.max(0.16, 1 - distance / Math.max(projected || 1, 1));
 
     return {
       strike: item.strike,
       premium: item.premium,
       bid,
       ask,
-      bidQty: ladderEntry?.buyerQty ?? Math.round(120 + liquidity * 420),
-      askQty: ladderEntry?.sellerQty ?? Math.round(90 + liquidity * 360),
+      bidQty: ladderEntry?.buyerQty ?? 0,
+      askQty: ladderEntry?.sellerQty ?? 0,
       moneyness: item.strike === atmStrike ? "ATM" : item.strike < projected ? "ITM" : "OTM",
       impliedProbability: impliedProbability(item.premium, item.strike, projected),
     };
@@ -131,15 +129,6 @@ export function scoreParts(score?: string) {
 export function projectedRange(projected?: number) {
   if (!projected) return "0-0";
   return `${Math.max(0, Math.floor(projected - 3))}-${Math.ceil(projected + 5)}`;
-}
-
-function fallbackChain(market?: BackendMarket): OptionChainStrike[] {
-  if (!market?.quantityLadder?.length) return [];
-
-  return market.quantityLadder.map((entry) => ({
-    strike: entry.buyerPrice,
-    premium: round2((entry.buyerPrice + entry.sellerPrice) / 2),
-  }));
 }
 
 function impliedProbability(premium: number, strike: number, projected: number) {

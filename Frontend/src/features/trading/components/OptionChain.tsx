@@ -26,7 +26,9 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
   const { data: calculated, isLoading, isError } = useOptionChain(marketId, payload);
 
   const rows = useMemo(() => buildOptionRows(calculated, market), [calculated, market]);
-  const projectedScore = calculated?.projectedS0 ?? market?.ltp ?? 0;
+  const hasApiChain = Boolean(calculated?.optionChain?.length);
+  const projectedScore = calculated?.projectedS0 ?? 0;
+  const fairLtp = calculated?.ltp ?? 0;
   const atmRow = findAtmRow(rows);
   const activeRow = rows.find((row) => row.strike === selectedStrike) ?? atmRow;
   const visibleRows = useMemo(() => windowAroundAtm(rows), [rows]);
@@ -50,7 +52,7 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
         <div className="min-w-0">
           <h2 className="truncate text-sm font-black text-on-surface">Match Depth Options</h2>
           <p className="truncate text-[11px] text-on-surface-variant">
-            Fair LTP {(calculated?.ltp ?? market?.ltp ?? 0).toFixed(2)}
+            Fair LTP {fairLtp.toFixed(2)}
           </p>
         </div>
 
@@ -60,7 +62,7 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
             <span className="font-data-tabular text-on-surface">{projectedRange(projectedScore)}</span>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            <DataSourceBadge source={calculated?.optionChain?.length ? "api" : "derived"} />
+            <DataSourceBadge source={hasApiChain ? "api" : "static"} />
             <span className="rounded border border-primary/20 bg-primary/10 px-2 py-1 text-[10px] font-black text-primary">
               {payload?.innings === 2 ? "CHASE" : "1ST INNS"}
             </span>
@@ -82,17 +84,9 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
           </thead>
           <tbody>
             {isLoading && rows.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="h-64 text-center text-on-surface-variant">
-                  Loading option chain...
-                </td>
-              </tr>
+              <ZeroChainRow />
             ) : visibleRows.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="h-64 text-center text-on-surface-variant">
-                  No option chain available
-                </td>
-              </tr>
+              <ZeroChainRow />
             ) : (
               visibleRows.map((row) => {
                 const selected = activeRow?.strike === row.strike;
@@ -156,10 +150,36 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
       </div>
 
       <div className="flex items-center justify-between gap-2 border-t border-outline-variant bg-surface px-3 py-2 text-[10px] uppercase tracking-wide text-on-surface-variant">
-        <span>ATM {atmRow?.strike.toFixed(0) ?? "--"}</span>
-        <span className={isError ? "text-red-300" : "text-cyan-300"}>{isError ? "Pricing fallback" : `${selectedSide} ticket routed`}</span>
+        <span>ATM {atmRow?.strike.toFixed(0) ?? "0"}</span>
+        <span className={isError || !hasApiChain ? "text-red-300" : "text-cyan-300"}>
+          {isError || !hasApiChain ? "No API option chain" : `${selectedSide} ticket routed`}
+        </span>
       </div>
     </section>
+  );
+}
+
+function ZeroChainRow() {
+  return (
+    <tr className="border-b border-outline-variant/60">
+      <td className="px-3 py-3 text-lg font-black text-on-surface">0</td>
+      <td className="px-3 py-3">
+        <div className="flex items-center gap-3">
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-600/35">
+            <div className="h-full w-0 rounded-full bg-cyan-100" />
+          </div>
+          <span className="w-10 text-right text-[11px] font-black text-on-surface">0%</span>
+        </div>
+      </td>
+      <td className="px-3 py-3 text-right text-base font-black text-cyan-300">0.00</td>
+      <td className="px-3 py-3 text-right text-base font-black text-red-300">0.00</td>
+      <td className="px-3 py-3 text-right text-on-surface-variant">0</td>
+      <td className="px-3 py-3 text-center">
+        <span className="inline-flex min-w-10 justify-center rounded border border-slate-500/30 bg-slate-500/18 px-2 py-1 text-[10px] font-black text-slate-300">
+          --
+        </span>
+      </td>
+    </tr>
   );
 }
 

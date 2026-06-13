@@ -7,6 +7,7 @@ import {
   MatchScheduleStrip,
   OptionChain,
   OrderEntryForm,
+  TradingActivityPanel,
 } from "@/features/trading/components";
 import { useMarketDetail, useMarkets } from "@/features/trading/hooks";
 import { useLiveMatches, useMatchDetails } from "@/features/dashboard/hooks";
@@ -46,10 +47,13 @@ export default function TradingTerminalPage({ params }: PageProps) {
       <MatchScheduleStrip matches={matches} selectedMatchId={matchId} />
 
       <main className="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden">
-        <div className="grid min-h-full grid-cols-1 gap-3 p-3 lg:h-full lg:min-h-0 lg:grid-cols-[250px_minmax(0,1fr)_305px] xl:grid-cols-[280px_minmax(0,1fr)_330px] 2xl:grid-cols-[300px_minmax(0,1fr)_360px]">
+        <div className="grid min-h-full grid-cols-1 gap-3 p-3 lg:h-full lg:min-h-0 lg:grid-cols-[250px_minmax(0,1fr)_315px] xl:grid-cols-[280px_minmax(0,1fr)_340px] 2xl:grid-cols-[300px_minmax(0,1fr)_370px]">
           <LiveMatchStatsPanel className="lg:h-full lg:min-h-0" match={match} market={market} />
           <OptionChain className="lg:h-full lg:min-h-0" marketId={marketId} market={market} match={match} />
-          <OrderEntryForm matchId={matchId} marketId={marketId} match={match} />
+          <section className="flex min-h-0 flex-col gap-2">
+            <OrderEntryForm matchId={matchId} marketId={marketId} match={match} />
+            <TradingActivityPanel className="min-h-[170px] flex-1" matchId={matchId} marketId={marketId} />
+          </section>
         </div>
       </main>
     </div>
