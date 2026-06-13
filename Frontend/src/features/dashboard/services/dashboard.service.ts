@@ -135,7 +135,18 @@ async function fetchAllMarkets(): Promise<BackendMarket[]> {
     )
   );
 
-  return results.flatMap((result) => (result.status === "fulfilled" ? result.value.data.data ?? [] : []));
+  return results
+    .flatMap((result, index) => {
+      if (result.status !== "fulfilled") return [];
+      const match = matches[index];
+      return (result.value.data.data ?? []).map((market) => ({ market, match }));
+    })
+    .sort((a, b) => {
+      const priority = matchPriority(a.match?.status) - matchPriority(b.match?.status);
+      if (priority !== 0) return priority;
+      return new Date(a.match?.startTime ?? 0).getTime() - new Date(b.match?.startTime ?? 0).getTime();
+    })
+    .map((entry) => entry.market);
 }
 
 async function fetchOpenPositions(): Promise<BackendPosition[]> {
@@ -180,4 +191,11 @@ function isToday(value: string): boolean {
     date.getMonth() === now.getMonth() &&
     date.getDate() === now.getDate()
   );
+}
+
+function matchPriority(status?: string) {
+  const normalized = (status ?? "").toLowerCase();
+  if (normalized === "live") return 0;
+  if (normalized === "upcoming") return 1;
+  return 2;
 }

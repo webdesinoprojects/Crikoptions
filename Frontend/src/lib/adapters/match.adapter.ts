@@ -59,6 +59,10 @@ export function adaptMatch(backend: BackendMatch): FrontendMatch {
     awayScore: "",
     currentOver: backend.oversText || "0.0",
     format: backend.format,
+    innings: backend.innings,
+    currentScore: backend.currentScore,
+    wicketsLost: backend.wicketsLost,
+    ballsLeft: backend.ballsLeft,
     startTime: backend.startTime,
   };
 }

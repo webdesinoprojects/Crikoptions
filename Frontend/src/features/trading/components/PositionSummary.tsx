@@ -28,12 +28,17 @@ export function PositionSummary({ matchId, marketId }: PositionSummaryProps) {
   const activePositions = positions.filter((position) => position.marketId === marketId);
 
   return (
-    <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col h-64">
-      <div className="flex bg-surface border-b border-outline-variant p-1 gap-1">
+    <div className="bg-surface-container-lowest border border-outline-variant rounded-md overflow-hidden flex h-full min-h-[180px] flex-col">
+      <div className="bg-surface px-3 py-1.5 border-b border-outline-variant">
+        <h3 className="text-sm font-semibold text-on-surface">Exposure</h3>
+        <p className="text-[10px] text-on-surface-variant">Active positions and working orders</p>
+      </div>
+
+      <div className="flex bg-surface border-b border-outline-variant p-0.5 gap-1">
         <button
           type="button"
           onClick={() => setActiveTab("POSITIONS")}
-          className={`flex-1 py-1 text-[11px] font-bold rounded transition-all ${
+          className={`flex-1 py-0.5 text-[10px] font-bold rounded transition-all ${
             activeTab === "POSITIONS" ? "bg-surface-container-high text-on-surface" : "text-on-surface-variant hover:text-on-surface"
           }`}
         >
@@ -42,7 +47,7 @@ export function PositionSummary({ matchId, marketId }: PositionSummaryProps) {
         <button
           type="button"
           onClick={() => setActiveTab("ORDERS")}
-          className={`flex-1 py-1 text-[11px] font-bold rounded transition-all ${
+          className={`flex-1 py-0.5 text-[10px] font-bold rounded transition-all ${
             activeTab === "ORDERS" ? "bg-surface-container-high text-on-surface" : "text-on-surface-variant hover:text-on-surface"
           }`}
         >
@@ -50,12 +55,15 @@ export function PositionSummary({ matchId, marketId }: PositionSummaryProps) {
         </button>
       </div>
 
-      <div className="flex-grow p-2 overflow-y-auto scrollbar-hide text-[11px]">
+      <div className="flex-grow p-1.5 overflow-y-auto scrollbar-hide text-[11px]">
         {activeTab === "POSITIONS" ? (
           positionsLoading ? (
-            <div className="flex h-full items-center justify-center text-outline">Loading positions...</div>
-          ) : activePositions.length === 0 ? (
-            <div className="flex h-full items-center justify-center text-outline">No active positions</div>
+          <div className="flex h-full min-h-[100px] items-center justify-center text-outline">Loading positions...</div>
+        ) : activePositions.length === 0 ? (
+            <div className="flex h-full min-h-[100px] flex-col items-center justify-center rounded border border-dashed border-outline-variant text-center">
+              <span className="text-sm font-semibold text-on-surface">No active positions</span>
+              <span className="mt-1 text-[11px] text-on-surface-variant">Filled exposure will appear here.</span>
+            </div>
           ) : (
             <table className="w-full text-left font-data-tabular">
               <thead>
@@ -89,9 +97,12 @@ export function PositionSummary({ matchId, marketId }: PositionSummaryProps) {
         ) : (
           <div className="flex flex-col h-full">
             {isLoading ? (
-              <div className="flex-grow flex items-center justify-center text-outline">Loading orders...</div>
+              <div className="flex-grow min-h-[100px] flex items-center justify-center text-outline">Loading orders...</div>
             ) : activeOrders.length === 0 ? (
-              <div className="flex-grow flex items-center justify-center text-outline">No working orders</div>
+              <div className="flex-grow min-h-[100px] flex flex-col items-center justify-center rounded border border-dashed border-outline-variant text-center">
+                <span className="text-sm font-semibold text-on-surface">No working orders</span>
+                <span className="mt-1 text-[11px] text-on-surface-variant">Open limits will appear here.</span>
+              </div>
             ) : (
               <table className="w-full text-left font-data-tabular">
                 <thead>

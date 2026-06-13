@@ -11,6 +11,33 @@ export interface CreateOrderPayload {
   price: number;
 }
 
+export interface CalculatePricePayload {
+  innings: number;
+  currentScore: number;
+  wicketsLost: number;
+  ballsLeft?: number;
+  ballsBowled?: number;
+  targetScore?: number;
+}
+
+export interface OptionChainStrike {
+  strike: number;
+  premium: number;
+}
+
+export interface CalculatedPrice {
+  buyerPrice: number;
+  sellerPrice: number;
+  ltp: number;
+  open: number;
+  high: number;
+  low: number;
+  strikeStep?: number;
+  maxStrike?: number;
+  projectedS0?: number;
+  optionChain?: OptionChainStrike[];
+}
+
 class TradingService {
   // Live API Integrations
   async fetchMarkets(matchId: string): Promise<FrontendMarket[]> {
@@ -40,6 +67,14 @@ class TradingService {
   async createOrder(payload: CreateOrderPayload): Promise<FrontendOrder> {
     const response = await apiClient.post<{ success: boolean; data: BackendOrder }>("/v1/orders", payload);
     return adaptOrder(response.data.data);
+  }
+
+  async calculateMarketPrice(marketId: string, payload: CalculatePricePayload): Promise<CalculatedPrice> {
+    const response = await apiClient.post<{ success: boolean; data: CalculatedPrice }>(
+      `/v1/markets/${marketId}/calculate-price`,
+      payload
+    );
+    return response.data.data;
   }
 
   async cancelOrder(orderId: string): Promise<FrontendOrder> {

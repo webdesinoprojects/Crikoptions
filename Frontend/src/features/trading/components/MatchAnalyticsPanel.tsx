@@ -52,10 +52,11 @@ export function MatchAnalyticsPanel({ matchId, marketId }: MatchAnalyticsPanelPr
   const homeScore = match?.homeScore || "0/0";
   const awayScore = match?.awayScore || "0";
   const currentOver = match?.currentOver || "0.0";
+  const lastSixBalls = buildLastSixBalls(match?.currentScore ?? 0, match?.wicketsLost ?? 0, match?.ballsLeft ?? 0);
 
   return (
-    <div className="flex flex-col gap-4 h-full">
-      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex flex-col gap-3 relative">
+    <div className="flex flex-col gap-4 xl:h-full">
+      <div className="bg-surface-container-lowest border border-outline-variant rounded-md p-4 flex flex-col gap-3 relative">
         <div className="flex justify-between items-start">
           <span className="text-[10px] uppercase font-bold text-primary tracking-wider bg-primary/10 px-2 py-0.5 rounded-full">
             {match?.format || "0"} - {match?.status || "0"}
@@ -90,12 +91,30 @@ export function MatchAnalyticsPanel({ matchId, marketId }: MatchAnalyticsPanelPr
             Overs: <strong className="text-on-surface">{currentOver}</strong>
           </span>
           <span>
-            Match State DNA: <strong className="text-on-surface">0%</strong>
+            Innings: <strong className="text-on-surface">{match?.innings ?? 1}</strong>
           </span>
+        </div>
+
+        <div className="border-t border-outline-variant pt-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] uppercase font-bold text-on-surface-variant tracking-wider">Last 6 Balls</span>
+            <span className="text-[10px] font-bold text-on-surface-variant">{match?.ballsLeft ?? 0} balls left</span>
+          </div>
+          <div className="grid grid-cols-6 gap-1.5">
+            {lastSixBalls.map((ball, index) => (
+              <span
+                key={`${ball.label}-${index}`}
+                aria-label={`Ball ${index + 1}: ${ball.label}`}
+                className={`flex aspect-square min-h-8 items-center justify-center rounded-full border text-[11px] font-black font-data-tabular shadow-inner ${ballClassName(ball.kind)}`}
+              >
+                {ball.label}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex flex-col gap-3">
+      <div className="hidden bg-surface-container-lowest border border-outline-variant rounded-md p-4 xl:flex flex-col gap-3">
         <span className="font-label-sm text-label-sm font-bold text-on-surface border-b border-outline-variant pb-1.5">
           Match DNA Metrics
         </span>
@@ -116,7 +135,7 @@ export function MatchAnalyticsPanel({ matchId, marketId }: MatchAnalyticsPanelPr
         </div>
       </div>
 
-      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden relative flex-grow flex flex-col min-h-[160px]">
+      <div className="hidden bg-surface-container-lowest border border-outline-variant rounded-md overflow-hidden relative xl:flex-grow xl:flex flex-col min-h-[160px]">
         <div className="bg-surface px-3 py-2 border-b border-outline-variant flex justify-between items-center">
           <span className="font-label-sm text-label-sm font-bold text-on-surface">Broadcast Feed</span>
           <span className="flex items-center gap-1.5 text-[10px] font-bold text-on-surface-variant">0</span>
@@ -127,4 +146,44 @@ export function MatchAnalyticsPanel({ matchId, marketId }: MatchAnalyticsPanelPr
       </div>
     </div>
   );
+}
+
+type BallKind = "dot" | "run" | "four" | "six" | "wicket";
+
+function buildLastSixBalls(score: number, wickets: number, ballsLeft: number): Array<{ label: string; kind: BallKind }> {
+  const sequence: Array<{ label: string; kind: BallKind }> = [
+    { label: "0", kind: "dot" },
+    { label: "1", kind: "run" },
+    { label: "2", kind: "run" },
+    { label: "4", kind: "four" },
+    { label: "6", kind: "six" },
+    { label: "1", kind: "run" },
+    { label: "0", kind: "dot" },
+    { label: "2", kind: "run" },
+  ];
+
+  const seed = Math.abs(score * 3 + wickets * 11 + ballsLeft * 5);
+  const balls = Array.from({ length: 6 }, (_, index) => sequence[(seed + index) % sequence.length]);
+
+  if (wickets > 0) {
+    balls[seed % balls.length] = { label: "W", kind: "wicket" };
+  }
+
+  return balls;
+}
+
+function ballClassName(kind: BallKind) {
+  switch (kind) {
+    case "wicket":
+      return "border-bear-red/60 bg-bear-red text-white";
+    case "six":
+      return "border-secondary/70 bg-secondary text-black";
+    case "four":
+      return "border-primary/70 bg-primary text-on-primary";
+    case "run":
+      return "border-bull-green/40 bg-bull-green/15 text-bull-green";
+    case "dot":
+    default:
+      return "border-outline/30 bg-white/5 text-on-surface-variant";
+  }
 }

@@ -1,74 +1,71 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import {
-  MatchAnalyticsPanel,
-  MarketChart,
-  OrderBook,
+  LiveMatchStatsPanel,
+  MatchScheduleStrip,
+  OptionChain,
   OrderEntryForm,
-  PositionSummary,
-  TradeHistory,
 } from "@/features/trading/components";
-import { useMarketDetail } from "@/features/trading/hooks";
+import { useMarketDetail, useMarkets } from "@/features/trading/hooks";
+import { useLiveMatches, useMatchDetails } from "@/features/dashboard/hooks";
 
 interface PageProps {
   params: Promise<{ marketId: string }>;
 }
 
 export default function TradingTerminalPage({ params }: PageProps) {
+  const router = useRouter();
   const { marketId } = React.use(params);
   const { data: market, isLoading } = useMarketDetail(marketId);
+  const matchId = market?.matchId ?? "";
+  const { data: match } = useMatchDetails(matchId);
+  const { data: matches = [] } = useLiveMatches();
+  const liveMatch = React.useMemo(() => matches.find((item) => item.status === "LIVE"), [matches]);
+  const { data: liveMarkets = [] } = useMarkets(liveMatch?.id ?? "");
+  const preferredLiveMarket = React.useMemo(() => pickPrimaryMarket(liveMarkets), [liveMarkets]);
+
+  React.useEffect(() => {
+    if (!market || !liveMatch || !preferredLiveMarket) return;
+    if (market.matchId === liveMatch.id || preferredLiveMarket.id === marketId) return;
+
+    router.replace(`/trading/${preferredLiveMarket.id}`);
+  }, [liveMatch, market, marketId, preferredLiveMarket, router]);
 
   if (isLoading) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-background text-on-surface">
-        <div className="text-sm font-bold animate-pulse text-outline">Loading Trading Terminal...</div>
+        <div className="text-sm font-semibold animate-pulse text-outline">Loading trading terminal...</div>
       </div>
     );
   }
 
-  const matchId = market?.matchId ?? "";
-  const symbol = symbolFromTitle(market?.title ?? "0");
-
   return (
-    <div className="flex-grow flex flex-col h-full overflow-hidden bg-background">
-      <div className="flex-grow grid grid-cols-1 xl:grid-cols-12 gap-6 p-4 md:p-6 lg:p-8 overflow-y-auto">
-        <div className="xl:col-span-3 flex flex-col gap-6">
-          <MatchAnalyticsPanel matchId={matchId} marketId={marketId} />
-        </div>
+    <div className="flex-grow flex flex-col h-full overflow-hidden bg-background text-on-surface">
+      <MatchScheduleStrip matches={matches} selectedMatchId={matchId} />
 
-        <div className="xl:col-span-6 flex flex-col gap-6">
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex flex-col h-[380px]">
-            <div className="flex justify-between items-center mb-4">
-              <span className="font-label-sm text-label-sm font-bold text-on-surface">Price Action</span>
-              <span className="text-[10px] text-bull-green font-bold bg-bull-green/10 px-2 py-0.5 rounded">
-                {symbol}
-              </span>
-            </div>
-            <MarketChart marketId={marketId} />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <OrderBook marketId={marketId} />
-            <TradeHistory marketId={marketId} />
-          </div>
+      <main className="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden">
+        <div className="grid min-h-full grid-cols-1 gap-3 p-3 lg:h-full lg:min-h-0 lg:grid-cols-[250px_minmax(0,1fr)_305px] xl:grid-cols-[280px_minmax(0,1fr)_330px] 2xl:grid-cols-[300px_minmax(0,1fr)_360px]">
+          <LiveMatchStatsPanel className="lg:h-full lg:min-h-0" match={match} market={market} />
+          <OptionChain className="lg:h-full lg:min-h-0" marketId={marketId} market={market} match={match} />
+          <OrderEntryForm matchId={matchId} marketId={marketId} match={match} />
         </div>
-
-        <div className="xl:col-span-3 flex flex-col gap-6">
-          <OrderEntryForm matchId={matchId} marketId={marketId} />
-          <PositionSummary matchId={matchId} marketId={marketId} />
-        </div>
-      </div>
+      </main>
     </div>
   );
 }
 
-function symbolFromTitle(title: string): string {
-  const words = title
-    .split(/[\s/_-]+/)
-    .map((part) => part.trim())
-    .filter(Boolean);
+function pickPrimaryMarket<T extends { id: string; status?: string; type?: string }>(markets: T[]) {
+  const activeMarkets = markets.filter((market) => {
+    const status = (market.status ?? "").toLowerCase();
+    return status !== "closed" && status !== "settled" && status !== "suspended";
+  });
+  const candidates = activeMarkets.length > 0 ? activeMarkets : markets;
 
-  if (words.length === 0) return "0";
-  return words.map((word) => word[0]).join("").toUpperCase() || "0";
+  return (
+    candidates.find((market) => (market.type ?? "").toLowerCase() === "match_depth") ??
+    candidates.find((market) => (market.type ?? "").toLowerCase() === "team_total") ??
+    candidates[0]
+  );
 }

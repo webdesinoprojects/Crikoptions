@@ -15,7 +15,7 @@ export function MarketMoversScanner() {
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-bold flex items-center justify-between gap-2">
           Market Movers
-          <DataSourceBadge source="api" />
+          <DataSourceBadge source="derived" />
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
