@@ -8,5 +8,6 @@ bin/
 
 .DS_Store
 *.md
+!CRIKOPTIONS_TRADING_PLATFORM_PHASED_PLAN.md
 *.pdf
 *.docx

@@ -3,6 +3,8 @@
 // Source of truth for all Portfolio Hub components.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { WalletAccount } from "@/features/wallet/types/wallet";
+
 export interface PortfolioPosition {
   marketId: string;
   symbol: string;
@@ -82,6 +84,7 @@ export interface PortfolioSummary {
   /** Available cash when backend provides it */
   availableMargin: number;
   usedMargin: number;
+  wallet: WalletAccount;
   positions: PortfolioPosition[];
   closedTrades: ClosedTrade[];
   equityCurve: EquityCurvePoint[];

@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/api/client";
 import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { BackendMatch } from "@/lib/adapters/match.adapter";
+import { walletService } from "@/features/wallet/services/wallet.service";
 import {
   ClosedTrade,
   EquityCurvePoint,
@@ -26,9 +27,10 @@ interface BackendPosition {
 
 class PortfolioService {
   async getPortfolioSummary(): Promise<PortfolioSummary> {
-    const [openPositions, closedPositions] = await Promise.all([
+    const [openPositions, closedPositions, wallet] = await Promise.all([
       this.fetchPositions("open"),
       this.fetchPositions("closed"),
+      walletService.getWallet(),
     ]);
 
     const allPositions = [...openPositions, ...closedPositions];
@@ -45,30 +47,32 @@ class PortfolioService {
     const totalUnrealizedPnL = positions.reduce((sum, position) => sum + position.unrealizedPnL, 0);
     const totalRealizedPnL = closedTrades.reduce((sum, trade) => sum + trade.realizedPnL, 0);
     const totalPnL = totalUnrealizedPnL + totalRealizedPnL;
+    const totalEquity = wallet.cashBalance + totalUnrealizedPnL;
     const dailyPnL =
       positions.filter((position) => isToday(position.openedAt)).reduce((sum, position) => sum + position.unrealizedPnL, 0) +
       closedTrades.filter((trade) => isToday(trade.closedAt)).reduce((sum, trade) => sum + trade.realizedPnL, 0);
-    const usedMargin = positions.reduce((sum, position) => sum + position.notional, 0);
+    const usedMargin = wallet.reservedBalance;
 
     fillAllocations(positions);
 
     return {
-      totalEquity: round2(totalPnL),
-      baseCapital: 0,
+      totalEquity: round2(totalEquity),
+      baseCapital: round2(wallet.cashBalance),
       totalUnrealizedPnL: round2(totalUnrealizedPnL),
       totalRealizedPnL: round2(totalRealizedPnL),
       totalPnL: round2(totalPnL),
-      totalPnLPct: 0,
+      totalPnLPct: wallet.cashBalance > 0 ? round2((totalPnL / wallet.cashBalance) * 100) : 0,
       dailyPnL: round2(dailyPnL),
-      dailyPnLPct: 0,
+      dailyPnLPct: wallet.cashBalance > 0 ? round2((dailyPnL / wallet.cashBalance) * 100) : 0,
       openPositionsCount: positions.length,
       closedTradesCount: closedTrades.length,
       winRate: computeWinRate(closedTrades),
       avgWin: average(closedTrades.filter((trade) => trade.realizedPnL > 0).map((trade) => trade.realizedPnL)),
       avgLoss: average(closedTrades.filter((trade) => trade.realizedPnL <= 0).map((trade) => Math.abs(trade.realizedPnL))),
       profitFactor: computeProfitFactor(closedTrades),
-      availableMargin: 0,
+      availableMargin: round2(wallet.availableBalance),
       usedMargin: round2(usedMargin),
+      wallet,
       positions,
       closedTrades,
       equityCurve: buildEquityCurve(closedTrades),

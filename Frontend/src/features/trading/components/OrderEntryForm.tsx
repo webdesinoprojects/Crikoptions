@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useTerminalStore } from "@/stores/terminal.store";
 import { Match } from "@/types";
+import { useWallet } from "@/features/wallet/hooks";
 import { useCreateOrder, useMarketDetail, useOptionChain } from "../hooks";
 import { buildOptionRows, buildPricePayload, findAtmRow, projectedRange } from "../utils/terminal-context";
 
@@ -23,6 +24,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const setSelectedSide = useTerminalStore((state) => state.setSelectedSide);
   const selectedStrike = useTerminalStore((state) => state.selectedStrike);
   const { data: market } = useMarketDetail(marketId);
+  const { data: wallet } = useWallet();
   const payload = useMemo(() => buildPricePayload(match, market), [match, market]);
   const { data: calculated } = useOptionChain(marketId, payload);
   const rows = useMemo(() => buildOptionRows(calculated, market), [calculated, market]);
@@ -37,6 +39,8 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const priceValue = type === "MARKET" ? backendPrice : Number.parseFloat(displayPrice) || 0;
   const qtyValue = Number.parseInt(qty, 10) || 0;
   const marginRequired = priceValue * qtyValue;
+  const availableBalance = wallet?.availableBalance ?? 0;
+  const isBuyBalanceExceeded = side === "BUY" && marginRequired > availableBalance;
   const fairLtp = calculated?.ltp ?? market?.ltp ?? 0;
   const sensitivity = ballSensitivity(match?.ballsLeft ?? 120, match?.wicketsLost ?? 0);
 
@@ -53,6 +57,10 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
     }
     if (priceValue <= 0) {
       toast.error("Please enter a valid price");
+      return;
+    }
+    if (isBuyBalanceExceeded) {
+      toast.error("Insufficient paper wallet balance");
       return;
     }
 
@@ -207,11 +215,17 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
             Rs {marginRequired.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         </div>
+        <div className={`mt-0.5 flex justify-between ${isBuyBalanceExceeded ? "text-bear-red" : "text-on-surface-variant"}`}>
+          <span>Available Balance</span>
+          <span className="font-data-tabular font-black">
+            Rs {availableBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
+        </div>
       </div>
 
       <button
         type="submit"
-        disabled={createOrderMutation.isPending || !matchId || !marketId}
+        disabled={createOrderMutation.isPending || !matchId || !marketId || isBuyBalanceExceeded}
         className={`h-9 shrink-0 rounded-md text-[12px] font-black text-white shadow-lg transition-all hover:shadow-xl ${
           side === "BUY" ? "bg-bull-green hover:bg-bull-green/90" : "bg-bear-red hover:bg-bear-red/90"
         } disabled:opacity-50`}

@@ -18,6 +18,7 @@ No frontend service falls back to mock/generated market, portfolio, trading, or 
 | Home matches and match detail | API | `src/features/dashboard/services/dashboard.service.ts` |
 | Markets, market depth, and order book | API | `src/features/trading/services/trading.service.ts` |
 | Order list/create/cancel | API | `src/features/trading/services/trading.service.ts` |
+| Wallet balance and ledger | API | `src/features/wallet/services/wallet.service.ts` |
 | Watchlist | API | `src/features/watchlist/services/watchlist.service.ts` |
 | Dashboard overview | DERIVED | `src/features/dashboard/services/dashboard.service.ts` |
 | Live ticker and market movers | DERIVED | `src/features/dashboard/services/dashboard.service.ts` |
@@ -28,7 +29,6 @@ No frontend service falls back to mock/generated market, portfolio, trading, or 
 
 ## Backend Gaps Rendered As Empty/Zero
 
-- Account cash balance and available margin.
 - Backend opportunity scanner feed.
 - Backend AI/intelligence signal feed.
 - Backend DNA archive, scenario projections, event impact, and outcome distribution datasets.

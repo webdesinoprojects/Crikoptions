@@ -21,6 +21,7 @@ export interface User {
   name: string;
   phone?: string;
   tier?: string;
+  role?: "user" | "admin" | string;
   settings?: UserSettings;
   createdAt: string;
 }

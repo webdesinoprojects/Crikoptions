@@ -15,10 +15,11 @@ import {
   Settings,
   TrendingUp,
   User,
+  Wallet,
 } from "lucide-react";
 import { useAuthStore } from "@/features/auth/hooks/useAuth";
 import { useHomeMatches, useLiveTicker } from "@/features/dashboard/hooks";
-import { LiveMarketTicker } from "@/features/dashboard/components/LiveMarketTicker";
+import { WalletBalancePill } from "@/features/wallet/components";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -51,6 +52,9 @@ export default function TopNavBar() {
     { name: "Trading Terminal", href: primaryMarketHref, icon: <TrendingUp className="w-4 h-4" /> },
     { name: "Portfolio Hub", href: "/portfolio", icon: <Activity className="w-4 h-4" /> },
     { name: "Intelligence HQ", href: primaryInsightHref, icon: <Compass className="w-4 h-4" /> },
+    ...(user?.role === "admin"
+      ? [{ name: "Admin Wallets", href: "/admin/wallets", icon: <Wallet className="w-4 h-4" /> }]
+      : []),
   ];
 
   const isActive = (href: string) => {
@@ -84,13 +88,9 @@ export default function TopNavBar() {
         </nav>
       </div>
 
-      <div className="hidden md:flex items-center gap-4 flex-1 max-w-xl xl:max-w-2xl px-8">
-        <div className="w-full">
-          <LiveMarketTicker />
-        </div>
-      </div>
-
       <div className="flex items-center gap-4">
+        <WalletBalancePill enabled={isAuthenticated} />
+
         <div className="hidden sm:flex items-center gap-3 border-r border-border/15 pr-4">
           <button className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all cursor-pointer">
             <Bell className="w-4 h-4" />

@@ -10,7 +10,6 @@ import { MarketMoversHeatmap } from "./MarketMoversHeatmap";
 import { DashboardTradeTicket } from "./DashboardTradeTicket";
 import { DashboardWatchlist } from "./DashboardWatchlist";
 import { OpportunityScanner } from "./OpportunityScanner";
-import { DashboardRightRail } from "./DashboardRightRail";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardView() {
@@ -20,8 +19,8 @@ export default function DashboardView() {
   const riskRating = marginUsagePct > 70 ? "HIGH" : marginUsagePct > 0 ? "ACTIVE" : "0";
 
   return (
-    <div className="flex-1 flex overflow-hidden h-full">
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    <div className="flex-1 overflow-hidden h-full">
+      <div className="h-full overflow-y-auto p-4 space-y-4">
         {isLoading || !overview ? (
           <div className="grid grid-cols-5 gap-3">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -81,8 +80,6 @@ export default function DashboardView() {
           <OpportunityScanner />
         </div>
       </div>
-
-      <DashboardRightRail />
     </div>
   );
 }

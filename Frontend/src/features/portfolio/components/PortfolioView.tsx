@@ -19,6 +19,7 @@ export function PortfolioView() {
   async function handleRefresh() {
     setRefreshing(true);
     await qc.invalidateQueries({ queryKey: ["portfolio"] });
+    await qc.invalidateQueries({ queryKey: ["wallet"] });
     await qc.invalidateQueries({ queryKey: ["orders"] });
     setTimeout(() => setRefreshing(false), 800);
   }
