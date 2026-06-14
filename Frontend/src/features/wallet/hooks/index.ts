@@ -9,13 +9,13 @@ export const walletKeys = {
   adminLedger: (userId?: string) => ["admin", "wallet-ledger", userId ?? "all"] as const,
 };
 
-export function useWallet(enabled = true) {
+export function useWallet(enabled = true, refetchInterval = 30_000) {
   return useQuery({
     queryKey: walletKeys.wallet,
     queryFn: () => walletService.getWallet(),
     enabled,
     staleTime: 15_000,
-    refetchInterval: 30_000,
+    refetchInterval,
     refetchOnWindowFocus: true,
   });
 }

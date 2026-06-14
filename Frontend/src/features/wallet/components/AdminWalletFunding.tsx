@@ -2,7 +2,7 @@
 
 import React from "react";
 import { toast } from "sonner";
-import { ArrowDownCircle, ArrowUpCircle, RefreshCw, Wallet } from "lucide-react";
+import { ArrowDownCircle, ArrowUpCircle, RefreshCw, Wallet, AlertCircle } from "lucide-react";
 import { useAuthStore } from "@/features/auth/hooks/useAuth";
 import {
   useAdminCreditWallet,
@@ -19,6 +19,7 @@ export function AdminWalletFunding() {
   const [amount, setAmount] = React.useState("10000");
   const [reason, setReason] = React.useState("Admin paper wallet funding");
   const [mode, setMode] = React.useState<FundingMode>("credit");
+  const [formError, setFormError] = React.useState<string | null>(null);
 
   const normalizedUserId = userId.trim();
   const isAdmin = user?.role === "admin";
@@ -31,6 +32,7 @@ export function AdminWalletFunding() {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+    setFormError(null);
     const parsedAmount = Number.parseFloat(amount);
     if (!isAdmin) {
       toast.error("Admin access required");
@@ -55,6 +57,7 @@ export function AdminWalletFunding() {
       },
       {
         onSuccess: (result) => {
+          setFormError(null);
           toast.success(
             `${mode === "credit" ? "Credited" : "Debited"} Rs ${formatMoney(parsedAmount)}. Available: Rs ${formatMoney(
               result.wallet.availableBalance
@@ -62,7 +65,9 @@ export function AdminWalletFunding() {
           );
         },
         onError: (error: unknown) => {
-          toast.error(getErrorMessage(error, "Wallet adjustment failed"));
+          const message = getErrorMessage(error, "Wallet adjustment failed");
+          setFormError(message);
+          toast.error(message);
         },
       }
     );
@@ -75,6 +80,15 @@ export function AdminWalletFunding() {
         <p className="mt-1 text-[11px] text-on-surface-variant">
           Credit or debit paper money for beta trading accounts. Every adjustment is written to the wallet ledger.
         </p>
+        {user && (
+          <p className="mt-2 text-[10px] text-on-surface-variant">
+            Signed in as <span className="font-bold text-white">{user.email}</span> with role{" "}
+            <span className={`font-bold ${user.role === "admin" ? "text-bull-green" : "text-bear-red"}`}>
+              {user.role || "user"}
+            </span>
+            .
+          </p>
+        )}
       </div>
 
       {!isAdmin ? (
@@ -160,6 +174,13 @@ export function AdminWalletFunding() {
           >
             {activeMutation.isPending ? "Applying..." : `${mode === "credit" ? "Credit" : "Debit"} Paper Wallet`}
           </button>
+
+          {formError && (
+            <div className="mt-3 flex items-start gap-2 rounded-md border border-bear-red/30 bg-bear-red/10 p-3 text-xs text-bear-red">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{formError}</span>
+            </div>
+          )}
         </form>
 
         <div className="grid gap-3 lg:grid-rows-[auto_minmax(0,1fr)]">
@@ -188,6 +209,13 @@ export function AdminWalletFunding() {
               <BalanceCard label="Reserved" value={walletQuery.data?.reservedBalance ?? 0} />
               <BalanceCard label="Currency" text={walletQuery.data?.currency ?? "PAPER_INR"} />
             </div>
+
+            {walletQuery.isError && (
+              <div className="mt-3 flex items-start gap-2 rounded-md border border-bear-red/30 bg-bear-red/10 p-3 text-xs text-bear-red">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{getErrorMessage(walletQuery.error, "Failed to load wallet snapshot")}</span>
+              </div>
+            )}
           </section>
 
           <section className="min-h-[280px] overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest">
@@ -265,19 +293,34 @@ function formatDate(value: string) {
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "response" in error &&
-    typeof error.response === "object" &&
-    error.response !== null &&
-    "data" in error.response &&
-    typeof error.response.data === "object" &&
-    error.response.data !== null &&
-    "message" in error.response.data &&
-    typeof error.response.data.message === "string"
-  ) {
-    return error.response.data.message;
+  if (typeof error === "object" && error !== null && "response" in error) {
+    const response = error.response;
+    if (typeof response === "object" && response !== null && "data" in response) {
+      const data = response.data;
+      if (typeof data === "object" && data !== null) {
+        if ("message" in data && typeof data.message === "string" && data.message.trim()) {
+          if (data.message.toLowerCase().includes("admin access required")) {
+            return "Admin access required on the backend. Restart the backend after updating ADMIN_EMAILS, then sign out and sign in again.";
+          }
+          return data.message;
+        }
+        if ("error" in data && typeof data.error === "string" && data.error.trim()) {
+          return data.error;
+        }
+      }
+    }
+    if (typeof response === "object" && response !== null && "status" in response) {
+      const status = response.status;
+      if (status === 401) return "Unauthorized. Log in again with an admin account.";
+      if (status === 403) return "Forbidden. Your account does not have backend admin permissions.";
+      if (status === 404) return "User or wallet not found for that ID.";
+    }
+  }
+  if (error instanceof Error && error.message.trim()) {
+    if (error.message.includes("timeout")) {
+      return "Request timed out. Check that the backend is running and NEXT_PUBLIC_API_URL is correct.";
+    }
+    return error.message;
   }
   return fallback;
 }

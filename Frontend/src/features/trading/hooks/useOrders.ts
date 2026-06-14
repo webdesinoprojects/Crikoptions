@@ -1,11 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { tradingService, CreateOrderPayload } from "../services/trading.service";
+import {
+  refreshAfterOrderCancel,
+  refreshAfterOrderSubmit,
+  terminalPollInterval,
+  tradingQueryKeys,
+} from "./query-keys";
 
-export const useOrders = (matchId?: string, status?: string) => {
+export const useOrders = (matchId?: string) => {
   return useQuery({
-    queryKey: ["orders", matchId, status],
-    queryFn: () => tradingService.fetchOrders(matchId, status),
-    refetchInterval: 5000, // Refresh orders list every 5s
+    queryKey: tradingQueryKeys.orders(matchId),
+    queryFn: () => tradingService.fetchOrders(matchId),
+    enabled: !!matchId,
+    refetchInterval: terminalPollInterval,
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -13,20 +21,20 @@ export const useCreateOrder = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreateOrderPayload) => tradingService.createOrder(payload),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    onSuccess: (data, variables) => {
+      refreshAfterOrderSubmit(queryClient, data, variables.matchId, variables.marketId);
       queryClient.invalidateQueries({ queryKey: ["marketDepth", data.marketId] });
       queryClient.invalidateQueries({ queryKey: ["orderBook", data.marketId] });
     },
   });
 };
 
-export const useCancelOrder = () => {
+export const useCancelOrder = (matchId?: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (orderId: string) => tradingService.cancelOrder(orderId),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      refreshAfterOrderCancel(queryClient, matchId);
       queryClient.invalidateQueries({ queryKey: ["marketDepth", data.marketId] });
       queryClient.invalidateQueries({ queryKey: ["orderBook", data.marketId] });
     },

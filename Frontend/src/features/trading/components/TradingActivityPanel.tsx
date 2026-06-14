@@ -2,11 +2,11 @@
 
 import React, { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { usePositions } from "@/features/portfolio/hooks";
-import { PortfolioPosition } from "@/features/portfolio/types/portfolio";
-import { cn } from "@/lib/utils";
 import { Order } from "@/types";
-import { useCancelOrder, useOrders, useTradeHistory } from "../hooks";
+import { Execution } from "../types/execution";
+import { OpenPosition } from "../types/position";
+import { cn } from "@/lib/utils";
+import { useCancelOrder, useExecutions, useOpenPositions, useOrders } from "../hooks";
 
 interface TradingActivityPanelProps {
   matchId: string;
@@ -19,11 +19,14 @@ type ActivityTab = "ORDERS" | "POSITIONS" | "FILLS";
 export function TradingActivityPanel({ className, matchId, marketId }: TradingActivityPanelProps) {
   const [tab, setTab] = useState<ActivityTab>("ORDERS");
   const { data: orders = [], isLoading: ordersLoading } = useOrders(matchId);
-  const { data: trades = [], isLoading: tradesLoading } = useTradeHistory(marketId);
-  const { data: positions = [], isLoading: positionsLoading } = usePositions();
-  const cancelOrderMutation = useCancelOrder();
+  const { data: executions = [], isLoading: executionsLoading } = useExecutions(matchId, marketId);
+  const { data: positions = [], isLoading: positionsLoading } = useOpenPositions();
+  const cancelOrderMutation = useCancelOrder(matchId);
 
-  const marketOrders = useMemo(() => orders.filter((order) => order.marketId === marketId), [marketId, orders]);
+  const marketOrders = useMemo(
+    () => orders.filter((order) => order.marketId === marketId),
+    [marketId, orders]
+  );
   const workingOrders = useMemo(
     () => marketOrders.filter((order) => order.status === "PENDING" || order.status === "PARTIAL"),
     [marketOrders]
@@ -50,7 +53,7 @@ export function TradingActivityPanel({ className, matchId, marketId }: TradingAc
       <div className="flex shrink-0 items-center justify-between border-b border-outline-variant bg-surface px-2.5 py-1.5">
         <div className="min-w-0">
           <h3 className="truncate text-[12px] font-black text-on-surface">Orders & Positions</h3>
-          <p className="truncate text-[10px] text-on-surface-variant">Same-market exposure while placing orders</p>
+          <p className="truncate text-[10px] text-on-surface-variant">Live orders, fills, and open positions</p>
         </div>
         <span className="rounded border border-primary/20 bg-primary/10 px-2 py-0.5 text-[9px] font-black text-primary">
           LIVE
@@ -64,7 +67,7 @@ export function TradingActivityPanel({ className, matchId, marketId }: TradingAc
         <TabButton active={tab === "POSITIONS"} count={marketPositions.length} onClick={() => setTab("POSITIONS")}>
           Positions
         </TabButton>
-        <TabButton active={tab === "FILLS"} count={trades.length} onClick={() => setTab("FILLS")}>
+        <TabButton active={tab === "FILLS"} count={executions.length} onClick={() => setTab("FILLS")}>
           Fills
         </TabButton>
       </div>
@@ -73,7 +76,7 @@ export function TradingActivityPanel({ className, matchId, marketId }: TradingAc
         {tab === "ORDERS" && (
           <OrdersTab
             loading={ordersLoading}
-            orders={workingOrders}
+            orders={marketOrders}
             cancelling={cancelOrderMutation.isPending}
             onCancel={handleCancel}
           />
@@ -82,7 +85,7 @@ export function TradingActivityPanel({ className, matchId, marketId }: TradingAc
           <PositionsTab loading={positionsLoading} positions={marketPositions} />
         )}
         {tab === "FILLS" && (
-          <FillsTab loading={tradesLoading} trades={trades} />
+          <FillsTab loading={executionsLoading} executions={executions} />
         )}
       </div>
     </section>
@@ -127,8 +130,8 @@ function OrdersTab({
   onCancel: (orderId: string) => void;
   orders: Order[];
 }) {
-  if (loading) return <PanelState label="Loading working orders..." />;
-  if (orders.length === 0) return <PanelState label="No working orders for this strike market" />;
+  if (loading) return <PanelState label="Loading orders..." />;
+  if (orders.length === 0) return <PanelState label="No orders for this market yet" />;
 
   return (
     <div className="space-y-1.5">
@@ -137,15 +140,24 @@ function OrdersTab({
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <SidePill side={order.side} />
+              <span className="font-data-tabular text-[11px] font-black text-on-surface-variant">
+                Strike {order.strike}
+              </span>
               <span className="font-data-tabular text-[12px] font-black text-on-surface">
                 Rs {(order.price ?? 0).toFixed(2)}
               </span>
             </div>
             <span className="font-data-tabular text-[11px] font-black text-on-surface">{order.quantity} lots</span>
           </div>
+          <div className="mt-1 grid grid-cols-2 gap-x-2 font-data-tabular text-[10px] text-on-surface-variant">
+            <span>Filled {order.filledQuantity}</span>
+            <span className="text-right">Remaining {order.remainingQuantity}</span>
+            <span>Avg {order.averageFillPrice > 0 ? order.averageFillPrice.toFixed(2) : "--"}</span>
+            <span className={`text-right font-black ${statusColor(order.status)}`}>{order.status}</span>
+          </div>
           <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-on-surface-variant">
-            <span>{formatTime(order.createdAt)} - {order.status}</span>
-            {order.status === "PENDING" && (
+            <span>{formatTime(order.createdAt)}</span>
+            {(order.status === "PENDING" || order.status === "PARTIAL") && (
               <button
                 type="button"
                 onClick={() => onCancel(order.id)}
@@ -162,29 +174,33 @@ function OrdersTab({
   );
 }
 
-function PositionsTab({ loading, positions }: { loading: boolean; positions: PortfolioPosition[] }) {
+function PositionsTab({ loading, positions }: { loading: boolean; positions: OpenPosition[] }) {
   if (loading) return <PanelState label="Loading positions..." />;
-  if (positions.length === 0) return <PanelState label="No active position in this market" />;
+  if (positions.length === 0) {
+    return <PanelState label="No open position yet. Positions appear after the first fill." />;
+  }
 
   return (
     <div className="space-y-1.5">
       {positions.map((position) => {
-        const positive = position.unrealizedPnL >= 0;
+        const positive = position.pnl >= 0;
         return (
-          <div key={position.marketId} className="rounded-md border border-outline-variant/60 bg-surface px-2 py-1.5">
+          <div key={position._id} className="rounded-md border border-outline-variant/60 bg-surface px-2 py-1.5">
             <div className="flex items-center justify-between gap-2">
               <div className="flex min-w-0 items-center gap-2">
-                <SidePill side={position.side} />
-                <span className="truncate text-[12px] font-black text-on-surface">{position.symbol}</span>
+                <span className="font-data-tabular text-[11px] font-black text-on-surface">
+                  Strike {position.strike}
+                </span>
+                <span className="text-[10px] text-on-surface-variant">{position.lots} lots</span>
               </div>
               <span className={`font-data-tabular text-[12px] font-black ${positive ? "text-bull-green" : "text-bear-red"}`}>
-                {positive ? "+" : "-"}Rs {Math.abs(position.unrealizedPnL).toFixed(2)}
+                {positive ? "+" : "-"}Rs {Math.abs(position.pnl).toFixed(2)}
               </span>
             </div>
             <div className="mt-1 grid grid-cols-3 gap-2 font-data-tabular text-[10px] text-on-surface-variant">
-              <span>Qty {position.quantity}</span>
-              <span>Avg {position.averageEntryPrice.toFixed(2)}</span>
-              <span className="text-right">LTP {position.currentPrice.toFixed(2)}</span>
+              <span>Buy {position.buyPrice.toFixed(2)}</span>
+              <span>LTP {position.ltp.toFixed(2)}</span>
+              <span className="text-right">PnL {position.pnl.toFixed(2)}</span>
             </div>
           </div>
         );
@@ -193,25 +209,24 @@ function PositionsTab({ loading, positions }: { loading: boolean; positions: Por
   );
 }
 
-function FillsTab({
-  loading,
-  trades,
-}: {
-  loading: boolean;
-  trades: Array<{ id: string; timestamp: string; makerSide?: "BUY" | "SELL"; price: number; quantity: number }>;
-}) {
+function FillsTab({ loading, executions }: { loading: boolean; executions: Execution[] }) {
   if (loading) return <PanelState label="Loading fills..." />;
-  if (trades.length === 0) return <PanelState label="No fills yet for this market" />;
+  if (executions.length === 0) {
+    return <PanelState label="No executions yet. Fills appear when orders execute." />;
+  }
 
   return (
     <div className="space-y-1">
-      {trades.slice(0, 8).map((trade) => (
-        <div key={trade.id} className="grid grid-cols-[46px_1fr_52px] rounded bg-surface px-2 py-1 font-data-tabular text-[11px]">
-          <span className="text-on-surface-variant">{formatTime(trade.timestamp)}</span>
-          <span className={trade.makerSide === "SELL" ? "font-black text-bear-red" : "font-black text-bull-green"}>
-            {(trade.makerSide ?? "BUY")} @ {trade.price.toFixed(2)}
+      {executions.map((execution) => (
+        <div
+          key={execution._id}
+          className="grid grid-cols-[46px_1fr_52px] rounded bg-surface px-2 py-1 font-data-tabular text-[11px]"
+        >
+          <span className="text-on-surface-variant">{formatTime(execution.createdAt)}</span>
+          <span className={execution.side === "sell" ? "font-black text-bear-red" : "font-black text-bull-green"}>
+            {execution.side.toUpperCase()} {execution.strike} @ {execution.price.toFixed(2)}
           </span>
-          <span className="text-right text-on-surface">{trade.quantity}</span>
+          <span className="text-right text-on-surface">{execution.quantity}</span>
         </div>
       ))}
     </div>
@@ -238,6 +253,13 @@ function SidePill({ side }: { side: "BUY" | "SELL" }) {
       {side}
     </span>
   );
+}
+
+function statusColor(status: Order["status"]) {
+  if (status === "FILLED") return "text-bull-green";
+  if (status === "PARTIAL") return "text-primary";
+  if (status === "CANCELLED") return "text-on-surface-variant";
+  return "text-[#FFB300]";
 }
 
 function formatTime(value: string) {

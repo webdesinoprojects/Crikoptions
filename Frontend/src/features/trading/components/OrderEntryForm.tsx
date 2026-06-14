@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useTerminalStore } from "@/stores/terminal.store";
 import { Match } from "@/types";
 import { useWallet } from "@/features/wallet/hooks";
+import { terminalPollInterval } from "../hooks/query-keys";
 import { useCreateOrder, useMarketDetail, useOptionChain } from "../hooks";
 import { buildOptionRows, buildPricePayload, findAtmRow, projectedRange } from "../utils/terminal-context";
 
@@ -24,7 +25,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const setSelectedSide = useTerminalStore((state) => state.setSelectedSide);
   const selectedStrike = useTerminalStore((state) => state.selectedStrike);
   const { data: market } = useMarketDetail(marketId);
-  const { data: wallet } = useWallet();
+  const { data: wallet } = useWallet(true, terminalPollInterval);
   const payload = useMemo(() => buildPricePayload(match, market), [match, market]);
   const { data: calculated } = useOptionChain(marketId, payload);
   const rows = useMemo(() => buildOptionRows(calculated, market), [calculated, market]);
@@ -63,18 +64,34 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
       toast.error("Insufficient paper wallet balance");
       return;
     }
+    if (!selectedRow?.strike) {
+      toast.error("Select a strike from the option chain before placing an order");
+      return;
+    }
 
     createOrderMutation.mutate(
       {
         matchId,
         marketId,
+        strike: selectedRow.strike,
         side: side.toLowerCase() as "buy" | "sell",
+        type,
         quantity: qtyValue,
         price: priceValue,
       },
       {
         onSuccess: (data) => {
-          toast.success(`Order placed: ${side} ${qtyValue} units @ Rs ${(data.price ?? 0).toFixed(2)}`);
+          if (data.status === "FILLED") {
+            toast.success(`Order filled: ${side} ${qtyValue} @ strike ${selectedRow.strike} · Rs ${(data.price ?? 0).toFixed(2)}`);
+          } else if (data.status === "PARTIAL") {
+            toast.success(
+              `Partially filled: ${data.filledQuantity}/${data.quantity} lots · ${data.remainingQuantity} remaining`
+            );
+          } else {
+            toast.success(
+              `Order open (PENDING): limit Rs ${(data.price ?? 0).toFixed(2)} is below market ask. Raise limit >= ask for immediate fill.`
+            );
+          }
           setQty(String(orderSize));
         },
         onError: (error: unknown) => {
@@ -206,6 +223,12 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
 
       <div className="shrink-0 rounded-md border border-outline-variant bg-surface p-1.5 text-[10px]">
         <div className="flex justify-between text-on-surface-variant">
+          <span>Selected Ask / Bid</span>
+          <span className="font-data-tabular text-on-surface">
+            {selectedRow ? `Bid ${selectedRow.bid.toFixed(2)} · Ask ${selectedRow.ask.toFixed(2)}` : "--"}
+          </span>
+        </div>
+        <div className="mt-0.5 flex justify-between text-on-surface-variant">
           <span>Estimated Price</span>
           <span className="font-data-tabular text-on-surface">Rs {priceValue.toFixed(2)}</span>
         </div>

@@ -5,6 +5,7 @@ import TopNavBar from "@/components/TopNavBar";
 import { SessionNavBar } from "@/components/ui/sidebar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Providers from "@/components/Providers";
+import { Toaster } from "@/components/ui/sonner";
 
 const montserrat = Montserrat({
   variable: "--font-display-xl",
@@ -50,6 +51,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             {children}
+            <Toaster richColors closeButton position="top-right" />
           </ThemeProvider>
         </Providers>
       </body>

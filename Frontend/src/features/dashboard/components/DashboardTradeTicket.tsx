@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { TerminalPanel } from "@/components/shared/TerminalComponents";
 import { useLiveTicker } from "@/features/dashboard/hooks";
-import { useCreateOrder, useMarketDetail } from "@/features/trading/hooks";
+import { useMarketDetail } from "@/features/trading/hooks";
 import { toast } from "sonner";
 
 export function DashboardTradeTicket() {
@@ -19,7 +19,6 @@ export function DashboardTradeTicket() {
     [selectedMarketId, tickers]
   );
   const { data: market } = useMarketDetail(selectedMarketId);
-  const createOrderMutation = useCreateOrder();
   const backendPrice = selectedTicker?.lastTradedPrice ?? 0;
   const effectivePrice = price > 0 ? price : backendPrice;
 
@@ -31,24 +30,7 @@ export function DashboardTradeTicket() {
       return;
     }
 
-    createOrderMutation.mutate(
-      {
-        matchId: market.matchId,
-        marketId: selectedMarketId,
-        side: side.toLowerCase() as "buy" | "sell",
-        quantity: qty,
-        price: effectivePrice,
-      },
-      {
-        onSuccess: () => {
-          toast.success(`Order placed: ${side} ${qty} ${selectedTicker?.symbol ?? "0"} @ Rs ${effectivePrice}`);
-        },
-        onError: (err: unknown) => {
-          const errMsg = getErrorMessage(err, "Failed to place order");
-          toast.error(`Error: ${errMsg}`);
-        },
-      }
-    );
+    toast.error("Place strike orders from the Trading Terminal where the option chain is available.");
   };
 
   return (
@@ -126,12 +108,12 @@ export function DashboardTradeTicket() {
 
         <button
           type="submit"
-          disabled={createOrderMutation.isPending || !selectedMarketId}
+          disabled={!selectedMarketId}
           className={`w-full py-1.5 mt-2 rounded text-[10px] font-bold text-white transition-all uppercase tracking-wider ${
             side === "BUY" ? "bg-bull-green hover:bg-bull-green/90" : "bg-bear-red hover:bg-bear-red/90"
           } disabled:opacity-50`}
         >
-          {createOrderMutation.isPending ? "Placing..." : `PLACE ${side} ORDER`}
+          {`OPEN TRADING TERMINAL FOR ${side}`}
         </button>
       </form>
     </TerminalPanel>
