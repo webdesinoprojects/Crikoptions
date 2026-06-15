@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Clock, ListChecks, ShieldCheck } from "lucide-react";
 import { TerminalPanel } from "@/components/shared/TerminalComponents";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,7 +9,7 @@ import { Order } from "@/types";
 import { usePositions } from "../hooks";
 import { PortfolioPosition } from "../types/portfolio";
 
-type TradeOpsTab = "POSITIONS" | "ORDERS" | "FILLS";
+type TradeOpsTab = "POSITIONS" | "ORDERS";
 
 export function TradeOperationsWorkspace() {
   const [tab, setTab] = useState<TradeOpsTab>("POSITIONS");
@@ -18,25 +18,19 @@ export function TradeOperationsWorkspace() {
 
   const positionRows = positions.length > 0 ? positions : samplePositions;
   const orderRows = orders.length > 0 ? orders : sampleOrders;
-  const fillRows = useMemo(() => {
-    const realFills = orders.filter((order) => order.status === "FILLED" || order.filledQuantity > 0);
-    return realFills.length > 0 ? realFills : sampleFills;
-  }, [orders]);
-
   const isSample =
     (tab === "POSITIONS" && positions.length === 0) ||
-    (tab === "ORDERS" && orders.length === 0) ||
-    (tab === "FILLS" && !orders.some((order) => order.status === "FILLED" || order.filledQuantity > 0));
+    (tab === "ORDERS" && orders.length === 0);
 
   const totalExposure = positionRows.reduce((sum, position) => sum + position.notional, 0);
   const workingOrders = orderRows.filter((order) => order.status === "PENDING" || order.status === "PARTIAL").length;
-  const filledLots = fillRows.reduce((sum, order) => sum + (order.filledQuantity || order.quantity), 0);
+  const executedOrders = orderRows.filter((order) => order.status === "FILLED").length;
 
   return (
     <TerminalPanel
       density="dense"
       title="Trade Operations"
-      subtitle="Sample screens for active positions, working orders, and executed fills"
+      subtitle="Active positions and order status"
       className="min-h-[420px]"
       headerActions={
         <span className="rounded border border-primary/20 bg-primary/10 px-2 py-0.5 text-[9px] font-black uppercase text-primary">
@@ -48,7 +42,7 @@ export function TradeOperationsWorkspace() {
       <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
         <OpsMetric icon={<ShieldCheck className="h-4 w-4" />} label="Gross exposure" value={`Rs ${formatMoney(totalExposure)}`} />
         <OpsMetric icon={<Clock className="h-4 w-4" />} label="Working orders" value={String(workingOrders)} />
-        <OpsMetric icon={<ListChecks className="h-4 w-4" />} label="Filled lots" value={filledLots.toLocaleString()} />
+        <OpsMetric icon={<ListChecks className="h-4 w-4" />} label="Executed orders" value={executedOrders.toLocaleString()} />
       </div>
 
       <div className="flex flex-wrap gap-1 rounded-md border border-outline/10 bg-surface-dim p-1">
@@ -56,10 +50,7 @@ export function TradeOperationsWorkspace() {
           Open Positions
         </TabButton>
         <TabButton active={tab === "ORDERS"} onClick={() => setTab("ORDERS")}>
-          Working Orders
-        </TabButton>
-        <TabButton active={tab === "FILLS"} onClick={() => setTab("FILLS")}>
-          Fills
+          Orders
         </TabButton>
       </div>
 
@@ -69,9 +60,6 @@ export function TradeOperationsWorkspace() {
         )}
         {tab === "ORDERS" && (
           <OrdersScreen rows={orderRows} loading={ordersLoading && orders.length === 0} sample={orders.length === 0} />
-        )}
-        {tab === "FILLS" && (
-          <FillsScreen rows={fillRows} loading={ordersLoading && fillRows.length === 0} sample={isSample} />
         )}
       </div>
     </TerminalPanel>
@@ -181,7 +169,7 @@ function OrdersScreen({ loading, rows, sample }: { loading: boolean; rows: Order
             <th className="px-3 py-2 text-center">Type</th>
             <th className="px-3 py-2 text-right">Limit</th>
             <th className="px-3 py-2 text-right">Qty</th>
-            <th className="px-3 py-2 text-right">Filled</th>
+            <th className="px-3 py-2 text-right">Done</th>
             <th className="px-3 py-2 text-right">Status</th>
           </tr>
         </thead>
@@ -210,55 +198,6 @@ function OrdersScreen({ loading, rows, sample }: { loading: boolean; rows: Order
                 </td>
               </tr>
             ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function FillsScreen({ loading, rows, sample }: { loading: boolean; rows: Order[]; sample: boolean }) {
-  return (
-    <div className="h-full overflow-auto">
-      <table className="w-full min-w-[680px] border-collapse font-data-tabular text-[12px]">
-        <thead className="sticky top-0 bg-surface text-[10px] uppercase tracking-wider text-on-surface-variant">
-          <tr className="border-b border-outline/10">
-            <th className="px-3 py-2 text-left">Fill time</th>
-            <th className="px-3 py-2 text-left">Market</th>
-            <th className="px-3 py-2 text-center">Side</th>
-            <th className="px-3 py-2 text-right">Avg fill</th>
-            <th className="px-3 py-2 text-right">Lots</th>
-            <th className="px-3 py-2 text-right">Notional</th>
-            <th className="px-3 py-2 text-right">State</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-outline/5">
-          {loading ? <LoadingRows columns={7} /> : null}
-          {!loading &&
-            rows.map((order) => {
-              const lots = order.filledQuantity || order.quantity;
-              const price = order.price ?? 0;
-              return (
-                <tr key={`${order.id}-fill`} className="hover:bg-white/[0.03]">
-                  <td className="px-3 py-2 text-on-surface">
-                    <div className="font-black">{formatTime(order.createdAt)}</div>
-                    <div className="text-[10px] text-on-surface-variant">{shortId(order.id)}</div>
-                  </td>
-                  <td className="px-3 py-2 text-on-surface-variant">
-                    {shortId(order.marketId)}
-                    {sample && <span className="ml-2 text-[9px] font-black text-primary">SAMPLE</span>}
-                  </td>
-                  <td className="px-3 py-2 text-center">
-                    <SideBadge side={order.side} />
-                  </td>
-                  <td className="px-3 py-2 text-right text-on-surface">Rs {price.toFixed(2)}</td>
-                  <td className="px-3 py-2 text-right text-on-surface">{lots.toLocaleString()}</td>
-                  <td className="px-3 py-2 text-right text-on-surface-variant">Rs {formatMoney(price * lots)}</td>
-                  <td className="px-3 py-2 text-right">
-                    <StatusBadge status={order.status} />
-                  </td>
-                </tr>
-              );
-            })}
         </tbody>
       </table>
     </div>
@@ -305,7 +244,13 @@ function StatusBadge({ status }: { status: Order["status"] }) {
       ? "border-primary/25 bg-primary/10 text-primary"
       : "border-amber-400/25 bg-amber-400/10 text-amber-200";
 
-  return <span className={`rounded border px-2 py-0.5 text-[10px] font-black ${className}`}>{status}</span>;
+  return <span className={`rounded border px-2 py-0.5 text-[10px] font-black ${className}`}>{displayStatus(status)}</span>;
+}
+
+function displayStatus(status: Order["status"]) {
+  if (status === "FILLED") return "EXECUTED";
+  if (status === "PARTIAL") return "PARTIAL";
+  return status;
 }
 
 function RiskBar({ value }: { value: number }) {
@@ -433,37 +378,3 @@ const sampleOrders: Order[] = [
   },
 ];
 
-const sampleFills: Order[] = [
-  {
-    id: "fill-sample-001",
-    matchId: "match-csk-mi",
-    marketId: "CSK130",
-    strike: 130,
-    side: "BUY",
-    type: "LIMIT",
-    status: "FILLED",
-    backendStatus: "executed",
-    price: 18.4,
-    quantity: 40,
-    filledQuantity: 40,
-    remainingQuantity: 0,
-    averageFillPrice: 18.4,
-    createdAt: now,
-  },
-  {
-    id: "fill-sample-002",
-    matchId: "match-csk-mi",
-    marketId: "CSK150",
-    strike: 150,
-    side: "SELL",
-    type: "LIMIT",
-    status: "FILLED",
-    backendStatus: "executed",
-    price: 9.2,
-    quantity: 25,
-    filledQuantity: 25,
-    remainingQuantity: 0,
-    averageFillPrice: 9.2,
-    createdAt: now,
-  },
-];

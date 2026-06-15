@@ -22,7 +22,7 @@ export const useCreateOrder = () => {
   return useMutation({
     mutationFn: (payload: CreateOrderPayload) => tradingService.createOrder(payload),
     onSuccess: (data, variables) => {
-      refreshAfterOrderSubmit(queryClient, data, variables.matchId, variables.marketId);
+      refreshAfterOrderSubmit(queryClient, data, variables.matchId);
       queryClient.invalidateQueries({ queryKey: ["marketDepth", data.marketId] });
       queryClient.invalidateQueries({ queryKey: ["orderBook", data.marketId] });
     },

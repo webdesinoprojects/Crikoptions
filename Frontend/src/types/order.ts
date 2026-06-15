@@ -1,4 +1,4 @@
-export type BackendOrderStatus = "open" | "executed" | "partially_filled" | "cancelled";
+export type BackendOrderStatus = "open" | "executed" | "partially_filled" | "cancelled" | "rejected" | string;
 
 export interface Order {
   id: string;
@@ -7,7 +7,7 @@ export interface Order {
   strike: number;
   side: "BUY" | "SELL";
   type: "MARKET" | "LIMIT" | "STOP";
-  status: "PENDING" | "PARTIAL" | "FILLED" | "CANCELLED";
+  status: "PENDING" | "PARTIAL" | "FILLED" | "CANCELLED" | "REJECTED" | "UNKNOWN";
   backendStatus: BackendOrderStatus;
   price?: number;
   quantity: number;

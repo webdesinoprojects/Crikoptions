@@ -3,10 +3,9 @@
 import React, { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Order } from "@/types";
-import { Execution } from "../types/execution";
 import { OpenPosition } from "../types/position";
 import { cn } from "@/lib/utils";
-import { useCancelOrder, useExecutions, useOpenPositions, useOrders } from "../hooks";
+import { useCancelOrder, useOpenPositions, useOrders } from "../hooks";
 
 interface TradingActivityPanelProps {
   matchId: string;
@@ -14,27 +13,23 @@ interface TradingActivityPanelProps {
   className?: string;
 }
 
-type ActivityTab = "ORDERS" | "POSITIONS" | "FILLS";
+type ActivityTab = "ORDERS" | "POSITIONS";
 
 export function TradingActivityPanel({ className, matchId, marketId }: TradingActivityPanelProps) {
   const [tab, setTab] = useState<ActivityTab>("ORDERS");
-  const { data: orders = [], isLoading: ordersLoading } = useOrders(matchId);
-  const { data: executions = [], isLoading: executionsLoading } = useExecutions(matchId, marketId);
-  const { data: positions = [], isLoading: positionsLoading } = useOpenPositions();
+  const { data: orders = [], isFetching: ordersFetching, isLoading: ordersLoading } = useOrders(matchId);
+  const { data: positions = [], isFetching: positionsFetching, isLoading: positionsLoading } = useOpenPositions();
   const cancelOrderMutation = useCancelOrder(matchId);
 
   const marketOrders = useMemo(
-    () => orders.filter((order) => order.marketId === marketId),
+    () => orders.filter((order) => order.marketId === marketId && order.strike > 0 && order.quantity > 0),
     [marketId, orders]
   );
-  const workingOrders = useMemo(
-    () => marketOrders.filter((order) => order.status === "PENDING" || order.status === "PARTIAL"),
-    [marketOrders]
-  );
   const marketPositions = useMemo(
-    () => positions.filter((position) => position.marketId === marketId),
+    () => positions.filter((position) => position.marketId === marketId && position.strike > 0 && position.lots !== 0),
     [marketId, positions]
   );
+  const isSyncing = ordersFetching || positionsFetching || cancelOrderMutation.isPending;
 
   const handleCancel = (orderId: string) => {
     cancelOrderMutation.mutate(orderId, {
@@ -53,22 +48,21 @@ export function TradingActivityPanel({ className, matchId, marketId }: TradingAc
       <div className="flex shrink-0 items-center justify-between border-b border-outline-variant bg-surface px-2.5 py-1.5">
         <div className="min-w-0">
           <h3 className="truncate text-[12px] font-black text-on-surface">Orders & Positions</h3>
-          <p className="truncate text-[10px] text-on-surface-variant">Live orders, fills, and open positions</p>
+          <p className="truncate text-[10px] text-on-surface-variant">Live order status and open positions</p>
         </div>
-        <span className="rounded border border-primary/20 bg-primary/10 px-2 py-0.5 text-[9px] font-black text-primary">
-          LIVE
+        <span className={`rounded border px-2 py-0.5 text-[9px] font-black ${
+          isSyncing ? "border-[#FFB300]/25 bg-[#FFB300]/10 text-[#FFB300]" : "border-primary/20 bg-primary/10 text-primary"
+        }`}>
+          {isSyncing ? "SYNCING" : "LIVE"}
         </span>
       </div>
 
-      <div className="grid shrink-0 grid-cols-3 gap-1 border-b border-outline-variant bg-surface p-1">
-        <TabButton active={tab === "ORDERS"} count={workingOrders.length} onClick={() => setTab("ORDERS")}>
+      <div className="grid shrink-0 grid-cols-2 gap-1 border-b border-outline-variant bg-surface p-1">
+        <TabButton active={tab === "ORDERS"} count={marketOrders.length} onClick={() => setTab("ORDERS")}>
           Orders
         </TabButton>
         <TabButton active={tab === "POSITIONS"} count={marketPositions.length} onClick={() => setTab("POSITIONS")}>
           Positions
-        </TabButton>
-        <TabButton active={tab === "FILLS"} count={executions.length} onClick={() => setTab("FILLS")}>
-          Fills
         </TabButton>
       </div>
 
@@ -83,9 +77,6 @@ export function TradingActivityPanel({ className, matchId, marketId }: TradingAc
         )}
         {tab === "POSITIONS" && (
           <PositionsTab loading={positionsLoading} positions={marketPositions} />
-        )}
-        {tab === "FILLS" && (
-          <FillsTab loading={executionsLoading} executions={executions} />
         )}
       </div>
     </section>
@@ -133,15 +124,19 @@ function OrdersTab({
   if (loading) return <PanelState label="Loading orders..." />;
   if (orders.length === 0) return <PanelState label="No orders for this market yet" />;
 
+  const sortedOrders = [...orders].sort((a, b) => {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
   return (
     <div className="space-y-1.5">
-      {orders.map((order) => (
-        <div key={order.id} className="rounded-md border border-outline-variant/60 bg-surface px-2 py-1.5">
+      {sortedOrders.map((order) => (
+        <div key={order.id} className={`rounded-md border px-2 py-1.5 ${order.status === "FILLED" ? "border-bull-green/20 bg-bull-green/5" : "border-outline-variant/60 bg-surface"}`}>
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <SidePill side={order.side} />
               <span className="font-data-tabular text-[11px] font-black text-on-surface-variant">
-                Strike {order.strike}
+                Strike {formatStrike(order.strike)}
               </span>
               <span className="font-data-tabular text-[12px] font-black text-on-surface">
                 Rs {(order.price ?? 0).toFixed(2)}
@@ -150,21 +145,21 @@ function OrdersTab({
             <span className="font-data-tabular text-[11px] font-black text-on-surface">{order.quantity} lots</span>
           </div>
           <div className="mt-1 grid grid-cols-2 gap-x-2 font-data-tabular text-[10px] text-on-surface-variant">
-            <span>Filled {order.filledQuantity}</span>
+            <span>Done {order.filledQuantity}</span>
             <span className="text-right">Remaining {order.remainingQuantity}</span>
-            <span>Avg {order.averageFillPrice > 0 ? order.averageFillPrice.toFixed(2) : "--"}</span>
-            <span className={`text-right font-black ${statusColor(order.status)}`}>{order.status}</span>
+            <span>Avg price {order.averageFillPrice > 0 ? order.averageFillPrice.toFixed(2) : "--"}</span>
+            <span className={`text-right font-black ${statusColor(order.status)}`}>{displayStatus(order.status)}</span>
           </div>
           <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-on-surface-variant">
             <span>{formatTime(order.createdAt)}</span>
-            {(order.status === "PENDING" || order.status === "PARTIAL") && (
+            {isWorkingOrder(order) && (
               <button
                 type="button"
                 onClick={() => onCancel(order.id)}
                 disabled={cancelling}
                 className="rounded border border-bear-red/20 bg-bear-red/10 px-2 py-0.5 font-black text-bear-red disabled:opacity-50"
               >
-                Cancel
+                {cancelling ? "Cancelling" : "Cancel"}
               </button>
             )}
           </div>
@@ -177,7 +172,7 @@ function OrdersTab({
 function PositionsTab({ loading, positions }: { loading: boolean; positions: OpenPosition[] }) {
   if (loading) return <PanelState label="Loading positions..." />;
   if (positions.length === 0) {
-    return <PanelState label="No open position yet. Positions appear after the first fill." />;
+    return <PanelState label="No open position yet. Positions appear after an order executes." />;
   }
 
   return (
@@ -209,30 +204,6 @@ function PositionsTab({ loading, positions }: { loading: boolean; positions: Ope
   );
 }
 
-function FillsTab({ loading, executions }: { loading: boolean; executions: Execution[] }) {
-  if (loading) return <PanelState label="Loading fills..." />;
-  if (executions.length === 0) {
-    return <PanelState label="No executions yet. Fills appear when orders execute." />;
-  }
-
-  return (
-    <div className="space-y-1">
-      {executions.map((execution) => (
-        <div
-          key={execution._id}
-          className="grid grid-cols-[46px_1fr_52px] rounded bg-surface px-2 py-1 font-data-tabular text-[11px]"
-        >
-          <span className="text-on-surface-variant">{formatTime(execution.createdAt)}</span>
-          <span className={execution.side === "sell" ? "font-black text-bear-red" : "font-black text-bull-green"}>
-            {execution.side.toUpperCase()} {execution.strike} @ {execution.price.toFixed(2)}
-          </span>
-          <span className="text-right text-on-surface">{execution.quantity}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function PanelState({ label }: { label: string }) {
   return (
     <div className="flex h-full min-h-[100px] items-center justify-center rounded-md border border-dashed border-outline-variant text-center text-[11px] font-semibold text-on-surface-variant">
@@ -259,7 +230,22 @@ function statusColor(status: Order["status"]) {
   if (status === "FILLED") return "text-bull-green";
   if (status === "PARTIAL") return "text-primary";
   if (status === "CANCELLED") return "text-on-surface-variant";
+  if (status === "REJECTED") return "text-bear-red";
   return "text-[#FFB300]";
+}
+
+function displayStatus(status: Order["status"]) {
+  if (status === "FILLED") return "EXECUTED";
+  if (status === "PARTIAL") return "PARTIAL";
+  return status;
+}
+
+function isWorkingOrder(order: Order) {
+  return (order.status === "PENDING" || order.status === "PARTIAL") && order.remainingQuantity > 0 && order.strike > 0;
+}
+
+function formatStrike(strike: number) {
+  return strike > 0 ? strike.toFixed(0) : "--";
 }
 
 function formatTime(value: string) {

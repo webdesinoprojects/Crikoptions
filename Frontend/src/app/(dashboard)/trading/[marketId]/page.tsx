@@ -50,9 +50,9 @@ export default function TradingTerminalPage({ params }: PageProps) {
         <div className="grid min-h-full grid-cols-1 gap-3 p-3 lg:h-full lg:min-h-0 lg:grid-cols-[250px_minmax(0,1fr)_315px] xl:grid-cols-[280px_minmax(0,1fr)_340px] 2xl:grid-cols-[300px_minmax(0,1fr)_370px]">
           <LiveMatchStatsPanel className="lg:h-full lg:min-h-0" match={match} market={market} />
           <OptionChain className="lg:h-full lg:min-h-0" marketId={marketId} market={market} match={match} />
-          <section className="flex min-h-0 flex-col gap-2">
+          <section className="flex min-h-0 flex-col gap-2 overflow-y-auto pr-1 lg:h-full">
             <OrderEntryForm matchId={matchId} marketId={marketId} match={match} />
-            <TradingActivityPanel className="min-h-[170px] flex-1" matchId={matchId} marketId={marketId} />
+            <TradingActivityPanel className="min-h-[260px] shrink-0 lg:flex-1" matchId={matchId} marketId={marketId} />
           </section>
         </div>
       </main>

@@ -62,7 +62,7 @@ export function PositionSummary({ matchId, marketId }: PositionSummaryProps) {
         ) : activePositions.length === 0 ? (
             <div className="flex h-full min-h-[100px] flex-col items-center justify-center rounded border border-dashed border-outline-variant text-center">
               <span className="text-sm font-semibold text-on-surface">No active positions</span>
-              <span className="mt-1 text-[11px] text-on-surface-variant">Filled exposure will appear here.</span>
+              <span className="mt-1 text-[11px] text-on-surface-variant">Executed orders will appear here.</span>
             </div>
           ) : (
             <table className="w-full text-left font-data-tabular">

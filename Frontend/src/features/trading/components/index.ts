@@ -6,7 +6,6 @@ export * from "./MarketPulsePanel";
 export * from "./MatchProjectionsPanel";
 export * from "./TradingActivityPanel";
 export * from "./OrderBook";
-export * from "./TradeHistory";
 export * from "./OrderEntryForm";
 export * from "./PositionSummary";
 export * from "./MatchAnalyticsPanel";

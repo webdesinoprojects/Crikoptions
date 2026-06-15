@@ -8,19 +8,21 @@ interface WalletBalancePillProps {
 }
 
 export function WalletBalancePill({ enabled = true }: WalletBalancePillProps) {
-  const { data: wallet, isLoading } = useWallet(enabled);
+  const { data: wallet, isError, isLoading } = useWallet(enabled);
 
   if (!enabled) return null;
 
   return (
-    <div className="hidden min-h-10 min-w-[178px] xl:flex items-center gap-3 rounded-lg border border-outline/15 bg-surface px-3.5 py-2">
+    <div className="hidden min-h-9 min-w-[150px] items-center gap-2 rounded-lg border border-outline/15 bg-surface px-2.5 py-1.5 shadow-sm shadow-black/10 lg:flex xl:min-w-[178px]">
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10">
-        <Wallet className="h-4.5 w-4.5 text-primary" />
+        <Wallet className="h-4 w-4 text-primary" />
       </div>
-      <div className="leading-none">
-        <div className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Paper Balance</div>
-        <div className="mt-1 font-data-tabular text-sm font-black text-on-surface">
-          {isLoading ? "Loading" : `Rs ${formatMoney(wallet?.availableBalance ?? 0)}`}
+      <div className="min-w-0 leading-none">
+        <div className="truncate text-[8px] font-black uppercase tracking-wider text-muted-foreground xl:text-[9px]">
+          Paper Balance
+        </div>
+        <div className="mt-1 truncate font-data-tabular text-[12px] font-black text-on-surface xl:text-sm">
+          {isLoading ? "Loading" : isError ? "Unavailable" : `Rs ${formatMoney(wallet?.availableBalance ?? 0)}`}
         </div>
       </div>
     </div>
