@@ -39,7 +39,7 @@ export function PortfolioSnapshot() {
           </div>
           <div className="p-2 border border-outline-variant rounded-lg bg-surface-container/30">
             <span className="text-on-surface-variant block mb-1">Available Funds</span>
-            <span className="font-bold font-data-tabular text-sm">₹{data.marginAvailable.toLocaleString()}</span>
+            <span className="font-bold font-data-tabular text-sm">Rs {data.marginAvailable.toLocaleString()}</span>
           </div>
         </div>
       </CardContent>

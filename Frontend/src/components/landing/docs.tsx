@@ -55,13 +55,13 @@ export const DocsSection = () => {
                     <div className="w-3 h-3 rounded-full bg-red-500/80" />
                     <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
                     <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                    <span className="ml-4 font-mono text-xs text-gray-500">crikoptions-api.js</span>
+                    <span className="ml-4 font-mono text-xs text-gray-500">cricoptions-api.js</span>
                 </div>
                 <div className="p-6 font-mono text-sm overflow-x-auto">
                     <pre className="text-gray-300 leading-relaxed">
-<code className="block code-line"><span className="text-[#3131f5]">import</span> {'{'} CrikOptions {'}'} <span className="text-[#3131f5]">from</span> <span className="text-green-400">'@crikoptions/sdk'</span>;</code>
+<code className="block code-line"><span className="text-[#3131f5]">import</span> {'{'} CricOptions {'}'} <span className="text-[#3131f5]">from</span> <span className="text-green-400">'@cricoptions/sdk'</span>;</code>
 <code className="block code-line"></code>
-<code className="block code-line"><span className="text-blue-400">const</span> client = <span className="text-[#3131f5]">new</span> CrikOptions({'{'}</code>
+<code className="block code-line"><span className="text-blue-400">const</span> client = <span className="text-[#3131f5]">new</span> CricOptions({'{'}</code>
 <code className="block code-line">  apiKey: process.env.<span className="text-white">CRIK_API_KEY</span>,</code>
 <code className="block code-line">  environment: <span className="text-green-400">'production'</span></code>
 <code className="block code-line">{'}'});</code>

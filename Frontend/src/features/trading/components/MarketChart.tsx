@@ -84,7 +84,7 @@ export function MarketChart({ marketId }: MarketChartProps) {
   return (
     <div className="w-full flex-grow relative">
       <div className="absolute right-2 top-2 z-10">
-        <DataSourceBadge source="simulated" />
+        <DataSourceBadge source="api" />
       </div>
       <div className="h-full w-full" ref={chartContainerRef} />
     </div>

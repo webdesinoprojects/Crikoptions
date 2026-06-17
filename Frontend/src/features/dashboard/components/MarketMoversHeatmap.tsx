@@ -4,49 +4,28 @@ import React, { useMemo } from "react";
 import { TerminalPanel } from "@/components/shared/TerminalComponents";
 import { EChartsWrapper } from "@/components/shared/EChartsWrapper";
 import { AssetHeatmapMask } from "./AssetHeatmapMask";
+import { useMarketMovers } from "@/features/dashboard/hooks";
 
 export function MarketMoversHeatmap() {
+  const { data: movers = [] } = useMarketMovers();
   const option = useMemo(() => {
-
-    // 5x3 heat grid representing player stocks & daily changes
-    const hours = ["BAT", "BOWL", "ALL"];
-    const days = ["RCB", "CSK", "MI", "SRH", "KKR"];
-
-    const data = [
-      [0, 0, 8.4], [1, 0, 12.5], [2, 0, -3.2], [3, 0, 4.1], [4, 0, 6.2], // Batter row
-      [0, 1, -1.5], [1, 1, 8.2], [2, 1, 5.5], [3, 1, -6.1], [4, 1, 2.8],  // Bowler row
-      [0, 2, -15.4], [1, 2, 0.5], [2, 2, -4.2], [3, 2, 7.8], [4, 2, 11.2], // All-rounder row
-    ];
+    const symbols = movers.map((mover) => mover.symbol);
+    const data = movers.map((mover, index) => [index, 0, mover.changePercent]);
 
     return {
       tooltip: {
         position: "top" as const,
-        formatter: (params: any) => {
-          const value = params.value[2];
+        formatter: (params: unknown) => {
+          const valueTuple = getHeatmapTuple(params);
+          const symbolIndex = valueTuple?.[0] ?? 0;
+          const value = valueTuple?.[2] ?? 0;
           const colorClass = value >= 0 ? "#22c55e" : "#ef4444";
-          return `${days[params.value[0]]} ${hours[params.value[1]]}: <span style="color:${colorClass};font-weight:bold;">${value >= 0 ? "+" : ""}${value}%</span>`;
+          return `${symbols[symbolIndex] ?? "0"}: <span style="color:${colorClass};font-weight:bold;">${value >= 0 ? "+" : ""}${value}%</span>`;
         },
       },
-      grid: {
-        top: 10,
-        bottom: 30,
-        left: 50,
-        right: 10,
-      },
-      xAxis: {
-        type: "category" as const,
-        data: days,
-        splitArea: {
-          show: true,
-        },
-      },
-      yAxis: {
-        type: "category" as const,
-        data: hours,
-        splitArea: {
-          show: true,
-        },
-      },
+      grid: { top: 10, bottom: 30, left: 50, right: 10 },
+      xAxis: { type: "category" as const, data: symbols, splitArea: { show: true } },
+      yAxis: { type: "category" as const, data: ["Change"], splitArea: { show: true } },
       visualMap: {
         min: -15,
         max: 15,
@@ -56,48 +35,52 @@ export function MarketMoversHeatmap() {
         bottom: 0,
         itemWidth: 10,
         itemHeight: 120,
-        textStyle: {
-          color: "#94a3b8",
-          fontSize: 9,
-          fontFamily: "JetBrains Mono, monospace",
-        },
-        inRange: {
-          color: ["#ef4444", "#0a1428", "#22c55e"], // Bear-red to dark-blue to Bull-green
-        },
+        textStyle: { color: "#94a3b8", fontSize: 9, fontFamily: "JetBrains Mono, monospace" },
+        inRange: { color: ["#ef4444", "#0a1428", "#22c55e"] },
       },
       series: [
         {
           name: "Movers Heat",
           type: "heatmap" as const,
-          data: data,
+          data,
           label: {
             show: true,
-            formatter: (params: any) => `${params.value[2]}%`,
+            formatter: (params: unknown) => `${getHeatmapTuple(params)?.[2] ?? 0}%`,
             fontSize: 9,
             fontFamily: "JetBrains Mono, monospace",
             color: "#f8fafc",
           },
-          emphasis: {
-            itemStyle: {
-              shadowBlur: 10,
-              shadowColor: "rgba(0, 0, 0, 0.5)",
-            },
-          },
         },
       ],
     };
-  }, []);
+  }, [movers]);
 
   return (
-    <TerminalPanel
-      title="Market Movers Heatmap"
-      subtitle="Z-score pricing variance per squad / category"
-      className="h-[260px]"
-    >
+    <TerminalPanel title="Market Movers Heatmap" subtitle="Backend market change by symbol" className="h-[260px]">
       <div className="flex-1 min-h-0 relative">
         <AssetHeatmapMask />
-        <EChartsWrapper option={option} />
+        {movers.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-xs text-on-surface-variant">
+            No backend market movers
+          </div>
+        ) : (
+          <EChartsWrapper option={option} />
+        )}
       </div>
     </TerminalPanel>
   );
+}
+
+function getHeatmapTuple(params: unknown): [number, number, number] | null {
+  if (
+    typeof params === "object" &&
+    params !== null &&
+    "value" in params &&
+    Array.isArray(params.value) &&
+    params.value.length >= 3
+  ) {
+    const [x, y, value] = params.value;
+    return [Number(x) || 0, Number(y) || 0, Number(value) || 0];
+  }
+  return null;
 }

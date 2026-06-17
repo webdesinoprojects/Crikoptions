@@ -39,7 +39,7 @@ const Navbar1 = () => {
             transition={{ duration: 0.3 }}
           >
             <Link href="/" className="flex items-center gap-2">
-              <span className="text-2xl font-extrabold tracking-tight text-white uppercase font-display">Crikoptions</span>
+              <span className="text-2xl font-extrabold tracking-tight text-white uppercase font-display">CricOptions</span>
             </Link>
           </motion.div>
         </div>

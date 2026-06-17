@@ -5,12 +5,11 @@ import { useOutcomeDistribution } from "../hooks";
 import { TerminalPanel } from "@/components/shared/TerminalComponents";
 import { EChartsWrapper } from "@/components/shared/EChartsWrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { motion, Variants } from "framer-motion";
 
 interface OutcomeDistributionProps {
   matchId: string;
 }
-
-import { motion, Variants } from "framer-motion";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -29,43 +28,23 @@ export function OutcomeDistribution({ matchId }: OutcomeDistributionProps) {
   const { data: outcomes, isLoading } = useOutcomeDistribution(matchId);
 
   const curveOption = useMemo(() => {
-    const bellData = Array.from({ length: 60 }, (_, i) => {
-      const x = (i - 30) / 10;
-      return [i, Math.exp(-0.5 * x * x) * 100];
-    });
-
+    const data = outcomes?.map((outcome) => outcome.probability) ?? [];
     return {
-      tooltip: {
-        trigger: "axis" as const,
-        formatter: "Score distribution range density",
-      },
+      tooltip: { trigger: "axis" as const, formatter: "Backend probability distribution" },
       grid: { top: "5%", left: "2%", right: "2%", bottom: "2%", containLabel: false },
-      xAxis: { type: "value" as const, show: false, min: 0, max: 59 },
-      yAxis: { type: "value" as const, show: false },
+      xAxis: { type: "category" as const, show: false, data: outcomes?.map((outcome) => outcome.label) ?? [] },
+      yAxis: { type: "value" as const, show: false, min: 0, max: 100 },
       series: [
         {
           type: "line" as const,
-          data: bellData,
+          data,
           smooth: true,
           symbol: "none",
           lineStyle: { color: "#4AF626", width: 2 },
-          areaStyle: {
-            color: {
-              type: "linear" as const,
-              x: 0,
-              y: 0,
-              x2: 0,
-              y2: 1,
-              colorStops: [
-                { offset: 0, color: "rgba(74, 246, 38, 0.25)" },
-                { offset: 1, color: "rgba(74, 246, 38, 0.02)" }
-              ]
-            }
-          },
         },
       ],
     };
-  }, []);
+  }, [outcomes]);
 
   const sentimentColor = (s: string) =>
     s === "BULLISH" ? "#4AF626" : s === "BEARISH" ? "#FF2A2A" : "#0EA5E9";
@@ -73,28 +52,32 @@ export function OutcomeDistribution({ matchId }: OutcomeDistributionProps) {
   return (
     <TerminalPanel
       title="[ OUTCOME DISTRIBUTIONS ]"
-      subtitle="Score outcome curves computed from similar match states"
+      subtitle="Backend outcome probability data"
       className="h-[320px] rounded-none font-mono group"
     >
       <div className="flex-1 flex flex-col justify-between min-h-0 select-none">
-        {/* Bell curve */}
-        <div className="h-20 relative group-hover:scale-[1.02] transition-transform duration-700 ease-out origin-bottom">
-          <EChartsWrapper option={curveOption} />
+        <div className="h-20 relative">
+          {outcomes && outcomes.length > 0 ? (
+            <EChartsWrapper option={curveOption} />
+          ) : (
+            <div className="flex h-full items-center justify-center text-xs text-on-surface-variant">
+              No backend outcome curve
+            </div>
+          )}
         </div>
 
         <div className="text-center text-[12px] font-bold text-[#4AF626] mt-2 tracking-widest drop-shadow-[0_0_8px_rgba(74,246,38,0.4)]">
-          [ EXPECTED SCORE: 342 RUNS ]
+          [ EXPECTED SCORE: 0 RUNS ]
         </div>
 
-        {/* Probability bars */}
         <div className="space-y-3 mt-4">
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-6 w-full bg-white/5 animate-pulse rounded-none" />
             ))
-          ) : (
+          ) : outcomes && outcomes.length > 0 ? (
             <motion.div variants={containerVariants} initial="hidden" animate="visible" className="flex flex-col gap-3">
-              {outcomes?.map((o) => (
+              {outcomes.map((o) => (
                 <div key={o.label}>
                   <div className="flex justify-between items-center text-[11px] mb-1 font-bold tracking-wide">
                     <span className="text-white font-medium">{o.range || o.label}</span>
@@ -109,17 +92,20 @@ export function OutcomeDistribution({ matchId }: OutcomeDistributionProps) {
                       style={{
                         width: `${o.probability}%`,
                         backgroundColor: sentimentColor(o.sentiment),
-                        boxShadow: `0 0 10px ${sentimentColor(o.sentiment)}40`
+                        boxShadow: `0 0 10px ${sentimentColor(o.sentiment)}40`,
                       }}
                     />
                   </div>
                 </div>
               ))}
             </motion.div>
+          ) : (
+            <div className="py-8 text-center text-xs text-on-surface-variant">
+              No backend outcome distribution
+            </div>
           )}
         </div>
       </div>
     </TerminalPanel>
   );
 }
-

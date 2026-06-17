@@ -71,7 +71,7 @@ export function PredictiveSignals({ matchId }: PredictiveSignalsProps) {
                   ))}
                 </tr>
               ))
-            ) : (
+            ) : signals && signals.length > 0 ? (
               signals?.map((sig, i) => {
                 const style = actionStyle(sig.action);
                 const badge = engineBadge(sig.engine);
@@ -129,6 +129,12 @@ export function PredictiveSignals({ matchId }: PredictiveSignalsProps) {
                   </motion.tr>
                 );
               })
+            ) : (
+              <tr>
+                <td colSpan={5} className="py-12 text-center text-on-surface-variant">
+                  No backend predictive signals
+                </td>
+              </tr>
             )}
           </motion.tbody>
         </table>
@@ -136,4 +142,3 @@ export function PredictiveSignals({ matchId }: PredictiveSignalsProps) {
     </TerminalPanel>
   );
 }
-

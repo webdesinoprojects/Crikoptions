@@ -1,12 +1,12 @@
-.env
 
 bin/
 *.exe
 
-.vscode/
 .idea/
 
 .DS_Store
 *.md
 *.pdf
 *.docx
+config.bat
+node_modules

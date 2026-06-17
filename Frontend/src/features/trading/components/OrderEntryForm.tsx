@@ -1,45 +1,108 @@
-import React, { useState, useEffect } from "react";
-import { useTerminalStore } from "@/stores/terminal.store";
-import { useCreateOrder } from "../hooks";
+import React, { useMemo, useState } from "react";
+import { CheckCircle2, Clock3, Loader2, RotateCcw, ShieldCheck, Zap } from "lucide-react";
 import { toast } from "sonner";
+import { useWallet } from "@/features/wallet/hooks";
+import { useTerminalStore } from "@/stores/terminal.store";
+import { Match, Order } from "@/types";
+import { terminalPollInterval } from "../hooks/query-keys";
+import { useCreateOrder, useMarketDetail, useOptionChain } from "../hooks";
+import { buildOptionRows, buildPricePayload, findAtmRow, projectedRange } from "../utils/terminal-context";
 
 interface OrderEntryFormProps {
   matchId: string;
   marketId: string;
+  match?: Match;
 }
 
-export function OrderEntryForm({ matchId, marketId }: OrderEntryFormProps) {
-  const [side, setSide] = useState<"BUY" | "SELL">("BUY");
-  const [type, setType] = useState<"LIMIT" | "MARKET">("LIMIT");
-  const [qty, setQty] = useState<string>("10");
-  
-  const selectedPriceStore = useTerminalStore((state) => state.selectedPrice);
-  const setSelectedPriceStore = useTerminalStore((state) => state.setSelectedPrice);
-  const [price, setPrice] = useState<string>("150.00");
+type OrderMode = "LIMIT" | "MARKET";
 
+export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps) {
+  const [type, setType] = useState<OrderMode>("LIMIT");
+  const [priceOverride, setPriceOverride] = useState<{ key: string; value: string } | null>(null);
+  const [lastOrder, setLastOrder] = useState<Order | null>(null);
+  const [lastOrderTime, setLastOrderTime] = useState<Date | null>(null);
+
+  const orderSize = useTerminalStore((state) => state.orderSize);
+  const setOrderSize = useTerminalStore((state) => state.setOrderSize);
+  const [qty, setQty] = useState(String(orderSize));
+  const selectedPriceStore = useTerminalStore((state) => state.selectedPrice);
+  const selectedSideStore = useTerminalStore((state) => state.selectedSide);
+  const setSelectedSide = useTerminalStore((state) => state.setSelectedSide);
+  const selectedStrike = useTerminalStore((state) => state.selectedStrike);
+
+  const { data: market } = useMarketDetail(marketId);
+  const { data: wallet } = useWallet(true, terminalPollInterval);
+  const payload = useMemo(() => buildPricePayload(match, market), [match, market]);
+  const { data: calculated } = useOptionChain(marketId, payload);
+  const rows = useMemo(() => buildOptionRows(calculated, market), [calculated, market]);
+  const selectedRow = rows.find((row) => row.strike === selectedStrike) ?? findAtmRow(rows);
   const createOrderMutation = useCreateOrder();
 
-  // Prefill price when selected from the order book
-  useEffect(() => {
-    if (selectedPriceStore !== null) {
-      setPrice(selectedPriceStore.toFixed(2));
-    }
-  }, [selectedPriceStore]);
+  const side = selectedSideStore ?? "BUY";
+  const quoteBid = selectedRow?.bid ?? 0;
+  const quoteAsk = selectedRow?.ask ?? 0;
+  const routedPrice = side === "BUY" ? quoteAsk : quoteBid;
+  const backendPrice = routedPrice || selectedPriceStore || market?.ltp || market?.buyerPrice || market?.sellerPrice || 0;
+  const priceKey = `${selectedStrike ?? "market"}:${backendPrice.toFixed(2)}`;
+  const displayPrice = priceOverride?.key === priceKey ? priceOverride.value : backendPrice.toFixed(2);
+  const priceValue = type === "MARKET" ? backendPrice : Number.parseFloat(displayPrice) || 0;
+  const qtyValue = Number.parseInt(qty, 10) || 0;
+  const notional = priceValue * qtyValue;
+  const cashRequired = side === "BUY" ? notional : 0;
+  const availableBalance = wallet?.availableBalance ?? 0;
+  const isBuyBalanceExceeded = side === "BUY" && cashRequired > availableBalance;
+  const fairLtp = calculated?.ltp ?? market?.ltp ?? 0;
+  const sensitivity = ballSensitivity(match?.ballsLeft ?? 120, match?.wicketsLost ?? 0);
+  const spread = selectedRow ? quoteAsk - quoteBid : 0;
+  const hasExecutableQuote = Boolean(selectedRow && routedPrice > 0);
+  const willExecuteNow =
+    type === "MARKET" ||
+    (type === "LIMIT" &&
+      hasExecutableQuote &&
+      (side === "BUY" ? priceValue + 0.005 >= quoteAsk : priceValue - 0.005 <= quoteBid));
+  const submitDisabled =
+    createOrderMutation.isPending ||
+    !matchId ||
+    !marketId ||
+    !selectedRow ||
+    isBuyBalanceExceeded ||
+    (type === "MARKET" && !hasExecutableQuote);
 
-  const priceValue = parseFloat(price) || 0;
-  const qtyValue = parseInt(qty) || 0;
-  const marginRequired = priceValue * qtyValue;
+  const alignLimitToQuote = () => {
+    if (!hasExecutableQuote) return;
+    setPriceOverride({ key: priceKey, value: routedPrice.toFixed(2) });
+  };
+
+  const resetTicket = () => {
+    setPriceOverride(null);
+    setQty(String(orderSize));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    if (!matchId || !marketId) {
+      toast.error("No backend market context available");
+      return;
+    }
+    if (!selectedRow?.strike) {
+      toast.error("Select a strike from the option chain before placing an order");
+      return;
+    }
     if (qtyValue <= 0) {
       toast.error("Please enter a valid quantity");
       return;
     }
-    
-    if (type === "LIMIT" && priceValue <= 0) {
-      toast.error("Please enter a valid price");
+    if (type === "MARKET" && !hasExecutableQuote) {
+      toast.error("No executable quote is available for this strike");
+      return;
+    }
+    if (priceValue <= 0) {
+      toast.error(type === "MARKET" ? "No executable quote is available" : "Please enter a valid price");
+      return;
+    }
+    if (isBuyBalanceExceeded) {
+      toast.error("Insufficient paper wallet balance");
       return;
     }
 
@@ -47,164 +110,472 @@ export function OrderEntryForm({ matchId, marketId }: OrderEntryFormProps) {
       {
         matchId,
         marketId,
+        strike: selectedRow.strike,
         side: side.toLowerCase() as "buy" | "sell",
+        type,
         quantity: qtyValue,
-        price: type === "LIMIT" ? priceValue : 155.00, // standard market fallback
+        price: priceValue,
       },
       {
         onSuccess: (data) => {
-          toast.success(`Order Placed: ${side} ${qtyValue} units @ ₹${(data.price ?? 0).toFixed(2)}`);
-          setQty("10");
+          setLastOrder(data);
+          setLastOrderTime(new Date());
+
+          if (data.status === "FILLED") {
+            toast.success(`Executed: ${side} ${qtyValue} @ strike ${selectedRow.strike} - Rs ${formatMoney(data.averageFillPrice || data.price || 0)}`);
+          } else if (data.status === "PARTIAL") {
+            toast.success(`Partially executed: ${data.filledQuantity}/${data.quantity} lots - ${data.remainingQuantity} remaining`);
+          } else {
+            toast.success(
+              side === "BUY"
+                ? `Working order: limit Rs ${formatMoney(data.price ?? 0)} is below market ask.`
+                : `Working order: limit Rs ${formatMoney(data.price ?? 0)} is above market bid.`
+            );
+          }
+          setQty(String(orderSize));
         },
-        onError: (error: any) => {
-          const errMsg = error?.response?.data?.message || "Failed to place order";
-          toast.error(`Order Failed: ${errMsg}`);
+        onError: (error: unknown) => {
+          const errMsg = getErrorMessage(error, "Failed to place order");
+          toast.error(`Order failed: ${errMsg}`);
         },
       }
     );
   };
 
-  const handlePercentage = (pct: number) => {
-    // For demo/simulated account, assume 1000 max quantity capacity
-    const calculatedQty = Math.floor((1000 * pct) / 100);
-    setQty(calculatedQty.toString());
-  };
-
   return (
-    <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex flex-col gap-4">
-      {/* Side Selector Tabs */}
-      <div className="grid grid-cols-2 bg-surface p-1 rounded-lg border border-outline-variant">
-        <button
-          type="button"
-          onClick={() => setSide("BUY")}
-          className={`py-1.5 text-xs font-bold rounded-md transition-all ${
-            side === "BUY"
-              ? "bg-bull-green text-white shadow"
-              : "text-on-surface-variant hover:text-on-surface"
-          }`}
-        >
-          BUY
-        </button>
-        <button
-          type="button"
-          onClick={() => setSide("SELL")}
-          className={`py-1.5 text-xs font-bold rounded-md transition-all ${
-            side === "SELL"
-              ? "bg-bear-red text-white shadow"
-              : "text-on-surface-variant hover:text-on-surface"
-          }`}
-        >
-          SELL
-        </button>
+    <form
+      onSubmit={handleSubmit}
+      className="flex h-fit w-full min-w-0 shrink-0 flex-col gap-1.5 overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest p-2"
+    >
+      <div className="flex shrink-0 items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h3 className="text-sm font-black text-on-surface">Order Ticket</h3>
+          <p className="truncate text-[11px] text-on-surface-variant">
+            {selectedRow ? `Strike ${selectedRow.strike.toFixed(0)} selected` : market?.title ?? "Select a strike"}
+          </p>
+        </div>
+        <StatusPill side={side} />
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {/* Type Selector (Market / Limit) */}
-        <div className="flex gap-4 border-b border-outline-variant pb-2">
+      <QuoteFocusPanel
+        activeSide={side}
+        ask={quoteAsk}
+        bid={quoteBid}
+        probability={selectedRow?.impliedProbability}
+        spread={spread}
+        strike={selectedRow?.strike}
+      />
+
+      <div className="grid shrink-0 grid-cols-3 gap-1 text-[9px]">
+        <TicketMetric label="Projected" value={projectedRange(calculated?.projectedS0 ?? market?.ltp)} highlight />
+        <TicketMetric label="Fair LTP" value={formatMoney(fairLtp)} />
+        <TicketMetric label="Sensitivity" value={sensitivity} />
+      </div>
+
+      <div className="grid shrink-0 grid-cols-2 rounded-md border border-outline-variant bg-surface p-0.5">
+        {(["BUY", "SELL"] as const).map((option) => (
           <button
+            key={option}
             type="button"
-            onClick={() => setType("LIMIT")}
-            className={`text-xs font-bold pb-1 transition-all border-b-2 ${
-              type === "LIMIT"
-                ? "border-primary text-primary"
-                : "border-transparent text-on-surface-variant hover:text-on-surface"
+            onClick={() => setSelectedSide(option)}
+            className={`h-6 rounded text-[11px] font-black transition-all ${
+              side === option
+                ? option === "BUY"
+                  ? "bg-bull-green text-white shadow"
+                  : "bg-bear-red text-white shadow"
+                : "text-on-surface-variant hover:text-on-surface"
             }`}
           >
-            Limit Order
+            {option}
           </button>
+        ))}
+      </div>
+
+      <div className="grid shrink-0 grid-cols-2 gap-1 rounded-md border border-outline-variant bg-surface p-0.5">
+        {(["LIMIT", "MARKET"] as const).map((option) => (
           <button
+            key={option}
             type="button"
-            onClick={() => setType("MARKET")}
-            className={`text-xs font-bold pb-1 transition-all border-b-2 ${
-              type === "MARKET"
-                ? "border-primary text-primary"
-                : "border-transparent text-on-surface-variant hover:text-on-surface"
+            onClick={() => setType(option)}
+            className={`flex h-6 items-center justify-center gap-1 rounded text-[10px] font-black transition-all ${
+              type === option
+                ? "bg-primary/15 text-primary"
+                : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
             }`}
           >
-            Market Order
+            {option === "MARKET" ? <Zap className="h-3 w-3" /> : <ShieldCheck className="h-3 w-3" />}
+            {option}
           </button>
-        </div>
+        ))}
+      </div>
 
-        {/* Inputs */}
-        <div className="flex flex-col gap-3">
-          {type === "LIMIT" && (
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-wider">
-                Limit Price (₹)
-              </label>
-              <input
-                type="number"
-                step="0.05"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                className="bg-surface border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-primary font-data-tabular"
-              />
-            </div>
-          )}
+      <OrderRoutePreview
+        hasQuote={hasExecutableQuote}
+        side={side}
+        type={type}
+        willExecuteNow={willExecuteNow}
+        quoteBid={quoteBid}
+        quoteAsk={quoteAsk}
+        price={priceValue}
+      />
 
-          <div className="flex flex-col gap-1">
-            <div className="flex justify-between items-center">
-              <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-wider">
-                Quantity
-              </label>
-              <span className="text-[10px] text-on-surface-variant font-data-tabular">
-                Est. Max: 1,000
-              </span>
-            </div>
+      <div className="grid shrink-0 grid-cols-2 gap-1.5">
+        <div className="grid min-w-0 gap-1">
+          <div className="flex items-center justify-between gap-1">
+            <label className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant">
+              {type === "LIMIT" ? "Limit (Rs)" : "Expected price"}
+            </label>
+            {type === "LIMIT" && (
+              <button
+                type="button"
+                onClick={alignLimitToQuote}
+                disabled={!hasExecutableQuote}
+                className="inline-flex h-5 items-center gap-1 rounded border border-primary/20 bg-primary/10 px-1.5 text-[9px] font-black text-primary disabled:opacity-40"
+              >
+                <Zap className="h-3 w-3" />
+                {side === "BUY" ? "Ask" : "Bid"}
+              </button>
+            )}
+          </div>
+          {type === "LIMIT" ? (
             <input
               type="number"
-              value={qty}
-              onChange={(e) => setQty(e.target.value)}
-              className="bg-surface border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-primary font-data-tabular"
+              step="0.05"
+              value={displayPrice}
+              onChange={(e) => setPriceOverride({ key: priceKey, value: e.target.value })}
+              className="h-7 min-w-0 rounded-md border border-outline-variant bg-surface px-2 font-data-tabular text-[13px] font-black text-on-surface focus:border-primary focus:outline-none"
             />
-          </div>
+          ) : (
+            <div className="flex h-7 min-w-0 items-center rounded-md border border-bull-green/20 bg-bull-green/10 px-2 font-data-tabular text-[13px] font-black text-bull-green">
+              Rs {formatMoney(priceValue)}
+            </div>
+          )}
         </div>
 
-        {/* Percentage Selector Buttons */}
-        <div className="grid grid-cols-4 gap-2">
-          {[25, 50, 75, 100].map((pct) => (
+        <div className="grid min-w-0 gap-1">
+          <label className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant">
+            Quantity
+          </label>
+          <input
+            type="number"
+            value={qty}
+            onChange={(e) => setQty(e.target.value)}
+            className="h-7 min-w-0 rounded-md border border-outline-variant bg-surface px-2 font-data-tabular text-[13px] font-black text-on-surface focus:border-primary focus:outline-none"
+          />
+        </div>
+
+        <div className="col-span-2 grid grid-cols-4 gap-1">
+          {[5, 10, 25, 50].map((size) => (
             <button
-              key={pct}
+              key={size}
               type="button"
-              onClick={() => handlePercentage(pct)}
-              className="bg-surface hover:bg-surface-container border border-outline-variant rounded-md py-1 text-[10px] font-bold text-on-surface-variant transition-colors"
+              onClick={() => {
+                setOrderSize(size);
+                setQty(String(size));
+              }}
+              className={`h-5 rounded border text-[10px] font-black transition-colors ${
+                qtyValue === size
+                  ? "border-primary/40 bg-primary/15 text-primary"
+                  : "border-outline-variant bg-surface text-on-surface-variant hover:text-on-surface"
+              }`}
             >
-              {pct === 100 ? "MAX" : `${pct}%`}
+              {size}
             </button>
           ))}
         </div>
+      </div>
 
-        {/* Margin Calculations */}
-        <div className="bg-surface p-3 rounded-lg flex flex-col gap-1.5 text-xs border border-outline-variant">
-          <div className="flex justify-between text-on-surface-variant">
-            <span>Estimated Price:</span>
-            <span className="font-data-tabular text-on-surface">
-              ₹{type === "LIMIT" ? priceValue.toFixed(2) : "155.00"}
-            </span>
-          </div>
-          <div className="flex justify-between text-on-surface-variant">
-            <span>Required Margin:</span>
-            <span className="font-bold text-on-surface font-data-tabular">
-              ₹{marginRequired.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-          </div>
-        </div>
+      <OrderImpactPanel
+        availableBalance={availableBalance}
+        cashRequired={cashRequired}
+        danger={isBuyBalanceExceeded}
+        notional={notional}
+        price={priceValue}
+        side={side}
+      />
 
-        {/* Action Button */}
+      {lastOrder && <OrderReceipt order={lastOrder} submittedAt={lastOrderTime} />}
+
+      <div className="grid grid-cols-[1fr_32px] gap-1.5">
         <button
           type="submit"
-          disabled={createOrderMutation.isPending}
-          className={`w-full py-2.5 rounded-lg text-xs font-bold text-white transition-all shadow-lg hover:shadow-xl ${
-            side === "BUY"
-              ? "bg-bull-green hover:bg-bull-green/90"
-              : "bg-bear-red hover:bg-bear-red/90"
+          disabled={submitDisabled}
+          className={`inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md text-[12px] font-black text-white shadow-lg transition-all hover:shadow-xl ${
+            side === "BUY" ? "bg-bull-green hover:bg-bull-green/90" : "bg-bear-red hover:bg-bear-red/90"
           } disabled:opacity-50`}
         >
-          {createOrderMutation.isPending
-            ? "Placing Order..."
-            : `${side} ${type}`}
+          {createOrderMutation.isPending ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Routing...
+            </>
+          ) : (
+            <>
+              {willExecuteNow ? <Zap className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
+              {side === "BUY" ? "Buy" : "Sell"} {type} - Rs {formatMoney(notional)}
+            </>
+          )}
         </button>
-      </form>
+        <button
+          type="button"
+          onClick={resetTicket}
+          className="inline-flex h-8 items-center justify-center rounded-md border border-outline-variant bg-surface text-on-surface-variant hover:text-on-surface"
+          title="Reset ticket"
+        >
+          <RotateCcw className="h-4 w-4" />
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function QuoteFocusPanel({
+  activeSide,
+  ask,
+  bid,
+  probability,
+  spread,
+  strike,
+}: {
+  activeSide: "BUY" | "SELL";
+  ask: number;
+  bid: number;
+  probability?: number;
+  spread: number;
+  strike?: number;
+}) {
+  return (
+    <div className="shrink-0 rounded-md border border-outline-variant bg-surface-container-high/80 p-1.5">
+      <div className="grid grid-cols-[1fr_auto_auto] items-start gap-2">
+        <div className="min-w-0">
+          <div className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant">Selected strike</div>
+          <div className="font-data-tabular text-xl font-black leading-none text-on-surface">
+            {strike ? strike.toFixed(0) : "--"}
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant">Probability</div>
+          <div className="font-data-tabular text-base font-black text-teal-200">{probability ? `${probability}%` : "--"}</div>
+        </div>
+        <div className="text-right">
+          <div className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant">Spread</div>
+          <div className="font-data-tabular text-base font-black text-on-surface">Rs {formatMoney(Math.max(0, spread))}</div>
+        </div>
+      </div>
+
+      <div className="mt-1 grid grid-cols-2 gap-1">
+        <QuoteBox active={activeSide === "SELL"} label="Bid" tone="bid" value={bid} />
+        <QuoteBox active={activeSide === "BUY"} label="Ask" tone="ask" value={ask} />
+      </div>
     </div>
   );
+}
+
+function QuoteBox({
+  active,
+  label,
+  tone,
+  value,
+}: {
+  active: boolean;
+  label: string;
+  tone: "bid" | "ask";
+  value: number;
+}) {
+  const activeClass =
+    tone === "bid"
+      ? "border-cyan-300/50 bg-cyan-300/10 text-cyan-200"
+      : "border-bull-green/50 bg-bull-green/10 text-bull-green";
+
+  return (
+    <div className={`rounded border px-2 py-1 ${active ? activeClass : "border-outline-variant bg-surface text-on-surface"}`}>
+      <div className="text-[9px] font-black uppercase tracking-wider opacity-80">{label}</div>
+      <div className="font-data-tabular text-base font-black leading-tight">Rs {formatMoney(value)}</div>
+    </div>
+  );
+}
+
+function OrderImpactPanel({
+  availableBalance,
+  cashRequired,
+  danger,
+  notional,
+  price,
+  side,
+}: {
+  availableBalance: number;
+  cashRequired: number;
+  danger: boolean;
+  notional: number;
+  price: number;
+  side: "BUY" | "SELL";
+}) {
+  return (
+    <div className="shrink-0 rounded-md border border-outline-variant bg-surface p-1.5">
+      <div className="grid grid-cols-4 gap-1 font-data-tabular text-[10px]">
+        <ImpactCell label="Price" value={`Rs ${formatMoney(price)}`} />
+        <ImpactCell label="Notional" value={`Rs ${formatMoney(notional)}`} strong />
+        <ImpactCell
+          danger={danger}
+          label="Cash"
+          value={`Rs ${formatMoney(side === "BUY" ? cashRequired : 0)}`}
+        />
+        <ImpactCell danger={danger} label="Available" value={`Rs ${formatMoney(availableBalance)}`} align="right" />
+      </div>
+    </div>
+  );
+}
+
+function ImpactCell({
+  align,
+  danger,
+  label,
+  strong,
+  value,
+}: {
+  align?: "right";
+  danger?: boolean;
+  label: string;
+  strong?: boolean;
+  value: string;
+}) {
+  return (
+    <div className={`min-w-0 rounded border px-1.5 py-1 ${align === "right" ? "text-right" : ""} ${
+      danger ? "border-bear-red/30 bg-bear-red/10 text-bear-red" : "border-outline-variant bg-surface-container-low text-on-surface-variant"
+    }`}>
+      <div className="truncate">{label}</div>
+      <div className={`truncate font-black ${strong || !danger ? "text-on-surface" : ""}`}>{value}</div>
+    </div>
+  );
+}
+
+function StatusPill({ side }: { side: "BUY" | "SELL" }) {
+  return (
+    <span
+      className={`rounded border px-2 py-1 text-[10px] font-black ${
+        side === "BUY"
+          ? "border-bull-green/20 bg-bull-green/10 text-bull-green"
+          : "border-bear-red/20 bg-bear-red/10 text-bear-red"
+      }`}
+    >
+      {side}
+    </span>
+  );
+}
+
+function OrderRoutePreview({
+  hasQuote,
+  price,
+  quoteAsk,
+  quoteBid,
+  side,
+  type,
+  willExecuteNow,
+}: {
+  hasQuote: boolean;
+  price: number;
+  quoteAsk: number;
+  quoteBid: number;
+  side: "BUY" | "SELL";
+  type: OrderMode;
+  willExecuteNow: boolean;
+}) {
+  const activeQuote = side === "BUY" ? quoteAsk : quoteBid;
+  const tone = !hasQuote ? "border-outline-variant bg-surface text-on-surface-variant" : willExecuteNow
+    ? "border-bull-green/25 bg-bull-green/10 text-bull-green"
+    : "border-[#FFB300]/25 bg-[#FFB300]/10 text-[#FFB300]";
+  const Icon = !hasQuote ? Clock3 : willExecuteNow ? Zap : Clock3;
+  const label = !hasQuote
+    ? "Awaiting quote"
+    : type === "MARKET"
+      ? "Routes immediately"
+      : willExecuteNow
+        ? "Marketable limit"
+        : "Working limit";
+  const detail = !hasQuote
+    ? "Select a live strike with bid and ask."
+    : willExecuteNow
+      ? `${side} expected around Rs ${formatMoney(activeQuote)}.`
+      : `${side} limit Rs ${formatMoney(price)} will rest until the market crosses it.`;
+
+  return (
+    <div className={`flex min-h-8 items-center gap-2 rounded-md border px-2 py-1 ${tone}`}>
+      <Icon className="h-3.5 w-3.5 shrink-0" />
+      <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+        <div className="shrink-0 text-[11px] font-black">{label}</div>
+        <div className="truncate text-right text-[10px] opacity-90">{detail}</div>
+      </div>
+    </div>
+  );
+}
+
+function OrderReceipt({ order, submittedAt }: { order: Order; submittedAt: Date | null }) {
+  const executed = order.status === "FILLED";
+  const partial = order.status === "PARTIAL";
+  const tone = executed
+    ? "border-bull-green/25 bg-bull-green/10"
+    : partial
+      ? "border-primary/25 bg-primary/10"
+      : "border-[#FFB300]/25 bg-[#FFB300]/10";
+
+  return (
+    <div className={`rounded-md border px-2 py-1.5 ${tone}`}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-1.5">
+          {executed ? <CheckCircle2 className="h-4 w-4 text-bull-green" /> : <Clock3 className="h-4 w-4 text-[#FFB300]" />}
+          <span className="truncate text-[11px] font-black text-on-surface">
+            {executed ? "Executed" : partial ? "Partially executed" : "Working"}
+          </span>
+        </div>
+        <span className="font-data-tabular text-[10px] text-on-surface-variant">{submittedAt ? formatTime(submittedAt) : "--:--"}</span>
+      </div>
+      <div className="mt-1 grid grid-cols-3 gap-1 font-data-tabular text-[10px] text-on-surface-variant">
+        <span>{order.side} {order.strike}</span>
+        <span className="text-center">{order.filledQuantity}/{order.quantity} lots</span>
+        <span className="text-right">Rs {formatMoney(order.averageFillPrice || order.price || 0)}</span>
+      </div>
+    </div>
+  );
+}
+
+function TicketMetric({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div className="min-w-0 rounded border border-outline-variant bg-surface px-1.5 py-1">
+      <div className="truncate text-on-surface-variant">{label}</div>
+      <div className={`font-data-tabular font-black ${highlight ? "text-teal-200" : "text-on-surface"}`}>{value}</div>
+    </div>
+  );
+}
+
+function ballSensitivity(ballsLeft: number, wicketsLost: number) {
+  if (ballsLeft <= 18 || wicketsLost >= 7) return "High";
+  if (ballsLeft <= 42 || wicketsLost >= 4) return "Medium";
+  return "Low";
+}
+
+function formatMoney(value: number) {
+  if (!Number.isFinite(value)) return "0.00";
+  return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatTime(value: Date) {
+  return value.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function getErrorMessage(error: unknown, defaultMessage: string) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    typeof error.response === "object" &&
+    error.response !== null &&
+    "data" in error.response &&
+    typeof error.response.data === "object" &&
+    error.response.data !== null &&
+    "message" in error.response.data &&
+    typeof error.response.data.message === "string"
+  ) {
+    return error.response.data.message;
+  }
+  return defaultMessage;
 }

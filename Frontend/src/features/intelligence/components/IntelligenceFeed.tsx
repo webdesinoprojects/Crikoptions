@@ -41,7 +41,7 @@ export function IntelligenceFeed({ matchId }: IntelligenceFeedProps) {
                 <div className="flex flex-col min-w-0">
                   <span className="font-bold text-white truncate uppercase">{sig.player}</span>
                   <span className="text-[8px] text-on-surface-variant font-mono">
-                    {sig.engine} // SYS
+                    {sig.engine} - SYS
                   </span>
                 </div>
                 <div className="text-right shrink-0">
@@ -133,7 +133,7 @@ export function IntelligenceFeed({ matchId }: IntelligenceFeedProps) {
                 <div className="min-w-0 flex-1">
                   <div className="font-bold text-[#FF2A2A] uppercase truncate text-[9px]">{e.label}</div>
                   <div className="text-on-surface-variant text-[8px]">
-                    +VOL: {e.volatilityDelta}% // CONF: {e.confidence}%
+                    +VOL: {e.volatilityDelta}% - CONF: {e.confidence}%
                   </div>
                 </div>
               </div>
@@ -158,4 +158,3 @@ export function IntelligenceFeed({ matchId }: IntelligenceFeedProps) {
     </div>
   );
 }
-

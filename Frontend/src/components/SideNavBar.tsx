@@ -2,30 +2,31 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-const mainLinks = [
-  { label: "Dashboard", icon: "dashboard", href: "/" },
-  { label: "Trading Terminal", icon: "candlestick_chart", href: "/trading" },
-  { label: "Portfolio Hub", icon: "account_balance_wallet", href: "/portfolio" },
-  { label: "Market Scanner", icon: "query_stats", href: "#" },
-  { label: "Match Analysis", icon: "analytics", href: "#" },
-];
-
-// Default featured match for Intelligence HQ — replaces with real matchId from context later
-const FEATURED_MATCH_ID = "csk-vs-mi";
-
-const intelligenceLinks = [
-  { label: "Intelligence HQ", icon: "psychology", href: `/insights/${FEATURED_MATCH_ID}` },
-  { label: "DNA Engine", icon: "biotech", href: `/insights/${FEATURED_MATCH_ID}` },
-  { label: "News Terminal", icon: "newspaper", href: "#" },
-];
+import { useHomeMatches, useLiveTicker } from "@/features/dashboard/hooks";
 
 export default function SideNavBar() {
   const pathname = usePathname();
+  const { data: tickers } = useLiveTicker();
+  const { data: matches } = useHomeMatches();
+  const primaryMarketHref = tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/dashboard";
+  const primaryInsightHref = matches?.[0]?.id ? `/insights/${matches[0].id}` : "/dashboard";
+
+  const mainLinks = [
+    { label: "Dashboard", icon: "dashboard", href: "/dashboard" },
+    { label: "Trading Terminal", icon: "candlestick_chart", href: primaryMarketHref },
+    { label: "Portfolio Hub", icon: "account_balance_wallet", href: "/portfolio" },
+    { label: "Market Scanner", icon: "query_stats", href: "/dashboard" },
+    { label: "Match Analysis", icon: "analytics", href: primaryInsightHref },
+  ];
+
+  const intelligenceLinks = [
+    { label: "Intelligence HQ", icon: "psychology", href: primaryInsightHref },
+    { label: "DNA Engine", icon: "biotech", href: primaryInsightHref },
+    { label: "News Terminal", icon: "newspaper", href: "/dashboard" },
+  ];
 
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/";
-    if (href === "#") return false;
+    if (href === "/dashboard") return pathname === "/dashboard";
     return pathname.startsWith(href);
   };
 
@@ -34,15 +35,12 @@ export default function SideNavBar() {
       <div className="px-2 mb-4">
         <div className="flex items-center gap-2 p-1.5 rounded border border-outline/5 bg-surface-dim">
           <div className="w-6 h-6 rounded bg-primary/20 flex items-center justify-center">
-            <span className="material-symbols-outlined text-primary text-[14px]">
-              terminal
-            </span>
+            <span className="material-symbols-outlined text-primary text-[14px]">terminal</span>
           </div>
           <div>
             <p className="text-[10px] font-bold text-on-surface leading-tight">Pro Engine</p>
             <p className="text-[8px] text-bull-green flex items-center gap-1 font-bold leading-none">
-              <span className="w-1 h-1 rounded-full bg-bull-green animate-pulse"></span>{" "}
-              LIVE_SYNC
+              <span className="w-1 h-1 rounded-full bg-bull-green animate-pulse"></span> API_SYNC
             </p>
           </div>
         </div>
@@ -103,7 +101,7 @@ export default function SideNavBar() {
 
       <div className="px-2 mt-auto pt-2">
         <Link
-          href="/trading/market-1"
+          href={primaryMarketHref}
           className="w-full bg-primary text-on-primary font-bold py-1.5 rounded flex items-center justify-center gap-1.5 hover:brightness-110 active:scale-[0.98] transition-all text-[11px] uppercase tracking-wider"
         >
           <span className="material-symbols-outlined text-[14px]">rocket_launch</span>

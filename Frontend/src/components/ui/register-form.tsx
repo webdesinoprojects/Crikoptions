@@ -33,7 +33,7 @@ export default function RegisterForm() {
         <img
           className="h-full w-full md:w-[100vw] md:max-w-none object-cover object-center absolute left-0 md:left-1/2 md:-translate-x-1/2 select-none"
           src="/Welcome to.png"
-          alt="Welcome to Crikoptions"
+          alt="Welcome to CricOptions"
         />
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
@@ -54,7 +54,7 @@ export default function RegisterForm() {
         <div className="flex justify-between items-center w-full shrink-0">
           {/* Logo */}
           <div className="flex items-center gap-2 select-none">
-            <span className="text-lg font-black font-display uppercase tracking-widest text-[#d4af37]">Crikoptions</span>
+            <span className="text-lg font-black font-display uppercase tracking-widest text-[#d4af37]">CricOptions</span>
           </div>
           {/* Close button */}
           <Link href="/" className="text-white/50 hover:text-white transition-colors p-2">

@@ -4,7 +4,8 @@ import React from "react";
 import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { cn } from "@/lib/utils";
 import { Match } from "@/types";
-import { ballClassName, buildThisOverBalls, projectedRange, scoreParts } from "../utils/terminal-context";
+import { useThisOverBalls } from "../hooks/useThisOverBalls";
+import { ballClassName, projectedRange, scoreParts } from "../utils/terminal-context";
 
 interface LiveMatchStatsPanelProps {
   match?: Match;
@@ -25,7 +26,8 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
   const crr = ballsBowled > 0 ? currentScore / (ballsBowled / 6) : 0;
   const projected = projectedFinal(currentScore, ballsLeft, crr, market);
   const range = projectedRange(projected);
-  const balls = buildThisOverBalls(currentScore, wickets, ballsLeft, totalBalls);
+  const balls = useThisOverBalls(match);
+  const compactThisOver = balls.length > 6;
   const progress = projected > 0 ? Math.min(100, Math.max(0, (currentScore / projected) * 100)) : 0;
 
   return (
@@ -80,12 +82,21 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
 
         <section className="border-b border-outline-variant p-3">
           <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-on-surface-variant">This over</div>
-          <div className="flex w-full items-center justify-between gap-2">
+          <div
+            className={cn(
+              "w-full",
+              compactThisOver ? "grid grid-cols-6 gap-1.5" : "flex items-center justify-between gap-2"
+            )}
+          >
             {balls.map((ball, index) => (
               <span
                 key={`${ball.kind}-${ball.label}-${index}`}
                 aria-label={ball.kind === "empty" ? `Ball ${index + 1}: not yet bowled` : `Ball ${index + 1}: ${ball.label}`}
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border font-data-tabular text-[11px] font-black ${ballClassName(ball.kind)}`}
+                className={cn(
+                  "flex shrink-0 items-center justify-center rounded-full border font-data-tabular font-black",
+                  compactThisOver ? "h-6 w-6 justify-self-center text-[9px]" : "h-8 w-8 text-[11px]",
+                  ballClassName(ball.kind)
+                )}
               >
                 {ball.label}
               </span>

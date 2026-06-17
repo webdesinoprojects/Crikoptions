@@ -19,7 +19,7 @@ export const BroadcastInterfaceMask: React.FC = () => (
     
     {/* Monospace System Metadata String */}
     <div className="absolute bottom-3 left-4 font-mono text-[9px] tracking-[0.25em] text-[#0ea5e9]/50 select-none">
-      TRK-A_DNA // LIVE_FEED_INITIALIZING
+      BACKEND_FEED - 0
     </div>
   </div>
 );

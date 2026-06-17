@@ -1,64 +1,49 @@
 "use client"
 
-import React, { useEffect, useRef } from "react"
+import React, { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
-import { gsap } from "gsap"
-import { PixelTrail } from "@/components/ui/pixel-trail"
+import dynamic from "next/dynamic"
+
+const PixelTrail = dynamic(
+  () => import("@/components/ui/pixel-trail").then((mod) => mod.PixelTrail),
+  { ssr: false }
+)
 
 export const HeroSection = () => {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const h1Ref = useRef<HTMLHeadingElement>(null)
-  const pRef = useRef<HTMLParagraphElement>(null)
-  const ctaRef = useRef<HTMLDivElement>(null)
+  const [showPixelTrail, setShowPixelTrail] = useState(false)
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Set initial states
-      gsap.set([h1Ref.current, pRef.current, ctaRef.current], { 
-        y: 50, 
-        opacity: 0,
-        filter: "blur(10px)"
-      })
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    if (reducedMotion) return
 
-      // Reveal sequence
-      const tl = gsap.timeline({ defaults: { ease: "power4.out" } })
-      
-      tl.to(h1Ref.current, {
-        y: 0,
-        opacity: 1,
-        filter: "blur(0px)",
-        duration: 1.5,
-        delay: 0.2
-      })
-      .to(pRef.current, {
-        y: 0,
-        opacity: 1,
-        filter: "blur(0px)",
-        duration: 1.2
-      }, "-=1.0")
-      .to(ctaRef.current, {
-        y: 0,
-        opacity: 1,
-        filter: "blur(0px)",
-        duration: 1.2
-      }, "-=0.8")
+    if ("requestIdleCallback" in window && "cancelIdleCallback" in window) {
+      const idleCallback = window.requestIdleCallback(
+        () => setShowPixelTrail(true),
+        { timeout: 1400 }
+      )
 
-    }, containerRef)
+      return () => {
+        window.cancelIdleCallback(idleCallback)
+      }
+    }
 
-    return () => ctx.revert()
+    const timer = globalThis.setTimeout(() => setShowPixelTrail(true), 900)
+    return () => globalThis.clearTimeout(timer)
   }, [])
 
   return (
-    <section ref={containerRef} className="relative w-full min-h-[100dvh] flex flex-col items-center justify-center pt-24 pb-8 overflow-hidden bg-black">
+    <section className="relative w-full min-h-[100dvh] flex flex-col items-center justify-center pt-24 pb-8 overflow-hidden bg-black">
       {/* Interactive Pixel Trail Background */}
       <div className="absolute inset-0 z-0">
-        <PixelTrail
-          pixelSize={48}
-          fadeDuration={800}
-          delay={0}
-          pixelClassName="rounded-full bg-[#3131f5]/45 shadow-[0_0_12px_rgba(49,49,245,0.5)]"
-        />
+        {showPixelTrail ? (
+          <PixelTrail
+            pixelSize={64}
+            fadeDuration={650}
+            delay={0}
+            pixelClassName="rounded-full bg-[#3131f5]/35 shadow-[0_0_10px_rgba(49,49,245,0.42)]"
+          />
+        ) : null}
       </div>
       {/* Radial Gradient Wash */}
       <div aria-hidden className="absolute inset-0 pointer-events-none z-0">
@@ -76,18 +61,18 @@ export const HeroSection = () => {
         </div>
 
         {/* H1 - 2-Line Iron Rule */}
-        <h1 ref={h1Ref} className="max-w-5xl text-[clamp(3rem,8vw,7rem)] leading-[0.85] font-display font-black tracking-tighter text-white uppercase drop-shadow-2xl">
+        <h1 className="landing-reveal max-w-5xl text-[clamp(3rem,8vw,7rem)] leading-[0.85] font-display font-black tracking-tighter text-white uppercase drop-shadow-2xl">
           Institutional Grade<br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-300 to-gray-500">Cricket Options</span>
         </h1>
 
         {/* Subtitle */}
-        <p ref={pRef} className="mt-12 max-w-2xl text-lg md:text-xl font-sans text-gray-400 tracking-wide leading-relaxed">
+        <p className="landing-reveal landing-reveal-delay-1 mt-12 max-w-2xl text-lg md:text-xl font-sans text-gray-400 tracking-wide leading-relaxed">
           Advanced predictive algorithms, gapless execution, and real-time event telemetry. Engineered for mechanical efficiency.
         </p>
 
         {/* CTAs */}
-        <div ref={ctaRef} className="mt-16 flex flex-col sm:flex-row items-center gap-6">
+        <div className="landing-reveal landing-reveal-delay-2 mt-16 flex flex-col sm:flex-row items-center gap-6">
           <Link href="/register" className="group relative inline-flex items-center justify-center rounded-[2rem] bg-white/5 p-1.5 ring-1 ring-white/10 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-white/10 active:scale-[0.98]">
             <div className="relative flex items-center gap-4 rounded-[calc(2rem-0.375rem)] bg-[#3131f5] px-8 py-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)] transition-colors duration-500 group-hover:bg-[#4d4dff]">
               <span className="font-sans font-black uppercase tracking-widest text-white text-sm">Initialize Workspace</span>
