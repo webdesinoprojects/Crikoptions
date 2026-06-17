@@ -5,21 +5,31 @@ import { toast } from "sonner";
 import { Order } from "@/types";
 import { OpenPosition } from "../types/position";
 import { cn } from "@/lib/utils";
-import { useCancelOrder, useOpenPositions, useOrders } from "../hooks";
+import { useCancelOrder, useOpenPositions, useOrders, useOptionChain } from "../hooks";
+import { buildPricePayload, buildOptionRows } from "../utils/terminal-context";
+import { BackendMarket } from "@/lib/adapters/market.adapter";
+import { Match } from "@/types";
 
 interface TradingActivityPanelProps {
   matchId: string;
   marketId: string;
+  market?: BackendMarket;
+  match?: Match;
   className?: string;
 }
 
 type ActivityTab = "ORDERS" | "POSITIONS";
 
-export function TradingActivityPanel({ className, matchId, marketId }: TradingActivityPanelProps) {
+export function TradingActivityPanel({ className, matchId, marketId, market, match }: TradingActivityPanelProps) {
   const [tab, setTab] = useState<ActivityTab>("ORDERS");
   const { data: orders = [], isFetching: ordersFetching, isLoading: ordersLoading } = useOrders(matchId);
   const { data: positions = [], isFetching: positionsFetching, isLoading: positionsLoading } = useOpenPositions();
   const cancelOrderMutation = useCancelOrder(matchId);
+
+  // Live option chain for real-time PnL computation
+  const payload = useMemo(() => buildPricePayload(match, market), [match, market]);
+  const { data: calculated } = useOptionChain(marketId, payload);
+  const chainRows = useMemo(() => buildOptionRows(calculated, market), [calculated, market]);
 
   const marketOrders = useMemo(
     () => orders.filter((order) => order.marketId === marketId && order.strike > 0 && order.quantity > 0),
@@ -76,7 +86,7 @@ export function TradingActivityPanel({ className, matchId, marketId }: TradingAc
           />
         )}
         {tab === "POSITIONS" && (
-          <PositionsTab loading={positionsLoading} positions={marketPositions} />
+          <PositionsTab loading={positionsLoading} positions={marketPositions} chainRows={chainRows} />
         )}
       </div>
     </section>
@@ -169,7 +179,7 @@ function OrdersTab({
   );
 }
 
-function PositionsTab({ loading, positions }: { loading: boolean; positions: OpenPosition[] }) {
+function PositionsTab({ loading, positions, chainRows }: { loading: boolean; positions: OpenPosition[]; chainRows: ReturnType<typeof buildOptionRows> }) {
   if (loading) return <PanelState label="Loading positions..." />;
   if (positions.length === 0) {
     return <PanelState label="No open position yet. Positions appear after an order executes." />;
@@ -178,7 +188,13 @@ function PositionsTab({ loading, positions }: { loading: boolean; positions: Ope
   return (
     <div className="space-y-1.5">
       {positions.map((position) => {
-        const positive = position.pnl >= 0;
+        // Try to find live price from option chain for this strike
+        const chainRow = chainRows.find((row) => row.strike === position.strike);
+        const liveLtp = chainRow ? chainRow.bid : position.ltp;
+        const livePnl = chainRow
+          ? Math.round((liveLtp - position.buyPrice) * position.lots * 100) / 100
+          : position.pnl;
+        const positive = livePnl >= 0;
         return (
           <div key={position._id} className="rounded-md border border-outline-variant/60 bg-surface px-2 py-1.5">
             <div className="flex items-center justify-between gap-2">
@@ -189,13 +205,13 @@ function PositionsTab({ loading, positions }: { loading: boolean; positions: Ope
                 <span className="text-[10px] text-on-surface-variant">{position.lots} lots</span>
               </div>
               <span className={`font-data-tabular text-[12px] font-black ${positive ? "text-bull-green" : "text-bear-red"}`}>
-                {positive ? "+" : "-"}Rs {Math.abs(position.pnl).toFixed(2)}
+                {positive ? "+" : "-"}Rs {Math.abs(livePnl).toFixed(2)}
               </span>
             </div>
             <div className="mt-1 grid grid-cols-3 gap-2 font-data-tabular text-[10px] text-on-surface-variant">
               <span>Buy {position.buyPrice.toFixed(2)}</span>
-              <span>LTP {position.ltp.toFixed(2)}</span>
-              <span className="text-right">PnL {position.pnl.toFixed(2)}</span>
+              <span className={chainRow ? "text-teal-300" : ""}>LTP {liveLtp.toFixed(2)}{chainRow ? " ●" : ""}</span>
+              <span className="text-right">PnL {livePnl.toFixed(2)}</span>
             </div>
           </div>
         );

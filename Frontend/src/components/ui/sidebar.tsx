@@ -95,7 +95,7 @@ export function SessionNavBar() {
                 <div className="flex h-14 w-full shrink-0 items-center px-4">
                   <Link href="/" className="flex items-center gap-2 w-full">
                     {!isCollapsed ? (
-                      <span className="text-2xl font-extrabold tracking-tight text-on-surface">Crikoptions</span>
+                      <span className="text-2xl font-extrabold tracking-tight text-on-surface">CricOptions</span>
                     ) : (
                       <span className="text-2xl font-extrabold tracking-tight text-on-surface">C</span>
                     )}

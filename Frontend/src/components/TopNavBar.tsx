@@ -69,7 +69,7 @@ export default function TopNavBar() {
           <span className="w-5 h-5 rounded bg-primary flex items-center justify-center text-[10px] text-black font-extrabold tracking-normal">
             CO
           </span>
-          CrikOptions
+          CricOptions
         </Link>
         <nav className="hidden lg:flex items-center gap-1">
           {navItems.map((item) => (
@@ -166,7 +166,7 @@ export default function TopNavBar() {
                     <span className="w-5 h-5 rounded bg-primary flex items-center justify-center text-[10px] text-black font-extrabold">
                       CO
                     </span>
-                    CrikOptions
+                    CricOptions
                   </Link>
                 </SheetTitle>
               </SheetHeader>
