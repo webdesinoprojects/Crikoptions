@@ -27,7 +27,7 @@ export function IntelligenceWorkspace({ matchId }: IntelligenceWorkspaceProps) {
         <div className="shrink-0 p-4 pb-0">
           <MatchContextHeader matchId={matchId} />
           <div className="mt-2 flex justify-end">
-            <DataSourceBadge source="simulated" />
+            <DataSourceBadge source="derived" />
           </div>
         </div>
 

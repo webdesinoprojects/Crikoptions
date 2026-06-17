@@ -1,38 +1,34 @@
 # Frontend Reality Map
 
-This file tracks which frontend surfaces are currently backed by real API data and which are still simulated. The goal is to make mock data visible and easy to replace as backend endpoints become real.
+The frontend now uses backend HTTP APIs as the source of truth for app data.
+Unavailable backend datasets render as `0`, empty arrays, or empty states.
+No frontend service falls back to mock/generated market, portfolio, trading, or intelligence data.
 
 ## Source Labels
 
-- `API`: Data comes from the Go backend through `src/lib/api/client.ts`.
-- `DERIVED`: Data is calculated in the frontend from API responses.
-- `SIM`: Data is generated in the frontend because no backend endpoint exists yet.
+- `API`: Data comes directly from the Go backend through `src/lib/api/client.ts`.
+- `DERIVED`: Data is calculated from backend API responses in the frontend because the backend does not expose a dedicated aggregate endpoint.
 - `STATIC`: Static product, navigation, or marketing content.
 
 ## Current Status
 
-| Surface | Current source | Files | What must change to make it real |
-|---|---|---|---|
-| Auth login/register/profile | API | `src/features/auth/services/auth.service.ts` | Keep. Backend should remain source of truth. |
-| Home matches and match detail | API | `src/features/dashboard/services/dashboard.service.ts` | Persist backend matches instead of in-memory data. |
-| Market depth/order book | API | `src/features/trading/services/trading.service.ts` | Replace backend in-memory market repository with persistent market/order-book engine. |
-| Order list/create/cancel | API | `src/features/trading/services/trading.service.ts` | Protect backend routes with JWT and persist order/trade ledger. |
-| Watchlist | API | `src/features/watchlist/services/watchlist.service.ts` | Protect backend routes with JWT and persist per-user watchlists. |
-| Portfolio summary | DERIVED | `src/features/portfolio/services/portfolio.service.ts` | Move critical P&L, margin, and risk calculations to backend. |
-| Dashboard financial overview | SIM | `src/features/dashboard/services/dashboard.service.ts` | Add backend `/portfolio/summary` or `/dashboard/overview` endpoint. |
-| Live ticker | SIM | `src/features/dashboard/services/dashboard.service.ts` | Add market ticker endpoint or websocket stream. |
-| Market movers | SIM | `src/features/dashboard/services/dashboard.service.ts` | Add backend market scanner endpoint. |
-| Opportunity radar | SIM | `src/features/dashboard/services/dashboard.service.ts` | Add backend signal/opportunity endpoint. |
-| Dashboard intelligence feed | SIM | `src/features/dashboard/services/dashboard.service.ts` | Add backend alerts/signals endpoint. |
-| Trading candles | SIM | `src/features/trading/services/trading.service.ts` | Add backend candle/history endpoint. |
-| Recent trades / trade tape | SIM | `src/features/trading/services/trading.service.ts` | Add backend trade ledger endpoint or websocket stream. |
-| Match Intelligence HQ | SIM | `src/features/intelligence/services/intelligence.service.ts` | Add backend intelligence endpoints for DNA, signals, scenarios, outcomes, and event impact. |
+| Surface | Current source | Files |
+|---|---|---|
+| Auth login/register/profile | API | `src/features/auth/services/auth.service.ts` |
+| Home matches and match detail | API | `src/features/dashboard/services/dashboard.service.ts` |
+| Markets, market depth, and order book | API | `src/features/trading/services/trading.service.ts` |
+| Order list/create/cancel | API | `src/features/trading/services/trading.service.ts` |
+| Wallet balance and ledger | API | `src/features/wallet/services/wallet.service.ts` |
+| Watchlist | API | `src/features/watchlist/services/watchlist.service.ts` |
+| Dashboard overview | DERIVED | `src/features/dashboard/services/dashboard.service.ts` |
+| Live ticker and market movers | DERIVED | `src/features/dashboard/services/dashboard.service.ts` |
+| Portfolio summary | DERIVED | `src/features/portfolio/services/portfolio.service.ts` |
+| Trading candles | DERIVED | `src/features/trading/services/trading.service.ts` |
+| Recent trades / trade tape | DERIVED | `src/features/trading/services/trading.service.ts` |
+| Match Intelligence HQ | DERIVED | `src/features/intelligence/services/intelligence.service.ts` |
 
-## Frontend Build Order
+## Backend Gaps Rendered As Empty/Zero
 
-1. Keep source badges visible anywhere simulated data appears.
-2. Add endpoint clients beside each simulated service method before replacing UI code.
-3. When a backend endpoint exists, switch the hook query function from generator to API client.
-4. Remove the `SIM` badge only after the screen no longer falls back to generated values.
-5. Move portfolio/risk calculations to backend once real balances, fills, and mark prices exist.
-
+- Backend opportunity scanner feed.
+- Backend AI/intelligence signal feed.
+- Backend DNA archive, scenario projections, event impact, and outcome distribution datasets.

@@ -29,31 +29,17 @@ export const orderStream = {
     userId: string,
     onOrderUpdate: (event: OrderUpdateEvent) => void
   ): (() => void) => {
-    const socket = socketManager.connect();
+    socketManager.connect();
     const eventName = `user:${userId}:orders`;
-
-    socket.emit("subscribe", { channel: eventName });
-    socket.on(eventName, onOrderUpdate);
-
-    return () => {
-      socket.off(eventName, onOrderUpdate);
-      socket.emit("unsubscribe", { channel: eventName });
-    };
+    return socketManager.subscribe(eventName, onOrderUpdate);
   },
 
   subscribePositionUpdates: (
     userId: string,
     onPositionUpdate: (event: PositionUpdateEvent) => void
   ): (() => void) => {
-    const socket = socketManager.connect();
+    socketManager.connect();
     const eventName = `user:${userId}:positions`;
-
-    socket.emit("subscribe", { channel: eventName });
-    socket.on(eventName, onPositionUpdate);
-
-    return () => {
-      socket.off(eventName, onPositionUpdate);
-      socket.emit("unsubscribe", { channel: eventName });
-    };
+    return socketManager.subscribe(eventName, onPositionUpdate);
   },
 };

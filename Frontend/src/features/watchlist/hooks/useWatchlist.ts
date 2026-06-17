@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { watchlistService } from "../services/watchlist.service";
 import { Watchlist } from "@/types";
 
-export const useWatchlist = (userId: string = "user-1") => {
+export const useWatchlist = (userId: string = "0") => {
   return useQuery({
     queryKey: ["watchlist", userId],
     queryFn: () => watchlistService.fetchWatchlist(userId),
@@ -10,7 +10,7 @@ export const useWatchlist = (userId: string = "user-1") => {
   });
 };
 
-export const useAddWatchlist = (userId: string = "user-1") => {
+export const useAddWatchlist = (userId: string = "0") => {
   const queryClient = useQueryClient();
   const queryKey = ["watchlist", userId];
 
@@ -28,6 +28,7 @@ export const useAddWatchlist = (userId: string = "user-1") => {
         queryClient.setQueryData<Watchlist>(queryKey, {
           ...previousWatchlist,
           marketIds: [...previousWatchlist.marketIds, newMarketId],
+          items: previousWatchlist.items ?? [],
         });
       } else {
         queryClient.setQueryData<Watchlist>(queryKey, {
@@ -35,6 +36,7 @@ export const useAddWatchlist = (userId: string = "user-1") => {
           userId,
           name: "My Watchlist",
           marketIds: [newMarketId],
+          items: [],
         });
       }
 
@@ -54,7 +56,7 @@ export const useAddWatchlist = (userId: string = "user-1") => {
   });
 };
 
-export const useRemoveWatchlist = (userId: string = "user-1") => {
+export const useRemoveWatchlist = (userId: string = "0") => {
   const queryClient = useQueryClient();
   const queryKey = ["watchlist", userId];
 
@@ -69,6 +71,7 @@ export const useRemoveWatchlist = (userId: string = "user-1") => {
         queryClient.setQueryData<Watchlist>(queryKey, {
           ...previousWatchlist,
           marketIds: previousWatchlist.marketIds.filter((id) => id !== marketIdToRemove),
+          items: previousWatchlist.items?.filter((item) => item.marketId !== marketIdToRemove) ?? [],
         });
       }
 

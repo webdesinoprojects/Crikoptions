@@ -48,7 +48,7 @@ export function EventImpactEngine({ matchId }: EventImpactEngineProps) {
               <Skeleton key={i} className="h-8 w-full bg-white/5 animate-pulse rounded-none" />
             ))}
           </div>
-        ) : (
+        ) : impacts && impacts.length > 0 ? (
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -96,9 +96,12 @@ export function EventImpactEngine({ matchId }: EventImpactEngineProps) {
               </motion.div>
             ))}
           </motion.div>
+        ) : (
+          <div className="flex h-full items-center justify-center text-xs text-on-surface-variant">
+            No backend event impact data
+          </div>
         )}
       </div>
     </TerminalPanel>
   );
 }
-

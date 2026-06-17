@@ -1,4 +1,4 @@
-export type DataSourceKind = "api" | "simulated" | "derived" | "static";
+export type DataSourceKind = "api" | "derived" | "static";
 
 export interface DataSourceDescriptor {
   kind: DataSourceKind;
@@ -12,11 +12,6 @@ export const dataSources = {
     label: "API",
     description: "Served by the Go backend API.",
   },
-  simulated: {
-    kind: "simulated",
-    label: "SIM",
-    description: "Generated in the frontend until a backend endpoint exists.",
-  },
   derived: {
     kind: "derived",
     label: "DERIVED",
@@ -28,4 +23,3 @@ export const dataSources = {
     description: "Static product or configuration content.",
   },
 } satisfies Record<DataSourceKind, DataSourceDescriptor>;
-

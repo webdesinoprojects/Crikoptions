@@ -10,9 +10,9 @@ export default function DashboardLayout({
   return (
     <AuthGuard>
       <TopNavBar />
-      <div className="flex flex-1 overflow-hidden mt-14 h-[calc(100vh-56px)]">
+      <div className="flex overflow-hidden mt-14 h-[calc(100vh-56px)] w-full">
         <SessionNavBar />
-        <main className="flex-1 overflow-y-auto bg-background">
+        <main className="flex-1 min-h-0 min-w-0 overflow-y-auto bg-background">
           {children}
         </main>
       </div>

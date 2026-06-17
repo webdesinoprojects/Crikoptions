@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: PageProps) {
   const { matchId } = await params;
   const label = matchId.replace(/-/g, " ").toUpperCase();
   return {
-    title: `Intelligence HQ — ${label} | CrikOptions`,
+    title: `Intelligence HQ — ${label} | CricOptions`,
     description: `Match DNA Engine, AI Signals, Predictive Models, and Scenario Lab for ${label}`,
   };
 }

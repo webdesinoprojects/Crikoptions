@@ -11,7 +11,7 @@ export function LiveMarketTicker() {
 
   return (
     <div className="flex-1 max-w-xl mx-8 px-4 py-2 bg-surface-container rounded-lg flex items-center gap-4 overflow-hidden">
-      <DataSourceBadge source="simulated" />
+      <DataSourceBadge source="api" />
       {tickers.map((ticker, index) => (
         <div key={ticker.id} className="flex items-center gap-4">
           <span className="flex items-center gap-2 whitespace-nowrap">

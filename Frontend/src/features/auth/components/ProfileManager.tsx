@@ -74,13 +74,23 @@ export function ProfileManager() {
           <div className="absolute top-0 left-0 w-1 h-full bg-primary/50 group-hover:bg-primary transition-colors"></div>
           <div className="p-4 bg-black/40 border-b border-white/5 flex justify-between items-center">
             <h2 className="text-[12px] font-bold text-white tracking-widest uppercase">[ IDENTITY & ACCESS ]</h2>
-            <div className="px-2 py-0.5 border text-[9px] font-bold tracking-wider shadow-[0_0_8px_rgba(0,0,0,0.5)]" style={{ borderColor: `${tierColor}40`, color: tierColor, backgroundColor: `${tierColor}10` }}>
-              {user.tier || "STANDARD"} TIER
+            <div className="flex items-center gap-2">
+              <div
+                className={`px-2 py-0.5 border text-[9px] font-bold tracking-wider ${
+                  user.role === "admin"
+                    ? "border-[#4AF626]/40 text-[#4AF626] bg-[#4AF626]/10"
+                    : "border-white/20 text-on-surface-variant bg-black/40"
+                }`}
+              >
+                {(user.role || "user").toUpperCase()} ROLE
+              </div>
+              <div className="px-2 py-0.5 border text-[9px] font-bold tracking-wider shadow-[0_0_8px_rgba(0,0,0,0.5)]" style={{ borderColor: `${tierColor}40`, color: tierColor, backgroundColor: `${tierColor}10` }}>
+                {user.tier || "STANDARD"} TIER
+              </div>
             </div>
           </div>
           
           <div className="p-5 flex gap-5 items-start relative">
-            <div className="absolute right-4 top-4 text-[10px] text-on-surface-variant opacity-50">#{user.id.slice(-6).toUpperCase()}</div>
             <div className="w-20 h-20 shrink-0 border border-white/20 bg-black flex items-center justify-center relative overflow-hidden group-hover:border-primary/50 transition-colors shadow-[0_0_15px_rgba(0,0,0,0.8)]">
               <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(255,255,255,0.02)_4px,rgba(255,255,255,0.02)_8px)]"></div>
               <span className="text-2xl font-black text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] tracking-tighter relative z-10">{initials}</span>
@@ -116,6 +126,13 @@ export function ProfileManager() {
                   disabled
                 />
               </div>
+              {user.role !== "admin" && (
+                <div className="rounded border border-[#FFB300]/30 bg-[#FFB300]/10 p-3 text-[9px] leading-relaxed text-[#FFB300]">
+                  Admin wallet funding requires <strong>admin</strong> role from the backend. If you added your email to
+                  <code className="mx-1">ADMIN_EMAILS</code>, restart the backend server, sign out, and sign in again so
+                  your session picks up the new role.
+                </div>
+              )}
             </div>
           </div>
         </div>

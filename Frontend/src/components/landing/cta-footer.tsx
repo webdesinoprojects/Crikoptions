@@ -63,14 +63,14 @@ export const CtaFooter = () => {
         <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12 font-mono text-sm tracking-wider">
           
           <div className="flex flex-col gap-4">
-            <span className="text-white font-bold text-lg mb-2">CRIKOPTIONS</span>
-            <span className="text-gray-500">© 2026 CrikOptions Inc.</span>
+            <span className="text-white font-bold text-lg mb-2">CRICOPTIONS</span>
+            <span className="text-gray-500">© 2026 CricOptions Inc.</span>
             <span className="text-gray-500">All Systems Nominal.</span>
           </div>
 
           <div className="flex flex-col gap-4">
             <span className="text-white font-bold mb-2">PLATFORM</span>
-            <Link href="/trading/market-1" className="text-gray-500 hover:text-white transition-colors">Markets</Link>
+            <Link href="/dashboard" className="text-gray-500 hover:text-white transition-colors">Markets</Link>
             <Link href="/insights/1" className="text-gray-500 hover:text-white transition-colors">Intelligence</Link>
             <Link href="/portfolio" className="text-gray-500 hover:text-white transition-colors">Portfolio</Link>
           </div>

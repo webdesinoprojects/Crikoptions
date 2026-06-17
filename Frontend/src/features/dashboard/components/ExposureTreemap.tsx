@@ -4,12 +4,15 @@ import React, { useMemo } from "react";
 import { TerminalPanel } from "@/components/shared/TerminalComponents";
 import { EChartsWrapper } from "@/components/shared/EChartsWrapper";
 import { AssetHeatmapMask } from "./AssetHeatmapMask";
+import { usePositions } from "@/features/portfolio/hooks";
 
 export function ExposureTreemap() {
+  const { data: positions = [], isLoading } = usePositions();
+
   const option = useMemo(() => {
     return {
       tooltip: {
-        formatter: "{b}: Value ₹{c} ({d}%)",
+        formatter: "{b}: Value Rs {c}",
       },
       series: [
         {
@@ -18,7 +21,7 @@ export function ExposureTreemap() {
           visibleMin: 300,
           label: {
             show: true,
-            formatter: "{b}\n₹{c}",
+            formatter: "{b}\nRs {c}",
             fontFamily: "JetBrains Mono, monospace",
             fontSize: 11,
             color: "#f8fafc",
@@ -31,61 +34,33 @@ export function ExposureTreemap() {
             borderWidth: 2,
             gapWidth: 1,
           },
-          levels: [
-            {
-              itemStyle: {
-                borderColor: "#020617",
-                borderWidth: 2,
-                gapWidth: 2,
-              },
+          data: positions.map((position) => ({
+            name: position.symbol,
+            value: Math.max(1, Math.round(position.notional)),
+            itemStyle: {
+              color: position.unrealizedPnL >= 0 ? "rgba(34, 197, 94, 0.55)" : "rgba(239, 68, 68, 0.55)",
             },
-          ],
-          data: [
-            {
-              name: "V. Kohli",
-              value: 86400,
-              itemStyle: { color: "rgba(14, 165, 233, 0.8)" },
-            },
-            {
-              name: "J. Bumrah",
-              value: 62000,
-              itemStyle: { color: "rgba(14, 165, 233, 0.6)" },
-            },
-            {
-              name: "M. Dhoni",
-              value: 48000,
-              itemStyle: { color: "rgba(14, 165, 233, 0.5)" },
-            },
-            {
-              name: "R. Sharma",
-              value: 32000,
-              itemStyle: { color: "rgba(14, 165, 233, 0.4)" },
-            },
-            {
-              name: "S. Gill",
-              value: 12000,
-              itemStyle: { color: "rgba(14, 165, 233, 0.25)" },
-            },
-            {
-              name: "Cash/Margin",
-              value: 7420,
-              itemStyle: { color: "rgba(14, 165, 233, 0.15)" },
-            },
-          ],
+          })),
         },
       ],
     };
-  }, []);
+  }, [positions]);
 
   return (
-    <TerminalPanel
-      title="Exposure Treemap"
-      subtitle="Institutional asset concentration & margins"
-      className="h-[260px]"
-    >
+    <TerminalPanel title="Exposure Treemap" subtitle="Backend open-position concentration" className="h-[260px]">
       <div className="flex-1 min-h-0 relative">
         <AssetHeatmapMask />
-        <EChartsWrapper option={option} />
+        {isLoading ? (
+          <div className="flex h-full items-center justify-center text-xs text-on-surface-variant">
+            Loading exposure
+          </div>
+        ) : positions.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-xs text-on-surface-variant">
+            No active exposure
+          </div>
+        ) : (
+          <EChartsWrapper option={option} />
+        )}
       </div>
     </TerminalPanel>
   );
