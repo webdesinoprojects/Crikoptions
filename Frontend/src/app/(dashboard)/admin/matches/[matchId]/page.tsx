@@ -20,13 +20,36 @@ type BallEvent = {
 };
 
 type BackendMatch = {
+  _id?: string;
   innings: number;
   currentScore: number;
   wicketsLost: number;
   ballsLeft: number;
   status: string;
   oversText?: string;
+  teamAName?: string;
+  teamBName?: string;
+  format?: string;
 };
+
+// Convert BackendMatch to Match type for components
+function toMatchType(backendMatch: BackendMatch | null): any {
+  if (!backendMatch) return null;
+  return {
+    id: backendMatch._id || '',
+    title: `${backendMatch.teamAName || 'Team A'} vs ${backendMatch.teamBName || 'Team B'}`,
+    status: backendMatch.status?.toUpperCase() || 'LIVE',
+    homeTeam: { id: '1', name: backendMatch.teamAName || 'Team A', logo: '' },
+    awayTeam: { id: '2', name: backendMatch.teamBName || 'Team B', logo: '' },
+    startTime: new Date().toISOString(),
+    format: backendMatch.format || 'T20',
+    innings: backendMatch.innings,
+    currentScore: backendMatch.currentScore,
+    wicketsLost: backendMatch.wicketsLost,
+    ballsLeft: backendMatch.ballsLeft,
+    currentOver: backendMatch.oversText,
+  };
+}
 
 export default function AdminMatchControlPage() {
   const { matchId } = useParams<{ matchId: string }>();
@@ -216,7 +239,7 @@ export default function AdminMatchControlPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <h2 className="text-lg font-semibold mb-2">Option Chain (Market: {market.title})</h2>
-          <OptionChain marketId={market._id} market={market} match={match} />
+          <OptionChain marketId={market._id} market={market} match={toMatchType(match)} />
         </div>
         <div>
           <h2 className="text-lg font-semibold mb-2">Instructions</h2>

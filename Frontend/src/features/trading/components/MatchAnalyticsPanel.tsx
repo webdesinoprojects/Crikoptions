@@ -55,6 +55,8 @@ export function MatchAnalyticsPanel({ matchId, marketId }: MatchAnalyticsPanelPr
   const homeScore = match?.homeScore || "0/0";
   const awayScore = match?.awayScore || "0";
   const currentOver = match?.currentOver || "0.0";
+  const totalBalls = totalBallsForFormat(match?.format);
+  const ballsLeft = Math.max(0, Math.min(totalBalls, match?.ballsLeft ?? totalBalls));
 
   return (
     <div className="flex flex-col gap-4 xl:h-full">
