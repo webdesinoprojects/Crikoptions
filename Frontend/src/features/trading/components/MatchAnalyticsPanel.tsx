@@ -1,10 +1,11 @@
 import React from "react";
 import { useMatchDetails } from "@/features/dashboard/hooks";
-import { useWatchlist, useAddWatchlist, useRemoveWatchlist } from "@/features/watchlist/hooks/useWatchlist";
+import { useAddWatchlist, useRemoveWatchlist, useWatchlist } from "@/features/watchlist/hooks/useWatchlist";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Star } from "lucide-react";
 import { toast } from "sonner";
 import { BroadcastInterfaceMask } from "./BroadcastInterfaceMask";
+import { ballClassName, buildThisOverBalls } from "../utils/terminal-context";
 
 interface MatchAnalyticsPanelProps {
   matchId: string;
@@ -14,30 +15,25 @@ interface MatchAnalyticsPanelProps {
 export function MatchAnalyticsPanel({ matchId, marketId }: MatchAnalyticsPanelProps) {
   const { data: match, isLoading } = useMatchDetails(matchId);
   const { data: watchlist } = useWatchlist();
-  
   const addWatchlistMutation = useAddWatchlist();
   const removeWatchlistMutation = useRemoveWatchlist();
-
   const isWatchlisted = watchlist?.marketIds.includes(marketId) || false;
 
   const handleWatchlistToggle = () => {
+    if (!marketId) {
+      toast.error("No backend market selected");
+      return;
+    }
+
     if (isWatchlisted) {
       removeWatchlistMutation.mutate(marketId, {
-        onSuccess: () => {
-          toast.success("Removed market from watchlist");
-        },
-        onError: () => {
-          toast.error("Failed to remove from watchlist");
-        },
+        onSuccess: () => toast.success("Removed market from watchlist"),
+        onError: () => toast.error("Failed to remove from watchlist"),
       });
     } else {
       addWatchlistMutation.mutate(marketId, {
-        onSuccess: () => {
-          toast.success("Added market to watchlist");
-        },
-        onError: () => {
-          toast.error("Failed to add to watchlist");
-        },
+        onSuccess: () => toast.success("Added market to watchlist"),
+        onError: () => toast.error("Failed to add to watchlist"),
       });
     }
   };
@@ -52,15 +48,23 @@ export function MatchAnalyticsPanel({ matchId, marketId }: MatchAnalyticsPanelPr
     );
   }
 
+  const homeName = match?.homeTeam?.name || "0";
+  const awayName = match?.awayTeam?.name || "0";
+  const homeScore = match?.homeScore || "0/0";
+  const awayScore = match?.awayScore || "0";
+  const currentOver = match?.currentOver || "0.0";
+  const totalBalls = totalBallsForFormat(match?.format);
+  const ballsLeft = Math.max(0, Math.min(totalBalls, match?.ballsLeft ?? totalBalls));
+  const thisOverBalls = buildThisOverBalls(match?.currentScore ?? 0, match?.wicketsLost ?? 0, ballsLeft, totalBalls);
+
   return (
-    <div className="flex flex-col gap-4 h-full">
-      {/* Match Scorecard Header with Watchlist Toggle */}
-      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex flex-col gap-3 relative">
+    <div className="flex flex-col gap-4 xl:h-full">
+      <div className="bg-surface-container-lowest border border-outline-variant rounded-md p-4 flex flex-col gap-3 relative">
         <div className="flex justify-between items-start">
           <span className="text-[10px] uppercase font-bold text-primary tracking-wider bg-primary/10 px-2 py-0.5 rounded-full">
-            {match?.format || "T20"} • {match?.status || "LIVE"}
+            {match?.format || "0"} - {match?.status || "0"}
           </span>
-          
+
           <button
             type="button"
             onClick={handleWatchlistToggle}
@@ -74,72 +78,80 @@ export function MatchAnalyticsPanel({ matchId, marketId }: MatchAnalyticsPanelPr
           </button>
         </div>
 
-        {/* Teams and Score */}
         <div className="flex flex-col gap-2">
           <div className="flex justify-between items-center text-sm font-bold text-on-surface">
-            <span>{match?.homeTeam?.name || "CSK"}</span>
-            <span className="font-data-tabular">{match?.homeScore || "0/0"}</span>
+            <span>{homeName}</span>
+            <span className="font-data-tabular">{homeScore}</span>
           </div>
           <div className="flex justify-between items-center text-sm font-bold text-on-surface">
-            <span>{match?.awayTeam?.name || "MI"}</span>
-            <span className="font-data-tabular">{match?.awayScore || "—"}</span>
+            <span>{awayName}</span>
+            <span className="font-data-tabular">{awayScore}</span>
           </div>
         </div>
 
         <div className="flex justify-between text-[11px] text-on-surface-variant border-t border-outline-variant pt-2">
-          <span>Overs: <strong className="text-on-surface">{match?.currentOver || "0.0"}</strong></span>
-          <span>Match State DNA: <strong className="text-bull-green">94% CLUTCH</strong></span>
-        </div>
-      </div>
-
-      {/* Head to Head (H2H) Analytics Panel */}
-      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex flex-col gap-3">
-        <span className="font-label-sm text-label-sm font-bold text-on-surface border-b border-outline-variant pb-1.5">
-          Match DNA Metrics
-        </span>
-        
-        <div className="flex flex-col gap-3 text-xs">
-          {/* Strike Rate comparison progress bar */}
-          <div className="flex flex-col gap-1">
-            <div className="flex justify-between text-[10px] text-on-surface-variant">
-              <span>Avg Strike Rate</span>
-              <span>CSK (142) vs MI (148)</span>
-            </div>
-            <div className="h-1.5 w-full bg-surface-container rounded-full overflow-hidden flex">
-              <div className="bg-primary h-full" style={{ width: "48%" }} />
-              <div className="bg-orange-500 h-full" style={{ width: "52%" }} />
-            </div>
-          </div>
-
-          {/* Economy comparison progress bar */}
-          <div className="flex flex-col gap-1">
-            <div className="flex justify-between text-[10px] text-on-surface-variant">
-              <span>Bowling Economy</span>
-              <span>CSK (7.8) vs MI (8.2)</span>
-            </div>
-            <div className="h-1.5 w-full bg-surface-container rounded-full overflow-hidden flex">
-              <div className="bg-primary h-full" style={{ width: "51%" }} />
-              <div className="bg-orange-500 h-full" style={{ width: "49%" }} />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Live Video Stream Player Simulator */}
-      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden relative flex-grow flex flex-col min-h-[160px]">
-        <div className="bg-surface px-3 py-2 border-b border-outline-variant flex justify-between items-center">
-          <span className="font-label-sm text-label-sm font-bold text-on-surface">Live Broadcast</span>
-          <span className="flex items-center gap-1.5 text-[10px] font-bold text-bear-red">
-            <span className="w-1.5 h-1.5 rounded-full bg-bear-red animate-pulse" />
-            LIVE FEED
+          <span>
+            Overs: <strong className="text-on-surface">{currentOver}</strong>
+          </span>
+          <span>
+            Innings: <strong className="text-on-surface">{match?.innings ?? 1}</strong>
           </span>
         </div>
 
-        {/* Video simulation placeholder */}
+        <div className="border-t border-outline-variant pt-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] uppercase font-bold text-on-surface-variant tracking-wider">This Over</span>
+            <span className="text-[10px] font-bold text-on-surface-variant">{ballsLeft} balls left</span>
+          </div>
+          <div className="flex w-full items-center justify-between gap-1.5">
+            {thisOverBalls.map((ball, index) => (
+              <span
+                key={`${ball.kind}-${ball.label}-${index}`}
+                aria-label={ball.kind === "empty" ? `Ball ${index + 1}: not yet bowled` : `Ball ${index + 1}: ${ball.label}`}
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-[11px] font-black font-data-tabular shadow-inner ${ballClassName(ball.kind)}`}
+              >
+                {ball.label}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="hidden bg-surface-container-lowest border border-outline-variant rounded-md p-4 xl:flex flex-col gap-3">
+        <span className="font-label-sm text-label-sm font-bold text-on-surface border-b border-outline-variant pb-1.5">
+          Match DNA Metrics
+        </span>
+
+        <div className="flex flex-col gap-3 text-xs">
+          {["Avg Strike Rate", "Bowling Economy"].map((label) => (
+            <div key={label} className="flex flex-col gap-1">
+              <div className="flex justify-between text-[10px] text-on-surface-variant">
+                <span>{label}</span>
+                <span>{homeName} (0) vs {awayName} (0)</span>
+              </div>
+              <div className="h-1.5 w-full bg-surface-container rounded-full overflow-hidden flex">
+                <div className="bg-primary h-full" style={{ width: "0%" }} />
+                <div className="bg-orange-500 h-full" style={{ width: "0%" }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="hidden bg-surface-container-lowest border border-outline-variant rounded-md overflow-hidden relative xl:flex-grow xl:flex flex-col min-h-[160px]">
+        <div className="bg-surface px-3 py-2 border-b border-outline-variant flex justify-between items-center">
+          <span className="font-label-sm text-label-sm font-bold text-on-surface">Broadcast Feed</span>
+          <span className="flex items-center gap-1.5 text-[10px] font-bold text-on-surface-variant">0</span>
+        </div>
         <div className="flex-grow bg-black relative flex items-center justify-center min-h-[160px]">
           <BroadcastInterfaceMask />
         </div>
       </div>
     </div>
   );
+}
+
+function totalBallsForFormat(format?: string) {
+  const upper = (format ?? "T20").toUpperCase();
+  return upper.includes("ODI") || upper.includes("ONE") ? 300 : 120;
 }
