@@ -190,7 +190,10 @@ function PositionsTab({ loading, positions, chainRows }: { loading: boolean; pos
       {positions.map((position) => {
         // Try to find live price from option chain for this strike
         const chainRow = chainRows.find((row) => row.strike === position.strike);
-        const liveLtp = chainRow ? chainRow.bid : position.ltp;
+        // Use bid if long (we sell to close), use ask if short (we buy to close)
+        const liveLtp = chainRow
+          ? (position.lots > 0 ? chainRow.bid : chainRow.ask)
+          : position.ltp;
         const livePnl = chainRow
           ? Math.round((liveLtp - position.buyPrice) * position.lots * 100) / 100
           : position.pnl;
