@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils";
 
 const sourceStyles: Record<DataSourceKind, string> = {
   api: "border-bull-green/30 bg-bull-green/10 text-bull-green",
-  simulated: "border-amber-400/30 bg-amber-400/10 text-amber-300",
   derived: "border-primary/30 bg-primary/10 text-primary",
   static: "border-outline/30 bg-white/5 text-on-surface-variant",
 };
@@ -30,4 +29,3 @@ export function DataSourceBadge({
     </span>
   );
 }
-

@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Intelligence Domain Types
 // All types are match-aware. matchId is the primary context key.
-// Mock generators produce these shapes; real services will return the same shapes.
+// Backend-derived services return these shapes.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Historical match fingerprint from DNA similarity engine */
