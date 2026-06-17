@@ -5,12 +5,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { RefreshCw } from "lucide-react";
 import { DataSourceBadge } from "@/components/shared/DataSourceBadge";
 import {
-  PortfolioOverview,
   EquityCurveChart,
   PnLBreakdown,
-  PositionTable,
+  PortfolioOverview,
   RiskMetrics,
-  TradeJournal,
+  TradeOperationsWorkspace,
 } from "../components";
 
 export function PortfolioView() {
@@ -20,19 +19,20 @@ export function PortfolioView() {
   async function handleRefresh() {
     setRefreshing(true);
     await qc.invalidateQueries({ queryKey: ["portfolio"] });
+    await qc.invalidateQueries({ queryKey: ["wallet"] });
+    await qc.invalidateQueries({ queryKey: ["orders"] });
     setTimeout(() => setRefreshing(false), 800);
   }
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden select-none">
-      {/* Page header */}
       <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 border-b border-outline/10 bg-background/95 backdrop-blur">
         <div>
           <h1 className="text-sm font-bold text-white uppercase tracking-wider font-display">
             Portfolio Hub
           </h1>
           <p className="text-[9px] text-on-surface-variant">
-            Aggregated exposure, stress monitors, and holding period analytics.
+            Aggregated exposure, order workflow, and holding period analytics.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -49,10 +49,9 @@ export function PortfolioView() {
       </div>
 
       <div className="p-3 space-y-3 flex-1 overflow-y-auto">
-        {/* Row 1 — KPI overview strip */}
         <PortfolioOverview />
+        <TradeOperationsWorkspace />
 
-        {/* Row 2 — Equity Curve + PnL Attribution */}
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-3">
           <div className="lg:col-span-7">
             <EquityCurveChart />
@@ -62,16 +61,10 @@ export function PortfolioView() {
           </div>
         </div>
 
-        {/* Row 3 — Open positions table */}
-        <PositionTable />
-
-        {/* Row 4 — Risk Metrics */}
         <RiskMetrics />
-
-        {/* Row 5 — Closed Trade Journal */}
-        <TradeJournal />
       </div>
     </div>
   );
 }
+
 export default PortfolioView;

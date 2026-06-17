@@ -1,21 +1,56 @@
 import { apiClient } from "@/lib/api/client";
-import { Quote, Trade, MarketDepth, Market as FrontendMarket, Order as FrontendOrder } from "@/types";
+import { Quote, MarketDepth, Market as FrontendMarket, Order as FrontendOrder } from "@/types";
 import { adaptMarkets, adaptMarketDepth, BackendMarket } from "@/lib/adapters/market.adapter";
 import { adaptOrders, adaptOrder, BackendOrder } from "@/lib/adapters/order.adapter";
+import { Execution } from "../types/execution";
+import { OpenPosition } from "../types/position";
 
 export interface CreateOrderPayload {
   matchId: string;
   marketId: string;
+  strike: number;
   side: "buy" | "sell";
+  type: "LIMIT" | "MARKET";
   quantity: number;
   price: number;
 }
 
+export interface CalculatePricePayload {
+  innings: number;
+  currentScore: number;
+  wicketsLost: number;
+  ballsLeft?: number;
+  ballsBowled?: number;
+  targetScore?: number;
+}
+
+export interface OptionChainStrike {
+  strike: number;
+  premium: number;
+}
+
+export interface CalculatedPrice {
+  buyerPrice: number;
+  sellerPrice: number;
+  ltp: number;
+  open: number;
+  high: number;
+  low: number;
+  strikeStep?: number;
+  maxStrike?: number;
+  projectedS0?: number;
+  optionChain?: OptionChainStrike[];
+}
+
 class TradingService {
-  // Live API Integrations
   async fetchMarkets(matchId: string): Promise<FrontendMarket[]> {
     const response = await apiClient.get<{ success: boolean; data: BackendMarket[] }>(`/v1/matches/${matchId}/markets`);
     return adaptMarkets(response.data.data);
+  }
+
+  async fetchMarketDetail(marketId: string): Promise<BackendMarket> {
+    const response = await apiClient.get<{ success: boolean; data: BackendMarket }>(`/v1/markets/${marketId}`);
+    return response.data.data;
   }
 
   async fetchMarketDepth(marketId: string): Promise<MarketDepth> {
@@ -23,11 +58,10 @@ class TradingService {
     return adaptMarketDepth(response.data.data);
   }
 
-  async fetchOrders(matchId?: string, status?: string): Promise<FrontendOrder[]> {
+  async fetchOrders(matchId?: string): Promise<FrontendOrder[]> {
     const params: Record<string, string> = {};
     if (matchId) params.matchId = matchId;
-    if (status) params.status = status;
-    
+
     const response = await apiClient.get<{ success: boolean; data: BackendOrder[] }>("/v1/orders", { params });
     return adaptOrders(response.data.data);
   }
@@ -37,73 +71,84 @@ class TradingService {
     return adaptOrder(response.data.data);
   }
 
+  async fetchExecutions(matchId: string, marketId: string): Promise<Execution[]> {
+    const response = await apiClient.get<{ success: boolean; data: Execution[] }>("/v1/executions", {
+      params: { matchId, marketId },
+    });
+    return response.data.data ?? [];
+  }
+
+  async fetchOpenPositions(): Promise<OpenPosition[]> {
+    const response = await apiClient.get<{ success: boolean; data: OpenPosition[] }>("/v1/positions/open");
+    return normalizeOpenPositions(response.data.data ?? []);
+  }
+
+  async calculateMarketPrice(marketId: string, payload: CalculatePricePayload): Promise<CalculatedPrice> {
+    const response = await apiClient.post<{ success: boolean; data: CalculatedPrice }>(
+      `/v1/markets/${marketId}/calculate-price`,
+      payload
+    );
+    return response.data.data;
+  }
+
   async cancelOrder(orderId: string): Promise<FrontendOrder> {
     const response = await apiClient.patch<{ success: boolean; data: BackendOrder }>(`/v1/orders/${orderId}/cancel`);
     return adaptOrder(response.data.data);
   }
 
-  // Compatibility bindings for Phase A
   async getOrderBook(marketId: string): Promise<MarketDepth> {
     return this.fetchMarketDepth(marketId);
   }
 
-  // Mocked/generated real-time simulations (Go backend lacks trades/candles REST endpoints)
   async getMarketCandles(marketId: string, timeframe: string): Promise<Quote[]> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const candles: Quote[] = [];
-        let basePrice = 150;
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
-        
-        for (let i = 0; i < 60; i++) {
-          const time = new Date(now.getTime() - (60 - i) * 24 * 60 * 60 * 1000).getTime() / 1000;
-          const open = basePrice + (Math.random() - 0.5) * 5;
-          const close = open + (Math.random() - 0.5) * 5;
-          const high = Math.max(open, close) + Math.random() * 2;
-          const low = Math.min(open, close) - Math.random() * 2;
-          
-          candles.push({
-            marketId,
-            symbol: "MSDHONI",
-            timestamp: time,
-            open,
-            high,
-            low,
-            close,
-            volume: Math.floor(Math.random() * 10000)
-          });
-          
-          basePrice = close;
-        }
-        resolve(candles);
-      }, 500);
-    });
-  }
+    void timeframe;
+    const market = await this.fetchMarketDetail(marketId);
+    if (!market) return [];
 
-  async getRecentTrades(marketId: string): Promise<Trade[]> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const trades: Trade[] = [];
-        let basePrice = 154.50;
-        const now = new Date();
-        
-        for (let i = 0; i < 20; i++) {
-          const price = basePrice + (Math.random() - 0.5) * 0.2;
-          trades.push({
-            id: `trd_${i}`,
-            marketId,
-            price,
-            quantity: Math.floor(Math.random() * 200) + 10,
-            timestamp: new Date(now.getTime() - i * 5000).toISOString(),
-            makerSide: Math.random() > 0.5 ? "BUY" : "SELL"
-          });
-        }
-        
-        resolve(trades);
-      }, 300);
-    });
+    const timestamp = Math.floor(new Date(market.updatedAt || market.createdAt || Date.now()).getTime() / 1000);
+    const volume = (market.quantityLadder ?? []).reduce(
+      (total, row) => total + (row.buyerQty ?? 0) + (row.sellerQty ?? 0),
+      0
+    );
+
+    return [
+      {
+        marketId: market._id,
+        symbol: symbolFromTitle(market.title),
+        timestamp,
+        open: market.open ?? 0,
+        high: market.high ?? 0,
+        low: market.low ?? 0,
+        close: market.ltp ?? 0,
+        volume,
+      },
+    ];
   }
 }
 
 export const tradingService = new TradingService();
+
+function normalizeOpenPositions(positions: OpenPosition[]): OpenPosition[] {
+  return positions.map((position) => ({
+    ...position,
+    strike: numberOrZero(position.strike),
+    lots: numberOrZero(position.lots),
+    buyPrice: numberOrZero(position.buyPrice),
+    ltp: numberOrZero(position.ltp),
+    pnl: numberOrZero(position.pnl),
+  }));
+}
+
+function numberOrZero(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function symbolFromTitle(title: string): string {
+  const words = title
+    .split(/[\s/_-]+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (words.length === 0) return "0";
+  return words.map((word) => word[0]).join("").toUpperCase() || "0";
+}

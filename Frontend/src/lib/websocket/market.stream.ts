@@ -24,32 +24,17 @@ export const marketStream = {
     marketId: string,
     onUpdate: (event: MarketDepthUpdateEvent) => void
   ): (() => void) => {
-    const socket = socketManager.connect();
+    socketManager.connect();
     const eventName = `market:depth:${marketId}`;
-
-    socket.emit("subscribe", { channel: eventName });
-    socket.on(eventName, onUpdate);
-
-    // Unsubscribe cleanup callback
-    return () => {
-      socket.off(eventName, onUpdate);
-      socket.emit("unsubscribe", { channel: eventName });
-    };
+    return socketManager.subscribe(eventName, onUpdate);
   },
 
   subscribePriceTicks: (
     marketId: string,
     onTick: (event: PriceTickEvent) => void
   ): (() => void) => {
-    const socket = socketManager.connect();
+    socketManager.connect();
     const eventName = `market:ticks:${marketId}`;
-
-    socket.emit("subscribe", { channel: eventName });
-    socket.on(eventName, onTick);
-
-    return () => {
-      socket.off(eventName, onTick);
-      socket.emit("unsubscribe", { channel: eventName });
-    };
+    return socketManager.subscribe(eventName, onTick);
   },
 };

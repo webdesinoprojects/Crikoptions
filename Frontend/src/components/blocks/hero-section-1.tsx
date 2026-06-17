@@ -83,7 +83,7 @@ export function HeroSection() {
                                     <Link
                                         href="/login"
                                         className="hover:bg-[#0f172a]/50 bg-[#0f172a] group mx-auto flex w-fit items-center gap-4 rounded-full border border-[#1e3a8a]/50 p-1 pl-4 shadow-lg shadow-[#1e3a8a]/20 transition-all duration-300">
-                                        <span className="text-[#d4af37] text-sm font-mono tracking-wider font-bold">CRIKOPTIONS TERMINAL</span>
+                                        <span className="text-[#d4af37] text-sm font-mono tracking-wider font-bold">CRICOPTIONS TERMINAL</span>
                                         <span className="block h-4 w-0.5 border-l border-[#1e3a8a]"></span>
 
                                         <div className="bg-[#1e3a8a] group-hover:bg-[#2563eb] size-6 overflow-hidden rounded-full duration-500">
@@ -187,6 +187,6 @@ export function HeroSection() {
 
 const Logo = ({ className }: { className?: string }) => {
     return (
-        <img src="/logo.png" alt="CrikOptions Logo" className={cn('h-16 w-auto object-contain', className)} />
+        <img src="/logo.png" alt="CricOptions Logo" className={cn('h-16 w-auto object-contain', className)} />
     )
 }
