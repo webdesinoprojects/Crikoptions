@@ -25,6 +25,7 @@ type BackendMatch = {
   currentScore: number;
   wicketsLost: number;
   ballsLeft: number;
+  targetScore?: number;
   status: string;
   oversText?: string;
   teamAName?: string;
@@ -47,6 +48,7 @@ function toMatchType(backendMatch: BackendMatch | null): any {
     currentScore: backendMatch.currentScore,
     wicketsLost: backendMatch.wicketsLost,
     ballsLeft: backendMatch.ballsLeft,
+    targetScore: backendMatch.targetScore,
     currentOver: backendMatch.oversText,
   };
 }
@@ -55,6 +57,7 @@ export default function AdminMatchControlPage() {
   const { matchId } = useParams<{ matchId: string }>();
   const [match, setMatch] = useState<BackendMatch | null>(null);
   const [market, setMarket] = useState<BackendMarket | null>(null);
+  const [targetInput, setTargetInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
@@ -67,6 +70,7 @@ export default function AdminMatchControlPage() {
         apiClient.get<{ success: boolean; data: BackendMarket[] }>(`/v1/matches/${matchId}/markets`),
       ]);
       setMatch(matchRes.data.data);
+      setTargetInput(matchRes.data.data.targetScore ? String(matchRes.data.data.targetScore) : "");
       const depthMarket =
         marketsRes.data.data.find((m: BackendMarket) => m.type === "match_depth") || marketsRes.data.data[0];
       setMarket(depthMarket || null);
@@ -91,6 +95,7 @@ export default function AdminMatchControlPage() {
         currentScore: 0,
         wicketsLost: 0,
         ballsLeft: 120,
+        targetScore: 0,
         status: "live",
       });
       clearBallLog(matchId);
@@ -112,12 +117,7 @@ export default function AdminMatchControlPage() {
         let newBallsLeft = match.ballsLeft;
         let newWickets = match.wicketsLost;
 
-        if (event.wide) {
-          newScore += 1;
-        } else {
-          newScore += 1;
-          newBallsLeft = Math.max(0, newBallsLeft - 1);
-        }
+        newScore += 1;
 
         let newStatus = match.status;
         if (newBallsLeft === 0 || newWickets >= 10) {
@@ -131,6 +131,8 @@ export default function AdminMatchControlPage() {
           ballsLeft: newBallsLeft,
           status: newStatus,
         });
+
+        appendBall(matchId, ballEventFromAdmin(event));
       } else {
         const response = await apiClient.post<{ success: boolean; data?: BackendMatch }>(
           `/v1/admin/matches/${matchId}/ball`,
@@ -153,6 +155,28 @@ export default function AdminMatchControlPage() {
       await fetchData(true);
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Failed to apply ball event"));
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const saveTargetScore = async () => {
+    if (!match) return;
+    const nextTarget = Number.parseInt(targetInput, 10) || 0;
+    setUpdating(true);
+    try {
+      await apiClient.patch(`/v1/admin/matches/${matchId}/score`, {
+        innings: match.innings,
+        currentScore: match.currentScore,
+        wicketsLost: match.wicketsLost,
+        ballsLeft: match.ballsLeft,
+        targetScore: nextTarget,
+        status: match.status,
+      });
+      toast.success(nextTarget > 0 ? "Target score saved" : "Target score cleared");
+      await fetchData(true);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Failed to save target score"));
     } finally {
       setUpdating(false);
     }
@@ -187,8 +211,26 @@ export default function AdminMatchControlPage() {
             <div className="text-sm text-gray-400">Status</div>
             <div className="text-xl font-bold">{match.status}</div>
           </div>
+          <div>
+            <div className="text-sm text-gray-400">Target</div>
+            <div className="text-xl font-bold">{match.targetScore || "--"}</div>
+          </div>
         </div>
-        <div className="mt-4">
+        <div className="mt-4 flex flex-wrap items-end gap-3">
+          <label className="block">
+            <span className="mb-1 block text-sm text-gray-400">2nd innings target score</span>
+            <input
+              value={targetInput}
+              onChange={(event) => setTargetInput(event.target.value)}
+              type="number"
+              min="0"
+              className="h-10 w-40 rounded-md border border-gray-700 bg-gray-950 px-3 text-white"
+              placeholder="e.g. 181"
+            />
+          </label>
+          <Button onClick={saveTargetScore} disabled={updating} variant="secondary">
+            Save Target
+          </Button>
           <Button onClick={resetMatch} disabled={updating} variant="outline">
             Reset to Start (0/0, 120 balls)
           </Button>

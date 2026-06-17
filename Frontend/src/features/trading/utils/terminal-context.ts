@@ -30,7 +30,7 @@ export function buildPricePayload(match?: Match, market?: BackendMarket): Calcul
   const ballsLeft = Math.max(0, Math.min(totalBalls, match.ballsLeft ?? totalBalls));
 
   if (innings === 2) {
-    const targetScore = Math.max(currentScore + 1, Math.ceil(market?.high ?? market?.ltp ?? currentScore + 1));
+    const targetScore = Math.max(currentScore + 1, match.targetScore ?? Math.ceil(market?.high ?? market?.ltp ?? currentScore + 1));
 
     return {
       innings,
@@ -184,7 +184,9 @@ export function ballsBowledFromSnap(snap: ScoreboardSnap) {
 
 export function padThisOverBalls(balls: BallEvent[]): BallEvent[] {
   const filled = balls.filter((ball) => ball.kind !== "empty");
-  return Array.from({ length: 6 }, (_, index) => filled[index] ?? { label: "", kind: "empty" });
+  const legalCount = filled.filter(isLegalBallEvent).length;
+  const blanksNeeded = Math.max(0, 6 - legalCount);
+  return [...filled, ...Array.from({ length: blanksNeeded }, () => ({ label: "", kind: "empty" as const }))];
 }
 
 export function ballEventFromCommentary(event: { runs: number; isWicket: boolean }): BallEvent {
@@ -202,16 +204,31 @@ export function ballEventFromAdmin(event: {
 }): BallEvent {
   if (event.wicket) return { label: "W", kind: "wicket" };
   if (event.wide) return { label: "Wd", kind: "run" };
+  if (event.noBall) return { label: "Nb", kind: "run" };
   return ballFromRuns(event.runs);
 }
 
 /** Render the 6 "this over" slots from an append-only, click-ordered list of legal deliveries. */
 export function currentOverFromList(list: BallEvent[]): BallEvent[] {
-  const len = list.length;
-  if (len === 0) return padThisOverBalls([]);
-  const inOver = len % 6 === 0 ? 6 : len % 6;
-  const start = len - inOver;
-  return padThisOverBalls(list.slice(start));
+  const filled = list.filter((ball) => ball.kind !== "empty");
+  if (filled.length === 0) return padThisOverBalls([]);
+
+  const legalTotal = filled.filter(isLegalBallEvent).length;
+  if (legalTotal === 0) return padThisOverBalls(filled);
+
+  const legalInOver = legalTotal % 6 === 0 ? 6 : legalTotal % 6;
+  let legalSeen = 0;
+  let start = filled.length;
+
+  for (let index = filled.length - 1; index >= 0; index -= 1) {
+    start = index;
+    if (isLegalBallEvent(filled[index])) {
+      legalSeen += 1;
+      if (legalSeen === legalInOver) break;
+    }
+  }
+
+  return padThisOverBalls(filled.slice(start));
 }
 
 export function currentOverBallIndices(snap: ScoreboardSnap): { start: number; count: number } {
@@ -261,6 +278,10 @@ export function runsFromBallEvent(ball: BallEvent): number {
   if (ball.kind === "four") return 4;
   if (ball.kind === "dot" || ball.kind === "empty") return 0;
   return Number.parseInt(ball.label, 10) || 0;
+}
+
+export function isLegalBallEvent(ball: BallEvent) {
+  return ball.kind !== "empty" && ball.label !== "Wd" && ball.label !== "Nb";
 }
 
 export type ScoreDeltaResult = BallEvent[] | "reset" | null;

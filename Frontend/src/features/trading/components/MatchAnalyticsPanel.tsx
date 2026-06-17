@@ -6,7 +6,7 @@ import { Star } from "lucide-react";
 import { toast } from "sonner";
 import { BroadcastInterfaceMask } from "./BroadcastInterfaceMask";
 import { ballClassName } from "../utils/terminal-context";
-import { useThisOverBalls } from "../hooks";
+import { useThisOverBalls } from "../hooks/useThisOverBalls";
 
 interface MatchAnalyticsPanelProps {
   matchId: string;
@@ -20,6 +20,7 @@ export function MatchAnalyticsPanel({ matchId, marketId }: MatchAnalyticsPanelPr
   const removeWatchlistMutation = useRemoveWatchlist();
   const isWatchlisted = watchlist?.marketIds.includes(marketId) || false;
   const thisOverBalls = useThisOverBalls(match);
+  const compactThisOver = thisOverBalls.length > 6;
 
   const handleWatchlistToggle = () => {
     if (!marketId) {
@@ -104,12 +105,14 @@ export function MatchAnalyticsPanel({ matchId, marketId }: MatchAnalyticsPanelPr
             <span className="text-[10px] uppercase font-bold text-on-surface-variant tracking-wider">This Over</span>
             <span className="text-[10px] font-bold text-on-surface-variant">{ballsLeft} balls left</span>
           </div>
-          <div className="flex w-full items-center justify-between gap-1.5">
+          <div className={compactThisOver ? "grid w-full grid-cols-6 gap-1.5" : "flex w-full items-center justify-between gap-1.5"}>
             {thisOverBalls.map((ball, index) => (
               <span
                 key={`${ball.kind}-${ball.label}-${index}`}
                 aria-label={ball.kind === "empty" ? `Ball ${index + 1}: not yet bowled` : `Ball ${index + 1}: ${ball.label}`}
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-[11px] font-black font-data-tabular shadow-inner ${ballClassName(ball.kind)}`}
+                className={`flex shrink-0 items-center justify-center rounded-full border font-black font-data-tabular shadow-inner ${
+                  compactThisOver ? "h-6 w-6 justify-self-center text-[9px]" : "h-8 w-8 text-[11px]"
+                } ${ballClassName(ball.kind)}`}
               >
                 {ball.label}
               </span>

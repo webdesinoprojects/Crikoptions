@@ -11,6 +11,7 @@ import {
   currentOverFromList,
   distributeRunsAcrossBalls,
   inferBallsFromScoreDelta,
+  isLegalBallEvent,
   padThisOverBalls,
   ScoreboardSnap,
   snapFromMatch,
@@ -71,7 +72,8 @@ export function useThisOverBalls(match?: Match): BallEvent[] {
     // First load on this browser (incl. a brand new browser / late join):
     // rebuild the current picture from the aggregate score.
     if (isFirstSync) {
-      if (bowled > 0 && log.length !== bowled) {
+      const legalLogged = log.filter(isLegalBallEvent).length;
+      if (bowled > 0 && legalLogged !== bowled) {
         setBallLog(matchId, distributeRunsAcrossBalls(bowled, snap.currentScore, snap.wicketsLost));
       }
       prevSnapRef.current = snap;
@@ -98,8 +100,18 @@ export function useThisOverBalls(match?: Match): BallEvent[] {
 
       // A wide adds a run but no legal ball — keep the log aligned to bowled.
       const after = loadBallLog(matchId);
-      if (after.length > bowled) {
-        setBallLog(matchId, after.slice(0, bowled));
+      const legalCount = after.filter(isLegalBallEvent).length;
+      if (legalCount > bowled) {
+        let remainingLegal = bowled;
+        setBallLog(
+          matchId,
+          after.filter((ball) => {
+            if (!isLegalBallEvent(ball)) return true;
+            if (remainingLegal <= 0) return false;
+            remainingLegal -= 1;
+            return true;
+          })
+        );
       }
     }
   }, [matchId, currentScore, wicketsLost, ballsLeft]);

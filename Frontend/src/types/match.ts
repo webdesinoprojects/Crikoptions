@@ -14,5 +14,6 @@ export interface Match {
   currentScore?: number;
   wicketsLost?: number;
   ballsLeft?: number;
+  targetScore?: number;
   startTime: string;
 }

@@ -14,6 +14,7 @@ function patchMatch(current: Match, event: MatchScoreUpdateEvent): Match {
     currentScore: event.currentScore,
     wicketsLost: event.wicketsLost,
     ballsLeft: event.ballsLeft,
+    targetScore: event.targetScore ?? current.targetScore,
     currentOver: event.oversText,
     homeScore: `${event.currentScore}/${event.wicketsLost}`,
   };

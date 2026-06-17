@@ -16,6 +16,7 @@ export interface BackendMatch {
   currentScore: number;
   wicketsLost: number;
   ballsLeft: number;
+  targetScore?: number;
   oversText: string;
   createdAt: string;
   updatedAt: string;
@@ -63,6 +64,7 @@ export function adaptMatch(backend: BackendMatch): FrontendMatch {
     currentScore: backend.currentScore,
     wicketsLost: backend.wicketsLost,
     ballsLeft: backend.ballsLeft,
+    targetScore: backend.targetScore,
     startTime: backend.startTime,
   };
 }

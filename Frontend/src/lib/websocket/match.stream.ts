@@ -6,6 +6,7 @@ export interface MatchScoreUpdateEvent {
   currentScore: number;
   wicketsLost: number;
   ballsLeft: number;
+  targetScore?: number;
   oversText: string;
   status: string;
   timestamp?: string;
