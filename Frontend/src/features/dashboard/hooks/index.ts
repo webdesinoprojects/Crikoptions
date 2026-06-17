@@ -29,7 +29,7 @@ export const useMatchDetails = (matchId: string) => {
     queryKey: ["matchDetails", matchId],
     queryFn: () => dashboardService.fetchMatchDetails(matchId),
     enabled: !!matchId,
-    refetchInterval: 5000,
+    refetchInterval: 1000,
   });
 };
 

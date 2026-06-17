@@ -7,6 +7,10 @@ import { Button } from "@/components/ui/button";
 import { OptionChain } from "@/features/trading/components/OptionChain";
 import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { toast } from "sonner";
+import { ballEventFromAdmin } from "@/features/trading/utils/terminal-context";
+import { appendBall, clearBallLog } from "@/features/trading/utils/ball-log";
+
+const wsEnabled = process.env.NEXT_PUBLIC_WS_ENABLED === "true";
 
 type BallEvent = {
   runs: number;
@@ -15,29 +19,39 @@ type BallEvent = {
   noBall?: boolean;
 };
 
+type BackendMatch = {
+  innings: number;
+  currentScore: number;
+  wicketsLost: number;
+  ballsLeft: number;
+  status: string;
+  oversText?: string;
+};
+
 export default function AdminMatchControlPage() {
   const { matchId } = useParams<{ matchId: string }>();
-  const [match, setMatch] = useState<any>(null);
+  const [match, setMatch] = useState<BackendMatch | null>(null);
   const [market, setMarket] = useState<BackendMarket | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = async (silent = false) => {
     if (!matchId) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const [matchRes, marketsRes] = await Promise.all([
-        apiClient.get<{ success: boolean; data: any }>(`/v1/matches/${matchId}`),
+        apiClient.get<{ success: boolean; data: BackendMatch }>(`/v1/matches/${matchId}`),
         apiClient.get<{ success: boolean; data: BackendMarket[] }>(`/v1/matches/${matchId}/markets`),
       ]);
       setMatch(matchRes.data.data);
-      const depthMarket = marketsRes.data.data.find((m: BackendMarket) => m.type === "match_depth") || marketsRes.data.data[0];
+      const depthMarket =
+        marketsRes.data.data.find((m: BackendMarket) => m.type === "match_depth") || marketsRes.data.data[0];
       setMarket(depthMarket || null);
     } catch (error) {
       toast.error("Failed to load match or markets");
       console.error(error);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -56,54 +70,66 @@ export default function AdminMatchControlPage() {
         ballsLeft: 120,
         status: "live",
       });
+      clearBallLog(matchId);
       toast.success("Match reset to start of innings");
-      await fetchData();
-    } catch (error: any) {
-      toast.error(`Failed: ${error.response?.data?.message || error.message}`);
+      await fetchData(true);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Failed to reset match"));
     } finally {
       setUpdating(false);
     }
   };
 
   const applyBallEvent = async (event: BallEvent) => {
-    if (!match) return;
+    if (!match || !matchId) return;
     setUpdating(true);
     try {
-      let newScore = match.currentScore;
-      let newWickets = match.wicketsLost;
-      let newBallsLeft = match.ballsLeft;
+      if (event.wide || event.noBall) {
+        let newScore = match.currentScore;
+        let newBallsLeft = match.ballsLeft;
+        let newWickets = match.wicketsLost;
 
-      if (event.wide) {
-        newScore += 1;
-      } else if (event.noBall) {
-        newScore += 1;
-        newBallsLeft = Math.max(0, newBallsLeft - 1);
+        if (event.wide) {
+          newScore += 1;
+        } else {
+          newScore += 1;
+          newBallsLeft = Math.max(0, newBallsLeft - 1);
+        }
+
+        let newStatus = match.status;
+        if (newBallsLeft === 0 || newWickets >= 10) {
+          newStatus = "completed";
+        }
+
+        await apiClient.patch(`/v1/admin/matches/${matchId}/score`, {
+          innings: match.innings,
+          currentScore: newScore,
+          wicketsLost: newWickets,
+          ballsLeft: newBallsLeft,
+          status: newStatus,
+        });
       } else {
-        newBallsLeft = Math.max(0, newBallsLeft - 1);
-        newScore += event.runs;
-        if (event.wicket) {
-          newWickets += 1;
+        const response = await apiClient.post<{ success: boolean; data?: BackendMatch }>(
+          `/v1/admin/matches/${matchId}/ball`,
+          {
+            runs: event.wicket ? 0 : event.runs,
+            isWicket: event.wicket,
+          }
+        );
+
+        if (response.data.data) {
+          setMatch(response.data.data);
+        }
+
+        if (!wsEnabled) {
+          appendBall(matchId, ballEventFromAdmin(event));
         }
       }
 
-      let newStatus = match.status;
-      if (newBallsLeft === 0 || newWickets >= 10) {
-        newStatus = "completed";
-      }
-
-      const payload = {
-        innings: match.innings,
-        currentScore: newScore,
-        wicketsLost: newWickets,
-        ballsLeft: newBallsLeft,
-        status: newStatus,
-      };
-
-      await apiClient.patch(`/v1/admin/matches/${matchId}/score`, payload);
       toast.success("Ball event applied");
-      await fetchData();
-    } catch (error: any) {
-      toast.error(`Failed: ${error.response?.data?.message || error.message}`);
+      await fetchData(true);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Failed to apply ball event"));
     } finally {
       setUpdating(false);
     }
@@ -122,7 +148,9 @@ export default function AdminMatchControlPage() {
         <div className="grid grid-cols-4 gap-4">
           <div>
             <div className="text-sm text-gray-400">Score</div>
-            <div className="text-xl font-bold">{match.currentScore}/{match.wicketsLost}</div>
+            <div className="text-xl font-bold">
+              {match.currentScore}/{match.wicketsLost}
+            </div>
           </div>
           <div>
             <div className="text-sm text-gray-400">Balls Left</div>
@@ -130,7 +158,7 @@ export default function AdminMatchControlPage() {
           </div>
           <div>
             <div className="text-sm text-gray-400">Overs</div>
-            <div className="text-xl font-bold">{match.oversText}</div>
+            <div className="text-xl font-bold">{match.oversText ?? "0.0"}</div>
           </div>
           <div>
             <div className="text-sm text-gray-400">Status</div>
@@ -147,15 +175,41 @@ export default function AdminMatchControlPage() {
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-2">Ball Events</h2>
         <div className="grid grid-cols-4 gap-2">
-          <Button onClick={() => applyBallEvent({ runs: 0, wicket: false })} disabled={updating}>Dot Ball</Button>
-          <Button onClick={() => applyBallEvent({ runs: 1, wicket: false })} disabled={updating}>1 Run</Button>
-          <Button onClick={() => applyBallEvent({ runs: 2, wicket: false })} disabled={updating}>2 Runs</Button>
-          <Button onClick={() => applyBallEvent({ runs: 3, wicket: false })} disabled={updating}>3 Runs</Button>
-          <Button onClick={() => applyBallEvent({ runs: 4, wicket: false })} disabled={updating}>Boundary (4)</Button>
-          <Button onClick={() => applyBallEvent({ runs: 6, wicket: false })} disabled={updating}>Six (6)</Button>
-          <Button onClick={() => applyBallEvent({ runs: 0, wicket: true })} disabled={updating} variant="destructive">Wicket</Button>
-          <Button onClick={() => applyBallEvent({ runs: 1, wicket: false, wide: true })} disabled={updating} variant="secondary">Wide (+1)</Button>
-          <Button onClick={() => applyBallEvent({ runs: 1, wicket: false, noBall: true })} disabled={updating} variant="secondary">No Ball (+1)</Button>
+          <Button onClick={() => applyBallEvent({ runs: 0, wicket: false })} disabled={updating}>
+            Dot Ball
+          </Button>
+          <Button onClick={() => applyBallEvent({ runs: 1, wicket: false })} disabled={updating}>
+            1 Run
+          </Button>
+          <Button onClick={() => applyBallEvent({ runs: 2, wicket: false })} disabled={updating}>
+            2 Runs
+          </Button>
+          <Button onClick={() => applyBallEvent({ runs: 3, wicket: false })} disabled={updating}>
+            3 Runs
+          </Button>
+          <Button onClick={() => applyBallEvent({ runs: 4, wicket: false })} disabled={updating}>
+            Boundary (4)
+          </Button>
+          <Button onClick={() => applyBallEvent({ runs: 6, wicket: false })} disabled={updating}>
+            Six (6)
+          </Button>
+          <Button onClick={() => applyBallEvent({ runs: 0, wicket: true })} disabled={updating} variant="destructive">
+            Wicket
+          </Button>
+          <Button
+            onClick={() => applyBallEvent({ runs: 1, wicket: false, wide: true })}
+            disabled={updating}
+            variant="secondary"
+          >
+            Wide (+1)
+          </Button>
+          <Button
+            onClick={() => applyBallEvent({ runs: 1, wicket: false, noBall: true })}
+            disabled={updating}
+            variant="secondary"
+          >
+            No Ball (+1)
+          </Button>
         </div>
       </div>
 
@@ -167,13 +221,31 @@ export default function AdminMatchControlPage() {
         <div>
           <h2 className="text-lg font-semibold mb-2">Instructions</h2>
           <ul className="list-disc pl-5 space-y-1 text-sm text-gray-300">
-            <li>Click ball events to manually advance the match.</li>
-            <li>The option chain will update automatically after each event.</li>
-            <li>Use this to test pricing responsiveness and order flow.</li>
-            <li>This page is admin‑only; non‑admin users cannot modify the match.</li>
+            <li>Legal balls use POST /admin/matches/.../ball and push live WS commentary.</li>
+            <li>Wide / no-ball still use score PATCH until backend adds extras API.</li>
+            <li>The option chain updates automatically after each event.</li>
+            <li>This page is admin-only; non-admin users cannot modify the match.</li>
           </ul>
         </div>
       </div>
     </div>
   );
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    typeof error.response === "object" &&
+    error.response !== null &&
+    "data" in error.response &&
+    typeof error.response.data === "object" &&
+    error.response.data !== null &&
+    "message" in error.response.data &&
+    typeof error.response.data.message === "string"
+  ) {
+    return error.response.data.message;
+  }
+  return fallback;
 }

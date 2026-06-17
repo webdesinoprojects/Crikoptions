@@ -1,38 +1,92 @@
 export type WebSocketCallback<T = unknown> = (data: T) => void;
 
+const MAX_RECONNECT_ATTEMPTS = 5;
+const RECONNECT_BASE_MS = 3000;
+
+function isWebSocketEnabled() {
+  return process.env.NEXT_PUBLIC_WS_ENABLED === "true";
+}
+
+function resolveWebSocketUrl() {
+  const raw = process.env.NEXT_PUBLIC_WS_URL;
+  if (!raw) return null;
+
+  try {
+    const parsed = new URL(raw);
+    if (parsed.protocol === "ws:" || parsed.protocol === "wss:") {
+      return parsed.toString();
+    }
+
+    const protocol = parsed.protocol === "https:" ? "wss:" : "ws:";
+    const path =
+      parsed.pathname && parsed.pathname !== "/"
+        ? parsed.pathname
+        : process.env.NEXT_PUBLIC_WS_PATH || "/api/v1/ws";
+    return `${protocol}//${parsed.host}${path}`;
+  } catch {
+    return null;
+  }
+}
+
 class SocketManager {
   private socket: WebSocket | null = null;
-  private url: string;
+  private url: string | null;
   private listeners: Map<string, Set<WebSocketCallback<unknown>>> = new Map();
-  private isConnecting: boolean = false;
+  private isConnecting = false;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private reconnectAttempts = 0;
+  private disabled = false;
+  private warnedUnavailable = false;
 
   constructor() {
-    // Determine the WS URL (ws:// or wss://)
-    const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = process.env.NEXT_PUBLIC_WS_URL ? new URL(process.env.NEXT_PUBLIC_WS_URL).host : "localhost:8080";
-    this.url = `${protocol}//${host}/ws`;
+    this.url = resolveWebSocketUrl();
+    if (!isWebSocketEnabled()) {
+      this.disabled = true;
+    }
   }
 
-  public connect(): WebSocket {
+  public isEnabled() {
+    return !this.disabled && Boolean(this.url);
+  }
+
+  public isConnected() {
+    return this.socket?.readyState === WebSocket.OPEN;
+  }
+
+  public connect(): WebSocket | null {
+    if (this.disabled || !this.url) return null;
+
     if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) {
       return this.socket;
     }
 
     if (this.isConnecting) {
-      return this.socket as WebSocket; // It's currently connecting
+      return this.socket;
+    }
+
+    if (this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      this.disableWithWarning("max reconnect attempts reached");
+      return null;
     }
 
     this.isConnecting = true;
-    this.socket = new WebSocket(this.url);
+
+    try {
+      this.socket = new WebSocket(this.url);
+    } catch {
+      this.isConnecting = false;
+      this.handleConnectionFailure("invalid websocket url");
+      return null;
+    }
 
     this.socket.onopen = () => {
-      console.log("WebSocket connected");
       this.isConnecting = false;
+      this.reconnectAttempts = 0;
       if (this.reconnectTimer) {
         clearTimeout(this.reconnectTimer);
         this.reconnectTimer = null;
       }
+      this.resubscribeAll();
     };
 
     this.socket.onmessage = (event) => {
@@ -43,38 +97,85 @@ class SocketManager {
           data?: unknown;
         };
         const { topic, data } = payload;
-        
+
         if (topic && this.listeners.has(topic)) {
           this.listeners.get(topic)?.forEach((callback) => callback(data));
         } else if (payload.event && this.listeners.has(payload.event)) {
-          // Alternate server event shape.
           this.listeners.get(payload.event)?.forEach((callback) => callback(payload.data ?? payload));
         }
-      } catch (err) {
-        console.error("Failed to parse websocket message", err);
+      } catch {
+        // Ignore malformed frames.
       }
     };
 
     this.socket.onclose = () => {
-      console.log("WebSocket disconnected");
       this.isConnecting = false;
       this.socket = null;
+      this.reconnectAttempts += 1;
+
+      if (this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+        this.disableWithWarning("server closed connection");
+        return;
+      }
+
       this.scheduleReconnect();
     };
 
-    this.socket.onerror = (err) => {
-      console.error("WebSocket error:", err);
+    this.socket.onerror = () => {
+      this.isConnecting = false;
+      this.handleConnectionFailure("connection failed");
     };
 
     return this.socket;
   }
 
+  private handleConnectionFailure(reason: string) {
+    this.reconnectAttempts += 1;
+
+    if (this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      this.disableWithWarning(reason);
+      return;
+    }
+
+    this.scheduleReconnect();
+  }
+
+  private disableWithWarning(reason: string) {
+    if (this.warnedUnavailable) return;
+    this.warnedUnavailable = true;
+    this.disabled = true;
+
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+
+    if (this.socket) {
+      this.socket.close();
+      this.socket = null;
+    }
+
+    console.warn(
+      `[CrikOptions] Live WebSocket unavailable (${reason}). Using HTTP polling and admin ball log instead.`,
+      this.url ?? "no websocket url configured"
+    );
+  }
+
   private scheduleReconnect() {
-    if (this.reconnectTimer) return;
+    if (this.disabled || this.reconnectTimer) return;
+
+    const delay = RECONNECT_BASE_MS * Math.min(this.reconnectAttempts, 3);
     this.reconnectTimer = setTimeout(() => {
-      console.log("Attempting WebSocket reconnection...");
+      this.reconnectTimer = null;
       this.connect();
-    }, 3000);
+    }, delay);
+  }
+
+  private resubscribeAll() {
+    if (this.socket?.readyState !== WebSocket.OPEN) return;
+    for (const topic of this.listeners.keys()) {
+      this.socket.send(JSON.stringify({ action: "subscribe", topic }));
+    }
   }
 
   public disconnect(): void {
@@ -94,21 +195,22 @@ class SocketManager {
     }
     this.listeners.get(topic)!.add(callback as WebSocketCallback<unknown>);
 
-    // Send a subscribe intent to the server if needed
-    if (this.socket?.readyState === WebSocket.OPEN) {
-       this.socket.send(JSON.stringify({ action: "subscribe", topic }));
+    if (this.isEnabled()) {
+      this.connect();
+      if (this.socket?.readyState === WebSocket.OPEN) {
+        this.socket.send(JSON.stringify({ action: "subscribe", topic }));
+      }
     }
 
-    // Return unsubscribe function
     return () => {
       const callbacks = this.listeners.get(topic);
-      if (callbacks) {
-        callbacks.delete(callback as WebSocketCallback<unknown>);
-        if (callbacks.size === 0) {
-          this.listeners.delete(topic);
-          if (this.socket?.readyState === WebSocket.OPEN) {
-             this.socket.send(JSON.stringify({ action: "unsubscribe", topic }));
-          }
+      if (!callbacks) return;
+
+      callbacks.delete(callback as WebSocketCallback<unknown>);
+      if (callbacks.size === 0) {
+        this.listeners.delete(topic);
+        if (this.socket?.readyState === WebSocket.OPEN) {
+          this.socket.send(JSON.stringify({ action: "unsubscribe", topic }));
         }
       }
     };

@@ -9,7 +9,7 @@ import {
   OrderEntryForm,
   TradingActivityPanel,
 } from "@/features/trading/components";
-import { useMarketDetail, useMarkets } from "@/features/trading/hooks";
+import { useMarketDetail, useMarkets, useMatchScoreStream } from "@/features/trading/hooks";
 import { useLiveMatches, useMatchDetails } from "@/features/dashboard/hooks";
 
 interface PageProps {
@@ -22,6 +22,7 @@ export default function TradingTerminalPage({ params }: PageProps) {
   const { data: market, isLoading } = useMarketDetail(marketId);
   const matchId = market?.matchId ?? "";
   const { data: match } = useMatchDetails(matchId);
+  useMatchScoreStream(matchId);
   const { data: matches = [] } = useLiveMatches();
   const liveMatch = React.useMemo(() => matches.find((item) => item.status === "LIVE"), [matches]);
   const { data: liveMarkets = [] } = useMarkets(liveMatch?.id ?? "");

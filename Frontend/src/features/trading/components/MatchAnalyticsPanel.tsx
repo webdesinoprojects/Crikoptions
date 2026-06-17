@@ -5,7 +5,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Star } from "lucide-react";
 import { toast } from "sonner";
 import { BroadcastInterfaceMask } from "./BroadcastInterfaceMask";
-import { ballClassName, buildThisOverBalls } from "../utils/terminal-context";
+import { ballClassName } from "../utils/terminal-context";
+import { useThisOverBalls } from "../hooks";
 
 interface MatchAnalyticsPanelProps {
   matchId: string;
@@ -18,6 +19,7 @@ export function MatchAnalyticsPanel({ matchId, marketId }: MatchAnalyticsPanelPr
   const addWatchlistMutation = useAddWatchlist();
   const removeWatchlistMutation = useRemoveWatchlist();
   const isWatchlisted = watchlist?.marketIds.includes(marketId) || false;
+  const thisOverBalls = useThisOverBalls(match);
 
   const handleWatchlistToggle = () => {
     if (!marketId) {
@@ -53,9 +55,6 @@ export function MatchAnalyticsPanel({ matchId, marketId }: MatchAnalyticsPanelPr
   const homeScore = match?.homeScore || "0/0";
   const awayScore = match?.awayScore || "0";
   const currentOver = match?.currentOver || "0.0";
-  const totalBalls = totalBallsForFormat(match?.format);
-  const ballsLeft = Math.max(0, Math.min(totalBalls, match?.ballsLeft ?? totalBalls));
-  const thisOverBalls = buildThisOverBalls(match?.currentScore ?? 0, match?.wicketsLost ?? 0, ballsLeft, totalBalls);
 
   return (
     <div className="flex flex-col gap-4 xl:h-full">

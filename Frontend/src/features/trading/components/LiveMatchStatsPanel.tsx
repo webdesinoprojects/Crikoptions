@@ -4,7 +4,8 @@ import React from "react";
 import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { cn } from "@/lib/utils";
 import { Match } from "@/types";
-import { ballClassName, buildThisOverBalls, projectedRange, scoreParts } from "../utils/terminal-context";
+import { useThisOverBalls } from "../hooks";
+import { ballClassName, projectedRange, scoreParts } from "../utils/terminal-context";
 
 interface LiveMatchStatsPanelProps {
   match?: Match;
@@ -25,7 +26,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
   const crr = ballsBowled > 0 ? currentScore / (ballsBowled / 6) : 0;
   const projected = projectedFinal(currentScore, ballsLeft, crr, market);
   const range = projectedRange(projected);
-  const balls = buildThisOverBalls(currentScore, wickets, ballsLeft, totalBalls);
+  const balls = useThisOverBalls(match);
   const progress = projected > 0 ? Math.min(100, Math.max(0, (currentScore / projected) * 100)) : 0;
 
   return (

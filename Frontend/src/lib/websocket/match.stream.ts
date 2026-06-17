@@ -8,17 +8,17 @@ export interface MatchScoreUpdateEvent {
   ballsLeft: number;
   oversText: string;
   status: string;
-  timestamp: string;
+  timestamp?: string;
 }
 
 export interface MatchCommentaryEvent {
-  matchId: string;
-  ballNumber: string; // e.g. "16.2"
+  matchId?: string;
+  ballNumber?: string;
   runs: number;
   isWicket: boolean;
   wicketType?: string;
-  description: string;
-  timestamp: string;
+  description?: string;
+  timestamp?: string;
 }
 
 /**

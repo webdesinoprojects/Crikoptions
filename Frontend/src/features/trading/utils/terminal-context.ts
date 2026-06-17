@@ -151,11 +151,224 @@ function buildFirstOverBalls(score: number, wickets: number, dealtSlots: number)
   return balls;
 }
 
-function ballFromRuns(runs: number): BallEvent {
-  if (runs >= 6) return { label: String(runs), kind: "six" };
-  if (runs === 4) return { label: "4", kind: "four" };
-  if (runs > 0) return { label: String(runs), kind: "run" };
+export function ballFromRuns(runs: number): BallEvent {
+  const value = Math.max(0, Math.min(6, Math.round(runs)));
+  if (value >= 6) return { label: "6", kind: "six" };
+  if (value === 4) return { label: "4", kind: "four" };
+  if (value > 0) return { label: String(value), kind: "run" };
   return { label: "0", kind: "dot" };
+}
+
+export interface ScoreboardSnap {
+  matchId: string;
+  currentScore: number;
+  wicketsLost: number;
+  ballsLeft: number;
+  totalBalls: number;
+}
+
+export function snapFromMatch(match: Match): ScoreboardSnap {
+  const totalBalls = totalBallsForFormat(match.format);
+  return {
+    matchId: match.id,
+    currentScore: match.currentScore ?? scoreFromDisplay(match.homeScore),
+    wicketsLost: match.wicketsLost ?? wicketsFromDisplay(match.homeScore),
+    ballsLeft: Math.max(0, Math.min(totalBalls, match.ballsLeft ?? totalBalls)),
+    totalBalls,
+  };
+}
+
+export function ballsBowledFromSnap(snap: ScoreboardSnap) {
+  return snap.totalBalls - snap.ballsLeft;
+}
+
+export function padThisOverBalls(balls: BallEvent[]): BallEvent[] {
+  const filled = balls.filter((ball) => ball.kind !== "empty");
+  return Array.from({ length: 6 }, (_, index) => filled[index] ?? { label: "", kind: "empty" });
+}
+
+export function ballEventFromCommentary(event: { runs: number; isWicket: boolean }): BallEvent {
+  const isWicket = event.isWicket === true;
+  const runs = Number.isFinite(Number(event.runs)) ? Number(event.runs) : 0;
+  if (isWicket) return { label: "W", kind: "wicket" };
+  return ballFromRuns(runs);
+}
+
+export function ballEventFromAdmin(event: {
+  runs: number;
+  wicket: boolean;
+  wide?: boolean;
+  noBall?: boolean;
+}): BallEvent {
+  if (event.wicket) return { label: "W", kind: "wicket" };
+  if (event.wide) return { label: "Wd", kind: "run" };
+  return ballFromRuns(event.runs);
+}
+
+/** Render the 6 "this over" slots from an append-only, click-ordered list of legal deliveries. */
+export function currentOverFromList(list: BallEvent[]): BallEvent[] {
+  const len = list.length;
+  if (len === 0) return padThisOverBalls([]);
+  const inOver = len % 6 === 0 ? 6 : len % 6;
+  const start = len - inOver;
+  return padThisOverBalls(list.slice(start));
+}
+
+export function currentOverBallIndices(snap: ScoreboardSnap): { start: number; count: number } {
+  const bowled = ballsBowledFromSnap(snap);
+  if (bowled <= 0) return { start: 0, count: 0 };
+  const inOver = bowled % 6;
+  const count = inOver === 0 ? 6 : inOver;
+  return { start: bowled - count, count };
+}
+
+export function buildThisOverFromHistory(snap: ScoreboardSnap, history: ReadonlyMap<number, BallEvent>): BallEvent[] {
+  const { start, count } = currentOverBallIndices(snap);
+  const filled: BallEvent[] = [];
+  for (let index = 0; index < count; index += 1) {
+    filled.push(history.get(start + index) ?? { label: "", kind: "empty" });
+  }
+  return padThisOverBalls(filled);
+}
+
+/** Rebuild current-over ball history when the page loads mid-match (e.g. 6/0 after first ball). */
+export function seedHistoryFromSnap(snap: ScoreboardSnap, history: ReadonlyMap<number, BallEvent>): Map<number, BallEvent> {
+  const bowled = ballsBowledFromSnap(snap);
+  if (bowled <= 0) return new Map(history);
+
+  const { start, count } = currentOverBallIndices(snap);
+  const missingIndices = Array.from({ length: count }, (_, index) => start + index).filter((index) => !history.has(index));
+  if (missingIndices.length === 0) return new Map(history);
+
+  const next = new Map(history);
+
+  // First over: total score maps directly to the balls visible in this over.
+  if (start === 0 && count === bowled) {
+    const balls = distributeRunsAcrossBalls(count, snap.currentScore, snap.wicketsLost);
+    balls.forEach((ball, offset) => {
+      const index = offset;
+      if (!next.has(index)) next.set(index, ball);
+    });
+    return next;
+  }
+
+  return next;
+}
+
+export function runsFromBallEvent(ball: BallEvent): number {
+  if (ball.kind === "wicket") return 0;
+  if (ball.kind === "six") return 6;
+  if (ball.kind === "four") return 4;
+  if (ball.kind === "dot" || ball.kind === "empty") return 0;
+  return Number.parseInt(ball.label, 10) || 0;
+}
+
+export type ScoreDeltaResult = BallEvent[] | "reset" | null;
+
+export function inferBallsFromScoreDelta(prev: ScoreboardSnap, next: ScoreboardSnap): ScoreDeltaResult {
+  const scoreDelta = next.currentScore - prev.currentScore;
+  const wicketsDelta = next.wicketsLost - prev.wicketsLost;
+  const prevBowled = ballsBowledFromSnap(prev);
+  const nextBowled = ballsBowledFromSnap(next);
+  const ballsBowledDelta = nextBowled - prevBowled;
+
+  if (
+    next.currentScore === 0 &&
+    next.wicketsLost === 0 &&
+    next.ballsLeft >= next.totalBalls - 1 &&
+    (prev.currentScore > 0 || prev.wicketsLost > 0)
+  ) {
+    return "reset";
+  }
+
+  if (scoreDelta === 0 && wicketsDelta === 0 && ballsBowledDelta === 0) {
+    return null;
+  }
+
+  if (ballsBowledDelta === 0 && scoreDelta === 1) {
+    return [{ label: "Wd", kind: "run" }];
+  }
+
+  // ballsLeft can lag behind score on some API responses — still show the last ball.
+  if (ballsBowledDelta <= 0 && scoreDelta > 0 && wicketsDelta === 0 && scoreDelta <= 6) {
+    return [ballFromRuns(scoreDelta)];
+  }
+
+  if (ballsBowledDelta <= 0) {
+    return null;
+  }
+
+  if (ballsBowledDelta === 1) {
+    if (wicketsDelta === 1 && scoreDelta === 0) {
+      return [{ label: "W", kind: "wicket" }];
+    }
+    if (wicketsDelta > 1) {
+      return null;
+    }
+    if (scoreDelta >= 0 && scoreDelta <= 6) {
+      return [ballFromRuns(scoreDelta)];
+    }
+    return null;
+  }
+
+  return distributeRunsAcrossBalls(ballsBowledDelta, scoreDelta, wicketsDelta);
+}
+
+export function distributeRunsAcrossBalls(ballCount: number, totalRuns: number, wickets: number): BallEvent[] {
+  if (ballCount <= 0) return [];
+
+  const runsPerBall = Array<number>(ballCount).fill(0);
+  let runs = Math.max(0, totalRuns);
+
+  // Fill from the end of the over so paired runs keep click order (4 then 6, not 6 then 4).
+  for (let index = ballCount - 1; index >= 0; index -= 1) {
+    const chunk = Math.min(6, runs);
+    runsPerBall[index] = chunk;
+    runs -= chunk;
+  }
+
+  const balls = runsPerBall.map((value) => ballFromRuns(value));
+  let wicketsLeft = Math.max(0, wickets);
+
+  for (let index = ballCount - 1; index >= 0 && wicketsLeft > 0; index -= 1) {
+    if (runsPerBall[index] === 0) {
+      balls[index] = { label: "W", kind: "wicket" };
+      wicketsLeft -= 1;
+    }
+  }
+
+  return balls;
+}
+
+/** @deprecated Use inferBallsFromScoreDelta instead. */
+export function inferBallFromScoreDelta(prev: ScoreboardSnap, next: ScoreboardSnap): BallEvent | "reset" | null {
+  const result = inferBallsFromScoreDelta(prev, next);
+  if (result === "reset" || result === null) return result;
+  return result[result.length - 1] ?? null;
+}
+
+export function appendBallToCurrentOver(
+  current: BallEvent[],
+  ball: BallEvent,
+  prev: ScoreboardSnap,
+  next: ScoreboardSnap
+): BallEvent[] {
+  const prevBowled = ballsBowledFromSnap(prev);
+  const nextBowled = ballsBowledFromSnap(next);
+  const prevInOver = prevBowled % 6;
+  const nextInOver = nextBowled % 6;
+  const filled = current.filter((item) => item.kind !== "empty");
+
+  if (nextInOver === 1 && prevInOver === 0 && prevBowled > 0 && nextBowled > prevBowled) {
+    return [ball];
+  }
+
+  if (nextInOver === 0 && nextBowled > prevBowled) {
+    if (filled.length >= 5) return [...filled.slice(0, 5), ball];
+    return [...filled, ball];
+  }
+
+  return [...filled, ball];
 }
 
 export function ballClassName(kind: BallKind) {
