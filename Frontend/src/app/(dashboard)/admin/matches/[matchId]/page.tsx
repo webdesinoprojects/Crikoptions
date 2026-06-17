@@ -154,8 +154,8 @@ export default function AdminMatchControlPage() {
           <Button onClick={() => applyBallEvent({ runs: 4, wicket: false })} disabled={updating}>Boundary (4)</Button>
           <Button onClick={() => applyBallEvent({ runs: 6, wicket: false })} disabled={updating}>Six (6)</Button>
           <Button onClick={() => applyBallEvent({ runs: 0, wicket: true })} disabled={updating} variant="destructive">Wicket</Button>
-          <Button onClick={() => applyBallEvent({ runs: 1, wide: true })} disabled={updating} variant="secondary">Wide (+1)</Button>
-          <Button onClick={() => applyBallEvent({ runs: 1, noBall: true })} disabled={updating} variant="secondary">No Ball (+1)</Button>
+          <Button onClick={() => applyBallEvent({ runs: 1, wicket: false, wide: true })} disabled={updating} variant="secondary">Wide (+1)</Button>
+          <Button onClick={() => applyBallEvent({ runs: 1, wicket: false, noBall: true })} disabled={updating} variant="secondary">No Ball (+1)</Button>
         </div>
       </div>
 

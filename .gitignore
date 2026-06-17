@@ -12,3 +12,5 @@ bin/
 !TRADING_EXECUTION_PRODUCTION_SPEC.md
 *.pdf
 *.docx
+
+Crikoptions_backend/

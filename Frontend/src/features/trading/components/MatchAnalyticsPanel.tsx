@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Star } from "lucide-react";
 import { toast } from "sonner";
 import { BroadcastInterfaceMask } from "./BroadcastInterfaceMask";
+import { ballClassName, buildThisOverBalls } from "../utils/terminal-context";
 
 interface MatchAnalyticsPanelProps {
   matchId: string;
@@ -52,7 +53,9 @@ export function MatchAnalyticsPanel({ matchId, marketId }: MatchAnalyticsPanelPr
   const homeScore = match?.homeScore || "0/0";
   const awayScore = match?.awayScore || "0";
   const currentOver = match?.currentOver || "0.0";
-  const lastSixBalls = buildLastSixBalls(match?.currentScore ?? 0, match?.wicketsLost ?? 0, match?.ballsLeft ?? 0);
+  const totalBalls = totalBallsForFormat(match?.format);
+  const ballsLeft = Math.max(0, Math.min(totalBalls, match?.ballsLeft ?? totalBalls));
+  const thisOverBalls = buildThisOverBalls(match?.currentScore ?? 0, match?.wicketsLost ?? 0, ballsLeft, totalBalls);
 
   return (
     <div className="flex flex-col gap-4 xl:h-full">
@@ -97,15 +100,15 @@ export function MatchAnalyticsPanel({ matchId, marketId }: MatchAnalyticsPanelPr
 
         <div className="border-t border-outline-variant pt-3">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] uppercase font-bold text-on-surface-variant tracking-wider">Last 6 Balls</span>
-            <span className="text-[10px] font-bold text-on-surface-variant">{match?.ballsLeft ?? 0} balls left</span>
+            <span className="text-[10px] uppercase font-bold text-on-surface-variant tracking-wider">This Over</span>
+            <span className="text-[10px] font-bold text-on-surface-variant">{ballsLeft} balls left</span>
           </div>
-          <div className="grid grid-cols-6 gap-1.5">
-            {lastSixBalls.map((ball, index) => (
+          <div className="flex w-full items-center justify-between gap-1.5">
+            {thisOverBalls.map((ball, index) => (
               <span
-                key={`${ball.label}-${index}`}
-                aria-label={`Ball ${index + 1}: ${ball.label}`}
-                className={`flex aspect-square min-h-8 items-center justify-center rounded-full border text-[11px] font-black font-data-tabular shadow-inner ${ballClassName(ball.kind)}`}
+                key={`${ball.kind}-${ball.label}-${index}`}
+                aria-label={ball.kind === "empty" ? `Ball ${index + 1}: not yet bowled` : `Ball ${index + 1}: ${ball.label}`}
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-[11px] font-black font-data-tabular shadow-inner ${ballClassName(ball.kind)}`}
               >
                 {ball.label}
               </span>
@@ -148,42 +151,7 @@ export function MatchAnalyticsPanel({ matchId, marketId }: MatchAnalyticsPanelPr
   );
 }
 
-type BallKind = "dot" | "run" | "four" | "six" | "wicket";
-
-function buildLastSixBalls(score: number, wickets: number, ballsLeft: number): Array<{ label: string; kind: BallKind }> {
-  const sequence: Array<{ label: string; kind: BallKind }> = [
-    { label: "0", kind: "dot" },
-    { label: "1", kind: "run" },
-    { label: "2", kind: "run" },
-    { label: "4", kind: "four" },
-    { label: "6", kind: "six" },
-    { label: "1", kind: "run" },
-    { label: "0", kind: "dot" },
-    { label: "2", kind: "run" },
-  ];
-
-  const seed = Math.abs(score * 3 + wickets * 11 + ballsLeft * 5);
-  const balls = Array.from({ length: 6 }, (_, index) => sequence[(seed + index) % sequence.length]);
-
-  if (wickets > 0) {
-    balls[seed % balls.length] = { label: "W", kind: "wicket" };
-  }
-
-  return balls;
-}
-
-function ballClassName(kind: BallKind) {
-  switch (kind) {
-    case "wicket":
-      return "border-bear-red/60 bg-bear-red text-white";
-    case "six":
-      return "border-secondary/70 bg-secondary text-black";
-    case "four":
-      return "border-primary/70 bg-primary text-on-primary";
-    case "run":
-      return "border-bull-green/40 bg-bull-green/15 text-bull-green";
-    case "dot":
-    default:
-      return "border-outline/30 bg-white/5 text-on-surface-variant";
-  }
+function totalBallsForFormat(format?: string) {
+  const upper = (format ?? "T20").toUpperCase();
+  return upper.includes("ODI") || upper.includes("ONE") ? 300 : 120;
 }
