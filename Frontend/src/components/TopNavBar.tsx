@@ -63,10 +63,10 @@ export default function TopNavBar() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 h-14 bg-background border-b border-border/10 select-none">
+    <header className="fixed top-0 left-0 right-0 z-50 flex h-16 items-center justify-between border-b border-border/10 bg-background/95 px-6 shadow-[0_12px_48px_rgba(0,0,0,0.25)] backdrop-blur-xl select-none">
       <div className="flex items-center gap-8">
-        <Link href="/dashboard" className="font-headline-md text-base font-bold text-white uppercase tracking-wider flex items-center gap-2 hover:opacity-95 transition-opacity">
-          <span className="w-5 h-5 rounded bg-primary flex items-center justify-center text-[10px] text-black font-extrabold tracking-normal">
+        <Link href="/dashboard" className="font-headline-md flex items-center gap-3 text-lg font-black uppercase tracking-wide text-white transition-opacity hover:opacity-95">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-[12px] font-extrabold tracking-normal text-black shadow-[0_0_28px_rgba(14,165,233,0.28)]">
             CO
           </span>
           CricOptions
@@ -76,9 +76,9 @@ export default function TopNavBar() {
             <Link
               key={item.name}
               href={item.href}
-              className={`px-3 py-1 rounded text-xs font-semibold tracking-wide transition-all ${
+              className={`rounded-md px-4 py-2 text-sm font-semibold tracking-normal transition-all ${
                 isActive(item.href)
-                  ? "bg-primary/10 text-primary"
+                  ? "bg-primary/15 text-primary shadow-[inset_0_-2px_0_rgba(14,165,233,0.85),0_10px_28px_rgba(14,165,233,0.12)]"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
               }`}
             >
@@ -92,13 +92,13 @@ export default function TopNavBar() {
         <WalletBalancePill enabled={isAuthenticated} />
 
         <div className="hidden sm:flex items-center gap-3 border-r border-border/15 pr-4">
-          <button className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all cursor-pointer">
+          <button className="rounded-md p-2 text-muted-foreground transition-all hover:bg-muted/40 hover:text-foreground cursor-pointer">
             <Bell className="w-4 h-4" />
           </button>
-          <button className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all cursor-pointer">
+          <button className="rounded-md p-2 text-muted-foreground transition-all hover:bg-muted/40 hover:text-foreground cursor-pointer">
             <History className="w-4 h-4" />
           </button>
-          <Link href="/profile" className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all block">
+          <Link href="/profile" className="block rounded-md p-2 text-muted-foreground transition-all hover:bg-muted/40 hover:text-foreground">
             <Settings className="w-4 h-4" />
           </Link>
         </div>

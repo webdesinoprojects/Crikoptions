@@ -133,6 +133,7 @@ function adaptOpenPosition(
   const pnl = numberOrZero(position.pnl);
 
   return {
+    id: position._id || `${position.marketId}-${side}-${position.createdAt || position.updatedAt || "open"}`,
     marketId: position.marketId,
     symbol: symbolFromMarket(market, position.marketId),
     matchName: matchName(match, position.matchId),

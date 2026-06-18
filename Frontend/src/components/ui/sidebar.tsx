@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion, Transition } from "framer-motion";
@@ -17,13 +18,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import { Separator } from "@/components/ui/separator";
 import { useHomeMatches, useLiveTicker } from "@/features/dashboard/hooks";
 
 const sidebarVariants = {
   open: {
-    width: "15rem",
+    width: "16rem",
   },
   closed: {
     width: "3.5rem",
@@ -66,7 +66,8 @@ const staggerVariants = {
 };
 
 export function SessionNavBar() {
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+  const isCollapsed = !isHovered;
   const pathname = usePathname();
   const { data: tickers } = useLiveTicker();
   const { data: matches } = useHomeMatches();
@@ -78,13 +79,13 @@ export function SessionNavBar() {
       className={cn(
         "sidebar z-40 shrink-0 border-r border-outline/10 relative",
       )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       initial={isCollapsed ? "closed" : "open"}
       animate={isCollapsed ? "closed" : "open"}
       variants={sidebarVariants}
       transition={transitionProps}
-      onMouseEnter={() => setIsCollapsed(false)}
-      onMouseLeave={() => setIsCollapsed(true)}
-      style={{ height: "calc(100vh - 56px)" }}
+      style={{ height: "calc(100vh - 64px)" }}
     >
       <motion.div
         className={`relative z-40 flex text-muted-foreground h-full shrink-0 flex-col bg-surface transition-all overflow-hidden`}
@@ -92,19 +93,19 @@ export function SessionNavBar() {
       >
         <motion.ul variants={staggerVariants} className="flex h-full flex-col">
           <div className="flex grow flex-col items-center">
-                <div className="flex h-14 w-full shrink-0 items-center px-4">
-                  <Link href="/" className="flex items-center gap-2 w-full">
-                    {!isCollapsed ? (
-                      <span className="text-2xl font-extrabold tracking-tight text-on-surface">CricOptions</span>
-                    ) : (
-                      <span className="text-2xl font-extrabold tracking-tight text-on-surface">C</span>
-                    )}
-                  </Link>
-                </div>
+            <div className={cn("flex h-20 w-full shrink-0 items-center", isCollapsed ? "justify-center px-0" : "px-5")}>
+              <Link href="/" className={cn("flex items-center gap-2", isCollapsed ? "justify-center" : "w-full")}>
+                {!isCollapsed ? (
+                  <span className="text-2xl font-extrabold tracking-tight text-on-surface">CricOptions</span>
+                ) : (
+                  <span className="text-2xl font-extrabold tracking-tight text-on-surface">C</span>
+                )}
+              </Link>
+            </div>
 
             <div className="flex h-full w-full flex-col">
               <div className="flex grow flex-col gap-4">
-                <ScrollArea className="h-16 grow p-2">
+                <ScrollArea className="h-16 grow px-2 pb-2">
                   <div className={cn("flex w-full flex-col gap-1")}>
                     
                     {!isCollapsed && (
@@ -116,8 +117,9 @@ export function SessionNavBar() {
                     <Link
                       href="/dashboard"
                       className={cn(
-                        "flex h-9 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
-                        pathname === "/dashboard" && "bg-primary/15 text-primary font-bold hover:bg-primary/20 hover:text-primary",
+                        "flex h-11 w-full flex-row items-center rounded-md px-3 py-2 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
+                        isCollapsed && "justify-center px-0",
+                        pathname === "/dashboard" && "bg-primary/15 text-primary font-bold shadow-[inset_3px_0_0_rgba(14,165,233,0.9)] hover:bg-primary/20 hover:text-primary",
                       )}
                     >
                       <LayoutDashboard className="h-5 w-5 shrink-0" />
@@ -129,8 +131,9 @@ export function SessionNavBar() {
                     <Link
                       href={primaryMarketHref}
                       className={cn(
-                        "flex h-9 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
-                        pathname?.includes("/trading") && "bg-primary/15 text-primary font-bold hover:bg-primary/20 hover:text-primary",
+                        "flex h-11 w-full flex-row items-center rounded-md px-3 py-2 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
+                        isCollapsed && "justify-center px-0",
+                        pathname?.includes("/trading") && "bg-primary/15 text-primary font-bold shadow-[inset_3px_0_0_rgba(14,165,233,0.9)] hover:bg-primary/20 hover:text-primary",
                       )}
                     >
                       <TrendingUp className="h-5 w-5 shrink-0" />
@@ -142,8 +145,9 @@ export function SessionNavBar() {
                     <Link
                       href="/portfolio"
                       className={cn(
-                        "flex h-9 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
-                        pathname?.includes("/portfolio") && "bg-primary/15 text-primary font-bold hover:bg-primary/20 hover:text-primary",
+                        "flex h-11 w-full flex-row items-center rounded-md px-3 py-2 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
+                        isCollapsed && "justify-center px-0",
+                        pathname?.includes("/portfolio") && "bg-primary/15 text-primary font-bold shadow-[inset_3px_0_0_rgba(14,165,233,0.9)] hover:bg-primary/20 hover:text-primary",
                       )}
                     >
                       <Wallet className="h-5 w-5 shrink-0" />
@@ -155,7 +159,8 @@ export function SessionNavBar() {
                     <Link
                       href="#"
                       className={cn(
-                        "flex h-9 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
+                        "flex h-11 w-full flex-row items-center rounded-md px-3 py-2 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
+                        isCollapsed && "justify-center px-0",
                       )}
                     >
                       <Activity className="h-5 w-5 shrink-0" />
@@ -175,8 +180,9 @@ export function SessionNavBar() {
                     <Link
                       href={primaryInsightHref}
                       className={cn(
-                        "flex h-9 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
-                        pathname?.includes("/insights") && "bg-primary/15 text-primary font-bold hover:bg-primary/20 hover:text-primary",
+                        "flex h-11 w-full flex-row items-center rounded-md px-3 py-2 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
+                        isCollapsed && "justify-center px-0",
+                        pathname?.includes("/insights") && "bg-primary/15 text-primary font-bold shadow-[inset_3px_0_0_rgba(14,165,233,0.9)] hover:bg-primary/20 hover:text-primary",
                       )}
                     >
                       <BrainCircuit className="h-5 w-5 shrink-0" />
@@ -195,7 +201,8 @@ export function SessionNavBar() {
                     <Link
                       href={primaryInsightHref}
                       className={cn(
-                        "flex h-9 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
+                        "flex h-11 w-full flex-row items-center rounded-md px-3 py-2 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
+                        isCollapsed && "justify-center px-0",
                       )}
                     >
                       <Dna className="h-5 w-5 shrink-0" />
@@ -207,7 +214,8 @@ export function SessionNavBar() {
                     <Link
                       href="#"
                       className={cn(
-                        "flex h-9 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
+                        "flex h-11 w-full flex-row items-center rounded-md px-3 py-2 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
+                        isCollapsed && "justify-center px-0",
                       )}
                     >
                       <Newspaper className="h-5 w-5 shrink-0" />
@@ -223,7 +231,10 @@ export function SessionNavBar() {
               <div className="flex flex-col p-2 border-t border-outline/10">
                 <Link
                   href="/profile"
-                  className="mt-auto flex h-9 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant"
+                  className={cn(
+                    "mt-auto flex h-9 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
+                    isCollapsed && "justify-center px-0"
+                  )}
                 >
                   <UserCircle className="h-5 w-5 shrink-0" />
                   <motion.li variants={variants}>

@@ -127,10 +127,10 @@ function PositionsScreen({
         <tbody className="divide-y divide-outline/5">
           {loading ? <LoadingRows columns={8} /> : null}
           {!loading &&
-            rows.map((position) => {
+            rows.map((position, index) => {
               const positive = position.unrealizedPnL >= 0;
               return (
-                <tr key={`${position.marketId}-${position.side}`} className="hover:bg-white/[0.03]">
+                <tr key={position.id || `${position.marketId}-${position.side}-${index}`} className="hover:bg-white/[0.03]">
                   <td className="px-3 py-2 font-black text-on-surface">
                     {position.symbol}
                     {sample && <span className="ml-2 text-[9px] font-black text-primary">SAMPLE</span>}
@@ -284,6 +284,7 @@ const now = new Date().toISOString();
 
 const samplePositions: PortfolioPosition[] = [
   {
+    id: "sample-position-csk-130-buy",
     marketId: "sample-csk-130",
     symbol: "CSK130",
     matchName: "CSK vs MI",
@@ -298,6 +299,7 @@ const samplePositions: PortfolioPosition[] = [
     openedAt: now,
   },
   {
+    id: "sample-position-csk-150-sell",
     marketId: "sample-csk-150",
     symbol: "CSK150",
     matchName: "CSK vs MI",
@@ -312,6 +314,7 @@ const samplePositions: PortfolioPosition[] = [
     openedAt: now,
   },
   {
+    id: "sample-position-dc-170-buy",
     marketId: "sample-dc-170",
     symbol: "DC170",
     matchName: "DC vs SRH",

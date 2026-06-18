@@ -69,7 +69,7 @@ export function PositionTable() {
                 </td>
               </tr>
             ) : (
-              filtered.map((pos) => {
+              filtered.map((pos, index) => {
                 const isUp = pos.unrealizedPnL >= 0;
                 const pnlColor = isUp ? "text-bull-green" : "text-bear-red";
                 const sideBg =
@@ -78,7 +78,7 @@ export function PositionTable() {
                     : "bg-bear-red/10 text-bear-red";
 
                 return (
-                  <tr key={pos.marketId} className="hover:bg-white/5 group transition-colors">
+                  <tr key={pos.id || `${pos.marketId}-${pos.side}-${index}`} className="hover:bg-white/5 group transition-colors">
                     <td className="py-1">
                       <div className="flex flex-col">
                         <span className="font-bold text-white">{pos.symbol}</span>

@@ -194,7 +194,7 @@ body {
   }
 }
 
-/* Noise texture overlay — apply with .noise-overlay on any container */
+/* Noise texture overlay - apply with .noise-overlay on any container */
 .noise-overlay::before {
   content: "";
   position: absolute;
@@ -298,4 +298,13 @@ body {
   to {
     transform: translateY(calc(-100% - var(--gap)));
   }
+}
+
+.neumorphic-button::after {
+  content: '';
+  @apply absolute inset-0 opacity-0 transition-opacity duration-300 bg-gradient-to-br from-[#0ea5e9]/20 to-transparent rounded-[calc(1rem-0.375rem)];
+}
+  
+.neumorphic-button:hover::after {
+  @apply opacity-100;
 }

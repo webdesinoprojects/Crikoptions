@@ -48,7 +48,7 @@ export default function TradingTerminalPage({ params }: PageProps) {
       <MatchScheduleStrip matches={matches} selectedMatchId={matchId} />
 
       <main className="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden">
-        <div className="grid min-h-full grid-cols-1 gap-3 p-3 lg:h-full lg:min-h-0 lg:grid-cols-[250px_minmax(0,1fr)_315px] xl:grid-cols-[280px_minmax(0,1fr)_340px] 2xl:grid-cols-[300px_minmax(0,1fr)_370px]">
+        <div className="grid min-h-full grid-cols-1 gap-3 p-3 lg:h-full lg:min-h-0 lg:grid-cols-[300px_minmax(0,1fr)_360px] xl:grid-cols-[340px_minmax(0,1fr)_420px] 2xl:grid-cols-[360px_minmax(0,1fr)_440px]">
           <LiveMatchStatsPanel className="lg:h-full lg:min-h-0" match={match} market={market} />
           <OptionChain className="lg:h-full lg:min-h-0" marketId={marketId} market={market} match={match} />
           <section className="flex min-h-0 flex-col gap-2 overflow-y-auto pr-1 lg:h-full">

@@ -6,6 +6,7 @@
 import { WalletAccount } from "@/features/wallet/types/wallet";
 
 export interface PortfolioPosition {
+  id: string;
   marketId: string;
   symbol: string;
   /** Derived from matchId stored in order */

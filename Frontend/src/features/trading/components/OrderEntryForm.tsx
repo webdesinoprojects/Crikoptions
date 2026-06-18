@@ -6,7 +6,7 @@ import { useTerminalStore } from "@/stores/terminal.store";
 import { Match, Order } from "@/types";
 import { terminalPollInterval } from "../hooks/query-keys";
 import { useCreateOrder, useMarketDetail, useOptionChain } from "../hooks";
-import { buildOptionRows, buildPricePayload, findAtmRow, projectedRange } from "../utils/terminal-context";
+import { buildOptionRows, buildPricePayload, findAtmRow } from "../utils/terminal-context";
 
 interface OrderEntryFormProps {
   matchId: string;
@@ -23,7 +23,6 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const [lastOrderTime, setLastOrderTime] = useState<Date | null>(null);
 
   const orderSize = useTerminalStore((state) => state.orderSize);
-  const setOrderSize = useTerminalStore((state) => state.setOrderSize);
   const [qty, setQty] = useState(String(orderSize));
   const selectedPriceStore = useTerminalStore((state) => state.selectedPrice);
   const selectedSideStore = useTerminalStore((state) => state.selectedSide);
@@ -51,9 +50,6 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const cashRequired = side === "BUY" ? notional : 0;
   const availableBalance = wallet?.availableBalance ?? 0;
   const isBuyBalanceExceeded = side === "BUY" && cashRequired > availableBalance;
-  const fairLtp = calculated?.ltp ?? market?.ltp ?? 0;
-  const sensitivity = ballSensitivity(match?.ballsLeft ?? 120, match?.wicketsLost ?? 0);
-  const spread = selectedRow ? quoteAsk - quoteBid : 0;
   const hasExecutableQuote = Boolean(selectedRow && routedPrice > 0);
   const willExecuteNow =
     type === "MARKET" ||
@@ -161,16 +157,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
         activeSide={side}
         ask={quoteAsk}
         bid={quoteBid}
-        probability={selectedRow?.impliedProbability}
-        spread={spread}
-        strike={selectedRow?.strike}
       />
-
-      <div className="grid shrink-0 grid-cols-3 gap-1 text-[9px]">
-        <TicketMetric label="Projected" value={projectedRange(calculated?.projectedS0 ?? market?.ltp)} highlight />
-        <TicketMetric label="Fair LTP" value={formatMoney(fairLtp)} />
-        <TicketMetric label="Sensitivity" value={sensitivity} />
-      </div>
 
       <div className="grid shrink-0 grid-cols-2 rounded-md border border-outline-variant bg-surface p-0.5">
         {(["BUY", "SELL"] as const).map((option) => (
@@ -208,16 +195,6 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
           </button>
         ))}
       </div>
-
-      <OrderRoutePreview
-        hasQuote={hasExecutableQuote}
-        side={side}
-        type={type}
-        willExecuteNow={willExecuteNow}
-        quoteBid={quoteBid}
-        quoteAsk={quoteAsk}
-        price={priceValue}
-      />
 
       <div className="grid shrink-0 grid-cols-2 gap-1.5">
         <div className="grid min-w-0 gap-1">
@@ -264,25 +241,6 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
           />
         </div>
 
-        <div className="col-span-2 grid grid-cols-4 gap-1">
-          {[5, 10, 25, 50].map((size) => (
-            <button
-              key={size}
-              type="button"
-              onClick={() => {
-                setOrderSize(size);
-                setQty(String(size));
-              }}
-              className={`h-5 rounded border text-[10px] font-black transition-colors ${
-                qtyValue === size
-                  ? "border-primary/40 bg-primary/15 text-primary"
-                  : "border-outline-variant bg-surface text-on-surface-variant hover:text-on-surface"
-              }`}
-            >
-              {size}
-            </button>
-          ))}
-        </div>
       </div>
 
       <OrderImpactPanel
@@ -333,37 +291,14 @@ function QuoteFocusPanel({
   activeSide,
   ask,
   bid,
-  probability,
-  spread,
-  strike,
 }: {
   activeSide: "BUY" | "SELL";
   ask: number;
   bid: number;
-  probability?: number;
-  spread: number;
-  strike?: number;
 }) {
   return (
     <div className="shrink-0 rounded-md border border-outline-variant bg-surface-container-high/80 p-1.5">
-      <div className="grid grid-cols-[1fr_auto_auto] items-start gap-2">
-        <div className="min-w-0">
-          <div className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant">Selected strike</div>
-          <div className="font-data-tabular text-xl font-black leading-none text-on-surface">
-            {strike ? strike.toFixed(0) : "--"}
-          </div>
-        </div>
-        <div className="text-right">
-          <div className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant">Probability</div>
-          <div className="font-data-tabular text-base font-black text-teal-200">{probability ? `${probability}%` : "--"}</div>
-        </div>
-        <div className="text-right">
-          <div className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant">Spread</div>
-          <div className="font-data-tabular text-base font-black text-on-surface">Rs {formatMoney(Math.max(0, spread))}</div>
-        </div>
-      </div>
-
-      <div className="mt-1 grid grid-cols-2 gap-1">
+      <div className="grid grid-cols-2 gap-1">
         <QuoteBox active={activeSide === "SELL"} label="Bid" tone="bid" value={bid} />
         <QuoteBox active={activeSide === "BUY"} label="Ask" tone="ask" value={ask} />
       </div>
@@ -417,7 +352,7 @@ function OrderImpactPanel({
         <ImpactCell label="Notional" value={`Rs ${formatMoney(notional)}`} strong />
         <ImpactCell
           danger={danger}
-          label="Cash"
+          label="Margin"
           value={`Rs ${formatMoney(side === "BUY" ? cashRequired : 0)}`}
         />
         <ImpactCell danger={danger} label="Available" value={`Rs ${formatMoney(availableBalance)}`} align="right" />
@@ -463,52 +398,6 @@ function StatusPill({ side }: { side: "BUY" | "SELL" }) {
   );
 }
 
-function OrderRoutePreview({
-  hasQuote,
-  price,
-  quoteAsk,
-  quoteBid,
-  side,
-  type,
-  willExecuteNow,
-}: {
-  hasQuote: boolean;
-  price: number;
-  quoteAsk: number;
-  quoteBid: number;
-  side: "BUY" | "SELL";
-  type: OrderMode;
-  willExecuteNow: boolean;
-}) {
-  const activeQuote = side === "BUY" ? quoteAsk : quoteBid;
-  const tone = !hasQuote ? "border-outline-variant bg-surface text-on-surface-variant" : willExecuteNow
-    ? "border-bull-green/25 bg-bull-green/10 text-bull-green"
-    : "border-[#FFB300]/25 bg-[#FFB300]/10 text-[#FFB300]";
-  const Icon = !hasQuote ? Clock3 : willExecuteNow ? Zap : Clock3;
-  const label = !hasQuote
-    ? "Awaiting quote"
-    : type === "MARKET"
-      ? "Routes immediately"
-      : willExecuteNow
-        ? "Marketable limit"
-        : "Working limit";
-  const detail = !hasQuote
-    ? "Select a live strike with bid and ask."
-    : willExecuteNow
-      ? `${side} expected around Rs ${formatMoney(activeQuote)}.`
-      : `${side} limit Rs ${formatMoney(price)} will rest until the market crosses it.`;
-
-  return (
-    <div className={`flex min-h-8 items-center gap-2 rounded-md border px-2 py-1 ${tone}`}>
-      <Icon className="h-3.5 w-3.5 shrink-0" />
-      <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
-        <div className="shrink-0 text-[11px] font-black">{label}</div>
-        <div className="truncate text-right text-[10px] opacity-90">{detail}</div>
-      </div>
-    </div>
-  );
-}
-
 function OrderReceipt({ order, submittedAt }: { order: Order; submittedAt: Date | null }) {
   const executed = order.status === "FILLED";
   const partial = order.status === "PARTIAL";
@@ -536,21 +425,6 @@ function OrderReceipt({ order, submittedAt }: { order: Order; submittedAt: Date 
       </div>
     </div>
   );
-}
-
-function TicketMetric({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
-  return (
-    <div className="min-w-0 rounded border border-outline-variant bg-surface px-1.5 py-1">
-      <div className="truncate text-on-surface-variant">{label}</div>
-      <div className={`font-data-tabular font-black ${highlight ? "text-teal-200" : "text-on-surface"}`}>{value}</div>
-    </div>
-  );
-}
-
-function ballSensitivity(ballsLeft: number, wicketsLost: number) {
-  if (ballsLeft <= 18 || wicketsLost >= 7) return "High";
-  if (ballsLeft <= 42 || wicketsLost >= 4) return "Medium";
-  return "Low";
 }
 
 function formatMoney(value: number) {

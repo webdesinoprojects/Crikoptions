@@ -42,7 +42,6 @@ export function useThisOverBalls(match?: Match): BallEvent[] {
   // Render from the shared log; react to same-tab + cross-tab writes.
   useEffect(() => {
     if (!matchId) {
-      setBalls(padThisOverBalls([]));
       return;
     }
 
@@ -114,7 +113,7 @@ export function useThisOverBalls(match?: Match): BallEvent[] {
         );
       }
     }
-  }, [matchId, currentScore, wicketsLost, ballsLeft]);
+  }, [matchId, match, currentScore, wicketsLost, ballsLeft]);
 
   // Live ball-by-ball via WebSocket (each connected client appends on receive).
   useEffect(() => {
@@ -125,5 +124,5 @@ export function useThisOverBalls(match?: Match): BallEvent[] {
     });
   }, [matchId]);
 
-  return balls;
+  return matchId ? balls : padThisOverBalls([]);
 }

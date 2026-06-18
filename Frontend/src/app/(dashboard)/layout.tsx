@@ -10,7 +10,7 @@ export default function DashboardLayout({
   return (
     <AuthGuard>
       <TopNavBar />
-      <div className="flex overflow-hidden mt-14 h-[calc(100vh-56px)] w-full">
+      <div className="mt-16 flex h-[calc(100vh-64px)] w-full overflow-hidden">
         <SessionNavBar />
         <main className="flex-1 min-h-0 min-w-0 overflow-y-auto bg-background">
           {children}

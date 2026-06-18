@@ -1,208 +1,157 @@
-"use client" 
+"use client"
 
-import * as React from "react"
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Menu, X, User } from "lucide-react"
+import { AnimatePresence, motion } from "framer-motion"
+import { Menu, X } from "lucide-react"
 import Link from "next/link"
-import { cn } from "@/lib/utils"
+import { useState } from "react"
+
 import { useAuthStore } from "@/features/auth/hooks/useAuth"
 
-const Navbar1 = () => {
+const navItems = [
+  { label: "Features", href: "#features" },
+  { label: "Terminal", href: "#terminal" },
+  { label: "Pricing", href: "#pricing" },
+  { label: "Docs", href: "#docs" },
+]
+
+export function Navbar1() {
   const [isOpen, setIsOpen] = useState(false)
-  const [isScrolled, setIsScrolled] = useState(false)
   const { user, isAuthenticated } = useAuthStore()
 
-  const toggleMenu = () => setIsOpen(!isOpen)
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50)
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  const primaryHref = isAuthenticated ? "/dashboard" : "/register"
+  const primaryLabel = isAuthenticated ? "Workspace" : "Start trading"
 
   return (
-    <div className="fixed top-0 z-50 flex justify-center w-full py-4 px-4 transition-all duration-300">
-      <div className={cn(
-        "flex items-center justify-between px-6 py-3 rounded-full w-full max-w-6xl relative z-10 transition-all duration-300 border",
-        isScrolled 
-          ? "bg-[#020617]/85 backdrop-blur-xl shadow-2xl border-white/10" 
-          : "bg-transparent border-transparent shadow-none"
-      )}>
-        <div className="flex items-center">
-          <motion.div
-            className="h-10 w-auto mr-6"
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Link href="/" className="flex items-center gap-2">
-              <span className="text-2xl font-extrabold tracking-tight text-white uppercase font-display">CricOptions</span>
-            </Link>
-          </motion.div>
-        </div>
-        
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-8">
-          {["Features", "Terminal", "Pricing", "Docs"].map((item) => (
-            <motion.div
-              key={item}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              whileHover={{ scale: 1.05 }}
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#020711]/86 backdrop-blur-2xl">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <Link
+          href="/"
+          className="group flex min-w-0 items-center gap-3 rounded-full pr-2"
+          aria-label="CricOptions home"
+        >
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-full border border-sky-300/30 bg-sky-400 text-sm font-black text-slate-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_14px_34px_rgba(14,165,233,0.22)]">
+            CO
+          </span>
+          <span className="hidden text-lg font-black text-slate-50 sm:block">
+            CricOptions
+          </span>
+        </Link>
+
+        <nav className="hidden items-center gap-8 md:flex">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="rounded-full px-1 py-2 text-base font-semibold text-slate-400 transition-colors hover:text-slate-50"
             >
-              <Link href={`#${item.toLowerCase()}`} className="text-sm text-slate-300 hover:text-white transition-colors font-medium">
-                {item}
-              </Link>
-            </motion.div>
+              {item.label}
+            </Link>
           ))}
         </nav>
- 
-        {/* Desktop CTA Button or Profile Icon */}
-        <motion.div
-          className="hidden md:flex items-center gap-4"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-        >
+
+        <div className="hidden items-center gap-2 md:flex">
           {isAuthenticated && user ? (
-            <div className="flex items-center gap-4">
-              <Link href="/dashboard" className="text-sm font-bold text-slate-300 hover:text-white transition-colors">
-                Workspace
-              </Link>
-              <Link href="/profile" className="flex items-center gap-2 group cursor-pointer">
-                <div className="w-9 h-9 rounded-full bg-[#0ea5e9]/20 flex items-center justify-center border border-[#0ea5e9]/30 group-hover:border-[#0ea5e9]/65 transition-colors">
-                  <span className="text-[#0ea5e9] text-sm font-bold font-mono">
-                    {user.name ? user.name.charAt(0).toUpperCase() : "U"}
-                  </span>
-                </div>
-                <span className="text-sm font-bold text-white group-hover:text-[#0ea5e9] transition-colors">
-                  {user.name}
-                </span>
-              </Link>
-            </div>
-          ) : (
-            <>
-              <Link
-                href="/login"
-                className="text-sm font-medium text-slate-300 hover:text-white transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/register"
-                className="inline-flex items-center justify-center px-5 py-2 text-sm text-white bg-[#0ea5e9] font-bold rounded-full hover:bg-[#38bdf8] transition-colors shadow-[0_0_15px_rgba(14,165,233,0.3)]"
-              >
-                Get Started
-              </Link>
-            </>
-          )}
-        </motion.div>
- 
-        {/* Mobile Menu Button */}
-        <motion.button className="md:hidden flex items-center" onClick={toggleMenu} whileTap={{ scale: 0.9 }}>
-          <Menu className="h-6 w-6 text-white" />
-        </motion.button>
-      </div>
- 
-      {/* Mobile Menu Overlay */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            className="fixed inset-0 bg-[#020617]/95 backdrop-blur-xl z-50 pt-24 px-6 md:hidden border-b border-[#0ea5e9]/20 shadow-2xl"
-            initial={{ opacity: 0, y: "-100%" }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: "-100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          >
-            <motion.button
-              className="absolute top-6 right-6 p-2 bg-white/10 rounded-full"
-              onClick={toggleMenu}
-              whileTap={{ scale: 0.9 }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
+            <Link
+              href="/profile"
+              className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] py-1.5 pl-2 pr-3 text-sm font-semibold text-slate-200 transition hover:border-sky-300/40"
             >
-              <X className="h-6 w-6 text-white" />
-            </motion.button>
-            <div className="flex flex-col space-y-6">
-              {["Features", "Terminal", "Pricing", "Docs"].map((item, i) => (
+              <span className="flex size-7 items-center justify-center rounded-full bg-sky-400/15 font-mono text-xs text-sky-300">
+                {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+              </span>
+              <span className="max-w-24 truncate">{user.name || "Profile"}</span>
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-full border border-white/10 bg-white/2.5 px-6 py-3 text-base font-semibold text-slate-300 transition-colors hover:border-sky-300/25 hover:text-slate-50"
+            >
+              Sign in
+            </Link>
+          )}
+
+          <Link
+            href={primaryHref}
+            className="rounded-full bg-sky-400 px-7 py-3 text-base font-black text-slate-950 shadow-[0_16px_34px_rgba(14,165,233,0.28)] transition hover:bg-sky-300 active:translate-y-px"
+          >
+            {primaryLabel}
+          </Link>
+        </div>
+
+        <button
+          className="flex size-10 items-center justify-center rounded-full border border-white/10 bg-white/4 text-slate-50 md:hidden"
+          onClick={() => setIsOpen(true)}
+          aria-label="Open navigation menu"
+          type="button"
+        >
+          <Menu className="size-5" />
+        </button>
+      </div>
+
+      <AnimatePresence>
+        {isOpen ? (
+          <motion.div
+            className="fixed inset-0 z-50 bg-[#020617]/96 px-4 py-4 backdrop-blur-xl md:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="flex items-center justify-between">
+              <Link href="/" className="flex items-center gap-3" onClick={() => setIsOpen(false)}>
+                <span className="flex size-10 items-center justify-center rounded-full bg-sky-400 text-sm font-black text-slate-950">
+                  CO
+                </span>
+                <span className="text-sm font-black text-slate-50">CricOptions</span>
+              </Link>
+              <button
+                className="flex size-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-50"
+                onClick={() => setIsOpen(false)}
+                aria-label="Close navigation menu"
+                type="button"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+
+            <div className="mt-12 grid gap-3">
+              {navItems.map((item, index) => (
                 <motion.div
-                  key={item}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 + 0.1 }}
-                  exit={{ opacity: 0, x: 20 }}
+                  key={item.href}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.04 }}
                 >
-                  <Link href={`#${item.toLowerCase()}`} className="text-xl text-white font-display font-medium" onClick={toggleMenu}>
-                    {item}
+                  <Link
+                    href={item.href}
+                    onClick={() => setIsOpen(false)}
+                    className="flex rounded-xl border border-white/10 bg-white/[0.035] px-5 py-4 text-lg font-semibold text-slate-100"
+                  >
+                    {item.label}
                   </Link>
                 </motion.div>
               ))}
- 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                exit={{ opacity: 0, y: 20 }}
-                className="pt-8 flex flex-col gap-4 border-t border-white/10"
+            </div>
+
+            <div className="mt-8 grid gap-3 border-t border-white/10 pt-6">
+              {!isAuthenticated ? (
+                <Link
+                  href="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="rounded-full border border-white/10 px-5 py-3 text-center text-base font-semibold text-slate-100"
+                >
+                  Sign in
+                </Link>
+              ) : null}
+              <Link
+                href={primaryHref}
+                onClick={() => setIsOpen(false)}
+                className="rounded-full bg-sky-400 px-5 py-3 text-center text-base font-black text-slate-950"
               >
-                {isAuthenticated && user ? (
-                  <>
-                    <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/10">
-                      <div className="w-10 h-10 rounded-full bg-[#0ea5e9]/20 flex items-center justify-center border border-[#0ea5e9]/30">
-                        <span className="text-[#0ea5e9] text-sm font-bold font-mono">
-                          {user.name ? user.name.charAt(0).toUpperCase() : "U"}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-white">{user.name}</p>
-                        <p className="text-xs text-slate-400">{user.email}</p>
-                      </div>
-                    </div>
-                    <Link
-                      href="/profile"
-                      className="inline-flex items-center justify-center w-full px-5 py-3 text-base text-white font-bold bg-[#0ea5e9] rounded-full hover:bg-[#38bdf8] transition-colors"
-                      onClick={toggleMenu}
-                    >
-                      Customize Profile
-                    </Link>
-                    <Link
-                      href="/dashboard"
-                      className="inline-flex items-center justify-center w-full px-5 py-3 text-base text-white bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-                      onClick={toggleMenu}
-                    >
-                      Go to Workspace
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      href="/login"
-                      className="inline-flex items-center justify-center w-full px-5 py-3 text-base text-white bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-                      onClick={toggleMenu}
-                    >
-                      Sign In
-                    </Link>
-                    <Link
-                      href="/register"
-                      className="inline-flex items-center justify-center w-full px-5 py-3 text-base text-white font-bold bg-[#0ea5e9] rounded-full hover:bg-[#38bdf8] transition-colors"
-                      onClick={toggleMenu}
-                    >
-                      Get Started
-                    </Link>
-                  </>
-                )}
-              </motion.div>
+                {primaryLabel}
+              </Link>
             </div>
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
-    </div>
+    </header>
   )
 }
- 
-export { Navbar1 }

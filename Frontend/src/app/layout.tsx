@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Outfit, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import TopNavBar from "@/components/TopNavBar";
-import { SessionNavBar } from "@/components/ui/sidebar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Providers from "@/components/Providers";
 import { Toaster } from "@/components/ui/sonner";
@@ -26,9 +24,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PitchSide Pro Terminal | Professional Trading Workstation",
+  title: "CricOptions | Cricket Options Trading Terminal",
   description:
-    "Bloomberg Terminal for sports markets — real-time player derivatives, market sentiment, and AI-powered trading intelligence.",
+    "A professional cricket options trading workspace for live market data, execution, portfolio risk, and match intelligence.",
 };
 
 export default function RootLayout({

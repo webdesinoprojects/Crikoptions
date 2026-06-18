@@ -5,7 +5,7 @@ import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { cn } from "@/lib/utils";
 import { Match } from "@/types";
 import { useThisOverBalls } from "../hooks/useThisOverBalls";
-import { ballClassName, projectedRange, scoreParts } from "../utils/terminal-context";
+import { BallEvent, ballClassName, scoreParts } from "../utils/terminal-context";
 
 interface LiveMatchStatsPanelProps {
   match?: Match;
@@ -16,19 +16,15 @@ interface LiveMatchStatsPanelProps {
 export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStatsPanelProps) {
   const score = scoreParts(match?.homeScore);
   const parsedRuns = Number.parseInt(score.runs, 10);
-  const parsedWickets = Number.parseInt(score.wickets, 10);
   const currentScore = match?.currentScore ?? (Number.isFinite(parsedRuns) ? parsedRuns : 0);
-  const wickets = match?.wicketsLost ?? (Number.isFinite(parsedWickets) ? parsedWickets : 0);
   const totalBalls = totalBallsForFormat(match?.format);
   const ballsLeft = Math.max(0, Math.min(totalBalls, match?.ballsLeft ?? totalBalls));
   const ballsBowled = totalBalls - ballsLeft;
   const overs = match?.currentOver ?? oversTextFromBalls(ballsBowled);
   const crr = ballsBowled > 0 ? currentScore / (ballsBowled / 6) : 0;
   const projected = projectedFinal(currentScore, ballsLeft, crr, market);
-  const range = projectedRange(projected);
   const balls = useThisOverBalls(match);
   const compactThisOver = balls.length > 6;
-  const progress = projected > 0 ? Math.min(100, Math.max(0, (currentScore / projected) * 100)) : 0;
 
   return (
     <aside
@@ -91,10 +87,11 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
             {balls.map((ball, index) => (
               <span
                 key={`${ball.kind}-${ball.label}-${index}`}
-                aria-label={ball.kind === "empty" ? `Ball ${index + 1}: not yet bowled` : `Ball ${index + 1}: ${ball.label}`}
+                aria-label={ball.kind === "empty" ? `Ball ${index + 1}: not yet bowled` : `Ball ${index + 1}: ${ball.detail ?? ball.label}`}
+                title={ball.detail ?? ball.label}
                 className={cn(
                   "flex shrink-0 items-center justify-center rounded-full border font-data-tabular font-black",
-                  compactThisOver ? "h-6 w-6 justify-self-center text-[9px]" : "h-8 w-8 text-[11px]",
+                  compactThisOver ? "h-6 min-w-6 justify-self-center px-1 text-[8px]" : "h-8 min-w-8 px-1.5 text-[10px]",
                   ballClassName(ball.kind)
                 )}
               >
@@ -104,34 +101,37 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
           </div>
         </section>
 
-        <section className="border-b border-outline-variant p-3">
-          <div className="mb-2 grid grid-cols-[1fr_54px_54px] text-[10px] uppercase tracking-wide text-on-surface-variant">
-            <span>Metric</span>
-            <span className="text-right">Now</span>
-            <span className="text-right">Proj</span>
-          </div>
-          <MetricRow label="Runs" now={currentScore.toString()} projected={String(projected)} highlight />
-          <MetricRow label="Wickets" now={wickets.toString()} projected="10" />
-          <MetricRow label="Balls left" now={ballsLeft.toString()} projected="0" />
-          <MetricRow label="Run rate" now={crr.toFixed(2)} projected={projected > 0 ? (projected / (totalBalls / 6)).toFixed(2) : "0.00"} />
-        </section>
-
-        <section className="p-3">
-          <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-on-surface-variant">Target projection</div>
-          <div className="mb-2 flex items-end justify-between gap-3">
-            <div className="text-[11px] text-on-surface-variant">Current {currentScore}</div>
-            <div className="text-right font-data-tabular text-sm font-black text-teal-300">Proj {projected}</div>
-          </div>
-          <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
-            <div className="h-full rounded-full bg-teal-400" style={{ width: `${progress}%` }} />
-          </div>
-          <div className="mt-2 flex items-center justify-between text-[11px] text-on-surface-variant">
-            <span>Range</span>
-            <span className="font-data-tabular text-on-surface">{range}</span>
-          </div>
-        </section>
+        <OnFieldPanel balls={balls} match={match} />
       </div>
     </aside>
+  );
+}
+
+function OnFieldPanel({ balls, match }: { balls: BallEvent[]; match?: Match }) {
+  const lastWicket = [...balls].reverse().find((ball) =>
+    ["wicket", "bowled", "lbw", "caught", "runOut"].includes(ball.kind)
+  );
+  const battingSide = match?.innings === 2 ? match?.awayTeam.shortName : match?.homeTeam.shortName;
+
+  return (
+    <section className="p-3">
+      <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-on-surface-variant">On field</div>
+      <div className="grid gap-2 text-[12px]">
+        <ContextRow label="Striker" value="On strike" />
+        <ContextRow label="Bowler" value="Current over" />
+        <ContextRow label="Last wicket" value={lastWicket?.detail ?? "No wicket this over"} />
+        <ContextRow label="Top performer" value={battingSide ? `${battingSide} run pace` : "Batting side"} />
+      </div>
+    </section>
+  );
+}
+
+function ContextRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded border border-outline-variant/70 bg-surface/60 px-2 py-1.5">
+      <span className="text-on-surface-variant">{label}</span>
+      <span className="truncate text-right font-semibold text-on-surface">{value}</span>
+    </div>
   );
 }
 
@@ -142,26 +142,6 @@ function StatBox({ label, tone, value }: { label: string; tone?: "teal"; value: 
       <div className={cn("mt-0.5 font-data-tabular text-base font-black", tone === "teal" ? "text-teal-300" : "text-on-surface")}>
         {value}
       </div>
-    </div>
-  );
-}
-
-function MetricRow({
-  highlight,
-  label,
-  now,
-  projected,
-}: {
-  highlight?: boolean;
-  label: string;
-  now: string;
-  projected: string;
-}) {
-  return (
-    <div className="grid grid-cols-[1fr_54px_54px] border-b border-outline-variant/60 py-1.5 text-[12px] last:border-b-0">
-      <span className={highlight ? "font-semibold text-on-surface" : "text-on-surface-variant"}>{label}</span>
-      <span className="text-right font-data-tabular text-on-surface">{now}</span>
-      <span className="text-right font-data-tabular text-teal-300">{projected}</span>
     </div>
   );
 }

@@ -2,11 +2,12 @@ import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { Match } from "@/types";
 import { CalculatedPrice, CalculatePricePayload, OptionChainStrike } from "../services/trading.service";
 
-export type BallKind = "empty" | "dot" | "run" | "four" | "six" | "wicket";
+export type BallKind = "empty" | "dot" | "run" | "four" | "six" | "wicket" | "bowled" | "lbw" | "caught" | "runOut";
 
 export interface BallEvent {
   label: string;
   kind: BallKind;
+  detail?: string;
 }
 
 export interface ChainRow {
@@ -17,7 +18,6 @@ export interface ChainRow {
   bidQty: number;
   askQty: number;
   moneyness: "ITM" | "ATM" | "OTM";
-  impliedProbability: number;
 }
 
 export function buildPricePayload(match?: Match, market?: BackendMarket): CalculatePricePayload | undefined {
@@ -71,7 +71,6 @@ export function buildOptionRows(calculated?: CalculatedPrice, market?: BackendMa
       bidQty: ladderEntry?.buyerQty ?? 0,
       askQty: ladderEntry?.sellerQty ?? 0,
       moneyness: item.strike === atmStrike ? "ATM" : item.strike < projected ? "ITM" : "OTM",
-      impliedProbability: impliedProbability(item.premium, item.strike, projected),
     };
   });
 }
@@ -189,10 +188,10 @@ export function padThisOverBalls(balls: BallEvent[]): BallEvent[] {
   return [...filled, ...Array.from({ length: blanksNeeded }, () => ({ label: "", kind: "empty" as const }))];
 }
 
-export function ballEventFromCommentary(event: { runs: number; isWicket: boolean }): BallEvent {
+export function ballEventFromCommentary(event: { runs: number; isWicket: boolean; wicketType?: unknown }): BallEvent {
   const isWicket = event.isWicket === true;
   const runs = Number.isFinite(Number(event.runs)) ? Number(event.runs) : 0;
-  if (isWicket) return { label: "W", kind: "wicket" };
+  if (isWicket) return wicketBallFromType("wicketType" in event ? event.wicketType : undefined);
   return ballFromRuns(runs);
 }
 
@@ -397,6 +396,10 @@ export function ballClassName(kind: BallKind) {
     case "empty":
       return "border-slate-500/35 bg-transparent text-transparent";
     case "wicket":
+    case "bowled":
+    case "lbw":
+    case "caught":
+    case "runOut":
       return "border-bear-red/50 bg-bear-red text-white";
     case "six":
       return "border-orange-500/40 bg-orange-500/90 text-black";
@@ -410,6 +413,25 @@ export function ballClassName(kind: BallKind) {
   }
 }
 
+export function wicketBallFromType(value?: unknown): BallEvent {
+  const normalized = String(value ?? "").toLowerCase().replace(/[\s_-]+/g, "");
+
+  if (normalized.includes("bowled")) {
+    return { label: "B", kind: "bowled", detail: "Bowled" };
+  }
+  if (normalized.includes("lbw") || normalized.includes("legbefore")) {
+    return { label: "LBW", kind: "lbw", detail: "LBW" };
+  }
+  if (normalized.includes("caught") || normalized.includes("catch")) {
+    return { label: "C", kind: "caught", detail: "Caught" };
+  }
+  if (normalized.includes("runout")) {
+    return { label: "RO", kind: "runOut", detail: "Run out" };
+  }
+
+  return { label: "W", kind: "wicket", detail: "Wicket" };
+}
+
 export function scoreParts(score?: string) {
   const [runs, wickets] = (score || "0/0").split("/");
   return {
@@ -421,12 +443,6 @@ export function scoreParts(score?: string) {
 export function projectedRange(projected?: number) {
   if (!projected) return "0-0";
   return `${Math.max(0, Math.floor(projected - 3))}-${Math.ceil(projected + 5)}`;
-}
-
-function impliedProbability(premium: number, strike: number, projected: number) {
-  const intrinsicBias = projected > 0 ? projected / Math.max(strike, 1) : 0;
-  const premiumBias = premium / Math.max(premium + Math.max(strike - premium, 1), 1);
-  return Math.round(Math.min(98, Math.max(2, (intrinsicBias * 0.62 + premiumBias * 0.38) * 100)));
 }
 
 function nearestStrike(chain: OptionChainStrike[], projected: number) {

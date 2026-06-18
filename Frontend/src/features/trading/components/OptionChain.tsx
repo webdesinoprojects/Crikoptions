@@ -8,7 +8,7 @@ import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { useTerminalStore } from "@/stores/terminal.store";
 import { Match } from "@/types";
 import { useOptionChain } from "../hooks";
-import { ChainRow, buildOptionRows, buildPricePayload, findAtmRow, projectedRange } from "../utils/terminal-context";
+import { ChainRow, buildOptionRows, buildPricePayload, findAtmRow } from "../utils/terminal-context";
 
 interface OptionChainProps {
   marketId: string;
@@ -27,8 +27,6 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
 
   const rows = useMemo(() => buildOptionRows(calculated, market), [calculated, market]);
   const hasApiChain = Boolean(calculated?.optionChain?.length);
-  const projectedScore = calculated?.projectedS0 ?? 0;
-  const fairLtp = calculated?.ltp ?? 0;
   const atmRow = findAtmRow(rows);
   const activeRow = rows.find((row) => row.strike === selectedStrike) ?? atmRow;
   const visibleRows = useMemo(() => windowAroundAtm(rows), [rows]);
@@ -51,16 +49,10 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
       <div className="flex items-center justify-between gap-3 border-b border-outline-variant bg-surface px-3 py-2.5">
         <div className="min-w-0">
           <h2 className="truncate text-sm font-black text-on-surface">Match Depth Options</h2>
-          <p className="truncate text-[11px] text-on-surface-variant">
-            Fair LTP {fairLtp.toFixed(2)}
-          </p>
+          <p className="truncate text-[11px] text-on-surface-variant">Live strikes and executable quotes</p>
         </div>
 
         <div className="flex min-w-0 items-center gap-3 text-right">
-          <div className="hidden text-[12px] font-semibold text-on-surface-variant sm:block">
-            Projected Final{" "}
-            <span className="font-data-tabular text-on-surface">{projectedRange(projectedScore)}</span>
-          </div>
           <div className="flex shrink-0 items-center gap-2">
             <DataSourceBadge source={hasApiChain ? "api" : "static"} />
             <span className="rounded border border-primary/20 bg-primary/10 px-2 py-1 text-[10px] font-black text-primary">
@@ -75,7 +67,6 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
           <thead className="sticky top-0 z-10 bg-surface-container-high text-[10px] uppercase tracking-wide text-on-surface-variant">
             <tr className="border-b border-outline-variant">
               <th className="px-3 py-2.5 text-left font-semibold">Strike</th>
-              <th className="px-3 py-2.5 text-left font-semibold">Probability</th>
               <th className="px-3 py-2.5 text-right font-semibold">Bid</th>
               <th className="px-3 py-2.5 text-right font-semibold">Ask</th>
               <th className="px-3 py-2.5 text-right font-semibold">Size</th>
@@ -114,19 +105,6 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
                         {isAtm && <ChevronLeft className="h-4 w-4 text-cyan-300" />}
                       </span>
                     </td>
-                    <td className="px-3 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-600/35">
-                          <div
-                            className={cn("h-full rounded-full", isAtm ? "bg-cyan-300" : "bg-cyan-100")}
-                            style={{ width: `${row.impliedProbability}%` }}
-                          />
-                        </div>
-                        <span className="w-10 text-right text-[11px] font-black text-on-surface">
-                          {row.impliedProbability}%
-                        </span>
-                      </div>
-                    </td>
                     <td className="px-3 py-3 text-right text-base font-black text-cyan-300">{row.bid.toFixed(2)}</td>
                     <td className="px-3 py-3 text-right text-base font-black text-red-300">{row.ask.toFixed(2)}</td>
                     <td className="px-3 py-3 text-right text-on-surface-variant">{compactSize(size)}</td>
@@ -163,14 +141,6 @@ function ZeroChainRow() {
   return (
     <tr className="border-b border-outline-variant/60">
       <td className="px-3 py-3 text-lg font-black text-on-surface">0</td>
-      <td className="px-3 py-3">
-        <div className="flex items-center gap-3">
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-600/35">
-            <div className="h-full w-0 rounded-full bg-cyan-100" />
-          </div>
-          <span className="w-10 text-right text-[11px] font-black text-on-surface">0%</span>
-        </div>
-      </td>
       <td className="px-3 py-3 text-right text-base font-black text-cyan-300">0.00</td>
       <td className="px-3 py-3 text-right text-base font-black text-red-300">0.00</td>
       <td className="px-3 py-3 text-right text-on-surface-variant">0</td>
