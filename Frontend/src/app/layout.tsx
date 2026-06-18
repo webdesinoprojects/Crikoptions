@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Montserrat, Inter, JetBrains_Mono } from "next/font/google";
+import { Outfit, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import TopNavBar from "@/components/TopNavBar";
 import { SessionNavBar } from "@/components/ui/sidebar";
@@ -7,16 +7,16 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import Providers from "@/components/Providers";
 import { Toaster } from "@/components/ui/sonner";
 
-const montserrat = Montserrat({
+const outfit = Outfit({
   variable: "--font-display-xl",
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700", "800", "900"],
 });
 
-const inter = Inter({
+const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-body-md",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -39,7 +39,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${montserrat.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
+      className={`${outfit.variable} ${plusJakarta.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
       suppressHydrationWarning
     >
       <body className="min-h-screen flex flex-col bg-[#000d1a] text-on-primary-container font-sans">

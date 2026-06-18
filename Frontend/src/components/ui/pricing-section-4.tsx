@@ -14,26 +14,23 @@ const plans = [
   {
     name: "Starter",
     description:
-      "Great for small businesses and startups looking to get started with AI",
+      "Great for small traders and beginners looking to get started with basic options",
     price: 12,
     yearlyPrice: 99,
     buttonText: "Get started",
     buttonVariant: "outline" as const,
     includes: [
-      "Free includes:",
-      "Unlimited Cards",
-      "Custom background & stickers",
+      "Core features:",
+      "Basic Market Data",
+      "Standard execution speed",
       "2-factor authentication",
-      "Free includes:",
-      "Unlimited Cards",
-      "Custom background & stickers",
-      "2-factor authentication",
+      "Email support",
     ],
   },
   {
-    name: "Business",
+    name: "Pro",
     description:
-      "Best value for growing businesses that need more advanced features",
+      "Best value for active traders that need advanced telemetry and low latency",
     price: 48,
     yearlyPrice: 399,
     buttonText: "Get started",
@@ -41,32 +38,28 @@ const plans = [
     popular: true,
     includes: [
       "Everything in Starter, plus:",
-      "Advanced checklists",
-      "Custom fields",
-      "Serverless functions",
-      "Everything in Starter, plus:",
-      "Advanced checklists",
-      "Custom fields",
-      "Serverless functions",
+      "Advanced predictive algorithms",
+      "Sub-millisecond Order Books",
+      "Live Event Telemetry",
+      "Automated Risk Profiling",
+      "Priority 24/7 support",
     ],
   },
   {
-    name: "Enterprise",
+    name: "Institutional",
     description:
-      "Advanced plan with enhanced security and unlimited access for large teams",
-    price: 96,
-    yearlyPrice: 899,
-    buttonText: "Get started",
+      "Advanced plan with FIX API, enhanced security, and unlimited access for funds",
+    price: 299,
+    yearlyPrice: 2899,
+    buttonText: "Contact Sales",
     buttonVariant: "outline" as const,
     includes: [
-      "Everything in Business, plus:",
-      "Multi-board management",
-      "Multi-board guest",
-      "Attachment permissions",
-      "Everything in Business, plus:",
-      "Multi-board management",
-      "Multi-board guest",
-      "Attachment permissions",
+      "Everything in Pro, plus:",
+      "Direct FIX API Access",
+      "Colocation services",
+      "Dedicated account manager",
+      "Custom margin requirements",
+      "Military-grade data encryption",
     ],
   },
 ];
@@ -81,18 +74,18 @@ const PricingSwitch = ({ onSwitch }: { onSwitch: (value: string) => void }) => {
 
   return (
     <div className="flex justify-center">
-      <div className="relative z-10 mx-auto flex w-fit rounded-full bg-neutral-900 border border-gray-700 p-1">
+      <div className="relative z-10 mx-auto flex w-fit rounded-full bg-[#0a1428] border border-white/10 p-1">
         <button
           onClick={() => handleSwitch("0")}
           className={cn(
             "relative z-10 w-fit h-10 rounded-full sm:px-6 px-3 sm:py-2 py-1 font-medium transition-colors cursor-pointer outline-none",
-            selected === "0" ? "text-white" : "text-gray-200",
+            selected === "0" ? "text-white" : "text-slate-400",
           )}
         >
           {selected === "0" && (
             <motion.span
               layoutId="switch"
-              className="absolute top-0 left-0 h-10 w-full rounded-full border-4 shadow-sm shadow-blue-600 border-blue-600 bg-gradient-to-t from-blue-500 to-blue-600"
+              className="absolute top-0 left-0 h-10 w-full rounded-full border-4 shadow-sm shadow-[#0ea5e9]/50 border-[#0ea5e9] bg-gradient-to-t from-[#0ea5e9] to-[#38bdf8]"
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
             />
           )}
@@ -103,13 +96,13 @@ const PricingSwitch = ({ onSwitch }: { onSwitch: (value: string) => void }) => {
           onClick={() => handleSwitch("1")}
           className={cn(
             "relative z-10 w-fit h-10 flex-shrink-0 rounded-full sm:px-6 px-3 sm:py-2 py-1 font-medium transition-colors cursor-pointer outline-none",
-            selected === "1" ? "text-white" : "text-gray-200",
+            selected === "1" ? "text-white" : "text-slate-400",
           )}
         >
           {selected === "1" && (
             <motion.span
               layoutId="switch"
-              className="absolute top-0 left-0 h-10 w-full rounded-full border-4 shadow-sm shadow-blue-600 border-blue-600 bg-gradient-to-t from-blue-500 to-blue-600"
+              className="absolute top-0 left-0 h-10 w-full rounded-full border-4 shadow-sm shadow-[#0ea5e9]/50 border-[#0ea5e9] bg-gradient-to-t from-[#0ea5e9] to-[#38bdf8]"
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
             />
           )}
@@ -146,7 +139,7 @@ export default function PricingSection6() {
 
   return (
     <div
-      className="min-h-screen mx-auto relative bg-black overflow-x-hidden border-t border-white/5 py-12 flex flex-col justify-center"
+      className="min-h-screen mx-auto relative bg-[#020617] overflow-x-hidden py-12 flex flex-col justify-center border-t border-white/5"
       ref={pricingRef}
       id="pricing"
     >
@@ -158,13 +151,13 @@ export default function PricingSection6() {
           customVariants={revealVariants}
           className="absolute top-0 h-96 w-screen overflow-hidden [mask-image:radial-gradient(50%_50%,white,transparent)]"
         >
-          <div className="absolute bottom-0 left-0 right-0 top-0 bg-[linear-gradient(to_right,#ffffff2c_1px,transparent_1px),linear-gradient(to_bottom,#3a3a3a01_1px,transparent_1px)] bg-[size:70px_80px]"></div>
+          <div className="absolute bottom-0 left-0 right-0 top-0 bg-[linear-gradient(to_right,#ffffff10_1px,transparent_1px),linear-gradient(to_bottom,#ffffff10_1px,transparent_1px)] bg-[size:70px_80px]"></div>
           <SparklesComp
             density={1800}
             direction="bottom"
             speed={1}
-            color="#FFFFFF"
-            className="absolute inset-x-0 bottom-0 h-full w-full [mask-image:radial-gradient(50%_50%,white,transparent_85%)]"
+            color="#0ea5e9"
+            className="absolute inset-x-0 bottom-0 h-full w-full [mask-image:radial-gradient(50%_50%,white,transparent_85%)] opacity-30"
           />
         </TimelineContent>
 
@@ -178,15 +171,8 @@ export default function PricingSection6() {
             <div
               className="absolute left-[-568px] right-[-568px] top-0 h-[2053px] flex-none rounded-full"
               style={{
-                border: "200px solid #3131f5",
-                filter: "blur(92px)",
-                WebkitFilter: "blur(92px)",
-              }}
-            ></div>
-            <div
-              className="absolute left-[-568px] right-[-568px] top-0 h-[2053px] flex-none rounded-full"
-              style={{
-                border: "200px solid #3131f5",
+                border: "200px solid #0ea5e9",
+                opacity: 0.1,
                 filter: "blur(92px)",
                 WebkitFilter: "blur(92px)",
               }}
@@ -199,26 +185,13 @@ export default function PricingSection6() {
       <div
         className="absolute top-0 left-[10%] right-[10%] w-[80%] h-full z-0 pointer-events-none"
         style={{
-          backgroundImage: "radial-gradient(circle at center, #206ce8 0%, transparent 70%)",
-          opacity: 0.6,
-          mixBlendMode: "multiply",
+          backgroundImage: "radial-gradient(circle at center, rgba(14,165,233,0.15) 0%, transparent 70%)",
+          mixBlendMode: "screen",
         }}
       />
 
-      {/* Navigation Arrows */}
-      <div className="absolute left-4 top-1/2 -translate-y-1/2 z-50 hidden md:flex">
-        <button className="w-10 h-10 bg-black/60 hover:bg-black/90 border border-neutral-800 rounded-lg flex items-center justify-center text-white/70 hover:text-white transition-colors cursor-pointer">
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-      </div>
-      <div className="absolute right-4 top-1/2 -translate-y-1/2 z-50 hidden md:flex">
-        <button className="w-10 h-10 bg-black/60 hover:bg-black/90 border border-neutral-800 rounded-lg flex items-center justify-center text-white/70 hover:text-white transition-colors cursor-pointer">
-          <ChevronRight className="w-5 h-5" />
-        </button>
-      </div>
-
       <article className="text-center mb-10 pt-16 max-w-3xl mx-auto space-y-4 relative z-50 px-4">
-        <h2 className="text-4xl sm:text-5xl font-medium text-white tracking-tight">
+        <h2 className="text-4xl sm:text-5xl font-display font-black text-white uppercase tracking-tighter">
           <VerticalCutReveal
             splitBy="words"
             staggerDuration={0.15}
@@ -232,7 +205,7 @@ export default function PricingSection6() {
               delay: 0,
             }}
           >
-            Plans that works best for your
+            Access Tiers
           </VerticalCutReveal>
         </h2>
 
@@ -241,9 +214,9 @@ export default function PricingSection6() {
           animationNum={0}
           timelineRef={pricingRef}
           customVariants={revealVariants}
-          className="text-gray-300 max-w-xl mx-auto text-sm sm:text-base leading-relaxed"
+          className="text-slate-400 font-sans max-w-xl mx-auto text-lg leading-relaxed text-balance"
         >
-          Trusted by millions, We help teams all around the world, Explore which option is right for you.
+          Deploy capital with the execution speed of institutional quant funds. Choose your access tier.
         </TimelineContent>
 
         <TimelineContent
@@ -251,13 +224,13 @@ export default function PricingSection6() {
           animationNum={1}
           timelineRef={pricingRef}
           customVariants={revealVariants}
-          className="pt-2"
+          className="pt-6"
         >
           <PricingSwitch onSwitch={togglePricingPeriod} />
         </TimelineContent>
       </article>
 
-      <div className="grid md:grid-cols-3 max-w-5xl gap-6 px-4 mx-auto relative z-10">
+      <div className="grid md:grid-cols-3 max-w-6xl gap-6 px-4 mx-auto relative z-10">
         {plans.map((plan, index) => (
           <TimelineContent
             key={plan.name}
@@ -269,59 +242,64 @@ export default function PricingSection6() {
           >
             <Card
               className={cn(
-                "relative text-white border-neutral-800 w-full flex flex-col justify-between overflow-hidden rounded-2xl",
+                "relative text-white border-white/10 w-full flex flex-col justify-between overflow-hidden rounded-[2rem]",
                 plan.popular
-                  ? "bg-gradient-to-b from-neutral-900 via-[#0a0f1d] to-black shadow-[0px_-13px_120px_0px_#0900ff] z-20"
-                  : "bg-gradient-to-b from-neutral-900 via-neutral-950 to-black z-10"
+                  ? "bg-gradient-to-b from-[#0a1428] to-[#020617] shadow-[0px_-10px_80px_0px_rgba(14,165,233,0.15)] z-20 ring-1 ring-[#0ea5e9]/30"
+                  : "bg-gradient-to-b from-[#050b18] to-[#020617] z-10"
               )}
             >
               <CardHeader className="text-left p-8">
-                <div className="flex justify-between">
-                  <h3 className="text-3xl font-light mb-2">{plan.name}</h3>
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-2xl font-display font-bold uppercase tracking-tight text-[#0ea5e9]">{plan.name}</h3>
+                  {plan.popular && (
+                     <span className="text-xs font-mono tracking-widest text-[#ffd700] bg-[#ffd700]/10 px-3 py-1 rounded-full border border-[#ffd700]/20">RECOMMENDED</span>
+                  )}
                 </div>
                 <div className="flex items-baseline mb-4">
-                  <span className="text-4xl sm:text-5xl font-semibold">
+                  <span className="text-4xl sm:text-5xl font-display font-black text-white">
                     $
                     <NumberFlow
                       format={{
                         style: "decimal",
                       }}
                       value={isYearly ? plan.yearlyPrice : plan.price}
-                      className="text-4xl sm:text-5xl font-semibold"
+                      className="text-4xl sm:text-5xl"
                     />
                   </span>
-                  <span className="text-gray-400 ml-2 text-sm">
+                  <span className="text-slate-400 ml-2 font-sans text-sm">
                     /{isYearly ? "year" : "month"}
                   </span>
                 </div>
-                <p className="text-sm text-gray-300 leading-relaxed min-h-[40px]">{plan.description}</p>
+                <p className="text-sm font-sans text-slate-400 leading-relaxed min-h-[40px]">{plan.description}</p>
               </CardHeader>
 
               <CardContent className="p-8 pt-0 flex-grow flex flex-col justify-between">
                 <div>
                   <button
                     className={cn(
-                      "w-full mb-6 py-4 text-lg font-medium rounded-xl transition-all cursor-pointer",
+                      "w-full mb-8 py-4 font-sans font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer active:scale-[0.98]",
                       plan.popular
-                        ? "bg-gradient-to-t from-blue-500 to-blue-600 shadow-lg shadow-blue-800/50 border border-blue-500 text-white hover:brightness-110 active:scale-[0.98]"
-                        : "bg-gradient-to-t from-neutral-950 to-neutral-700 shadow-lg shadow-neutral-900/50 border border-neutral-800 text-white hover:from-neutral-900 hover:to-neutral-600 active:scale-[0.98]"
+                        ? "bg-gradient-to-t from-[#0ea5e9] to-[#38bdf8] shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_0_20px_rgba(14,165,233,0.3)] border border-[#38bdf8] text-white hover:brightness-110"
+                        : "bg-white/5 shadow-lg border border-white/10 text-white hover:bg-white/10"
                     )}
                   >
                     {plan.buttonText}
                   </button>
 
-                  <div className="space-y-3 pt-6 border-t border-neutral-700">
-                    <h4 className="font-medium text-base text-gray-200 mb-3">
+                  <div className="space-y-4 pt-6 border-t border-white/5">
+                    <h4 className="font-mono text-xs tracking-widest text-slate-500 mb-4 uppercase">
                       {plan.includes[0]}
                     </h4>
-                    <ul className="space-y-2.5">
+                    <ul className="space-y-3">
                       {plan.includes.slice(1).map((feature, featureIndex) => (
                         <li
                           key={featureIndex}
-                          className="flex items-center gap-2.5"
+                          className="flex items-center gap-3"
                         >
-                          <span className="h-2 w-2 bg-neutral-500 rounded-full shrink-0"></span>
-                          <span className="text-sm text-gray-300">{feature}</span>
+                          <div className="w-4 h-4 rounded-full bg-[#0ea5e9]/20 flex items-center justify-center border border-[#0ea5e9]/30 shrink-0">
+                             <div className="w-1.5 h-1.5 bg-[#0ea5e9] rounded-full" />
+                          </div>
+                          <span className="text-sm font-sans text-slate-300">{feature}</span>
                         </li>
                       ))}
                     </ul>

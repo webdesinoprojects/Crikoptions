@@ -30,15 +30,15 @@ export const DocsSection = () => {
   }, [])
 
   return (
-    <section id="docs" ref={containerRef} className="relative w-full py-8 bg-black z-10">
+    <section id="docs" ref={containerRef} className="relative w-full py-8 bg-[#020617] z-10">
       <div className="max-w-6xl mx-auto px-4 flex flex-col lg:flex-row items-center gap-16">
         
         <div className="w-full lg:w-1/2">
-           <div className="font-mono text-xs text-[#3131f5] mb-6 tracking-[0.2em]">[ DOCS / API_V2 ]</div>
+           <div className="font-mono text-xs text-[#0ea5e9] mb-6 tracking-[0.2em]">[ DOCS / API_V2 ]</div>
            <h2 className="text-4xl md:text-5xl font-display font-black text-white uppercase tracking-tighter mb-6 leading-[0.9]">
              Developer <br/>Integration
            </h2>
-           <p className="text-gray-400 font-sans text-lg mb-8 leading-relaxed">
+           <p className="text-slate-400 font-sans text-lg mb-8 leading-relaxed">
              Our REST and WebSocket APIs are designed for minimal latency. Stream live implied volatility, place multi-leg orders, and manage portfolio risk programmatically.
            </p>
            
@@ -55,18 +55,18 @@ export const DocsSection = () => {
                     <div className="w-3 h-3 rounded-full bg-red-500/80" />
                     <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
                     <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                    <span className="ml-4 font-mono text-xs text-gray-500">cricoptions-api.js</span>
+                    <span className="ml-4 font-mono text-xs text-slate-500">cricoptions-api.js</span>
                 </div>
                 <div className="p-6 font-mono text-sm overflow-x-auto">
                     <pre className="text-gray-300 leading-relaxed">
-<code className="block code-line"><span className="text-[#3131f5]">import</span> {'{'} CricOptions {'}'} <span className="text-[#3131f5]">from</span> <span className="text-green-400">'@cricoptions/sdk'</span>;</code>
+<code className="block code-line"><span className="text-[#0ea5e9]">import</span> {'{'} CricOptions {'}'} <span className="text-[#0ea5e9]">from</span> <span className="text-green-400">'@cricoptions/sdk'</span>;</code>
 <code className="block code-line"></code>
-<code className="block code-line"><span className="text-blue-400">const</span> client = <span className="text-[#3131f5]">new</span> CricOptions({'{'}</code>
+<code className="block code-line"><span className="text-blue-400">const</span> client = <span className="text-[#0ea5e9]">new</span> CricOptions({'{'}</code>
 <code className="block code-line">  apiKey: process.env.<span className="text-white">CRIK_API_KEY</span>,</code>
 <code className="block code-line">  environment: <span className="text-green-400">'production'</span></code>
 <code className="block code-line">{'}'});</code>
 <code className="block code-line"></code>
-<code className="block code-line"><span className="text-gray-500">// Subscribe to live match feed</span></code>
+<code className="block code-line"><span className="text-slate-500">// Subscribe to live match feed</span></code>
 <code className="block code-line">client.ws.subscribe(<span className="text-green-400">'match:INDvAUS'</span>, (data) =&gt; {'{'}</code>
 <code className="block code-line">  <span className="text-blue-400">if</span> (data.impliedVolatility &gt; <span className="text-orange-400">45.5</span>) {'{'}</code>
 <code className="block code-line">    client.orders.place({'{'}</code>

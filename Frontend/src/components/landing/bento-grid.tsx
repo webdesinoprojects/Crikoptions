@@ -27,17 +27,17 @@ const BentoCard = ({
     if (!el) return
 
     gsap.fromTo(el, 
-      { y: 100, opacity: 0, scale: 0.95 },
+      { y: 80, opacity: 0, scale: 0.97 },
       { 
         y: 0, 
         opacity: 1, 
         scale: 1,
-        duration: 1.2, 
+        duration: 1, 
         ease: "power3.out",
         delay: delay,
         scrollTrigger: {
           trigger: el,
-          start: "top 85%",
+          start: "top 88%",
           toggleActions: "play none none reverse"
         }
       }
@@ -45,15 +45,15 @@ const BentoCard = ({
   }, [delay])
 
   return (
-    <div ref={cardRef} className={`group relative rounded-[2rem] bg-white/5 p-1.5 ring-1 ring-white/10 ${className}`}>
-      <div className="relative h-full w-full rounded-[calc(2rem-0.375rem)] bg-[#020617]/95 backdrop-blur-sm p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] overflow-hidden">
-        {/* Glow effect on hover */}
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-[radial-gradient(circle_at_center,rgba(30,58,138,0.2)_0%,transparent_70%)]" />
+    <div ref={cardRef} className={`group relative rounded-2xl bg-white/[0.03] p-px ring-1 ring-white/[0.06] hover:ring-[#0ea5e9]/20 transition-all duration-500 ${className}`}>
+      <div className="relative h-full w-full rounded-[calc(1rem-1px)] bg-[#040d1c]/95 backdrop-blur-sm p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] overflow-hidden">
+        {/* Spotlight border glow on hover */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-[radial-gradient(circle_at_center,rgba(14,165,233,0.08)_0%,transparent_70%)]" />
         
         <div className="relative z-10 flex flex-col h-full">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center ring-1 ring-white/10">
-              <Icon className="w-5 h-5 text-[#3131f5]" />
+            <div className="w-10 h-10 rounded-xl bg-[#0ea5e9]/8 flex items-center justify-center ring-1 ring-[#0ea5e9]/15">
+              <Icon className="w-5 h-5 text-[#0ea5e9]" />
             </div>
             <h3 className="text-xl font-display font-bold text-white tracking-tight">{title}</h3>
           </div>
@@ -68,52 +68,52 @@ const BentoCard = ({
 
 export const BentoGrid = () => {
   return (
-    <section className="relative w-full py-8 bg-black z-10" id="features">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="mb-20 text-center">
-           <h2 className="text-4xl md:text-5xl font-display font-black text-white uppercase tracking-tighter mb-4">
+    <section className="relative w-full py-0 bg-[#020617] z-10" id="features">
+      <div className="max-w-6xl mx-auto px-4 pt-2 pb-6">
+        <div className="mb-16 text-center">
+           <h2 className="text-4xl md:text-5xl font-display font-black text-white uppercase tracking-[-0.03em] mb-4">
              Tactical Telemetry
            </h2>
-           <p className="text-gray-400 font-sans max-w-2xl mx-auto text-lg">
+           <p className="text-slate-400 font-sans max-w-2xl mx-auto text-lg" style={{ textWrap: "balance" }}>
              Engineered for institutional-grade stability. No empty voids. No wasted cycles.
            </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 auto-rows-[300px] gap-4 grid-flow-dense">
+        <div className="grid grid-cols-1 md:grid-cols-12 auto-rows-[280px] gap-3 grid-flow-dense">
           
-          {/* Large Main Card - 8 cols, 2 rows */}
+          {/* Large Main Card — 8 cols, 2 rows */}
           <BentoCard 
             title="Predictive Liquidation Engine" 
             icon={Cpu}
             className="md:col-span-8 md:row-span-2"
             delay={0}
           >
-            <div className="h-full w-full rounded-xl bg-black/40 border border-white/5 p-4 flex flex-col relative overflow-hidden">
-               <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-4">
-                 <span className="font-mono text-xs text-gray-500">[ SYS.CORE.LIQUIDATION ]</span>
-                 <span className="font-mono text-xs text-[#4AF626] flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#4AF626] animate-pulse" /> ACTIVE</span>
+            <div className="h-full w-full rounded-xl bg-[#020617]/60 border border-white/[0.04] p-4 flex flex-col relative overflow-hidden">
+               <div className="flex justify-between items-center border-b border-white/[0.06] pb-2 mb-4">
+                 <span className="font-mono text-xs text-slate-500">[ SYS.CORE.LIQUIDATION ]</span>
+                 <span className="font-mono text-xs text-[#0ea5e9] flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#0ea5e9] animate-pulse" /> ACTIVE</span>
                </div>
                
                <div className="flex-grow flex items-end gap-2 px-2">
                  {[40, 60, 30, 80, 50, 90, 45, 75, 100, 85].map((h, i) => (
-                   <div key={i} className="flex-1 bg-gradient-to-t from-[#1e3a8a] to-[#0ea5e9]/50 rounded-t-sm transition-all duration-1000 ease-out group-hover:scale-y-110 origin-bottom" style={{ height: `${h}%`, opacity: 0.5 + (i * 0.05) }} />
+                   <div key={i} className="flex-1 bg-gradient-to-t from-[#0ea5e9]/40 to-[#38bdf8]/15 rounded-t-sm transition-all duration-1000 ease-out group-hover:scale-y-110 origin-bottom" style={{ height: `${h}%`, opacity: 0.5 + (i * 0.05) }} />
                  ))}
                </div>
                
-               <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#0a1428] to-transparent" />
+               <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#040d1c] to-transparent" />
             </div>
           </BentoCard>
 
-          {/* Vertical Stack Card - 4 cols, 2 rows */}
+          {/* Vertical Stack Card — 4 cols, 2 rows */}
           <BentoCard 
             title="Sub-Millisecond Order Books" 
             icon={Activity}
             className="md:col-span-4 md:row-span-2"
-            delay={0.2}
+            delay={0.15}
           >
-             <div className="h-full w-full rounded-xl bg-black/40 border border-white/5 p-4 overflow-hidden relative">
-                <div className="font-mono text-xs flex flex-col gap-3 text-gray-400">
-                  <div className="grid grid-cols-3 text-gray-600 mb-2 pb-2 border-b border-white/5">
+             <div className="h-full w-full rounded-xl bg-[#020617]/60 border border-white/[0.04] p-4 overflow-hidden relative">
+                <div className="font-mono text-xs flex flex-col gap-3 text-slate-400">
+                  <div className="grid grid-cols-3 text-slate-600 mb-2 pb-2 border-b border-white/[0.04]">
                     <span>PRICE</span><span>SIZE</span><span>TIME</span>
                   </div>
                   {[
@@ -126,26 +126,25 @@ export const BentoGrid = () => {
                     { p: "44.90", s: "850", t: "12:04:01.201", type: "buy" },
                     { p: "44.85", s: "5,000", t: "12:04:01.256", type: "buy" },
                   ].map((row, i) => (
-                    <div key={i} className="grid grid-cols-3 hover:bg-white/5 px-1 py-0.5 rounded transition-colors cursor-default">
+                    <div key={i} className="grid grid-cols-3 hover:bg-white/[0.03] px-1 py-0.5 rounded transition-colors cursor-default">
                       <span className={row.type === 'buy' ? 'text-[#22c55e]' : 'text-[#ef4444]'}>{row.p}</span>
                       <span>{row.s}</span>
-                      <span className="text-gray-500">{row.t}</span>
+                      <span className="text-slate-600">{row.t}</span>
                     </div>
                   ))}
                 </div>
-                {/* Fade overlay to hide bottom rows */}
-                <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-[#0a1428] to-transparent pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-[#040d1c] to-transparent pointer-events-none" />
              </div>
           </BentoCard>
 
-          {/* Square Bottom Cards - 6 cols, 1 row each */}
+          {/* Bottom Cards — 6 cols each */}
           <BentoCard 
             title="Automated Risk Profiling" 
             icon={ShieldAlert}
             className="md:col-span-6 md:row-span-1"
-            delay={0.3}
+            delay={0.25}
           >
-             <p className="text-sm text-gray-400 font-sans leading-relaxed">
+             <p className="text-sm text-slate-400 font-sans leading-relaxed">
                Dynamic margin requirements calculated per over. Instant portfolio-wide hedging and auto-liquidation thresholds ensuring zero negative balance.
              </p>
           </BentoCard>
@@ -154,9 +153,9 @@ export const BentoGrid = () => {
             title="Encrypted Protocol" 
             icon={Cpu}
             className="md:col-span-6 md:row-span-1"
-            delay={0.4}
+            delay={0.35}
           >
-             <p className="text-sm text-gray-400 font-sans leading-relaxed">
+             <p className="text-sm text-slate-400 font-sans leading-relaxed">
                Military-grade data encryption securing all API payloads, WebSockets, and database transactions at rest and in transit.
              </p>
           </BentoCard>

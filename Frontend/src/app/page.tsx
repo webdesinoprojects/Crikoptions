@@ -3,7 +3,7 @@ import { HeroSection } from "@/components/landing/hero"
 import dynamic from "next/dynamic"
 
 const SectionFallback = ({ height = "h-[520px]" }: { height?: string }) => (
-  <section className={`bg-black ${height} border-t border-white/5`} />
+  <section className={`bg-[#020617] ${height} border-t border-white/5`} />
 )
 
 const BentoGrid = dynamic(
@@ -35,7 +35,7 @@ const CtaFooter = dynamic(
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#000d1a]">
+    <div className="min-h-screen bg-[#020617]">
       <Navbar1 />
       <main>
         <HeroSection />

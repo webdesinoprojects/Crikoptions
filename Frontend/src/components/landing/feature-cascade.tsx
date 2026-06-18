@@ -11,7 +11,7 @@ const features = [
     title: "ALGORITHMIC HEDGING",
     desc: "Deploy multi-leg options strategies instantly. The system automatically calculates delta-neutral positions and executes across all available strike prices.",
     number: "01",
-    color: "from-[#1e3a8a]/30 to-[#020617]"
+    color: "from-[#0ea5e9]/20 to-[#020617]"
   },
   {
     title: "LIVE EVENT TELEMETRY",
@@ -23,7 +23,7 @@ const features = [
     title: "INSTITUTIONAL API",
     desc: "Connect your proprietary quantitative models directly to our matching engine via ultra-low latency FIX and REST APIs.",
     number: "03",
-    color: "from-[#3131f5]/20 to-[#020617]"
+    color: "from-[#ffd700]/15 to-[#020617]"
   }
 ]
 
@@ -116,15 +116,15 @@ export const FeatureCascade = () => {
   }, [])
 
   return (
-    <section id="terminal" ref={containerRef} className="relative w-full min-h-screen bg-black flex items-center justify-center py-20 lg:py-0 overflow-clip">
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_bottom,rgba(30,58,138,0.15)_0%,transparent_80%)]" />
+    <section id="terminal" ref={containerRef} className="relative w-full min-h-screen bg-[#020617] flex items-center justify-center py-20 lg:py-0 overflow-clip">
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_bottom,rgba(14,165,233,0.1)_0%,transparent_80%)]" />
 
       <div className="w-full max-w-5xl mx-auto px-4 relative flex flex-col lg:block h-auto lg:h-[70vh] justify-center mt-16 lg:mt-0 gap-10">
         <div className="relative lg:absolute top-0 left-0 w-full lg:w-1/3 z-10 pt-12 pb-8 lg:pb-0 text-center lg:text-left">
             <h2 className="text-4xl md:text-5xl font-display font-black text-white uppercase tracking-tighter drop-shadow-lg">
-              Mechanical <br className="hidden lg:block"/><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3131f5] to-white">Precision</span>
+              Mechanical <br className="hidden lg:block"/><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0ea5e9] to-[#ffd700]">Precision</span>
             </h2>
-            <p className="mt-4 lg:mt-6 text-gray-400 font-sans text-lg">
+            <p className="mt-4 lg:mt-6 text-slate-400 font-sans text-lg">
                 Scroll to initialize system architecture protocols.
             </p>
         </div>
@@ -142,13 +142,13 @@ export const FeatureCascade = () => {
                 </div>
                 
                 <div>
-                  <div className="font-mono text-xs text-[#4AF626] mb-8 tracking-[0.2em]">[ PROTOCOL_ENGAGED ]</div>
+                  <div className="font-mono text-xs text-[#0ea5e9] mb-8 tracking-[0.2em]">[ PROTOCOL_ENGAGED ]</div>
                   <h3 className="text-4xl font-display font-black text-white uppercase tracking-tight max-w-sm leading-none drop-shadow-md">
                     {feature.title}
                   </h3>
                 </div>
 
-                <p className="text-gray-300 font-sans text-lg max-w-md leading-relaxed">
+                <p className="text-slate-300 font-sans text-lg max-w-md leading-relaxed">
                   {feature.desc}
                 </p>
               </div>

@@ -55,7 +55,7 @@ export default function Features() {
   const m3 = marqueeData.slice((marqueeData.length / 3) * 2);
 
   return (
-    <section className="relative bg-black py-20 sm:py-32 text-white border-t border-white/10 overflow-hidden">
+    <section className="relative bg-[#020617] py-20 sm:py-32 text-white border-t border-white/10 overflow-hidden">
       {/* Background ambient glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
 
@@ -64,7 +64,7 @@ export default function Features() {
           <h2 className="font-display text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-primary/80 leading-tight">
             Removing the roadblocks to your success
           </h2>
-          <p className="max-w-2xl text-sm sm:text-base text-zinc-400 font-normal leading-relaxed">
+          <p className="max-w-2xl text-sm sm:text-base text-slate-400 font-normal leading-relaxed">
             It's easy to get lost in a sea of advice, conflicting opinions, and
             endless "must-dos." We filter out the noise, focus on what truly
             matters, and give you the kind of clarity that lets your business
@@ -73,14 +73,14 @@ export default function Features() {
           
           <div className="relative w-full max-w-4xl overflow-hidden pt-8">
             {/* Fade overlays */}
-            <div className="absolute left-0 top-0 bottom-0 z-20 w-16 sm:w-28 bg-gradient-to-r from-black to-transparent pointer-events-none" />
-            <div className="absolute right-0 top-0 bottom-0 z-20 w-16 sm:w-28 bg-gradient-to-l from-black to-transparent pointer-events-none" />
+            <div className="absolute left-0 top-0 bottom-0 z-20 w-16 sm:w-28 bg-gradient-to-r from-[#020617] to-transparent pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 z-20 w-16 sm:w-28 bg-gradient-to-l from-[#020617] to-transparent pointer-events-none" />
 
             <div className="flex flex-col gap-3">
               <Marquee className="[--duration:35s] [--gap:0.75rem]" repeat={3}>
                 {m1.map((q, idx) => (
                   <Badge
-                    className="rounded-full border-white/10 bg-white/5 hover:bg-white/10 hover:border-primary/30 transition-all px-4 py-2 text-xs text-zinc-300 font-medium whitespace-nowrap cursor-default"
+                    className="rounded-full border-white/10 bg-white/5 hover:bg-white/10 hover:border-primary/30 transition-all px-4 py-2 text-xs text-slate-300 font-medium whitespace-nowrap cursor-default"
                     key={`m1-${idx}`}
                     variant="outline"
                   >
@@ -96,7 +96,7 @@ export default function Features() {
               >
                 {m2.map((q, idx) => (
                   <Badge
-                    className="rounded-full border-white/10 bg-white/5 hover:bg-white/10 hover:border-primary/30 transition-all px-4 py-2 text-xs text-zinc-300 font-medium whitespace-nowrap cursor-default"
+                    className="rounded-full border-white/10 bg-white/5 hover:bg-white/10 hover:border-primary/30 transition-all px-4 py-2 text-xs text-slate-300 font-medium whitespace-nowrap cursor-default"
                     key={`m2-${idx}`}
                     variant="outline"
                   >
@@ -108,7 +108,7 @@ export default function Features() {
               <Marquee className="[--duration:32s] [--gap:0.75rem]" repeat={3}>
                 {m3.map((q, idx) => (
                   <Badge
-                    className="rounded-full border-white/10 bg-white/5 hover:bg-white/10 hover:border-primary/30 transition-all px-4 py-2 text-xs text-zinc-300 font-medium whitespace-nowrap cursor-default"
+                    className="rounded-full border-white/10 bg-white/5 hover:bg-white/10 hover:border-primary/30 transition-all px-4 py-2 text-xs text-slate-300 font-medium whitespace-nowrap cursor-default"
                     key={`m3-${idx}`}
                     variant="outline"
                   >
@@ -131,7 +131,7 @@ export default function Features() {
                 {/* Micro highlight effect on hover */}
                 <div className="absolute inset-0 bg-gradient-to-b from-primary/0 to-primary/[0.015] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                 
-                <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 group-hover:text-primary group-hover:border-primary/30 transition-all duration-300 shadow-md">
+                <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 group-hover:text-primary group-hover:border-primary/30 transition-all duration-300 shadow-md">
                   <Icon className="w-6 h-6 transform group-hover:scale-110 transition-transform duration-300" />
                 </div>
 
@@ -139,7 +139,7 @@ export default function Features() {
                   <h3 className="font-display font-semibold text-xl sm:text-2xl text-white group-hover:text-primary transition-colors duration-300">
                     {feature.title}
                   </h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed font-normal">
+                  <p className="text-sm text-slate-400 leading-relaxed font-normal">
                     {feature.description}
                   </p>
                 </div>
