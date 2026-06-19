@@ -1,9 +1,7 @@
-.env
 
 bin/
 *.exe
 
-.vscode/
 .idea/
 
 .DS_Store
@@ -14,3 +12,5 @@ bin/
 *.docx
 
 Crikoptions_backend/
+config.bat
+node_modules

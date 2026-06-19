@@ -29,17 +29,19 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
   return (
     <aside
       className={cn(
-        "flex h-[390px] min-h-[340px] flex-col overflow-hidden rounded-md border border-outline-variant bg-surface-container-lowest",
+        "relative flex h-[390px] min-h-[340px] flex-col overflow-hidden rounded-xl border border-cyan-300/12 bg-[#040a17]/92 shadow-[0_20px_70px_rgba(0,0,0,0.34)] backdrop-blur-xl",
         className
       )}
     >
-      <div className="flex items-center justify-between border-b border-outline-variant bg-surface px-3 py-2">
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-cyan-300/55 to-transparent" />
+      <div className="relative flex items-center justify-between border-b border-white/8 bg-[#071124]/92 px-3 py-2.5">
         <span
           className={cn(
-            "rounded px-2 py-0.5 text-[10px] font-black uppercase tracking-wide",
-            match?.status === "LIVE" ? "bg-amber-500/20 text-amber-200 ring-1 ring-amber-500/25" : "bg-primary/15 text-primary"
+            "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-black uppercase tracking-wide",
+            match?.status === "LIVE" ? "bg-amber-400/15 text-amber-200 ring-1 ring-amber-300/20" : "bg-primary/15 text-primary"
           )}
         >
+          {match?.status === "LIVE" && <span className="size-1.5 rounded-full bg-amber-200 shadow-[0_0_10px_rgba(253,230,138,0.9)]" />}
           {match?.status ?? "LIVE"}
         </span>
         <span className="text-[10px] uppercase tracking-wide text-on-surface-variant">
@@ -48,10 +50,10 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <section className="border-b border-outline-variant p-3">
+        <section className="border-b border-white/8 p-3.5">
           <div className="grid grid-cols-[1fr_36px_1fr] items-center gap-2 text-center">
             <div>
-              <div className="text-[11px] uppercase tracking-wide text-on-surface-variant">
+              <div className="text-[11px] uppercase tracking-wide text-cyan-100/65">
                 {match?.homeTeam.shortName ?? "Team A"}
               </div>
               <div className="mt-1 font-data-tabular text-3xl font-black text-teal-200">
@@ -62,7 +64,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
             </div>
             <div className="text-[11px] uppercase text-on-surface-variant">vs</div>
             <div>
-              <div className="text-[11px] uppercase tracking-wide text-on-surface-variant">
+              <div className="text-[11px] uppercase tracking-wide text-cyan-100/65">
                 {match?.awayTeam.shortName ?? "Team B"}
               </div>
               <div className="mt-1 font-data-tabular text-3xl font-black text-on-surface-variant">-</div>
@@ -76,8 +78,8 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
           </div>
         </section>
 
-        <section className="border-b border-outline-variant p-3">
-          <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-on-surface-variant">This over</div>
+        <section className="border-b border-white/8 p-3.5">
+          <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-cyan-100/60">This over</div>
           <div
             className={cn(
               "w-full",
@@ -114,8 +116,8 @@ function OnFieldPanel({ balls, match }: { balls: BallEvent[]; match?: Match }) {
   const battingSide = match?.innings === 2 ? match?.awayTeam.shortName : match?.homeTeam.shortName;
 
   return (
-    <section className="p-3">
-      <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-on-surface-variant">On field</div>
+    <section className="p-3.5">
+      <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-cyan-100/60">On field</div>
       <div className="grid gap-2 text-[12px]">
         <ContextRow label="Striker" value="On strike" />
         <ContextRow label="Bowler" value="Current over" />
@@ -128,7 +130,7 @@ function OnFieldPanel({ balls, match }: { balls: BallEvent[]; match?: Match }) {
 
 function ContextRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded border border-outline-variant/70 bg-surface/60 px-2 py-1.5">
+    <div className="flex items-center justify-between gap-3 rounded-md border border-white/8 bg-[#071327]/78 px-2.5 py-2">
       <span className="text-on-surface-variant">{label}</span>
       <span className="truncate text-right font-semibold text-on-surface">{value}</span>
     </div>
@@ -137,8 +139,8 @@ function ContextRow({ label, value }: { label: string; value: string }) {
 
 function StatBox({ label, tone, value }: { label: string; tone?: "teal"; value: string }) {
   return (
-    <div className="rounded bg-surface-container-high p-2 text-center">
-      <div className="text-[10px] uppercase tracking-wide text-on-surface-variant">{label}</div>
+    <div className="rounded-lg border border-white/8 bg-[#08152b]/88 p-2.5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <div className="text-[10px] uppercase tracking-wide text-cyan-100/60">{label}</div>
       <div className={cn("mt-0.5 font-data-tabular text-base font-black", tone === "teal" ? "text-teal-300" : "text-on-surface")}>
         {value}
       </div>
