@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 import { useRouter } from "next/navigation";
 import {
   LiveMatchStatsPanel,
@@ -18,6 +20,7 @@ interface PageProps {
 
 export default function TradingTerminalPage({ params }: PageProps) {
   const router = useRouter();
+  const terminalRef = React.useRef<HTMLDivElement>(null);
   const { marketId } = React.use(params);
   const { data: market, isLoading } = useMarketDetail(marketId);
   const matchId = market?.matchId ?? "";
@@ -35,6 +38,26 @@ export default function TradingTerminalPage({ params }: PageProps) {
     router.replace(`/trading/${preferredLiveMarket.id}`);
   }, [liveMatch, market, marketId, preferredLiveMarket, router]);
 
+  useGSAP(
+    () => {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+      gsap.fromTo(
+        "[data-terminal-panel]",
+        { opacity: 0, y: 14, filter: "blur(8px)" },
+        {
+          opacity: 1,
+          y: 0,
+          filter: "blur(0px)",
+          duration: 0.55,
+          ease: "power3.out",
+          stagger: 0.055,
+        }
+      );
+    },
+    { scope: terminalRef, dependencies: [marketId] }
+  );
+
   if (isLoading) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-background text-on-surface">
@@ -44,14 +67,32 @@ export default function TradingTerminalPage({ params }: PageProps) {
   }
 
   return (
-    <div className="flex-grow flex flex-col h-full overflow-hidden bg-background text-on-surface">
-      <MatchScheduleStrip matches={matches} selectedMatchId={matchId} />
+    <div
+      ref={terminalRef}
+      className="relative flex h-full flex-grow flex-col overflow-hidden bg-[#020511] text-on-surface"
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(14,165,233,0.16),transparent_34%),radial-gradient(ellipse_at_bottom_right,rgba(16,185,129,0.08),transparent_32%),linear-gradient(180deg,#020511_0%,#030712_44%,#01030a_100%)]"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(56,189,248,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(56,189,248,0.035)_1px,transparent_1px)] bg-[size:48px_48px] opacity-30"
+      />
 
-      <main className="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden">
-        <div className="grid min-h-full grid-cols-1 gap-3 p-3 lg:h-full lg:min-h-0 lg:grid-cols-[300px_minmax(0,1fr)_360px] xl:grid-cols-[340px_minmax(0,1fr)_420px] 2xl:grid-cols-[360px_minmax(0,1fr)_440px]">
-          <LiveMatchStatsPanel className="lg:h-full lg:min-h-0" match={match} market={market} />
-          <OptionChain className="lg:h-full lg:min-h-0" marketId={marketId} market={market} match={match} />
-          <section className="flex min-h-0 flex-col gap-2 overflow-y-auto pr-1 lg:h-full">
+      <div className="relative z-10" data-terminal-panel>
+        <MatchScheduleStrip matches={matches} selectedMatchId={matchId} />
+      </div>
+
+      <main className="relative z-10 min-h-0 flex-1 overflow-y-auto lg:overflow-hidden">
+        <div className="grid min-h-full grid-cols-1 gap-3 p-3 lg:h-full lg:min-h-0 lg:grid-cols-[310px_minmax(0,1fr)_370px] xl:grid-cols-[350px_minmax(0,1fr)_420px] 2xl:grid-cols-[370px_minmax(0,1fr)_440px]">
+          <div className="min-h-0 lg:h-full" data-terminal-panel>
+            <LiveMatchStatsPanel className="lg:h-full lg:min-h-0" match={match} market={market} />
+          </div>
+          <div className="min-h-0 lg:h-full" data-terminal-panel>
+            <OptionChain className="lg:h-full lg:min-h-0" marketId={marketId} market={market} match={match} />
+          </div>
+          <section className="flex min-h-0 flex-col gap-2 overflow-y-auto pr-1 lg:h-full" data-terminal-panel>
             <OrderEntryForm matchId={matchId} marketId={marketId} match={match} />
             <TradingActivityPanel className="min-h-[260px] shrink-0 lg:flex-1" matchId={matchId} marketId={marketId} match={match} market={market} />
           </section>
