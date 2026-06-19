@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Match } from "@/types";
 import { cn } from "@/lib/utils";
 import { scoreParts } from "../utils/terminal-context";
+import { pickPrimaryMarket } from "../utils/market-select";
 import { useMarkets } from "../hooks";
 
 interface MatchScheduleStripProps {
@@ -47,11 +48,7 @@ function MatchCard({ match, selected }: { match: Match; selected: boolean }) {
   const handleClick = () => {
     if (selected) return;
 
-    const primary =
-      markets.find((market) => (market.type ?? "").toLowerCase() === "match_depth") ??
-      markets.find((market) => (market.type ?? "").toLowerCase() === "team_total") ??
-      markets[0];
-
+    const primary = pickPrimaryMarket(markets);
     if (primary?.id) {
       router.push(`/trading/${primary.id}`);
     }

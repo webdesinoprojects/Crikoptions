@@ -23,7 +23,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
   const overs = match?.currentOver ?? oversTextFromBalls(ballsBowled);
   const crr = ballsBowled > 0 ? currentScore / (ballsBowled / 6) : 0;
   const projected = projectedFinal(currentScore, ballsLeft, crr, market);
-  const balls = useThisOverBalls(match);
+  const balls = useThisOverBalls(match, market?.matchId);
   const compactThisOver = balls.length > 6;
 
   return (

@@ -19,7 +19,7 @@ export function MatchAnalyticsPanel({ matchId, marketId }: MatchAnalyticsPanelPr
   const addWatchlistMutation = useAddWatchlist();
   const removeWatchlistMutation = useRemoveWatchlist();
   const isWatchlisted = watchlist?.marketIds.includes(marketId) || false;
-  const thisOverBalls = useThisOverBalls(match);
+  const thisOverBalls = useThisOverBalls(match, matchId);
   const compactThisOver = thisOverBalls.length > 6;
 
   const handleWatchlistToggle = () => {

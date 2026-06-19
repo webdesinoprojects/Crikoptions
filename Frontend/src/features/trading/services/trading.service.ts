@@ -42,6 +42,16 @@ export interface OptionChainStrike {
   premium: number;
 }
 
+/** One persisted ball from GET /v1/matches/{id}/events (exact, ordered history). */
+export interface MatchBallHistoryEvent {
+  innings?: number;
+  over?: number;
+  ball?: number;
+  runs: number;
+  isWicket: boolean;
+  extra?: string | null;
+}
+
 export interface CalculatedPrice {
   buyerPrice: number;
   sellerPrice: number;
@@ -116,6 +126,14 @@ class TradingService {
       }
       throw error;
     }
+  }
+
+  async fetchMatchEvents(matchId: string, limit = 6): Promise<MatchBallHistoryEvent[]> {
+    const response = await apiClient.get<{ success: boolean; data: MatchBallHistoryEvent[] }>(
+      `/v1/matches/${matchId}/events`,
+      { params: { limit } }
+    );
+    return response.data.data ?? [];
   }
 
   async fetchExecutions(matchId: string, marketId: string): Promise<Execution[]> {
