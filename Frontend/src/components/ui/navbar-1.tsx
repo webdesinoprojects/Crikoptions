@@ -23,7 +23,7 @@ export function Navbar1() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#020711]/86 backdrop-blur-2xl">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-24 max-w-[1500px] items-center justify-between px-4 sm:px-8 lg:px-12">
         <Link
           href="/"
           className="group flex min-w-0 items-center gap-3 rounded-full pr-2"

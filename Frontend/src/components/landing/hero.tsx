@@ -300,7 +300,7 @@ export const HeroSection = () => {
         </motion.div>
 
         <motion.div
-          className="relative z-10 min-h-[620px] w-full lg:min-h-[600px]"
+          className="relative z-10 min-h-[620px] w-full lg:min-h-[600px] flex items-center justify-center"
           initial={{ opacity: 0, x: 34 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.85, ease: "easeOut", delay: 0.12 }}
@@ -356,14 +356,14 @@ export const HeroSection = () => {
             ))}
           </div>
 
-          <div className="relative mx-auto overflow-hidden rounded-2xl border border-sky-300/12 bg-[#071020]/90 p-3 shadow-[0_32px_96px_rgba(0,0,0,0.42)] backdrop-blur-xl lg:hidden">
+          <div className="relative mx-auto overflow-hidden rounded-2xl border border-sky-300/12 bg-[#071020]/90 p-3 shadow-[0_32px_96px_rgba(0,0,0,0.42),0_0_50px_rgba(14,165,233,0.15)] backdrop-blur-xl lg:hidden mt-20 sm:mt-10">
             <Image
               src="/cricoptions-hero-trading.png"
               alt="CricOptions cricket options trading workstation"
               width={1792}
               height={1024}
               priority
-              className="aspect-[16/10] w-full rounded-xl object-cover object-[55%_40%]"
+              className="aspect-[16/10] w-full rounded-xl object-cover object-[55%_40%] shadow-2xl"
             />
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <MatchPanel />

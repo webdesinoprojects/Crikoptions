@@ -394,22 +394,22 @@ export function appendBallToCurrentOver(
 export function ballClassName(kind: BallKind) {
   switch (kind) {
     case "empty":
-      return "border-slate-500/35 bg-transparent text-transparent";
+      return "border-white/8 bg-transparent text-transparent";
     case "wicket":
     case "bowled":
     case "lbw":
     case "caught":
     case "runOut":
-      return "border-bear-red/50 bg-bear-red text-white";
+      return "border-red-300/45 bg-red-500 text-white shadow-[0_0_18px_rgba(239,68,68,0.22)]";
     case "six":
-      return "border-orange-500/40 bg-orange-500/90 text-black";
+      return "border-orange-300/45 bg-orange-500 text-black shadow-[0_0_18px_rgba(249,115,22,0.22)]";
     case "four":
-      return "border-primary/50 bg-primary text-on-primary";
+      return "border-cyan-200/45 bg-cyan-400 text-slate-950 shadow-[0_0_18px_rgba(34,211,238,0.2)]";
     case "run":
-      return "border-teal-500/40 bg-teal-500/20 text-teal-200";
+      return "border-teal-300/35 bg-teal-400/14 text-teal-100";
     case "dot":
     default:
-      return "border-slate-500/30 bg-slate-500/30 text-slate-200";
+      return "border-slate-400/20 bg-slate-400/12 text-slate-200";
   }
 }
 

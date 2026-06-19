@@ -141,12 +141,13 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex h-fit w-full min-w-0 shrink-0 flex-col gap-1.5 overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest p-2"
+      className="relative flex h-fit w-full min-w-0 shrink-0 flex-col gap-2 overflow-hidden rounded-xl border border-cyan-300/12 bg-[#040a17]/94 p-2.5 shadow-[0_22px_70px_rgba(0,0,0,0.36)] backdrop-blur-xl"
     >
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-cyan-300/55 to-transparent" />
       <div className="flex shrink-0 items-start justify-between gap-2">
         <div className="min-w-0">
-          <h3 className="text-sm font-black text-on-surface">Order Ticket</h3>
-          <p className="truncate text-[11px] text-on-surface-variant">
+          <h3 className="text-[15px] font-black text-on-surface">Order Ticket</h3>
+          <p className="truncate text-[11px] text-cyan-100/62">
             {selectedRow ? `Strike ${selectedRow.strike.toFixed(0)} selected` : market?.title ?? "Select a strike"}
           </p>
         </div>
@@ -159,17 +160,17 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
         bid={quoteBid}
       />
 
-      <div className="grid shrink-0 grid-cols-2 rounded-md border border-outline-variant bg-surface p-0.5">
+      <div className="grid shrink-0 grid-cols-2 rounded-lg border border-white/8 bg-[#071327] p-0.5">
         {(["BUY", "SELL"] as const).map((option) => (
           <button
             key={option}
             type="button"
             onClick={() => setSelectedSide(option)}
-            className={`h-6 rounded text-[11px] font-black transition-all ${
+            className={`h-7 rounded-md text-[11px] font-black transition-all ${
               side === option
                 ? option === "BUY"
-                  ? "bg-bull-green text-white shadow"
-                  : "bg-bear-red text-white shadow"
+                  ? "bg-bull-green text-white shadow-[0_8px_22px_rgba(34,197,94,0.18)]"
+                  : "bg-bear-red text-white shadow-[0_8px_22px_rgba(239,68,68,0.18)]"
                 : "text-on-surface-variant hover:text-on-surface"
             }`}
           >
@@ -178,13 +179,13 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
         ))}
       </div>
 
-      <div className="grid shrink-0 grid-cols-2 gap-1 rounded-md border border-outline-variant bg-surface p-0.5">
+      <div className="grid shrink-0 grid-cols-2 gap-1 rounded-lg border border-white/8 bg-[#071327] p-0.5">
         {(["LIMIT", "MARKET"] as const).map((option) => (
           <button
             key={option}
             type="button"
             onClick={() => setType(option)}
-            className={`flex h-6 items-center justify-center gap-1 rounded text-[10px] font-black transition-all ${
+            className={`flex h-7 items-center justify-center gap-1 rounded-md text-[10px] font-black transition-all ${
               type === option
                 ? "bg-primary/15 text-primary"
                 : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
@@ -220,10 +221,10 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
               step="0.05"
               value={displayPrice}
               onChange={(e) => setPriceOverride({ key: priceKey, value: e.target.value })}
-              className="h-7 min-w-0 rounded-md border border-outline-variant bg-surface px-2 font-data-tabular text-[13px] font-black text-on-surface focus:border-primary focus:outline-none"
+              className="h-8 min-w-0 rounded-md border border-white/10 bg-[#071327] px-2 font-data-tabular text-[13px] font-black text-on-surface focus:border-primary focus:outline-none"
             />
           ) : (
-            <div className="flex h-7 min-w-0 items-center rounded-md border border-bull-green/20 bg-bull-green/10 px-2 font-data-tabular text-[13px] font-black text-bull-green">
+            <div className="flex h-8 min-w-0 items-center rounded-md border border-bull-green/20 bg-bull-green/10 px-2 font-data-tabular text-[13px] font-black text-bull-green">
               Rs {formatMoney(priceValue)}
             </div>
           )}
@@ -237,7 +238,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
             type="number"
             value={qty}
             onChange={(e) => setQty(e.target.value)}
-            className="h-7 min-w-0 rounded-md border border-outline-variant bg-surface px-2 font-data-tabular text-[13px] font-black text-on-surface focus:border-primary focus:outline-none"
+            className="h-8 min-w-0 rounded-md border border-white/10 bg-[#071327] px-2 font-data-tabular text-[13px] font-black text-on-surface focus:border-primary focus:outline-none"
           />
         </div>
 
@@ -258,8 +259,8 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
         <button
           type="submit"
           disabled={submitDisabled}
-          className={`inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md text-[12px] font-black text-white shadow-lg transition-all hover:shadow-xl ${
-            side === "BUY" ? "bg-bull-green hover:bg-bull-green/90" : "bg-bear-red hover:bg-bear-red/90"
+          className={`inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg text-[12px] font-black text-white shadow-lg transition-all hover:shadow-xl ${
+            side === "BUY" ? "bg-bull-green hover:bg-bull-green/90 shadow-bull-green/15" : "bg-bear-red hover:bg-bear-red/90 shadow-bear-red/15"
           } disabled:opacity-50`}
         >
           {createOrderMutation.isPending ? (
@@ -277,7 +278,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
         <button
           type="button"
           onClick={resetTicket}
-          className="inline-flex h-8 items-center justify-center rounded-md border border-outline-variant bg-surface text-on-surface-variant hover:text-on-surface"
+          className="inline-flex h-9 items-center justify-center rounded-lg border border-white/10 bg-[#071327] text-on-surface-variant hover:text-on-surface"
           title="Reset ticket"
         >
           <RotateCcw className="h-4 w-4" />
@@ -297,8 +298,8 @@ function QuoteFocusPanel({
   bid: number;
 }) {
   return (
-    <div className="shrink-0 rounded-md border border-outline-variant bg-surface-container-high/80 p-1.5">
-      <div className="grid grid-cols-2 gap-1">
+    <div className="shrink-0 rounded-lg border border-white/8 bg-[#071327]/90 p-1.5">
+      <div className="grid grid-cols-2 gap-1.5">
         <QuoteBox active={activeSide === "SELL"} label="Bid" tone="bid" value={bid} />
         <QuoteBox active={activeSide === "BUY"} label="Ask" tone="ask" value={ask} />
       </div>
@@ -319,12 +320,12 @@ function QuoteBox({
 }) {
   const activeClass =
     tone === "bid"
-      ? "border-cyan-300/50 bg-cyan-300/10 text-cyan-200"
-      : "border-bull-green/50 bg-bull-green/10 text-bull-green";
+      ? "border-cyan-300/50 bg-cyan-300/10 text-cyan-100"
+      : "border-red-300/45 bg-red-400/10 text-red-200";
 
   return (
-    <div className={`rounded border px-2 py-1 ${active ? activeClass : "border-outline-variant bg-surface text-on-surface"}`}>
-      <div className="text-[9px] font-black uppercase tracking-wider opacity-80">{label}</div>
+    <div className={`rounded-md border px-2.5 py-2 ${active ? activeClass : "border-white/8 bg-[#040a17] text-on-surface"}`}>
+      <div className="text-[9px] font-black uppercase tracking-wider opacity-75">{label}</div>
       <div className="font-data-tabular text-base font-black leading-tight">Rs {formatMoney(value)}</div>
     </div>
   );
@@ -346,7 +347,7 @@ function OrderImpactPanel({
   side: "BUY" | "SELL";
 }) {
   return (
-    <div className="shrink-0 rounded-md border border-outline-variant bg-surface p-1.5">
+    <div className="shrink-0 rounded-lg border border-white/8 bg-[#071327]/90 p-1.5">
       <div className="grid grid-cols-4 gap-1 font-data-tabular text-[10px]">
         <ImpactCell label="Price" value={`Rs ${formatMoney(price)}`} />
         <ImpactCell label="Notional" value={`Rs ${formatMoney(notional)}`} strong />
@@ -376,7 +377,7 @@ function ImpactCell({
 }) {
   return (
     <div className={`min-w-0 rounded border px-1.5 py-1 ${align === "right" ? "text-right" : ""} ${
-      danger ? "border-bear-red/30 bg-bear-red/10 text-bear-red" : "border-outline-variant bg-surface-container-low text-on-surface-variant"
+      danger ? "border-bear-red/30 bg-bear-red/10 text-bear-red" : "border-white/8 bg-[#040a17] text-on-surface-variant"
     }`}>
       <div className="truncate">{label}</div>
       <div className={`truncate font-black ${strong || !danger ? "text-on-surface" : ""}`}>{value}</div>
@@ -387,7 +388,7 @@ function ImpactCell({
 function StatusPill({ side }: { side: "BUY" | "SELL" }) {
   return (
     <span
-      className={`rounded border px-2 py-1 text-[10px] font-black ${
+      className={`rounded-md border px-2 py-1 text-[10px] font-black ${
         side === "BUY"
           ? "border-bull-green/20 bg-bull-green/10 text-bull-green"
           : "border-bear-red/20 bg-bear-red/10 text-bear-red"

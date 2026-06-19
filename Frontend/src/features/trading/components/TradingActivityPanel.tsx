@@ -51,14 +51,15 @@ export function TradingActivityPanel({ className, matchId, marketId, market, mat
   return (
     <section
       className={cn(
-        "flex min-h-0 flex-col overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest",
+        "relative flex min-h-0 flex-col overflow-hidden rounded-xl border border-cyan-300/12 bg-[#040a17]/94 shadow-[0_22px_70px_rgba(0,0,0,0.32)] backdrop-blur-xl",
         className
       )}
     >
-      <div className="flex shrink-0 items-center justify-between border-b border-outline-variant bg-surface px-2.5 py-1.5">
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-cyan-300/55 to-transparent" />
+      <div className="relative flex shrink-0 items-center justify-between border-b border-white/8 bg-[#071124]/92 px-2.5 py-2">
         <div className="min-w-0">
           <h3 className="truncate text-[12px] font-black text-on-surface">Orders & Positions</h3>
-          <p className="truncate text-[10px] text-on-surface-variant">Live order status and open positions</p>
+          <p className="truncate text-[10px] text-cyan-100/62">Live order status and open positions</p>
         </div>
         <span className={`rounded border px-2 py-0.5 text-[9px] font-black ${
           isSyncing ? "border-[#FFB300]/25 bg-[#FFB300]/10 text-[#FFB300]" : "border-primary/20 bg-primary/10 text-primary"
@@ -67,7 +68,7 @@ export function TradingActivityPanel({ className, matchId, marketId, market, mat
         </span>
       </div>
 
-      <div className="grid shrink-0 grid-cols-2 gap-1 border-b border-outline-variant bg-surface p-1">
+      <div className="grid shrink-0 grid-cols-2 gap-1 border-b border-white/8 bg-[#071327] p-1">
         <TabButton active={tab === "ORDERS"} count={marketOrders.length} onClick={() => setTab("ORDERS")}>
           Orders
         </TabButton>
@@ -110,8 +111,8 @@ function TabButton({
       onClick={onClick}
       className={`flex h-7 items-center justify-center gap-1 rounded text-[10px] font-black transition-colors ${
         active
-          ? "bg-primary/15 text-primary"
-          : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
+          ? "bg-primary/15 text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+          : "text-on-surface-variant hover:bg-white/5 hover:text-on-surface"
       }`}
     >
       <span>{children}</span>
@@ -141,7 +142,7 @@ function OrdersTab({
   return (
     <div className="space-y-1.5">
       {sortedOrders.map((order) => (
-        <div key={order.id} className={`rounded-md border px-2 py-1.5 ${order.status === "FILLED" ? "border-bull-green/20 bg-bull-green/5" : "border-outline-variant/60 bg-surface"}`}>
+        <div key={order.id} className={`rounded-lg border px-2.5 py-2 ${order.status === "FILLED" ? "border-bull-green/20 bg-bull-green/8" : "border-white/8 bg-[#071327]/72"}`}>
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <SidePill side={order.side} />
@@ -199,7 +200,7 @@ function PositionsTab({ loading, positions, chainRows }: { loading: boolean; pos
           : position.pnl;
         const positive = livePnl >= 0;
         return (
-          <div key={position._id} className="rounded-md border border-outline-variant/60 bg-surface px-2 py-1.5">
+          <div key={position._id} className="rounded-lg border border-white/8 bg-[#071327]/72 px-2.5 py-2">
             <div className="flex items-center justify-between gap-2">
               <div className="flex min-w-0 items-center gap-2">
                 <span className="font-data-tabular text-[11px] font-black text-on-surface">
@@ -225,7 +226,7 @@ function PositionsTab({ loading, positions, chainRows }: { loading: boolean; pos
 
 function PanelState({ label }: { label: string }) {
   return (
-    <div className="flex h-full min-h-[100px] items-center justify-center rounded-md border border-dashed border-outline-variant text-center text-[11px] font-semibold text-on-surface-variant">
+    <div className="flex h-full min-h-[100px] items-center justify-center rounded-lg border border-dashed border-white/10 bg-white/2.5 text-center text-[11px] font-semibold text-on-surface-variant">
       {label}
     </div>
   );
