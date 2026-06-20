@@ -2,14 +2,13 @@
 
 import React, { useMemo } from "react";
 import ReactECharts from "echarts-for-react";
-import { useTheme } from "next-themes";
 import * as echarts from "echarts";
 
 interface EChartsWrapperProps {
   option: echarts.EChartsOption;
   style?: React.CSSProperties;
   className?: string;
-  onEvents?: Record<string, (params: any) => void>;
+  onEvents?: Record<string, (params: unknown) => void>;
 }
 
 export function EChartsWrapper({
@@ -18,9 +17,6 @@ export function EChartsWrapper({
   className,
   onEvents,
 }: EChartsWrapperProps) {
-  const { resolvedTheme } = useTheme();
-  const isDark = true; // Hardcoded true because the workstation is institutional dark theme
-
   const mergedOption = useMemo(() => {
     const defaultGrid = {
       top: 15,

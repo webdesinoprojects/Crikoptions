@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/features/auth/hooks/useAuth";
 
@@ -8,11 +8,11 @@ export const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, token, isLoading } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false
+  );
 
   useEffect(() => {
     if (mounted && !isLoading && !token && !isAuthenticated) {

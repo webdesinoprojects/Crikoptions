@@ -6,10 +6,25 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
+type TimelineAnimationState = {
+  y?: number | string;
+  opacity?: number;
+  filter?: string;
+  transition?: {
+    duration?: number;
+    delay?: number;
+  };
+};
+
+type TimelineVariants = {
+  hidden?: TimelineAnimationState;
+  visible?: TimelineAnimationState | ((index: number) => TimelineAnimationState);
+};
+
 interface TimelineContentProps {
   animationNum?: number;
   timelineRef?: React.RefObject<HTMLDivElement | null>;
-  customVariants?: any;
+  customVariants?: TimelineVariants;
   className?: string;
   children: React.ReactNode;
   as?: string;
@@ -30,8 +45,8 @@ export function TimelineContent({
     if (!el) return;
 
     // Default animation variables
-    let fromVars: any = { y: 30, opacity: 0, filter: "blur(4px)" };
-    let toVars: any = {
+    let fromVars: gsap.TweenVars = { y: 30, opacity: 0, filter: "blur(4px)" };
+    let toVars: gsap.TweenVars = {
       y: 0,
       opacity: 1,
       filter: "blur(0px)",
@@ -48,8 +63,9 @@ export function TimelineContent({
     // Map customVariants to GSAP if provided
     if (customVariants) {
       const hidden = customVariants.hidden || {};
-      const visibleFn = customVariants.visible;
-      const visible = typeof visibleFn === "function" ? visibleFn(animationNum) : (customVariants.visible || {});
+      const visibleSource = customVariants.visible;
+      const visible: TimelineAnimationState =
+        typeof visibleSource === "function" ? visibleSource(animationNum) : (visibleSource ?? {});
       const transition = visible.transition || {};
 
       fromVars = {
@@ -80,7 +96,7 @@ export function TimelineContent({
     };
   }, [animationNum, timelineRef, customVariants]);
 
-  const Component = as as any;
+  const Component = as as React.ElementType;
 
   return (
     <Component ref={elementRef} className={className}>

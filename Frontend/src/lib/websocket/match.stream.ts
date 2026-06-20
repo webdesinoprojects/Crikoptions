@@ -1,4 +1,5 @@
 import { socketManager } from "./socket-manager";
+import type { LiveMatchContext } from "@/types";
 
 export interface MatchScoreUpdateEvent {
   matchId: string;
@@ -9,6 +10,7 @@ export interface MatchScoreUpdateEvent {
   targetScore?: number;
   oversText: string;
   status: string;
+  liveContext?: LiveMatchContext;
   timestamp?: string;
 }
 
@@ -17,6 +19,7 @@ export interface MatchCommentaryEvent {
   ballNumber?: string;
   runs: number;
   isWicket: boolean;
+  extra?: "wide" | "noball" | null;
   wicketType?: string;
   description?: string;
   timestamp?: string;

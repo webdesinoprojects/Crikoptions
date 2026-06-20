@@ -1,4 +1,4 @@
-import { Match as FrontendMatch, Team as FrontendTeam } from "@/types";
+import { LiveMatchContext, Match as FrontendMatch, Team as FrontendTeam } from "@/types";
 
 export interface BackendMatch {
   _id: string;
@@ -18,6 +18,7 @@ export interface BackendMatch {
   ballsLeft: number;
   targetScore?: number;
   oversText: string;
+  liveContext?: LiveMatchContext;
   createdAt: string;
   updatedAt: string;
 }
@@ -65,6 +66,7 @@ export function adaptMatch(backend: BackendMatch): FrontendMatch {
     wicketsLost: backend.wicketsLost,
     ballsLeft: backend.ballsLeft,
     targetScore: backend.targetScore,
+    liveContext: backend.liveContext,
     startTime: backend.startTime,
   };
 }

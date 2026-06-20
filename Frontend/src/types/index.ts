@@ -52,6 +52,4 @@ export interface Opportunity {
   currentPrice: number;
 }
 
-export interface SignalLegacy {
-  // Not used
-}
+export type SignalLegacy = Record<string, never>;

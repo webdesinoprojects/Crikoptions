@@ -93,16 +93,6 @@ export function SessionNavBar() {
       >
         <motion.ul variants={staggerVariants} className="flex h-full flex-col">
           <div className="flex grow flex-col items-center">
-            <div className={cn("flex h-20 w-full shrink-0 items-center", isCollapsed ? "justify-center px-0" : "px-5")}>
-              <Link href="/" className={cn("flex items-center gap-2", isCollapsed ? "justify-center" : "w-full")}>
-                {!isCollapsed ? (
-                  <span className="text-2xl font-extrabold tracking-tight text-on-surface">CricOptions</span>
-                ) : (
-                  <span className="text-2xl font-extrabold tracking-tight text-on-surface">C</span>
-                )}
-              </Link>
-            </div>
-
             <div className="flex h-full w-full flex-col">
               <div className="flex grow flex-col gap-4">
                 <ScrollArea className="h-16 grow px-2 pb-2">

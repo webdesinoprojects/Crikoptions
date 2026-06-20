@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/features/auth/hooks/useAuth";
 import { ShieldAlert } from "lucide-react";
@@ -9,7 +9,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, isAuthenticated, isLoading } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const isAuthorized = !isLoading && isAuthenticated && user?.role === "admin";
 
   useEffect(() => {
     // Wait until auth initialization finishes
@@ -20,9 +20,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       } else if (user?.role !== "admin") {
         // Logged in but NOT an admin
         router.push("/dashboard");
-      } else {
-        // Is an admin
-        setIsAuthorized(true);
       }
     }
   }, [user, isAuthenticated, isLoading, router, pathname]);

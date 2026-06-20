@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { User, LoginCredentials, RegisterCredentials } from "../types/auth";
 import { authService } from "../services/auth.service";
+import { getErrorMessage } from "@/lib/error-message";
 
 interface AuthState {
   user: User | null;
@@ -37,8 +38,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         localStorage.setItem("crik_token", token);
       }
       set({ token, user, isAuthenticated: true, isLoading: false });
-    } catch (err: any) {
-      const errMsg = err.response?.data?.message || err.message || "Failed to sign in";
+    } catch (error: unknown) {
+      const errMsg = getErrorMessage(error, "Failed to sign in");
       set({ error: errMsg, isLoading: false });
       throw new Error(errMsg);
     }
@@ -60,8 +61,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         localStorage.setItem("crik_token", token);
       }
       set({ token, user, isAuthenticated: true, isLoading: false });
-    } catch (err: any) {
-      const errMsg = err.response?.data?.message || err.message || "Failed to register";
+    } catch (error: unknown) {
+      const errMsg = getErrorMessage(error, "Failed to register");
       set({ error: errMsg, isLoading: false });
       throw new Error(errMsg);
     }
@@ -79,8 +80,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const updatedUser = await authService.updateProfile(profile);
       set({ user: updatedUser, isLoading: false });
-    } catch (err: any) {
-      const errMsg = err.response?.data?.message || err.message || "Failed to update profile";
+    } catch (error: unknown) {
+      const errMsg = getErrorMessage(error, "Failed to update profile");
       set({ error: errMsg, isLoading: false });
       throw new Error(errMsg);
     }
@@ -102,7 +103,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const user = await authService.getProfile();
       set({ user, isAuthenticated: true, isLoading: false });
-    } catch (err) {
+    } catch {
       // Token is likely invalid or expired
       if (typeof window !== "undefined") {
         localStorage.removeItem("crik_token");

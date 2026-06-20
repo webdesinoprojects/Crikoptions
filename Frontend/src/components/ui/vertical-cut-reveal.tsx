@@ -9,13 +9,13 @@ import {
   useRef,
   useState,
 } from "react"
-import { motion } from "motion/react";
+import { motion, type Transition } from "motion/react";
 import { cn } from "@/lib/utils"
 
 interface TextProps {
   children: React.ReactNode
   reverse?: boolean
-  transition?: any
+  transition?: Transition
   splitBy?: "words" | "characters" | "lines" | string
   staggerDuration?: number
   staggerFrom?: "first" | "last" | "center" | "random" | number

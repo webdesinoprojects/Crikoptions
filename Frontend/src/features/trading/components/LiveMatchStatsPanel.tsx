@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
+import { Activity, Gauge, Info, Radio, Swords } from "lucide-react";
 import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { cn } from "@/lib/utils";
-import { Match } from "@/types";
+import { BatterStats, Match } from "@/types";
 import { useThisOverBalls } from "../hooks/useThisOverBalls";
 import { BallEvent, ballClassName, scoreParts } from "../utils/terminal-context";
 
@@ -17,133 +18,324 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
   const score = scoreParts(match?.homeScore);
   const parsedRuns = Number.parseInt(score.runs, 10);
   const currentScore = match?.currentScore ?? (Number.isFinite(parsedRuns) ? parsedRuns : 0);
+  const wickets = (match?.wicketsLost ?? Number.parseInt(score.wickets, 10)) || 0;
   const totalBalls = totalBallsForFormat(match?.format);
   const ballsLeft = Math.max(0, Math.min(totalBalls, match?.ballsLeft ?? totalBalls));
   const ballsBowled = totalBalls - ballsLeft;
   const overs = match?.currentOver ?? oversTextFromBalls(ballsBowled);
   const crr = ballsBowled > 0 ? currentScore / (ballsBowled / 6) : 0;
   const projected = projectedFinal(currentScore, ballsLeft, crr, market);
-  const balls = useThisOverBalls(match, market?.matchId);
+  const projectionReady = ballsBowled >= 6;
+  const liveContext = match?.liveContext;
+  const bowlerEconomy = liveContext && liveContext.bowler.balls > 0
+    ? liveContext.bowler.runs / (liveContext.bowler.balls / 6)
+    : 0;
+  const balls = useThisOverBalls(match);
   const compactThisOver = balls.length > 6;
+  const innings = match?.innings ?? 1;
+  const battingTeam = innings === 2 ? match?.awayTeam : match?.homeTeam;
+  const bowlingTeam = innings === 2 ? match?.homeTeam : match?.awayTeam;
+  const battingCode = teamCode(battingTeam?.shortName || battingTeam?.name);
+  const bowlingCode = teamCode(bowlingTeam?.shortName || bowlingTeam?.name);
+  const lastWicket = [...balls].reverse().find((ball) => isWicket(ball));
+  const momentum = momentumLabel(balls, crr, battingCode, bowlingCode);
+  const volatility = volatilityLabel(market);
 
   return (
     <aside
       className={cn(
-        "flex h-[390px] min-h-[340px] flex-col overflow-hidden rounded-md border border-outline-variant bg-surface-container-lowest",
+        "relative flex h-[620px] min-h-[460px] flex-col overflow-hidden rounded-[10px] border border-cyan-300/16 bg-[#030916]/96 shadow-[0_24px_80px_rgba(0,0,0,0.42)]",
         className
       )}
     >
-      <div className="flex items-center justify-between border-b border-outline-variant bg-surface px-3 py-2">
-        <span
-          className={cn(
-            "rounded px-2 py-0.5 text-[10px] font-black uppercase tracking-wide",
-            match?.status === "LIVE" ? "bg-amber-500/20 text-amber-200 ring-1 ring-amber-500/25" : "bg-primary/15 text-primary"
-          )}
-        >
-          {match?.status ?? "LIVE"}
-        </span>
-        <span className="text-[10px] uppercase tracking-wide text-on-surface-variant">
-          {match?.format ?? "T20"} - {ordinal(match?.innings ?? 1)} innings
-        </span>
-      </div>
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-cyan-300/70 to-transparent" />
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <section className="border-b border-outline-variant p-3">
-          <div className="grid grid-cols-[1fr_36px_1fr] items-center gap-2 text-center">
-            <div>
-              <div className="text-[11px] uppercase tracking-wide text-on-surface-variant">
-                {match?.homeTeam.shortName ?? "Team A"}
+      <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-color:rgba(56,189,248,0.22)_transparent] [scrollbar-width:thin]">
+        <section className="border-b border-cyan-100/10 bg-[radial-gradient(circle_at_top,rgba(14,165,233,0.12),transparent_48%),#050c1b] p-3.5">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-[4px] border px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em]",
+                match?.status === "LIVE"
+                  ? "border-amber-300/25 bg-amber-400/12 text-amber-200"
+                  : "border-cyan-300/20 bg-cyan-400/10 text-cyan-200"
+              )}
+            >
+              {match?.status === "LIVE" && <span className="size-1.5 rounded-full bg-amber-200 shadow-[0_0_10px_rgba(253,230,138,0.9)]" />}
+              {match?.status ?? "LIVE"}
+            </span>
+            <span className="truncate text-right text-[13px] font-bold tracking-tight text-slate-100">
+              {match?.title ?? `${battingCode} vs ${bowlingCode}`}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-3">
+            <TeamMark code={teamCode(match?.homeTeam.shortName || match?.homeTeam.name)} active={innings === 1} />
+            <div className="min-w-0 text-center">
+              <div className="font-data-tabular text-[25px] font-black leading-none tracking-[-0.04em] text-cyan-300">
+                {battingCode} {currentScore}/{wickets}
+                <span className="ml-1.5 text-[12px] font-semibold tracking-normal text-slate-400">({overs} ov)</span>
               </div>
-              <div className="mt-1 font-data-tabular text-3xl font-black text-teal-200">
-                {score.runs}
-                <span className="text-sm text-on-surface-variant">/{score.wickets}</span>
+              <div className="mt-2 truncate text-[10px] text-slate-400">
+                {bowlingCode} bowling <span className="mx-1 text-slate-600">•</span> {match?.format ?? "T20"}
+                <span className="mx-1 text-slate-600">•</span> {ordinal(innings)} innings
               </div>
-              <div className="mt-0.5 text-[11px] text-on-surface-variant">{overs} overs</div>
             </div>
-            <div className="text-[11px] uppercase text-on-surface-variant">vs</div>
-            <div>
-              <div className="text-[11px] uppercase tracking-wide text-on-surface-variant">
-                {match?.awayTeam.shortName ?? "Team B"}
-              </div>
-              <div className="mt-1 font-data-tabular text-3xl font-black text-on-surface-variant">-</div>
-              <div className="mt-0.5 text-[11px] text-on-surface-variant">bat {match?.innings === 2 ? "2nd" : "1st"}</div>
-            </div>
+            <TeamMark code={teamCode(match?.awayTeam.shortName || match?.awayTeam.name)} active={innings === 2} />
           </div>
 
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <StatBox label="CRR" value={crr.toFixed(2)} />
-            <StatBox label="Projected" value={String(projected)} tone="teal" />
+            <StatBox
+              label="CRR · runs/over"
+              value={crr.toFixed(2)}
+              hint={ballsBowled > 0 ? `${currentScore} ÷ ${ballsBowled} balls × 6` : "Starts after first ball"}
+            />
+            <StatBox
+              label="Projected"
+              value={projectionReady ? String(projected) : "—"}
+              hint={projectionReady ? "At current run rate" : "Available after 1 over"}
+              tone="cyan"
+            />
           </div>
         </section>
 
-        <section className="border-b border-outline-variant p-3">
-          <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-on-surface-variant">This over</div>
-          <div
-            className={cn(
-              "w-full",
-              compactThisOver ? "grid grid-cols-6 gap-1.5" : "flex items-center justify-between gap-2"
-            )}
-          >
-            {balls.map((ball, index) => (
-              <span
-                key={`${ball.kind}-${ball.label}-${index}`}
-                aria-label={ball.kind === "empty" ? `Ball ${index + 1}: not yet bowled` : `Ball ${index + 1}: ${ball.detail ?? ball.label}`}
-                title={ball.detail ?? ball.label}
-                className={cn(
-                  "flex shrink-0 items-center justify-center rounded-full border font-data-tabular font-black",
-                  compactThisOver ? "h-6 min-w-6 justify-self-center px-1 text-[8px]" : "h-8 min-w-8 px-1.5 text-[10px]",
-                  ballClassName(ball.kind)
-                )}
-              >
-                {ball.label}
-              </span>
-            ))}
+        <section className="border-b border-cyan-100/10 bg-[#040b18] px-3.5 py-3">
+          <div className="mb-2.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-300">
+            Recent balls
+            <Info className="size-3 text-slate-500" aria-hidden />
+          </div>
+          <BallStrip balls={balls} compact={compactThisOver} />
+        </section>
+
+        <section className="border-b border-cyan-100/10 p-3">
+          <div className="mb-2 flex items-center justify-between border-b border-cyan-100/10 pb-2">
+            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-200">
+              <Radio className="size-3.5 text-cyan-400" aria-hidden />
+              On-field matrix
+            </div>
+            <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-emerald-400">
+              <span className="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+              Live
+            </span>
+          </div>
+
+          <div className="grid gap-2">
+            <FieldBlock icon={<Swords className="size-4" />} title="Batting now" tone="cyan">
+              {liveContext ? (
+                <>
+                  <BatterRow player={liveContext.striker} striker />
+                  <BatterRow player={liveContext.nonStriker} />
+                  <MetricRow
+                    label="Partnership"
+                    value={`${liveContext.partnership.runs} off ${liveContext.partnership.balls}`}
+                    mono
+                  />
+                </>
+              ) : (
+                <MissingPlayerFeed />
+              )}
+            </FieldBlock>
+
+            <FieldBlock icon={<Activity className="size-4" />} title="Bowling now">
+              {liveContext ? (
+                <>
+                  <MetricRow label="Bowler" value={liveContext.bowler.name} strong />
+                  <MetricRow
+                    label="Figures"
+                    value={`${oversFromBalls(liveContext.bowler.balls)}-${liveContext.bowler.maidens}-${liveContext.bowler.runs}-${liveContext.bowler.wickets}`}
+                    mono
+                  />
+                </>
+              ) : (
+                <MissingPlayerFeed />
+              )}
+              <div className="flex items-center justify-between gap-3 py-1.5">
+                <span className="text-[10px] text-slate-400">This over</span>
+                <div className="flex items-center gap-1">
+                  {balls.slice(0, 6).map((ball, index) => (
+                    <span
+                      key={`${ball.kind}-${ball.label}-${index}-mini`}
+                      className={cn(
+                        "flex size-4 items-center justify-center rounded-full border font-data-tabular text-[7px] font-black",
+                        ballClassName(ball.kind)
+                      )}
+                    >
+                      {ball.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <MetricRow label="Economy" value={liveContext ? bowlerEconomy.toFixed(2) : "—"} mono />
+            </FieldBlock>
           </div>
         </section>
 
-        <OnFieldPanel balls={balls} match={match} />
+        <section className="p-3">
+          <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-200">
+            <Gauge className="size-3.5 text-cyan-400" aria-hidden />
+            Match pulse
+          </div>
+          <div className="overflow-hidden rounded-[6px] border border-cyan-100/10 bg-[#050d1d]">
+            <PulseRow label="Last wicket" value={lastWicket?.detail ?? "No wicket this over"} />
+            <PulseRow label="Momentum" value={momentum.value} tone={momentum.tone} />
+            <PulseRow label="Market volatility" value={volatility.value} tone={volatility.tone} />
+            <PulseRow label="Pressure" value={crr >= 8 ? `On ${bowlingCode}` : "Balanced phase"} tone={crr >= 8 ? "amber" : "muted"} />
+          </div>
+        </section>
       </div>
     </aside>
   );
 }
 
-function OnFieldPanel({ balls, match }: { balls: BallEvent[]; match?: Match }) {
-  const lastWicket = [...balls].reverse().find((ball) =>
-    ["wicket", "bowled", "lbw", "caught", "runOut"].includes(ball.kind)
-  );
-  const battingSide = match?.innings === 2 ? match?.awayTeam.shortName : match?.homeTeam.shortName;
-
+function TeamMark({ active, code }: { active: boolean; code: string }) {
   return (
-    <section className="p-3">
-      <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-on-surface-variant">On field</div>
-      <div className="grid gap-2 text-[12px]">
-        <ContextRow label="Striker" value="On strike" />
-        <ContextRow label="Bowler" value="Current over" />
-        <ContextRow label="Last wicket" value={lastWicket?.detail ?? "No wicket this over"} />
-        <ContextRow label="Top performer" value={battingSide ? `${battingSide} run pace` : "Batting side"} />
+    <div className="text-center">
+      <div
+        className={cn(
+          "mx-auto flex size-10 items-center justify-center rounded-[7px] border bg-[#071326] font-data-tabular text-[11px] font-black tracking-tight",
+          active ? "border-cyan-300/40 text-cyan-200 shadow-[0_0_20px_rgba(34,211,238,0.12)]" : "border-white/10 text-slate-400"
+        )}
+      >
+        {code}
       </div>
-    </section>
-  );
-}
-
-function ContextRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-3 rounded border border-outline-variant/70 bg-surface/60 px-2 py-1.5">
-      <span className="text-on-surface-variant">{label}</span>
-      <span className="truncate text-right font-semibold text-on-surface">{value}</span>
+      <div className={cn("mt-1 text-[9px] font-bold", active ? "text-slate-200" : "text-slate-500")}>{code}</div>
     </div>
   );
 }
 
-function StatBox({ label, tone, value }: { label: string; tone?: "teal"; value: string }) {
+function BallStrip({ balls, compact }: { balls: BallEvent[]; compact: boolean }) {
   return (
-    <div className="rounded bg-surface-container-high p-2 text-center">
-      <div className="text-[10px] uppercase tracking-wide text-on-surface-variant">{label}</div>
-      <div className={cn("mt-0.5 font-data-tabular text-base font-black", tone === "teal" ? "text-teal-300" : "text-on-surface")}>
-        {value}
-      </div>
+    <div className={cn("w-full", compact ? "grid grid-cols-6 gap-1.5" : "flex items-center justify-between gap-2")}>
+      {balls.map((ball, index) => (
+        <span
+          key={`${ball.kind}-${ball.label}-${index}`}
+          aria-label={ball.kind === "empty" ? `Ball ${index + 1}: not yet bowled` : `Ball ${index + 1}: ${ball.detail ?? ball.label}`}
+          title={ball.detail ?? ball.label}
+          className={cn(
+            "flex shrink-0 items-center justify-center rounded-full border font-data-tabular font-black",
+            compact ? "h-7 min-w-7 justify-self-center px-1 text-[9px]" : "h-9 min-w-9 px-2 text-[11px]",
+            ballClassName(ball.kind)
+          )}
+        >
+          {ball.label}
+        </span>
+      ))}
     </div>
   );
+}
+
+function FieldBlock({
+  children,
+  icon,
+  title,
+  tone,
+}: {
+  children: React.ReactNode;
+  icon: React.ReactNode;
+  title: string;
+  tone?: "cyan";
+}) {
+  return (
+    <div className="overflow-hidden rounded-[6px] border border-cyan-100/10 bg-[#050d1d]">
+      <div
+        className={cn(
+          "flex items-center gap-2 border-b border-cyan-100/10 px-2.5 py-2 text-[10px] font-semibold uppercase tracking-[0.08em]",
+          tone === "cyan" ? "bg-cyan-400/7 text-cyan-100" : "bg-white/[0.02] text-slate-300"
+        )}
+      >
+        <span className={tone === "cyan" ? "text-cyan-400" : "text-slate-500"}>{icon}</span>
+        {title}
+      </div>
+      <div className="divide-y divide-cyan-100/8 px-2.5">{children}</div>
+    </div>
+  );
+}
+
+function MetricRow({ label, mono, strong, value }: { label: string; mono?: boolean; strong?: boolean; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-1.5 text-[10px]">
+      <span className="text-slate-400">{label}</span>
+      <span className={cn("truncate text-right text-slate-200", mono && "font-data-tabular", strong && "font-semibold")}>{value}</span>
+    </div>
+  );
+}
+
+function BatterRow({ player, striker = false }: { player: BatterStats; striker?: boolean }) {
+  const strikeRate = player.balls > 0 ? (player.runs / player.balls) * 100 : 0;
+  return (
+    <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 py-1.5 text-[10px]">
+      <span className="truncate font-semibold text-slate-200">
+        {player.name}{striker ? " *" : ""}
+      </span>
+      <span className="font-data-tabular font-bold text-slate-100">{player.runs} ({player.balls})</span>
+      <span className="w-12 text-right font-data-tabular text-[9px] text-slate-500">SR {strikeRate.toFixed(1)}</span>
+    </div>
+  );
+}
+
+function MissingPlayerFeed() {
+  return (
+    <div className="py-2 text-[10px] leading-relaxed text-amber-200/80">
+      Player context is not set. Add striker, non-striker, and bowler in Admin Match Control.
+    </div>
+  );
+}
+
+function PulseRow({ label, tone = "muted", value }: { label: string; tone?: "cyan" | "emerald" | "amber" | "red" | "muted"; value: string }) {
+  const tones = {
+    cyan: "text-cyan-300",
+    emerald: "text-emerald-400",
+    amber: "text-amber-400",
+    red: "text-red-400",
+    muted: "text-slate-300",
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-3 border-b border-cyan-100/8 px-2.5 py-2 text-[10px] last:border-b-0">
+      <span className="text-slate-400">{label}</span>
+      <span className={cn("truncate text-right font-semibold", tones[tone])}>{value}</span>
+    </div>
+  );
+}
+
+function StatBox({ hint, label, tone, value }: { hint: string; label: string; tone?: "cyan"; value: string }) {
+  return (
+    <div className="rounded-[6px] border border-cyan-100/12 bg-[#07152a]/90 px-3 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
+      <div className="text-[9px] uppercase tracking-[0.1em] text-slate-400">{label}</div>
+      <div className={cn("mt-0.5 font-data-tabular text-[17px] font-black", tone === "cyan" ? "text-cyan-300" : "text-slate-100")}>{value}</div>
+      <div className="mt-0.5 truncate font-data-tabular text-[8px] text-slate-500" title={hint}>{hint}</div>
+    </div>
+  );
+}
+
+function momentumLabel(balls: BallEvent[], crr: number, battingCode: string, bowlingCode: string) {
+  const completed = balls.filter((ball) => ball.kind !== "empty");
+  const recent = completed.slice(-2);
+  if (recent.some(isWicket)) return { value: `${bowlingCode} pressing`, tone: "red" as const };
+  if (recent.some((ball) => ball.kind === "four" || ball.kind === "six") || crr >= 8) {
+    return { value: `${battingCode} attacking`, tone: "emerald" as const };
+  }
+  return { value: "Even phase", tone: "cyan" as const };
+}
+
+function volatilityLabel(market?: BackendMarket) {
+  const baseline = Math.max(1, market?.ltp ?? 0);
+  const spread = Math.max(0, (market?.high ?? 0) - (market?.low ?? 0));
+  const ratio = spread / baseline;
+  if (ratio >= 0.12) return { value: "High", tone: "red" as const };
+  if (ratio >= 0.04) return { value: "Active", tone: "amber" as const };
+  return { value: "Stable", tone: "emerald" as const };
+}
+
+function isWicket(ball: BallEvent) {
+  return ["wicket", "bowled", "lbw", "caught", "runOut"].includes(ball.kind);
+}
+
+function teamCode(value?: string) {
+  const normalized = (value ?? "TEAM").trim();
+  const words = normalized.split(/\s+/).filter(Boolean);
+  if (words.length > 1) return words.map((word) => word[0]).join("").slice(0, 3).toUpperCase();
+  return normalized.slice(0, 3).toUpperCase();
 }
 
 function projectedFinal(currentScore: number, ballsLeft: number, crr: number, market?: BackendMarket) {
@@ -159,6 +351,11 @@ function totalBallsForFormat(format?: string) {
 
 function oversTextFromBalls(balls: number) {
   return `${Math.floor(balls / 6)}.${balls % 6}`;
+}
+
+function oversFromBalls(balls: number) {
+  const legalBalls = Math.max(0, balls);
+  return `${Math.floor(legalBalls / 6)}.${legalBalls % 6}`;
 }
 
 function ordinal(value: number) {

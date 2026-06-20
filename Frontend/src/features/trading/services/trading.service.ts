@@ -15,19 +15,6 @@ export interface CreateOrderPayload {
   price: number;
 }
 
-export interface ClosePositionPayload {
-  positionId: string;
-  type: "LIMIT" | "MARKET";
-  /** Optional. Backend defaults to full open lots when omitted. */
-  quantity?: number;
-  /** Required for LIMIT exits. */
-  price?: number;
-  /** Context used to fall back to a SELL order if the close endpoint is unavailable. */
-  matchId?: string;
-  marketId?: string;
-  strike?: number;
-}
-
 export interface CalculatePricePayload {
   innings: number;
   currentScore: number;
@@ -40,16 +27,6 @@ export interface CalculatePricePayload {
 export interface OptionChainStrike {
   strike: number;
   premium: number;
-}
-
-/** One persisted ball from GET /v1/matches/{id}/events (exact, ordered history). */
-export interface MatchBallHistoryEvent {
-  innings?: number;
-  over?: number;
-  ball?: number;
-  runs: number;
-  isWicket: boolean;
-  extra?: string | null;
 }
 
 export interface CalculatedPrice {
@@ -92,48 +69,6 @@ class TradingService {
   async createOrder(payload: CreateOrderPayload): Promise<FrontendOrder> {
     const response = await apiClient.post<{ success: boolean; data: BackendOrder }>("/v1/orders", payload);
     return adaptOrder(response.data.data);
-  }
-
-  async closePosition(payload: ClosePositionPayload): Promise<FrontendOrder> {
-    const body: Record<string, unknown> = { type: payload.type };
-    if (typeof payload.quantity === "number" && payload.quantity > 0) {
-      body.quantity = payload.quantity;
-    }
-    if (payload.type === "LIMIT" && typeof payload.price === "number") {
-      body.price = payload.price;
-    }
-
-    try {
-      const response = await apiClient.post<{ success: boolean; data: BackendOrder }>(
-        `/v1/positions/${payload.positionId}/close`,
-        body
-      );
-      return adaptOrder(response.data.data);
-    } catch (error) {
-      // If the dedicated close endpoint isn't deployed, exit via a SELL order
-      // (same engine as a buy). Only retry when the route is truly absent so we
-      // never double-execute after a real validation/server error.
-      if (closeEndpointMissing(error) && payload.marketId && payload.matchId && typeof payload.strike === "number") {
-        return this.createOrder({
-          matchId: payload.matchId,
-          marketId: payload.marketId,
-          strike: payload.strike,
-          side: "sell",
-          type: payload.type,
-          quantity: payload.quantity ?? 0,
-          price: payload.price ?? 0,
-        });
-      }
-      throw error;
-    }
-  }
-
-  async fetchMatchEvents(matchId: string, limit = 6): Promise<MatchBallHistoryEvent[]> {
-    const response = await apiClient.get<{ success: boolean; data: MatchBallHistoryEvent[] }>(
-      `/v1/matches/${matchId}/events`,
-      { params: { limit } }
-    );
-    return response.data.data ?? [];
   }
 
   async fetchExecutions(matchId: string, marketId: string): Promise<Execution[]> {
@@ -206,13 +141,6 @@ function normalizeOpenPositions(positions: OpenPosition[]): OpenPosition[] {
 
 function numberOrZero(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
-}
-
-function closeEndpointMissing(error: unknown): boolean {
-  if (typeof error !== "object" || error === null || !("response" in error)) return false;
-  const response = (error as { response?: { status?: number } }).response;
-  // 404 = route not found, 405 = method not allowed, 501 = not implemented.
-  return response?.status === 404 || response?.status === 405 || response?.status === 501;
 }
 
 function symbolFromTitle(title: string): string {

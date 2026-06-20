@@ -7,14 +7,21 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Wallet, Activity, ChevronRight } from "lucide-react";
 
+type AdminMatch = {
+  _id: string;
+  teams?: { home?: string; away?: string };
+  tournament?: string;
+  status?: string;
+};
+
 export default function AdminConsolePage() {
-  const [matches, setMatches] = useState<any[]>([]);
+  const [matches, setMatches] = useState<AdminMatch[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        const response = await apiClient.get("/v1/matches/home");
+        const response = await apiClient.get<{ data?: AdminMatch[] }>("/v1/matches/home");
         // /v1/matches/home usually returns a list of active matches. 
         // If there's an admin endpoint for all matches later, we can switch to it.
         setMatches(response.data?.data || []);

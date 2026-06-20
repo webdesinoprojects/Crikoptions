@@ -2,25 +2,23 @@ import { socketManager } from "./socket-manager";
 
 export interface OrderUpdateEvent {
   orderId: string;
+  userId: string;
   marketId: string;
-  strike: number;
   side: "BUY" | "SELL";
-  status: string;
+  price: number;
+  quantity: number;
   filledQuantity: number;
-  remainingQuantity: number;
-  averageFillPrice: number;
+  status: "PENDING" | "PARTIAL" | "FILLED" | "CANCELLED";
+  timestamp: string;
 }
 
 export interface PositionUpdateEvent {
+  userId: string;
   marketId: string;
-  strike: number;
-  /** Remaining open lots. 0 => position fully closed (remove from open list). */
-  lots: number;
-  buyPrice: number;
-  ltp: number;
-  pnl: number;
-  realizedPnl: number;
-  status: string;
+  quantity: number; // positive for long, negative for short
+  averageEntryPrice: number;
+  unrealizedPnL: number;
+  timestamp: string;
 }
 
 /**

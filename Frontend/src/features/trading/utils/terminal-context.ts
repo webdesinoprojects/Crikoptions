@@ -1,8 +1,6 @@
 import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { Match } from "@/types";
-import { CalculatedPrice, CalculatePricePayload, MatchBallHistoryEvent, OptionChainStrike } from "../services/trading.service";
-
-export type { MatchBallHistoryEvent };
+import { CalculatedPrice, CalculatePricePayload, OptionChainStrike } from "../services/trading.service";
 
 export type BallKind = "empty" | "dot" | "run" | "four" | "six" | "wicket" | "bowled" | "lbw" | "caught" | "runOut";
 
@@ -190,10 +188,12 @@ export function padThisOverBalls(balls: BallEvent[]): BallEvent[] {
   return [...filled, ...Array.from({ length: blanksNeeded }, () => ({ label: "", kind: "empty" as const }))];
 }
 
-export function ballEventFromCommentary(event: { runs: number; isWicket: boolean; wicketType?: unknown }): BallEvent {
+export function ballEventFromCommentary(event: { runs: number; isWicket: boolean; wicketType?: unknown; extra?: string | null }): BallEvent {
   const isWicket = event.isWicket === true;
   const runs = Number.isFinite(Number(event.runs)) ? Number(event.runs) : 0;
   if (isWicket) return wicketBallFromType("wicketType" in event ? event.wicketType : undefined);
+  if (event.extra === "wide") return { label: "Wd", kind: "run", detail: "Wide" };
+  if (event.extra === "noball") return { label: "Nb", kind: "run", detail: "No ball" };
   return ballFromRuns(runs);
 }
 
@@ -209,41 +209,15 @@ export function ballEventFromAdmin(event: {
   return ballFromRuns(event.runs);
 }
 
-export function ballEventFromHistory(event: MatchBallHistoryEvent): BallEvent {
-  const extra = String(event.extra ?? "").toLowerCase().replace(/[\s_-]+/g, "");
-  if (extra === "wide" || extra === "wd") return { label: "Wd", kind: "run" };
-  if (extra === "noball" || extra === "nb") return { label: "Nb", kind: "run" };
-  if (event.isWicket === true) return { label: "W", kind: "wicket" };
-  return ballFromRuns(Number(event.runs) || 0);
-}
-
-/** Render the 6 "this over" slots from an append-only delivery log.
- *  When `ballsBowled` is provided (from the live scoreboard), use it to decide
- *  how many legal deliveries belong to the *current* over — not the log length.
- *  Otherwise a partial log (e.g. last-6 events seed at 2.3 overs) shows all 6 slots
- *  filled even though only 3 balls were bowled this over. */
-export function currentOverFromList(list: BallEvent[], ballsBowled?: number): BallEvent[] {
-  // The scoreboard is authoritative when provided: 0 balls bowled => empty over,
-  // even if a stale log still holds deliveries (e.g. right after a match reset).
-  if (typeof ballsBowled === "number" && ballsBowled <= 0) {
-    return padThisOverBalls([]);
-  }
-
+/** Render the 6 "this over" slots from an append-only, click-ordered list of legal deliveries. */
+export function currentOverFromList(list: BallEvent[]): BallEvent[] {
   const filled = list.filter((ball) => ball.kind !== "empty");
   if (filled.length === 0) return padThisOverBalls([]);
 
-  const legalInLog = filled.filter(isLegalBallEvent).length;
-  const legalInOver =
-    typeof ballsBowled === "number" && ballsBowled > 0
-      ? ballsBowled % 6 === 0
-        ? 6
-        : ballsBowled % 6
-      : legalInLog % 6 === 0
-        ? 6
-        : legalInLog % 6;
+  const legalTotal = filled.filter(isLegalBallEvent).length;
+  if (legalTotal === 0) return padThisOverBalls(filled);
 
-  if (legalInOver === 0) return padThisOverBalls([]);
-
+  const legalInOver = legalTotal % 6 === 0 ? 6 : legalTotal % 6;
   let legalSeen = 0;
   let start = filled.length;
 
@@ -256,21 +230,6 @@ export function currentOverFromList(list: BallEvent[], ballsBowled?: number): Ba
   }
 
   return padThisOverBalls(filled.slice(start));
-}
-
-/** Drop the oldest legal deliveries when the log has more than the scoreboard says were bowled. */
-export function trimBallLogToBowled(list: BallEvent[], bowled: number): BallEvent[] {
-  if (bowled <= 0) return list;
-
-  const legalIndices: number[] = [];
-  list.forEach((ball, index) => {
-    if (isLegalBallEvent(ball)) legalIndices.push(index);
-  });
-
-  if (legalIndices.length <= bowled) return list;
-
-  const dropCount = legalIndices.length - bowled;
-  return list.slice(legalIndices[dropCount] ?? 0);
 }
 
 export function currentOverBallIndices(snap: ScoreboardSnap): { start: number; count: number } {
@@ -437,22 +396,22 @@ export function appendBallToCurrentOver(
 export function ballClassName(kind: BallKind) {
   switch (kind) {
     case "empty":
-      return "border-slate-500/35 bg-transparent text-transparent";
+      return "border-white/8 bg-transparent text-transparent";
     case "wicket":
     case "bowled":
     case "lbw":
     case "caught":
     case "runOut":
-      return "border-bear-red/50 bg-bear-red text-white";
+      return "border-red-300/45 bg-red-500 text-white shadow-[0_0_18px_rgba(239,68,68,0.22)]";
     case "six":
-      return "border-orange-500/40 bg-orange-500/90 text-black";
+      return "border-orange-300/45 bg-orange-500 text-black shadow-[0_0_18px_rgba(249,115,22,0.22)]";
     case "four":
-      return "border-primary/50 bg-primary text-on-primary";
+      return "border-cyan-200/45 bg-cyan-400 text-slate-950 shadow-[0_0_18px_rgba(34,211,238,0.2)]";
     case "run":
-      return "border-teal-500/40 bg-teal-500/20 text-teal-200";
+      return "border-teal-300/35 bg-teal-400/14 text-teal-100";
     case "dot":
     default:
-      return "border-slate-500/30 bg-slate-500/30 text-slate-200";
+      return "border-slate-400/20 bg-slate-400/12 text-slate-200";
   }
 }
 

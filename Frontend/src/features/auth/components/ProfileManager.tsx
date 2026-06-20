@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import { useAuthStore } from "../hooks/useAuth";
 import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getErrorMessage } from "@/lib/error-message";
 
 export function ProfileManager() {
-  const { user, updateProfile, isLoading, error } = useAuthStore();
+  const { user, updateProfile, isLoading } = useAuthStore();
   
   // Local state for all fields
   const [name, setName] = useState("");
@@ -21,7 +22,9 @@ export function ProfileManager() {
   const [localError, setLocalError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
+    if (!user) return;
+
+    const frame = requestAnimationFrame(() => {
       setName(user.name);
       setPhone(user.phone || "");
       if (user.settings) {
@@ -31,7 +34,9 @@ export function ProfileManager() {
         setTheme(user.settings.preferences?.theme || "TERMINAL_DARK");
         setDataDensity(user.settings.preferences?.dataDensity || "COMPACT");
       }
-    }
+    });
+
+    return () => cancelAnimationFrame(frame);
   }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,8 +54,8 @@ export function ProfileManager() {
       });
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err: any) {
-      setLocalError(err.message || "Failed to update profile settings.");
+    } catch (error: unknown) {
+      setLocalError(getErrorMessage(error, "Failed to update profile settings."));
     }
   };
 

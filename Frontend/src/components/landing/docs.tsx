@@ -59,18 +59,18 @@ export const DocsSection = () => {
                 </div>
                 <div className="p-6 font-mono text-sm overflow-x-auto">
                     <pre className="text-gray-300 leading-relaxed">
-<code className="block code-line"><span className="text-[#0ea5e9]">import</span> {'{'} CricOptions {'}'} <span className="text-[#0ea5e9]">from</span> <span className="text-green-400">'@cricoptions/sdk'</span>;</code>
+<code className="block code-line"><span className="text-[#0ea5e9]">import</span> {'{'} CricOptions {'}'} <span className="text-[#0ea5e9]">from</span> <span className="text-green-400">{"'@cricoptions/sdk'"}</span>;</code>
 <code className="block code-line"></code>
 <code className="block code-line"><span className="text-blue-400">const</span> client = <span className="text-[#0ea5e9]">new</span> CricOptions({'{'}</code>
 <code className="block code-line">  apiKey: process.env.<span className="text-white">CRIK_API_KEY</span>,</code>
-<code className="block code-line">  environment: <span className="text-green-400">'production'</span></code>
+<code className="block code-line">  environment: <span className="text-green-400">{"'production'"}</span></code>
 <code className="block code-line">{'}'});</code>
 <code className="block code-line"></code>
-<code className="block code-line"><span className="text-slate-500">// Subscribe to live match feed</span></code>
-<code className="block code-line">client.ws.subscribe(<span className="text-green-400">'match:INDvAUS'</span>, (data) =&gt; {'{'}</code>
+<code className="block code-line"><span className="text-slate-500">{"// Subscribe to live match feed"}</span></code>
+<code className="block code-line">client.ws.subscribe(<span className="text-green-400">{"'match:INDvAUS'"}</span>, (data) =&gt; {'{'}</code>
 <code className="block code-line">  <span className="text-blue-400">if</span> (data.impliedVolatility &gt; <span className="text-orange-400">45.5</span>) {'{'}</code>
 <code className="block code-line">    client.orders.place({'{'}</code>
-<code className="block code-line">      type: <span className="text-green-400">'SELL_STRADDLE'</span>,</code>
+<code className="block code-line">      type: <span className="text-green-400">{"'SELL_STRADDLE'"}</span>,</code>
 <code className="block code-line">      size: <span className="text-orange-400">1000</span></code>
 <code className="block code-line">    {'}'});</code>
 <code className="block code-line">  {'}'}</code>

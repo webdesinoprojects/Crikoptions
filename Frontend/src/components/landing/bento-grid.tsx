@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from "react"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
-import { Activity, ShieldAlert, Cpu } from "lucide-react"
+import { Activity, ShieldAlert, Cpu, type LucideIcon } from "lucide-react"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -17,7 +17,7 @@ const BentoCard = ({
   className?: string, 
   children: React.ReactNode, 
   title: string,
-  icon: any,
+  icon: LucideIcon,
   delay?: number
 }) => {
   const cardRef = useRef<HTMLDivElement>(null)

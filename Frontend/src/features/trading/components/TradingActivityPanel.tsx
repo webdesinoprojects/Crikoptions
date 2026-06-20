@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Order } from "@/types";
 import { OpenPosition } from "../types/position";
 import { cn } from "@/lib/utils";
-import { useCancelOrder, useClosePosition, useOpenPositions, useOrders, useOptionChain, useUserStream } from "../hooks";
+import { useCancelOrder, useOpenPositions, useOrders, useOptionChain } from "../hooks";
 import { buildPricePayload, buildOptionRows } from "../utils/terminal-context";
 import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { Match } from "@/types";
@@ -25,7 +25,6 @@ export function TradingActivityPanel({ className, matchId, marketId, market, mat
   const { data: orders = [], isFetching: ordersFetching, isLoading: ordersLoading } = useOrders(matchId);
   const { data: positions = [], isFetching: positionsFetching, isLoading: positionsLoading } = useOpenPositions();
   const cancelOrderMutation = useCancelOrder(matchId);
-  useUserStream(matchId);
 
   // Live option chain for real-time PnL computation
   const payload = useMemo(() => buildPricePayload(match, market), [match, market]);
@@ -52,14 +51,15 @@ export function TradingActivityPanel({ className, matchId, marketId, market, mat
   return (
     <section
       className={cn(
-        "flex min-h-0 flex-col overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest",
+        "relative flex min-h-0 flex-col overflow-hidden rounded-xl border border-cyan-300/12 bg-[#040a17]/94 shadow-[0_22px_70px_rgba(0,0,0,0.32)] backdrop-blur-xl",
         className
       )}
     >
-      <div className="flex shrink-0 items-center justify-between border-b border-outline-variant bg-surface px-2.5 py-1.5">
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-cyan-300/55 to-transparent" />
+      <div className="relative flex shrink-0 items-center justify-between border-b border-white/8 bg-[#071124]/92 px-2.5 py-2">
         <div className="min-w-0">
           <h3 className="truncate text-[12px] font-black text-on-surface">Orders & Positions</h3>
-          <p className="truncate text-[10px] text-on-surface-variant">Live order status and open positions</p>
+          <p className="truncate text-[10px] text-cyan-100/62">Live order status and open positions</p>
         </div>
         <span className={`rounded border px-2 py-0.5 text-[9px] font-black ${
           isSyncing ? "border-[#FFB300]/25 bg-[#FFB300]/10 text-[#FFB300]" : "border-primary/20 bg-primary/10 text-primary"
@@ -68,7 +68,7 @@ export function TradingActivityPanel({ className, matchId, marketId, market, mat
         </span>
       </div>
 
-      <div className="grid shrink-0 grid-cols-2 gap-1 border-b border-outline-variant bg-surface p-1">
+      <div className="grid shrink-0 grid-cols-2 gap-1 border-b border-white/8 bg-[#071327] p-1">
         <TabButton active={tab === "ORDERS"} count={marketOrders.length} onClick={() => setTab("ORDERS")}>
           Orders
         </TabButton>
@@ -87,7 +87,7 @@ export function TradingActivityPanel({ className, matchId, marketId, market, mat
           />
         )}
         {tab === "POSITIONS" && (
-          <PositionsTab loading={positionsLoading} positions={marketPositions} chainRows={chainRows} matchId={matchId} />
+          <PositionsTab loading={positionsLoading} positions={marketPositions} chainRows={chainRows} />
         )}
       </div>
     </section>
@@ -111,8 +111,8 @@ function TabButton({
       onClick={onClick}
       className={`flex h-7 items-center justify-center gap-1 rounded text-[10px] font-black transition-colors ${
         active
-          ? "bg-primary/15 text-primary"
-          : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
+          ? "bg-primary/15 text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+          : "text-on-surface-variant hover:bg-white/5 hover:text-on-surface"
       }`}
     >
       <span>{children}</span>
@@ -142,7 +142,7 @@ function OrdersTab({
   return (
     <div className="space-y-1.5">
       {sortedOrders.map((order) => (
-        <div key={order.id} className={`rounded-md border px-2 py-1.5 ${order.status === "FILLED" ? "border-bull-green/20 bg-bull-green/5" : "border-outline-variant/60 bg-surface"}`}>
+        <div key={order.id} className={`rounded-lg border px-2.5 py-2 ${order.status === "FILLED" ? "border-bull-green/20 bg-bull-green/8" : "border-white/8 bg-[#071327]/72"}`}>
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <SidePill side={order.side} />
@@ -180,17 +180,7 @@ function OrdersTab({
   );
 }
 
-function PositionsTab({
-  loading,
-  positions,
-  chainRows,
-  matchId,
-}: {
-  loading: boolean;
-  positions: OpenPosition[];
-  chainRows: ReturnType<typeof buildOptionRows>;
-  matchId: string;
-}) {
+function PositionsTab({ loading, positions, chainRows }: { loading: boolean; positions: OpenPosition[]; chainRows: ReturnType<typeof buildOptionRows> }) {
   if (loading) return <PanelState label="Loading positions..." />;
   if (positions.length === 0) {
     return <PanelState label="No open position yet. Positions appear after an order executes." />;
@@ -198,195 +188,45 @@ function PositionsTab({
 
   return (
     <div className="space-y-1.5">
-      {positions.map((position) => (
-        <PositionCard
-          key={position._id}
-          position={position}
-          chainRow={chainRows.find((row) => row.strike === position.strike)}
-          matchId={matchId}
-        />
-      ))}
-    </div>
-  );
-}
-
-function PositionCard({
-  position,
-  chainRow,
-  matchId,
-}: {
-  position: OpenPosition;
-  chainRow?: ReturnType<typeof buildOptionRows>[number];
-  matchId: string;
-}) {
-  const closeMutation = useClosePosition(matchId);
-  const lots = position.lots;
-  // We hold longs; we SELL to close, so the marketable exit price is the bid.
-  const liveLtp = chainRow ? chainRow.bid : position.ltp;
-  const livePnl = chainRow
-    ? Math.round((liveLtp - position.buyPrice) * lots * 100) / 100
-    : position.pnl;
-  const positive = livePnl >= 0;
-
-  const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<"MARKET" | "LIMIT">("MARKET");
-  const [qty, setQty] = useState(String(lots));
-  const [price, setPrice] = useState(liveLtp > 0 ? liveLtp.toFixed(2) : "");
-
-  const canClose = lots > 0 && !!matchId;
-
-  const openExit = () => {
-    setMode("MARKET");
-    setQty(String(lots));
-    setPrice(liveLtp > 0 ? liveLtp.toFixed(2) : "");
-    setOpen(true);
-  };
-
-  const submitExit = () => {
-    const qtyValue = Math.max(1, Math.min(lots, Number.parseInt(qty, 10) || 0));
-    const priceValue = Number.parseFloat(price) || 0;
-
-    if (qtyValue <= 0) {
-      toast.error("Enter a valid quantity to close");
-      return;
-    }
-    if (mode === "LIMIT" && priceValue <= 0) {
-      toast.error("Enter a valid limit price");
-      return;
-    }
-
-    const exitPrice = priceValue > 0 ? priceValue : liveLtp;
-
-    closeMutation.mutate(
-      {
-        positionId: position._id,
-        type: mode,
-        quantity: qtyValue,
-        price: mode === "LIMIT" ? priceValue : exitPrice,
-        matchId: position.matchId,
-        marketId: position.marketId,
-        strike: position.strike,
-      },
-      {
-        onSuccess: (order) => {
-          if (order.status === "FILLED") {
-            toast.success(`Closed ${order.filledQuantity} lots @ strike ${position.strike} - Rs ${(order.averageFillPrice || priceValue).toFixed(2)}`);
-          } else if (order.status === "PARTIAL") {
-            toast.success(`Partially closed ${order.filledQuantity}/${qtyValue} lots - ${order.remainingQuantity} remaining`);
-          } else {
-            toast.success(`Working exit: limit Rs ${priceValue.toFixed(2)} resting above bid`);
-          }
-          setOpen(false);
-        },
-        onError: (error: unknown) => {
-          console.error("[exit] close position failed", error);
-          toast.error(getErrorMessage(error, "Unable to close position"));
-        },
-      }
-    );
-  };
-
-  return (
-    <div className="rounded-md border border-outline-variant/60 bg-surface px-2 py-1.5">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="font-data-tabular text-[11px] font-black text-on-surface">Strike {position.strike}</span>
-          <span className="text-[10px] text-on-surface-variant">{lots} lots</span>
-        </div>
-        <span className={`font-data-tabular text-[12px] font-black ${positive ? "text-bull-green" : "text-bear-red"}`}>
-          {positive ? "+" : "-"}Rs {Math.abs(livePnl).toFixed(2)}
-        </span>
-      </div>
-      <div className="mt-1 grid grid-cols-3 gap-2 font-data-tabular text-[10px] text-on-surface-variant">
-        <span>Buy {position.buyPrice.toFixed(2)}</span>
-        <span className={chainRow ? "text-teal-300" : ""}>LTP {liveLtp.toFixed(2)}{chainRow ? " ●" : ""}</span>
-        <span className="text-right">PnL {livePnl.toFixed(2)}</span>
-      </div>
-
-      {!open && (
-        <div className="mt-1.5 flex justify-end">
-          <button
-            type="button"
-            onClick={openExit}
-            disabled={!canClose}
-            className="rounded border border-bear-red/25 bg-bear-red/10 px-2.5 py-0.5 text-[10px] font-black text-bear-red transition-colors hover:bg-bear-red/20 disabled:opacity-40"
-          >
-            Sell
-          </button>
-        </div>
-      )}
-
-      {open && (
-        <div className="mt-1.5 space-y-1.5 rounded-md border border-outline-variant/60 bg-surface-container-lowest p-1.5">
-          <div className="grid grid-cols-2 gap-1 rounded border border-outline-variant bg-surface p-0.5">
-            {(["MARKET", "LIMIT"] as const).map((option) => (
-              <button
-                key={option}
-                type="button"
-                onClick={() => setMode(option)}
-                className={`h-6 rounded text-[10px] font-black transition-all ${
-                  mode === option ? "bg-bear-red text-white shadow" : "text-on-surface-variant hover:text-on-surface"
-                }`}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-2 gap-1.5">
-            <label className="flex flex-col gap-0.5">
-              <span className="text-[9px] font-black uppercase tracking-wide text-on-surface-variant">Qty (max {lots})</span>
-              <input
-                type="number"
-                min={1}
-                max={lots}
-                value={qty}
-                onChange={(e) => setQty(e.target.value)}
-                className="h-7 rounded border border-outline-variant bg-surface px-2 font-data-tabular text-[11px] font-black text-on-surface outline-none focus:border-primary"
-              />
-            </label>
-            <label className="flex flex-col gap-0.5">
-              <span className="text-[9px] font-black uppercase tracking-wide text-on-surface-variant">
-                {mode === "MARKET" ? "Bid (approx)" : "Limit Rs"}
+      {positions.map((position) => {
+        // Try to find live price from option chain for this strike
+        const chainRow = chainRows.find((row) => row.strike === position.strike);
+        // Use bid if long (we sell to close), use ask if short (we buy to close)
+        const liveLtp = chainRow
+          ? (position.lots > 0 ? chainRow.bid : chainRow.ask)
+          : position.ltp;
+        const livePnl = chainRow
+          ? Math.round((liveLtp - position.buyPrice) * position.lots * 100) / 100
+          : position.pnl;
+        const positive = livePnl >= 0;
+        return (
+          <div key={position._id} className="rounded-lg border border-white/8 bg-[#071327]/72 px-2.5 py-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="font-data-tabular text-[11px] font-black text-on-surface">
+                  Strike {position.strike}
+                </span>
+                <span className="text-[10px] text-on-surface-variant">{position.lots} lots</span>
+              </div>
+              <span className={`font-data-tabular text-[12px] font-black ${positive ? "text-bull-green" : "text-bear-red"}`}>
+                {positive ? "+" : "-"}Rs {Math.abs(livePnl).toFixed(2)}
               </span>
-              <input
-                type="number"
-                step="0.01"
-                value={price}
-                disabled={mode === "MARKET"}
-                onChange={(e) => setPrice(e.target.value)}
-                className="h-7 rounded border border-outline-variant bg-surface px-2 font-data-tabular text-[11px] font-black text-on-surface outline-none focus:border-primary disabled:opacity-50"
-              />
-            </label>
+            </div>
+            <div className="mt-1 grid grid-cols-3 gap-2 font-data-tabular text-[10px] text-on-surface-variant">
+              <span>Buy {position.buyPrice.toFixed(2)}</span>
+              <span className={chainRow ? "text-teal-300" : ""}>LTP {liveLtp.toFixed(2)}{chainRow ? " ●" : ""}</span>
+              <span className="text-right">PnL {livePnl.toFixed(2)}</span>
+            </div>
           </div>
-
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={submitExit}
-              disabled={closeMutation.isPending}
-              className="h-7 flex-1 rounded bg-bear-red text-[11px] font-black text-white shadow transition-colors hover:bg-bear-red/90 disabled:opacity-50"
-            >
-              {closeMutation.isPending ? "Selling..." : mode === "MARKET" ? "Sell @ Market" : "Place Sell Limit"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              disabled={closeMutation.isPending}
-              className="h-7 rounded border border-outline-variant px-2.5 text-[10px] font-black text-on-surface-variant transition-colors hover:text-on-surface disabled:opacity-50"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
+        );
+      })}
     </div>
   );
 }
 
 function PanelState({ label }: { label: string }) {
   return (
-    <div className="flex h-full min-h-[100px] items-center justify-center rounded-md border border-dashed border-outline-variant text-center text-[11px] font-semibold text-on-surface-variant">
+    <div className="flex h-full min-h-[100px] items-center justify-center rounded-lg border border-dashed border-white/10 bg-white/2.5 text-center text-[11px] font-semibold text-on-surface-variant">
       {label}
     </div>
   );
@@ -440,15 +280,14 @@ function getErrorMessage(error: unknown, defaultMessage: string) {
     error !== null &&
     "response" in error &&
     typeof error.response === "object" &&
-    error.response !== null
+    error.response !== null &&
+    "data" in error.response &&
+    typeof error.response.data === "object" &&
+    error.response.data !== null &&
+    "message" in error.response.data &&
+    typeof error.response.data.message === "string"
   ) {
-    const response = error.response as { status?: number; data?: { message?: unknown } };
-    if (typeof response.data?.message === "string") {
-      return response.data.message;
-    }
-    if (typeof response.status === "number") {
-      return `${defaultMessage} (HTTP ${response.status})`;
-    }
+    return error.response.data.message;
   }
   return defaultMessage;
 }

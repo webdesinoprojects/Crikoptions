@@ -1,7 +1,11 @@
 "use client";
 
 import { useId, useCallback } from "react";
-import Particles, { ParticlesProvider } from "@tsparticles/react";
+import Particles, {
+  ParticlesProvider,
+  type IParticlesProps,
+  type ParticlesPluginRegistrar,
+} from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 
 interface SparklesProps {
@@ -16,8 +20,8 @@ interface SparklesProps {
   minOpacity?: number | null;
   color?: string;
   background?: string;
-  options?: any;
-  direction?: string;
+  options?: IParticlesProps["options"];
+  direction?: "bottom" | "bottom-left" | "bottom-right" | "left" | "none" | "right" | "top" | "top-left" | "top-right" | "outside" | "inside";
 }
 
 export function Sparkles({
@@ -37,11 +41,11 @@ export function Sparkles({
 }: SparklesProps) {
   const id = useId();
 
-  const initFn = useCallback(async (engine: any) => {
+  const initFn: ParticlesPluginRegistrar = useCallback(async (engine) => {
     await loadSlim(engine);
   }, []);
 
-  const defaultOptions = {
+  const defaultOptions: NonNullable<IParticlesProps["options"]> = {
     background: {
       color: {
         value: background,

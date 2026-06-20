@@ -65,8 +65,8 @@ export default function Features() {
             Removing the roadblocks to your success
           </h2>
           <p className="max-w-2xl text-sm sm:text-base text-slate-400 font-normal leading-relaxed">
-            It's easy to get lost in a sea of advice, conflicting opinions, and
-            endless "must-dos." We filter out the noise, focus on what truly
+            It&apos;s easy to get lost in a sea of advice, conflicting opinions, and
+            endless &quot;must-dos.&quot; We filter out the noise, focus on what truly
             matters, and give you the kind of clarity that lets your business
             shine in the market.
           </p>
