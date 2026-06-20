@@ -129,40 +129,47 @@ export function RiskMetrics() {
         </div>
 
         {/* Risk gauges */}
-        <div className="flex flex-col justify-between gap-2.5 overflow-y-auto">
-          <RiskGauge
-            label="Max Concentration"
-            value={rm.maxConcentration}
-            max={100}
-            unit="%"
-            danger={rm.maxConcentration > 50}
-          />
-          <RiskGauge
-            label="Leverage Ratio"
-            value={rm.leverageRatio}
-            max={5}
-            unit="×"
-            danger={rm.leverageRatio > 3}
-          />
-          <RiskGauge
-            label="Portfolio Volatility"
-            value={rm.portfolioVolatility}
-            max={30}
-            unit="%"
-            danger={rm.portfolioVolatility > 20}
-          />
+        <div className="flex flex-col justify-between gap-4 overflow-y-auto pl-2">
+          <div className="space-y-4">
+            <RiskGauge
+              label="Max Concentration"
+              value={rm.maxConcentration}
+              max={100}
+              unit="%"
+              danger={rm.maxConcentration > 50}
+            />
+            <RiskGauge
+              label="Leverage Ratio"
+              value={rm.leverageRatio}
+              max={5}
+              unit="×"
+              danger={rm.leverageRatio > 3}
+            />
+            <RiskGauge
+              label="Portfolio Volatility"
+              value={rm.portfolioVolatility}
+              max={30}
+              unit="%"
+              danger={rm.portfolioVolatility > 20}
+            />
+          </div>
 
-          <div className="p-2.5 rounded bg-bear-red/5 border border-bear-red/20 relative overflow-hidden">
+          <div className="relative overflow-hidden rounded-xl border border-bear-red/30 bg-[#1a0505] p-4 shadow-[0_0_20px_rgba(239,68,68,0.1)] group">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(239,68,68,0.15),transparent_70%)]" />
+            <div className="absolute right-3 top-3 w-2 h-2 rounded-full bg-bear-red animate-ping opacity-75" />
+            <div className="absolute right-3 top-3 w-2 h-2 rounded-full bg-bear-red" />
             <RiskGraphWatermark />
-            <span className="text-[8px] uppercase tracking-wider text-bear-red font-bold block mb-0.5 relative z-10">
-              Stress Test (−20% Scenario)
-            </span>
-            <p className="text-sm font-mono font-bold text-bear-red relative z-10">
-              −₹{rm.stressTestLoss.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-            </p>
-            <p className="text-[8px] text-on-surface-variant relative z-10">
-              Est. downside if all exposures decline 20%
-            </p>
+            <div className="relative z-10 flex flex-col">
+              <span className="text-[10px] uppercase tracking-widest text-bear-red font-black mb-1 flex items-center gap-1.5">
+                Stress Test Scenario
+              </span>
+              <p className="text-2xl font-mono font-bold text-bear-red drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]">
+                −₹{rm.stressTestLoss.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </p>
+              <p className="text-[10px] font-medium text-on-surface-variant mt-1.5 leading-snug">
+                Est. max drawdown if all current open exposures instantly decline by 20%
+              </p>
+            </div>
           </div>
         </div>
       </div>

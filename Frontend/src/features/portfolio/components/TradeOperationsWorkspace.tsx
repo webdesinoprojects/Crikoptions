@@ -54,7 +54,7 @@ export function TradeOperationsWorkspace() {
         </TabButton>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-hidden rounded-md border border-outline/10 bg-background/45">
+      <div className="h-[350px] overflow-hidden rounded-md border border-outline/10 bg-background/45">
         {tab === "POSITIONS" && (
           <PositionsScreen rows={positionRows} loading={positionsLoading && positions.length === 0} sample={positions.length === 0} />
         )}
@@ -110,18 +110,18 @@ function PositionsScreen({
   sample: boolean;
 }) {
   return (
-    <div className="h-full overflow-auto">
-      <table className="w-full min-w-[780px] border-collapse font-data-tabular text-[12px]">
-        <thead className="sticky top-0 bg-surface text-[10px] uppercase tracking-wider text-on-surface-variant">
-          <tr className="border-b border-outline/10">
-            <th className="px-3 py-2 text-left">Market</th>
-            <th className="px-3 py-2 text-left">Match</th>
-            <th className="px-3 py-2 text-center">Side</th>
-            <th className="px-3 py-2 text-right">Qty</th>
-            <th className="px-3 py-2 text-right">Entry</th>
-            <th className="px-3 py-2 text-right">LTP</th>
-            <th className="px-3 py-2 text-right">Unrealized</th>
-            <th className="px-3 py-2 text-right">Risk</th>
+    <div className="h-full overflow-auto bg-surface-dim/20">
+      <table className="w-full min-w-[800px] border-collapse font-data-tabular text-[12px]">
+        <thead className="sticky top-0 z-10 bg-surface-dim/95 backdrop-blur-md shadow-sm border-b border-outline/10 text-[10px] uppercase tracking-widest text-on-surface-variant font-black">
+          <tr>
+            <th className="px-4 py-3 text-left">Market</th>
+            <th className="px-4 py-3 text-left">Match</th>
+            <th className="px-4 py-3 text-center">Side</th>
+            <th className="px-4 py-3 text-right">Qty</th>
+            <th className="px-4 py-3 text-right">Entry</th>
+            <th className="px-4 py-3 text-right">LTP</th>
+            <th className="px-4 py-3 text-right">Unrealized</th>
+            <th className="px-4 py-3 text-right">Risk</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-outline/5">
@@ -130,22 +130,22 @@ function PositionsScreen({
             rows.map((position, index) => {
               const positive = position.unrealizedPnL >= 0;
               return (
-                <tr key={position.id || `${position.marketId}-${position.side}-${index}`} className="hover:bg-white/[0.03]">
-                  <td className="px-3 py-2 font-black text-on-surface">
+                <tr key={position.id || `${position.marketId}-${position.side}-${index}`} className="group hover:bg-white/[0.04] transition-all duration-200 cursor-default">
+                  <td className="px-4 py-3 font-bold text-on-surface group-hover:text-primary transition-colors">
                     {position.symbol}
-                    {sample && <span className="ml-2 text-[9px] font-black text-primary">SAMPLE</span>}
+                    {sample && <span className="ml-2 inline-block px-1.5 py-0.5 bg-primary/10 text-primary text-[8px] rounded uppercase font-black tracking-widest border border-primary/20">SAMPLE</span>}
                   </td>
-                  <td className="px-3 py-2 text-on-surface-variant">{position.matchName}</td>
-                  <td className="px-3 py-2 text-center">
+                  <td className="px-4 py-3 text-on-surface-variant font-medium">{position.matchName}</td>
+                  <td className="px-4 py-3 text-center">
                     <SideBadge side={position.side} />
                   </td>
-                  <td className="px-3 py-2 text-right text-on-surface">{position.quantity.toLocaleString()}</td>
-                  <td className="px-3 py-2 text-right text-on-surface-variant">Rs {position.averageEntryPrice.toFixed(2)}</td>
-                  <td className="px-3 py-2 text-right text-on-surface">Rs {position.currentPrice.toFixed(2)}</td>
-                  <td className={`px-3 py-2 text-right font-black ${positive ? "text-bull-green" : "text-bear-red"}`}>
+                  <td className="px-4 py-3 text-right text-on-surface font-semibold">{position.quantity.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-right text-on-surface-variant font-medium">Rs {position.averageEntryPrice.toFixed(2)}</td>
+                  <td className="px-4 py-3 text-right text-on-surface font-medium">Rs {position.currentPrice.toFixed(2)}</td>
+                  <td className={`px-4 py-3 text-right font-black ${positive ? "text-bull-green drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]" : "text-bear-red drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]"}`}>
                     {positive ? "+" : "-"}Rs {Math.abs(position.unrealizedPnL).toFixed(2)}
                   </td>
-                  <td className="px-3 py-2 text-right">
+                  <td className="px-4 py-3 text-right">
                     <RiskBar value={position.allocation} />
                   </td>
                 </tr>
@@ -159,41 +159,59 @@ function PositionsScreen({
 
 function OrdersScreen({ loading, rows, sample }: { loading: boolean; rows: Order[]; sample: boolean }) {
   return (
-    <div className="h-full overflow-auto">
-      <table className="w-full min-w-[760px] border-collapse font-data-tabular text-[12px]">
-        <thead className="sticky top-0 bg-surface text-[10px] uppercase tracking-wider text-on-surface-variant">
-          <tr className="border-b border-outline/10">
-            <th className="px-3 py-2 text-left">Order</th>
-            <th className="px-3 py-2 text-left">Market</th>
-            <th className="px-3 py-2 text-center">Side</th>
-            <th className="px-3 py-2 text-center">Type</th>
-            <th className="px-3 py-2 text-right">Limit</th>
-            <th className="px-3 py-2 text-right">Qty</th>
-            <th className="px-3 py-2 text-right">Done</th>
-            <th className="px-3 py-2 text-right">Status</th>
+    <div className="h-full overflow-auto bg-surface-dim/20">
+      <table className="w-full min-w-[800px] border-collapse font-data-tabular text-[12px]">
+        <thead className="sticky top-0 z-10 bg-surface-dim/95 backdrop-blur-md shadow-sm border-b border-outline/10 text-[10px] uppercase tracking-widest text-on-surface-variant font-black">
+          <tr>
+            <th className="px-4 py-3 text-left">Order ID / Time</th>
+            <th className="px-4 py-3 text-left">Market</th>
+            <th className="px-4 py-3 text-center">Action</th>
+            <th className="px-4 py-3 text-center">Type</th>
+            <th className="px-4 py-3 text-right">Limit Price</th>
+            <th className="px-4 py-3 text-right">Quantity</th>
+            <th className="px-4 py-3 text-right">Filled</th>
+            <th className="px-4 py-3 text-right">Status</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-outline/5">
           {loading ? <LoadingRows columns={8} /> : null}
           {!loading &&
             rows.map((order) => (
-              <tr key={order.id} className="hover:bg-white/[0.03]">
-                <td className="px-3 py-2 text-on-surface">
-                  <div className="font-black">{shortId(order.id)}</div>
-                  <div className="text-[10px] text-on-surface-variant">{formatTime(order.createdAt)}</div>
+              <tr key={order.id} className="group hover:bg-white/[0.04] transition-all duration-200 cursor-default">
+                <td className="px-4 py-3">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-bold text-on-surface group-hover:text-primary transition-colors">{shortId(order.id)}</span>
+                    <span className="text-[10px] text-on-surface-variant font-medium flex items-center gap-1">
+                      <Clock className="w-2.5 h-2.5" />
+                      {formatTime(order.createdAt)}
+                    </span>
+                  </div>
                 </td>
-                <td className="px-3 py-2 text-on-surface-variant">
-                  {shortId(order.marketId)}
-                  {sample && <span className="ml-2 text-[9px] font-black text-primary">SAMPLE</span>}
+                <td className="px-4 py-3 text-on-surface-variant">
+                  <div className="font-semibold">{shortId(order.marketId)}</div>
+                  {sample && <span className="inline-block mt-1 px-1.5 py-0.5 bg-primary/10 text-primary text-[8px] rounded uppercase font-black tracking-widest border border-primary/20">SAMPLE</span>}
                 </td>
-                <td className="px-3 py-2 text-center">
+                <td className="px-4 py-3 text-center">
                   <SideBadge side={order.side} />
                 </td>
-                <td className="px-3 py-2 text-center text-on-surface-variant">{order.type}</td>
-                <td className="px-3 py-2 text-right text-on-surface">Rs {(order.price ?? 0).toFixed(2)}</td>
-                <td className="px-3 py-2 text-right text-on-surface">{order.quantity.toLocaleString()}</td>
-                <td className="px-3 py-2 text-right text-on-surface-variant">{order.filledQuantity.toLocaleString()}</td>
-                <td className="px-3 py-2 text-right">
+                <td className="px-4 py-3 text-center">
+                  <span className="px-2 py-0.5 rounded bg-surface border border-outline/10 text-[10px] text-on-surface-variant font-bold shadow-sm">{order.type}</span>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <div className="font-medium text-on-surface">Rs {(order.price ?? 0).toFixed(2)}</div>
+                </td>
+                <td className="px-4 py-3 text-right text-on-surface font-semibold">{order.quantity.toLocaleString()}</td>
+                <td className="px-4 py-3 text-right">
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="text-on-surface-variant font-semibold">{order.filledQuantity.toLocaleString()}</span>
+                    {order.quantity > 0 && (
+                      <div className="w-12 h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${(order.filledQuantity / order.quantity) * 100}%` }} />
+                      </div>
+                    )}
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-right">
                   <StatusBadge status={order.status} />
                 </td>
               </tr>
@@ -210,7 +228,7 @@ function LoadingRows({ columns }: { columns: number }) {
       {Array.from({ length: 5 }).map((_, rowIndex) => (
         <tr key={rowIndex}>
           {Array.from({ length: columns }).map((__, columnIndex) => (
-            <td key={columnIndex} className="px-3 py-2">
+            <td key={columnIndex} className="px-4 py-3">
               <Skeleton className="h-4 w-full bg-white/5" />
             </td>
           ))}
@@ -223,28 +241,38 @@ function LoadingRows({ columns }: { columns: number }) {
 function SideBadge({ side }: { side: "BUY" | "SELL" }) {
   return (
     <span
-      className={`inline-flex min-w-11 justify-center rounded border px-2 py-0.5 text-[10px] font-black ${
+      className={`inline-flex min-w-[56px] items-center justify-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-black shadow-sm transition-all ${
         side === "BUY"
-          ? "border-bull-green/25 bg-bull-green/10 text-bull-green"
-          : "border-bear-red/25 bg-bear-red/10 text-bear-red"
+          ? "border-bull-green/30 bg-[linear-gradient(135deg,rgba(16,185,129,0.15),rgba(16,185,129,0.05))] text-bull-green shadow-[0_0_10px_rgba(16,185,129,0.1)]"
+          : "border-bear-red/30 bg-[linear-gradient(135deg,rgba(239,68,68,0.15),rgba(239,68,68,0.05))] text-bear-red shadow-[0_0_10px_rgba(239,68,68,0.1)]"
       }`}
     >
+      <div className={`w-1.5 h-1.5 rounded-full ${side === "BUY" ? "bg-bull-green shadow-[0_0_5px_rgba(16,185,129,0.8)]" : "bg-bear-red shadow-[0_0_5px_rgba(239,68,68,0.8)]"}`} />
       {side}
     </span>
   );
 }
 
 function StatusBadge({ status }: { status: Order["status"] }) {
-  const className =
-    status === "FILLED"
-      ? "border-bull-green/25 bg-bull-green/10 text-bull-green"
-      : status === "CANCELLED"
-      ? "border-bear-red/25 bg-bear-red/10 text-bear-red"
-      : status === "PARTIAL"
-      ? "border-primary/25 bg-primary/10 text-primary"
-      : "border-amber-400/25 bg-amber-400/10 text-amber-200";
+  const isFilled = status === "FILLED";
+  const isCancelled = status === "CANCELLED";
+  const isPartial = status === "PARTIAL";
+  
+  const className = isFilled
+    ? "border-bull-green/30 bg-bull-green/10 text-bull-green shadow-[0_0_8px_rgba(16,185,129,0.15)]"
+    : isCancelled
+    ? "border-on-surface-variant/20 bg-surface text-on-surface-variant shadow-sm"
+    : isPartial
+    ? "border-primary/30 bg-primary/10 text-primary shadow-[0_0_8px_rgba(14,165,233,0.15)]"
+    : "border-amber-400/30 bg-amber-400/10 text-amber-300 shadow-[0_0_8px_rgba(251,191,36,0.15)]";
 
-  return <span className={`rounded border px-2 py-0.5 text-[10px] font-black ${className}`}>{displayStatus(status)}</span>;
+  return (
+    <span className={`inline-flex items-center justify-center gap-1.5 rounded-full border px-2.5 py-1 min-w-[70px] text-[10px] font-black tracking-wide ${className}`}>
+      {isFilled && <div className="w-1 h-1 rounded-full bg-bull-green shadow-[0_0_5px_currentColor]" />}
+      {!isFilled && !isCancelled && <div className="w-1 h-1 rounded-full animate-pulse bg-current shadow-[0_0_5px_currentColor]" />}
+      {displayStatus(status)}
+    </span>
+  );
 }
 
 function displayStatus(status: Order["status"]) {
@@ -255,12 +283,19 @@ function displayStatus(status: Order["status"]) {
 
 function RiskBar({ value }: { value: number }) {
   const bounded = Math.min(100, Math.max(0, value));
+  
+  // Dynamic color based on concentration
+  const isHighRisk = bounded > 40;
+  const isMedRisk = bounded > 20;
+  const colorClass = isHighRisk ? "bg-bear-red" : isMedRisk ? "bg-fuchsia-500" : "bg-primary";
+  const glowClass = isHighRisk ? "shadow-[0_0_8px_rgba(239,68,68,0.6)]" : isMedRisk ? "shadow-[0_0_8px_rgba(217,70,239,0.6)]" : "shadow-[0_0_8px_rgba(14,165,233,0.6)]";
+  
   return (
-    <div className="inline-flex items-center gap-2">
-      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-white/10">
-        <div className="h-full rounded-full bg-primary" style={{ width: `${bounded}%` }} />
+    <div className="inline-flex items-center justify-end gap-2.5 w-full">
+      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-white/5 border border-white/5">
+        <div className={`h-full rounded-full transition-all duration-700 ease-out ${colorClass} ${glowClass}`} style={{ width: `${bounded}%` }} />
       </div>
-      <span className="w-10 text-right text-[10px] font-black text-on-surface-variant">{bounded.toFixed(1)}%</span>
+      <span className={`w-10 text-right text-[10px] font-black ${isHighRisk ? "text-bear-red drop-shadow-[0_0_4px_rgba(239,68,68,0.5)]" : "text-on-surface"}`}>{bounded.toFixed(1)}%</span>
     </div>
   );
 }

@@ -29,13 +29,26 @@ export function EquityCurveChart() {
     return {
       tooltip: {
         trigger: "axis" as const,
+        backgroundColor: "rgba(6, 13, 26, 0.85)",
+        borderColor: "rgba(255, 255, 255, 0.1)",
+        borderWidth: 1,
+        padding: [8, 12],
+        textStyle: { color: "#fff", fontSize: 11, fontFamily: "JetBrains Mono" },
+        extraCssText: "backdrop-filter: blur(8px); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);",
         formatter: (params: unknown) => {
           const [eq, dd] = getAxisTooltipParams(params);
           return `
-            <div style="padding:2px 4px">
-              <div style="color:#94a3b8;font-size:9px;margin-bottom:2px">${eq.axisValue}</div>
-              <div>Equity: <span style="color:#22c55e;font-weight:bold">₹${Number(eq.data).toLocaleString("en-IN")}</span></div>
-              ${dd ? `<div>Drawdown: <span style="color:#ef4444;font-weight:bold">${Math.abs(Number(dd.data)).toFixed(2)}%</span></div>` : ""}
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <div style="color:#94a3b8;font-size:9px;text-transform:uppercase;letter-spacing:1px;font-weight:bold;">${eq.axisValue}</div>
+              <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
+                <span style="color:#e2e8f0;">Equity</span>
+                <span style="color:#22c55e;font-weight:bold;text-shadow:0 0 8px rgba(34,197,94,0.4)">₹${Number(eq.data).toLocaleString("en-IN")}</span>
+              </div>
+              ${dd ? `
+              <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
+                <span style="color:#e2e8f0;">Drawdown</span>
+                <span style="color:#ef4444;font-weight:bold;text-shadow:0 0 8px rgba(239,68,68,0.4)">${Math.abs(Number(dd.data)).toFixed(2)}%</span>
+              </div>` : ""}
             </div>
           `;
         },
@@ -85,7 +98,13 @@ export function EquityCurveChart() {
           data: equities,
           smooth: true,
           symbol: "none",
-          lineStyle: { color: "#0ea5e9", width: 1.5 },
+          lineStyle: { 
+            color: "#0ea5e9", 
+            width: 2,
+            shadowColor: "rgba(14,165,233,0.5)",
+            shadowBlur: 10,
+            shadowOffsetY: 5
+          },
           areaStyle: {
             color: {
               type: "linear" as const,
@@ -94,8 +113,8 @@ export function EquityCurveChart() {
               x2: 0,
               y2: 1,
               colorStops: [
-                { offset: 0, color: "rgba(14, 165, 233, 0.2)" },
-                { offset: 1, color: "rgba(14, 165, 233, 0.01)" }
+                { offset: 0, color: "rgba(14, 165, 233, 0.4)" },
+                { offset: 1, color: "rgba(14, 165, 233, 0.0)" }
               ]
             }
           },
@@ -106,7 +125,11 @@ export function EquityCurveChart() {
           xAxisIndex: 1,
           yAxisIndex: 1,
           data: drawdowns,
-          itemStyle: { color: "#ef4444", opacity: 0.8 },
+          itemStyle: { 
+            color: "#ef4444", 
+            opacity: 0.9,
+            borderRadius: [2, 2, 0, 0]
+          },
           barMaxWidth: 6,
         },
       ],
