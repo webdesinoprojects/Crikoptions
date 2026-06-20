@@ -133,6 +133,10 @@ function OrdersTab({
   onCancel: (orderId: string) => void;
   orders: Order[];
 }) {
+  const router = import("next/navigation").then(m => m.useRouter);
+  const { useRouter } = require("next/navigation");
+  const nextRouter = useRouter();
+
   if (loading) return <PanelState label="Loading orders..." />;
   if (orders.length === 0) return <PanelState label="No orders for this market yet" />;
 
@@ -140,43 +144,55 @@ function OrdersTab({
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
+  const displayedOrders = sortedOrders.slice(0, 10);
+  const hasMore = sortedOrders.length > 10;
+
   return (
-    <div className="space-y-1.5">
-      {sortedOrders.map((order) => (
-        <div key={order.id} className={`rounded-lg border px-2.5 py-2 ${order.status === "FILLED" ? "border-bull-green/20 bg-bull-green/8" : "border-white/8 bg-[#071327]/72"}`}>
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <SidePill side={order.side} />
-              <span className="font-data-tabular text-[11px] font-black text-on-surface-variant">
-                Strike {formatStrike(order.strike)}
-              </span>
-              <span className="font-data-tabular text-[12px] font-black text-on-surface">
-                Rs {(order.price ?? 0).toFixed(2)}
-              </span>
+    <div className="space-y-1.5 flex flex-col h-full">
+      <div className="space-y-1.5">
+        {displayedOrders.map((order) => (
+          <div key={order.id} className={`rounded-lg border px-2.5 py-2 ${order.status === "FILLED" ? "border-bull-green/20 bg-bull-green/8" : "border-white/8 bg-[#071327]/72"}`}>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <SidePill side={order.side} />
+                <span className="font-data-tabular text-[11px] font-black text-on-surface-variant">
+                  Strike {formatStrike(order.strike)}
+                </span>
+                <span className="font-data-tabular text-[12px] font-black text-on-surface">
+                  Rs {(order.price ?? 0).toFixed(2)}
+                </span>
+              </div>
+              <span className="font-data-tabular text-[11px] font-black text-on-surface">{order.quantity} lots</span>
             </div>
-            <span className="font-data-tabular text-[11px] font-black text-on-surface">{order.quantity} lots</span>
+            <div className="mt-1 grid grid-cols-2 gap-x-2 font-data-tabular text-[10px] text-on-surface-variant">
+              <span>Done {order.filledQuantity}</span>
+              <span className="text-right">Remaining {order.remainingQuantity}</span>
+              <span>Avg price {order.averageFillPrice > 0 ? order.averageFillPrice.toFixed(2) : "--"}</span>
+              <span className={`text-right font-black ${statusColor(order.status)}`}>{displayStatus(order.status)}</span>
+            </div>
+            <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-on-surface-variant">
+              <span>{formatTime(order.createdAt)}</span>
+              {isWorkingOrder(order) && (
+                <button
+                  type="button"
+                  onClick={() => onCancel(order.id)}
+                  disabled={cancelling}
+                  className="rounded border border-bear-red/20 bg-bear-red/10 px-2 py-0.5 font-black text-bear-red disabled:opacity-50"
+                >
+                  {cancelling ? "Cancelling" : "Cancel"}
+                </button>
+              )}
+            </div>
           </div>
-          <div className="mt-1 grid grid-cols-2 gap-x-2 font-data-tabular text-[10px] text-on-surface-variant">
-            <span>Done {order.filledQuantity}</span>
-            <span className="text-right">Remaining {order.remainingQuantity}</span>
-            <span>Avg price {order.averageFillPrice > 0 ? order.averageFillPrice.toFixed(2) : "--"}</span>
-            <span className={`text-right font-black ${statusColor(order.status)}`}>{displayStatus(order.status)}</span>
-          </div>
-          <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-on-surface-variant">
-            <span>{formatTime(order.createdAt)}</span>
-            {isWorkingOrder(order) && (
-              <button
-                type="button"
-                onClick={() => onCancel(order.id)}
-                disabled={cancelling}
-                className="rounded border border-bear-red/20 bg-bear-red/10 px-2 py-0.5 font-black text-bear-red disabled:opacity-50"
-              >
-                {cancelling ? "Cancelling" : "Cancel"}
-              </button>
-            )}
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => nextRouter.push("/portfolio")}
+        className="mt-2 w-full rounded border border-white/10 bg-white/5 py-2 text-[10px] font-black text-on-surface transition-colors hover:bg-white/10"
+      >
+        View All Orders →
+      </button>
     </div>
   );
 }

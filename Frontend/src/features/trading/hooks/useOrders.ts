@@ -7,11 +7,11 @@ import {
   tradingQueryKeys,
 } from "./query-keys";
 
-export const useOrders = (matchId?: string) => {
+export const useOrders = (matchId?: string, fetchAll: boolean = false) => {
   return useQuery({
     queryKey: tradingQueryKeys.orders(matchId),
     queryFn: () => tradingService.fetchOrders(matchId),
-    enabled: !!matchId,
+    enabled: fetchAll || !!matchId,
     refetchInterval: terminalPollInterval,
     refetchOnWindowFocus: true,
   });

@@ -14,7 +14,7 @@ type TradeOpsTab = "POSITIONS" | "ORDERS";
 export function TradeOperationsWorkspace() {
   const [tab, setTab] = useState<TradeOpsTab>("POSITIONS");
   const { data: positions = [], isLoading: positionsLoading } = usePositions();
-  const { data: orders = [], isLoading: ordersLoading } = useOrders();
+  const { data: orders = [], isLoading: ordersLoading } = useOrders(undefined, true);
 
   const positionRows = positions.length > 0 ? positions : samplePositions;
   const orderRows = orders.length > 0 ? orders : sampleOrders;
