@@ -9,6 +9,7 @@ import { useCancelOrder, useOpenPositions, useOrders, useOptionChain } from "../
 import { buildPricePayload, buildOptionRows } from "../utils/terminal-context";
 import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { Match } from "@/types";
+import { useTerminalStore } from "@/stores/terminal.store";
 
 interface TradingActivityPanelProps {
   matchId: string;
@@ -181,6 +182,9 @@ function OrdersTab({
 }
 
 function PositionsTab({ loading, positions, chainRows }: { loading: boolean; positions: OpenPosition[]; chainRows: ReturnType<typeof buildOptionRows> }) {
+  const setOrderIntent = useTerminalStore((state) => state.setOrderIntent);
+  const setOrderSize = useTerminalStore((state) => state.setOrderSize);
+
   if (loading) return <PanelState label="Loading positions..." />;
   if (positions.length === 0) {
     return <PanelState label="No open position yet. Positions appear after an order executes." />;
@@ -208,9 +212,25 @@ function PositionsTab({ loading, positions, chainRows }: { loading: boolean; pos
                 </span>
                 <span className="text-[10px] text-on-surface-variant">{position.lots} lots</span>
               </div>
-              <span className={`font-data-tabular text-[12px] font-black ${positive ? "text-bull-green" : "text-bear-red"}`}>
-                {positive ? "+" : "-"}Rs {Math.abs(livePnl).toFixed(2)}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className={`font-data-tabular text-[12px] font-black ${positive ? "text-bull-green" : "text-bear-red"}`}>
+                  {positive ? "+" : "-"}Rs {Math.abs(livePnl).toFixed(2)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOrderIntent({
+                      side: position.lots > 0 ? "SELL" : "BUY",
+                      strike: position.strike,
+                      price: liveLtp,
+                    });
+                    setOrderSize(Math.abs(position.lots));
+                  }}
+                  className="rounded border border-white/20 bg-white/5 px-2 py-0.5 text-[9px] font-black text-on-surface hover:bg-white/10 active:scale-95 transition-all"
+                >
+                  Close
+                </button>
+              </div>
             </div>
             <div className="mt-1 grid grid-cols-3 gap-2 font-data-tabular text-[10px] text-on-surface-variant">
               <span>Buy {position.buyPrice.toFixed(2)}</span>

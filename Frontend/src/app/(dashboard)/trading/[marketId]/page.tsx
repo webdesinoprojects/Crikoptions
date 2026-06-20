@@ -27,16 +27,6 @@ export default function TradingTerminalPage({ params }: PageProps) {
   const { data: match } = useMatchDetails(matchId);
   useMatchScoreStream(matchId);
   const { data: matches = [] } = useLiveMatches();
-  const liveMatch = React.useMemo(() => matches.find((item) => item.status === "LIVE"), [matches]);
-  const { data: liveMarkets = [] } = useMarkets(liveMatch?.id ?? "");
-  const preferredLiveMarket = React.useMemo(() => pickPrimaryMarket(liveMarkets), [liveMarkets]);
-
-  React.useEffect(() => {
-    if (!market || !liveMatch || !preferredLiveMarket) return;
-    if (market.matchId === liveMatch.id || preferredLiveMarket.id === marketId) return;
-
-    router.replace(`/trading/${preferredLiveMarket.id}`);
-  }, [liveMatch, market, marketId, preferredLiveMarket, router]);
 
   useGSAP(
     () => {

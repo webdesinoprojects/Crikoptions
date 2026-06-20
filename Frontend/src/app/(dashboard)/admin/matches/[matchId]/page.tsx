@@ -77,6 +77,32 @@ export default function AdminMatchControlPage() {
   const [incomingBatter, setIncomingBatter] = useState("");
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [recentPlayers, setRecentPlayers] = useState<string[]>([]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(`crikoptions_players_${matchId}`);
+      if (stored) {
+        setRecentPlayers(JSON.parse(stored));
+      }
+    } catch {
+      // ignore
+    }
+  }, [matchId]);
+
+  const addRecentPlayer = useCallback((name: string) => {
+    if (!name.trim()) return;
+    const cleanName = name.trim();
+    setRecentPlayers(prev => {
+      const next = Array.from(new Set([cleanName, ...prev])).slice(0, 20);
+      try {
+        localStorage.setItem(`crikoptions_players_${matchId}`, JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  }, [matchId]);
 
   const fetchData = useCallback(async () => {
     if (!matchId) return;
@@ -136,6 +162,10 @@ export default function AdminMatchControlPage() {
       return;
     }
 
+    addRecentPlayer(liveContextInput.striker.name);
+    addRecentPlayer(liveContextInput.nonStriker.name);
+    addRecentPlayer(liveContextInput.bowler.name);
+
     setUpdating(true);
     try {
       const response = await apiClient.patch<{ success: boolean; data: BackendMatch }>(
@@ -161,6 +191,10 @@ export default function AdminMatchControlPage() {
     if (event.wicket && !incomingBatter.trim()) {
       toast.error("Enter the incoming batter before recording a wicket");
       return;
+    }
+
+    if (event.wicket && incomingBatter.trim()) {
+      addRecentPlayer(incomingBatter);
     }
 
     setUpdating(true);
@@ -280,7 +314,22 @@ export default function AdminMatchControlPage() {
               Set the official striker, non-striker, current bowler, and their figures. Every delivery updates these values automatically.
             </p>
           </div>
-          <Button onClick={saveLiveContext} disabled={updating}>Save player context</Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setLiveContextInput((current) => ({
+                  ...current,
+                  striker: current.nonStriker,
+                  nonStriker: current.striker,
+                }));
+              }}
+              disabled={updating}
+            >
+              Swap Strike
+            </Button>
+            <Button onClick={saveLiveContext} disabled={updating}>Save player context</Button>
+          </div>
         </div>
 
         <div className="grid gap-3 xl:grid-cols-3">
@@ -288,15 +337,18 @@ export default function AdminMatchControlPage() {
             title="Striker"
             value={liveContextInput.striker}
             onChange={(striker) => setLiveContextInput((current) => ({ ...current, striker }))}
+            suggestions={recentPlayers}
           />
           <BatterEditor
             title="Non-striker"
             value={liveContextInput.nonStriker}
             onChange={(nonStriker) => setLiveContextInput((current) => ({ ...current, nonStriker }))}
+            suggestions={recentPlayers}
           />
           <BowlerEditor
             value={liveContextInput.bowler}
             onChange={(bowler) => setLiveContextInput((current) => ({ ...current, bowler }))}
+            suggestions={recentPlayers}
           />
         </div>
 
@@ -335,6 +387,20 @@ export default function AdminMatchControlPage() {
             className="h-10 w-full rounded-md border border-gray-700 bg-gray-950 px-3 text-white"
             placeholder="e.g. Rajat Patidar"
           />
+          {recentPlayers.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {recentPlayers.map((name) => (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => setIncomingBatter(name)}
+                  className="rounded border border-cyan-500/20 bg-cyan-500/10 px-2 py-0.5 text-[11px] text-cyan-200 hover:bg-cyan-500/20 transition-colors"
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <div className="grid grid-cols-4 gap-2">
           <Button onClick={() => applyBallEvent({ runs: 0, wicket: false })} disabled={updating || !match.liveContext}>
@@ -400,10 +466,12 @@ function BatterEditor({
   onChange,
   title,
   value,
+  suggestions = [],
 }: {
   onChange: (value: LiveMatchContext["striker"]) => void;
   title: string;
   value: LiveMatchContext["striker"];
+  suggestions?: string[];
 }) {
   return (
     <div className="rounded-md border border-white/10 bg-black/30 p-3">
@@ -416,6 +484,20 @@ function BatterEditor({
           className="h-9 w-full rounded border border-white/10 bg-slate-950 px-2.5 text-sm text-white"
           placeholder="Player name"
         />
+        {suggestions.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {suggestions.map((name) => (
+              <button
+                key={name}
+                type="button"
+                onClick={() => onChange({ ...value, name })}
+                className="rounded border border-cyan-500/20 bg-cyan-500/10 px-1.5 py-0.5 text-[10px] text-cyan-200 hover:bg-cyan-500/20 transition-colors"
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        )}
       </label>
       <div className="grid grid-cols-2 gap-2">
         <NumberEditor label="Runs" value={value.runs} onChange={(runs) => onChange({ ...value, runs })} />
@@ -428,9 +510,11 @@ function BatterEditor({
 function BowlerEditor({
   onChange,
   value,
+  suggestions = [],
 }: {
   onChange: (value: LiveMatchContext["bowler"]) => void;
   value: LiveMatchContext["bowler"];
+  suggestions?: string[];
 }) {
   return (
     <div className="rounded-md border border-white/10 bg-black/30 p-3">
@@ -443,6 +527,20 @@ function BowlerEditor({
           className="h-9 w-full rounded border border-white/10 bg-slate-950 px-2.5 text-sm text-white"
           placeholder="Bowler name"
         />
+        {suggestions.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {suggestions.map((name) => (
+              <button
+                key={name}
+                type="button"
+                onClick={() => onChange({ ...value, name })}
+                className="rounded border border-cyan-500/20 bg-cyan-500/10 px-1.5 py-0.5 text-[10px] text-cyan-200 hover:bg-cyan-500/20 transition-colors"
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        )}
       </label>
       <div className="grid grid-cols-2 gap-2">
         <NumberEditor label="Balls bowled" value={value.balls} onChange={(balls) => onChange({ ...value, balls })} />

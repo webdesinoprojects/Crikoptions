@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { CheckCircle2, Clock3, Loader2, RotateCcw, ShieldCheck, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { useWallet } from "@/features/wallet/hooks";
@@ -24,6 +24,10 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
 
   const orderSize = useTerminalStore((state) => state.orderSize);
   const [qty, setQty] = useState(String(orderSize));
+
+  useEffect(() => {
+    setQty(String(orderSize));
+  }, [orderSize]);
   const selectedPriceStore = useTerminalStore((state) => state.selectedPrice);
   const selectedSideStore = useTerminalStore((state) => state.selectedSide);
   const setSelectedSide = useTerminalStore((state) => state.setSelectedSide);
