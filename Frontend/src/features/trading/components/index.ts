@@ -1,4 +1,5 @@
 export * from "./MarketChart";
+export * from "./OptionChainGraphDialog";
 export * from "./OptionChain";
 export * from "./MatchScheduleStrip";
 export * from "./LiveMatchStatsPanel";

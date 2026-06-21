@@ -1,4 +1,5 @@
 export * from "./useMarketChart";
+export * from "./useOptionChainHistory";
 export * from "./useOrderBook";
 export * from "./useExecutions";
 export * from "./useOpenPositions";

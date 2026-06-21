@@ -50,7 +50,9 @@ export function buildPricePayload(match?: Match, market?: BackendMarket): Calcul
 }
 
 export function buildOptionRows(calculated?: CalculatedPrice, market?: BackendMarket): ChainRow[] {
-  const chain = calculated?.optionChain ?? [];
+  const chain = (calculated?.optionChain ?? [])
+    .filter((item) => item.strike >= 10)
+    .sort((left, right) => left.strike - right.strike);
   if (!chain.length) return [];
 
   const projected = calculated?.projectedS0 ?? chain[Math.floor(chain.length / 2)]?.strike ?? 0;
