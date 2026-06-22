@@ -57,7 +57,7 @@ export function LiveMatchArena() {
           {/* Team Score */}
           <div className="flex items-center gap-4 mb-4">
             <div className="w-12 h-12 rounded-lg bg-[#d4af37]/20 border border-[#d4af37]/30 flex items-center justify-center font-display text-2xl font-black text-[#d4af37] text-center leading-none px-1 break-words">
-              {match?.homeTeam?.code || "RCB"}
+              {match?.homeTeam?.shortName || "RCB"}
             </div>
             <div>
               <div className="flex items-end gap-2">
@@ -119,7 +119,7 @@ export function LiveMatchArena() {
 
         {/* Bottom Market Cards */}
         <div className="mt-auto grid grid-cols-1 md:grid-cols-4 gap-3 pt-6">
-          <MarketMiniCard title={`${match?.homeTeam?.code || "RCB"} WIN`} value="64.2%" trend="+6.8%" isUp />
+          <MarketMiniCard title={`${match?.homeTeam?.shortName || "RCB"} WIN`} value="64.2%" trend="+6.8%" isUp />
           <MarketMiniCard title="KOHLI 75+" value="Rs 72" trend="+18.4%" isUp />
           <MarketMiniCard title="NEXT WICKET <18 OV" value="Rs 38" trend="-5.2%" isUp={false} />
           

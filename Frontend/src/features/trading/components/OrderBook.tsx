@@ -104,7 +104,7 @@ function DepthRow({
         {price.toFixed(2)}
       </span>
       <span className="relative z-[1] flex items-center justify-end text-on-surface-variant">
-        {quantity.toLocaleString()}
+        {quantity.toLocaleString("en-IN")}
       </span>
     </button>
   );

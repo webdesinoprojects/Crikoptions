@@ -195,7 +195,7 @@ export function ProfileManager() {
             <div className="space-y-2">
               <div className="flex justify-between items-end">
                 <label className="text-[9px] uppercase tracking-widest text-on-surface-variant font-bold">MAX EXPOSURE PER TRADE</label>
-                <span className="text-[14px] font-black text-white tracking-wider">₹{maxExposure.toLocaleString()}</span>
+                <span className="text-[14px] font-black text-white tracking-wider">₹{maxExposure.toLocaleString("en-IN")}</span>
               </div>
               <input 
                 type="range" 

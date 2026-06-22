@@ -11,7 +11,7 @@ export function YourMatchday() {
   const combinedPnL = performance?.totalPnL ?? 860;
   
   // Calculate total exposure dynamically if positions have entryPrice/size, else fallback
-  const calculatedExposure = positions.reduce((acc, pos) => acc + ((pos.entryPrice || 0) * (pos.size || 0)), 0);
+  const calculatedExposure = positions.reduce((acc, pos) => acc + ((pos.averageEntryPrice || 0) * (pos.quantity || 0)), 0);
   const totalExposure = calculatedExposure > 0 ? calculatedExposure : 15600;
   const maxExposure = 30000; // arbitrary max for progress bar
   const exposurePct = Math.min((totalExposure / maxExposure) * 100, 100);
@@ -19,9 +19,9 @@ export function YourMatchday() {
   // Fallback data if no real positions yet
   const displayPositions = positions.length > 0 
     ? positions.map(p => ({ 
-        name: p.contractName || `Contract ${p.contractId}`, 
-        pnl: p.pnl || 0, 
-        isUp: (p.pnl || 0) >= 0 
+        name: p.matchName || `Contract ${p.id}`, 
+        pnl: p.unrealizedPnL || 0, 
+        isUp: (p.unrealizedPnL || 0) >= 0 
       })).slice(0, 3)
     : [
         { name: "Kohli 50+ Runs", pnl: 520, isUp: true },
@@ -46,7 +46,7 @@ export function YourMatchday() {
             LIVE
           </div>
           <div className={cn("text-xl font-data-tabular font-black", combinedPnL >= 0 ? "text-bull-green" : "text-bear-red")}>
-            {combinedPnL >= 0 ? "+" : "-"}Rs {Math.abs(combinedPnL).toLocaleString()}
+            {combinedPnL >= 0 ? "+" : "-"}Rs {Math.abs(combinedPnL).toLocaleString("en-IN")}
           </div>
           <div className="text-[10px] text-on-surface-variant tracking-wider uppercase">
             Combined Live P&L
@@ -78,7 +78,7 @@ export function YourMatchday() {
                 "text-sm font-bold font-data-tabular",
                 pos.isUp ? "text-bull-green" : "text-bear-red"
               )}>
-                {pos.isUp ? "+" : "-"}Rs {Math.abs(pos.pnl).toLocaleString()}
+                {pos.isUp ? "+" : "-"}Rs {Math.abs(pos.pnl).toLocaleString("en-IN")}
               </span>
               <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white transition-colors" />
             </div>
@@ -90,7 +90,7 @@ export function YourMatchday() {
       <div className="mt-6 pt-5 border-t border-white/10">
         <div className="flex justify-between items-end mb-2">
           <span className="text-xs text-on-surface-variant font-medium">Total Exposure</span>
-          <span className="text-sm font-bold text-white font-data-tabular">Rs {totalExposure.toLocaleString()}</span>
+          <span className="text-sm font-bold text-white font-data-tabular">Rs {totalExposure.toLocaleString("en-IN")}</span>
         </div>
         <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mb-5">
           <div className="h-full bg-cyan-500 rounded-full" style={{ width: `${exposurePct}%` }} />

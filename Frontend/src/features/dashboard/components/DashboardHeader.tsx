@@ -42,7 +42,7 @@ export function DashboardHeader({ overview }: DashboardHeaderProps) {
           <div>
             <div className="text-xs text-on-surface-variant mb-0.5">Paper Balance</div>
             <div className="text-lg font-bold text-white font-data-tabular">
-              Rs {paperBalance.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              Rs {paperBalance.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </div>
           </div>
         </div>
@@ -58,7 +58,7 @@ export function DashboardHeader({ overview }: DashboardHeaderProps) {
           <div>
             <div className="text-xs text-on-surface-variant mb-0.5">Today's P&L</div>
             <div className="text-lg font-bold text-bull-green font-data-tabular">
-              +{todaysPnL < 0 ? "-" : ""}Rs {Math.abs(todaysPnL).toLocaleString()}
+              +{todaysPnL < 0 ? "-" : ""}Rs {Math.abs(todaysPnL).toLocaleString("en-IN")}
             </div>
           </div>
         </div>

@@ -220,5 +220,5 @@ function ZeroChainRow() {
 
 function compactSize(value: number) {
   if (value >= 1000) return `${(value / 1000).toFixed(value >= 10_000 ? 0 : 1)}k`;
-  return value.toLocaleString();
+  return value.toLocaleString("en-IN");
 }

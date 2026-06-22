@@ -67,7 +67,7 @@ export function DashboardOrderBook() {
               <div key={`ask-${idx}`} className="flex justify-between items-center py-0.5 hover:bg-white/5 px-1 rounded transition-colors">
                 <span className="text-bear-red font-bold">Rs {ask.price.toFixed(2)}</span>
                 <span className="text-on-surface-variant">{ask.quantity}</span>
-                <span className="text-on-surface-variant/70">Rs {total.toLocaleString()}</span>
+                <span className="text-on-surface-variant/70">Rs {total.toLocaleString("en-IN")}</span>
               </div>
             );
           })}
@@ -85,7 +85,7 @@ export function DashboardOrderBook() {
               <div key={`bid-${idx}`} className="flex justify-between items-center py-0.5 hover:bg-white/5 px-1 rounded transition-colors">
                 <span className="text-bull-green font-bold">Rs {bid.price.toFixed(2)}</span>
                 <span className="text-on-surface-variant">{bid.quantity}</span>
-                <span className="text-on-surface-variant/70">Rs {total.toLocaleString()}</span>
+                <span className="text-on-surface-variant/70">Rs {total.toLocaleString("en-IN")}</span>
               </div>
             );
           })}

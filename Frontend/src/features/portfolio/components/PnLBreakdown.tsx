@@ -85,13 +85,13 @@ export function PnLBreakdown() {
                <Activity className="w-3 h-3" /> Daily PnL
              </span>
              <span className={`text-lg font-bold ${perf.dailyPnL >= 0 ? "text-bull-green" : "text-bear-red"}`}>
-                {perf.dailyPnL >= 0 ? "+" : "-"}₹{Math.abs(perf.dailyPnL).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                {perf.dailyPnL >= 0 ? "+" : "-"}₹{Math.abs(perf.dailyPnL).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
              </span>
           </div>
           <div className="flex flex-col text-right">
              <span className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant">Total PnL</span>
              <span className={`text-sm font-bold ${perf.totalPnL >= 0 ? "text-bull-green" : "text-bear-red"}`}>
-                {perf.totalPnL >= 0 ? "+" : "-"}₹{Math.abs(perf.totalPnL).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                {perf.totalPnL >= 0 ? "+" : "-"}₹{Math.abs(perf.totalPnL).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
              </span>
           </div>
         </div>

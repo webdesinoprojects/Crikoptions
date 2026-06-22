@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api/client";
+import { portfolioService } from "@/features/portfolio/services/portfolio.service";
 import { adaptMatch, adaptMatches, BackendMatch } from "@/lib/adapters/match.adapter";
 import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { BackendOrder } from "@/lib/adapters/order.adapter";
@@ -35,34 +36,7 @@ export const dashboardService = {
   },
 
   getFinancialOverview: async (): Promise<PortfolioSummary> => {
-    const [openPositions, closedPositions, orders] = await Promise.all([
-      fetchOpenPositions(),
-      fetchClosedPositions(),
-      fetchOrders(),
-    ]);
-
-    const openPnL = openPositions.reduce((sum, position) => sum + numberOrZero(position.pnl), 0);
-    const closedPnL = closedPositions.reduce((sum, position) => sum + numberOrZero(position.pnl), 0);
-    const totalPnL = openPnL + closedPnL;
-    const usedByPositions = openPositions.reduce(
-      (sum, position) => sum + Math.abs(numberOrZero(position.lots)) * numberOrZero(position.ltp),
-      0
-    );
-    const usedByOpenOrders = orders
-      .filter((order) => order.status?.toLowerCase() === "open")
-      .reduce((sum, order) => sum + numberOrZero(order.price) * numberOrZero(order.quantity), 0);
-    const dailyPnL = openPositions
-      .filter((position) => isToday(position.updatedAt))
-      .reduce((sum, position) => sum + numberOrZero(position.pnl), 0);
-
-    return {
-      totalEquity: round2(totalPnL),
-      dailyPnL: round2(dailyPnL),
-      dailyPnLPercentage: 0,
-      marginAvailable: 0,
-      marginUsed: round2(usedByPositions + usedByOpenOrders),
-      openPositionsCount: openPositions.length,
-    };
+    return portfolioService.getPortfolioSummary();
   },
 
   getLiveTicker: async (): Promise<TickerItem[]> => {

@@ -42,7 +42,7 @@ export function TradeOperationsWorkspace() {
       <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
         <OpsMetric icon={<ShieldCheck className="h-4 w-4" />} label="Gross exposure" value={`Rs ${formatMoney(totalExposure)}`} />
         <OpsMetric icon={<Clock className="h-4 w-4" />} label="Working orders" value={String(workingOrders)} />
-        <OpsMetric icon={<ListChecks className="h-4 w-4" />} label="Executed orders" value={executedOrders.toLocaleString()} />
+        <OpsMetric icon={<ListChecks className="h-4 w-4" />} label="Executed orders" value={executedOrders.toLocaleString("en-IN")} />
       </div>
 
       <div className="flex flex-wrap gap-1 rounded-md border border-outline/10 bg-surface-dim p-1">
@@ -139,7 +139,7 @@ function PositionsScreen({
                   <td className="px-4 py-3 text-center">
                     <SideBadge side={position.side} />
                   </td>
-                  <td className="px-4 py-3 text-right text-on-surface font-semibold">{position.quantity.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-right text-on-surface font-semibold">{position.quantity.toLocaleString("en-IN")}</td>
                   <td className="px-4 py-3 text-right text-on-surface-variant font-medium">Rs {position.averageEntryPrice.toFixed(2)}</td>
                   <td className="px-4 py-3 text-right text-on-surface font-medium">Rs {position.currentPrice.toFixed(2)}</td>
                   <td className={`px-4 py-3 text-right font-black ${positive ? "text-bull-green drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]" : "text-bear-red drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]"}`}>
@@ -200,10 +200,10 @@ function OrdersScreen({ loading, rows, sample }: { loading: boolean; rows: Order
                 <td className="px-4 py-3 text-right">
                   <div className="font-medium text-on-surface">Rs {(order.price ?? 0).toFixed(2)}</div>
                 </td>
-                <td className="px-4 py-3 text-right text-on-surface font-semibold">{order.quantity.toLocaleString()}</td>
+                <td className="px-4 py-3 text-right text-on-surface font-semibold">{order.quantity.toLocaleString("en-IN")}</td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex flex-col items-end gap-1">
-                    <span className="text-on-surface-variant font-semibold">{order.filledQuantity.toLocaleString()}</span>
+                    <span className="text-on-surface-variant font-semibold">{order.filledQuantity.toLocaleString("en-IN")}</span>
                     {order.quantity > 0 && (
                       <div className="w-12 h-1 bg-white/5 rounded-full overflow-hidden">
                         <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${(order.filledQuantity / order.quantity) * 100}%` }} />
@@ -312,7 +312,7 @@ function formatTime(value: string) {
 }
 
 function formatMoney(value: number) {
-  return value.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  return value.toLocaleString("en-IN", { maximumFractionDigits: 0 });
 }
 
 const now = new Date().toISOString();

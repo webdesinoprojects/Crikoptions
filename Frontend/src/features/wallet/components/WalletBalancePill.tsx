@@ -1,14 +1,14 @@
 "use client";
 
 import { Wallet } from "lucide-react";
-import { useWallet } from "../hooks";
+import { useDashboardOverview } from "@/features/dashboard/hooks";
 
 interface WalletBalancePillProps {
   enabled?: boolean;
 }
 
 export function WalletBalancePill({ enabled = true }: WalletBalancePillProps) {
-  const { data: wallet, isError, isLoading } = useWallet(enabled);
+  const { data: overview, isError, isLoading } = useDashboardOverview();
 
   if (!enabled) return null;
 
@@ -22,7 +22,7 @@ export function WalletBalancePill({ enabled = true }: WalletBalancePillProps) {
           Paper Balance
         </div>
         <div className="mt-1 truncate font-data-tabular text-[12px] font-black text-on-surface xl:text-sm">
-          {isLoading ? "Loading" : isError ? "Unavailable" : `Rs ${formatMoney(wallet?.availableBalance ?? 0)}`}
+          {isLoading ? "Loading" : isError ? "Unavailable" : `Rs ${formatMoney(overview?.totalEquity ?? 0)}`}
         </div>
       </div>
     </div>

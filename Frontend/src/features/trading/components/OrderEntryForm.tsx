@@ -434,7 +434,7 @@ function OrderReceipt({ order, submittedAt }: { order: Order; submittedAt: Date 
 
 function formatMoney(value: number) {
   if (!Number.isFinite(value)) return "0.00";
-  return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function formatTime(value: Date) {

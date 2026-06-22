@@ -377,7 +377,7 @@ function formatStrike(value: number) {
 
 function formatMoney(value: number) {
   if (!Number.isFinite(value)) return "0.00";
-  return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function formatClock(timestamp: number) {
@@ -390,5 +390,5 @@ function formatTimeLabel(timestamp: number) {
 
 function compactSize(value: number) {
   if (value >= 1000) return `${(value / 1000).toFixed(value >= 10_000 ? 0 : 1)}k`;
-  return value.toLocaleString();
+  return value.toLocaleString("en-IN");
 }
