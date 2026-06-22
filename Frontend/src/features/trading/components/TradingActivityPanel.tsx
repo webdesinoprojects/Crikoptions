@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Order } from "@/types";
 import { OpenPosition } from "../types/position";
 import { cn } from "@/lib/utils";
-import { useCancelOrder, useOpenPositions, useOrders, useOptionChain } from "../hooks";
+import { useCancelOrder, useOpenPositions, useOrders, useOptionChain, useCreateOrder } from "../hooks";
 import { buildPricePayload, buildOptionRows } from "../utils/terminal-context";
 import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { Match } from "@/types";
@@ -200,6 +200,7 @@ function OrdersTab({
 function PositionsTab({ loading, positions, chainRows }: { loading: boolean; positions: OpenPosition[]; chainRows: ReturnType<typeof buildOptionRows> }) {
   const setOrderIntent = useTerminalStore((state) => state.setOrderIntent);
   const setOrderSize = useTerminalStore((state) => state.setOrderSize);
+  const [closingPositionId, setClosingPositionId] = useState<string | null>(null);
 
   if (loading) return <PanelState label="Loading positions..." />;
   if (positions.length === 0) {
@@ -235,16 +236,21 @@ function PositionsTab({ loading, positions, chainRows }: { loading: boolean; pos
                 <button
                   type="button"
                   onClick={() => {
-                    setOrderIntent({
-                      side: position.lots > 0 ? "SELL" : "BUY",
-                      strike: position.strike,
-                      price: liveLtp,
-                    });
-                    setOrderSize(Math.abs(position.lots));
+                    if (closingPositionId === position._id) {
+                      setClosingPositionId(null);
+                    } else {
+                      setClosingPositionId(position._id);
+                      setOrderIntent({
+                        side: position.lots > 0 ? "SELL" : "BUY",
+                        strike: position.strike,
+                        price: liveLtp,
+                      });
+                      setOrderSize(Math.abs(position.lots));
+                    }
                   }}
                   className="rounded border border-white/20 bg-white/5 px-2 py-0.5 text-[9px] font-black text-on-surface hover:bg-white/10 active:scale-95 transition-all"
                 >
-                  Close
+                  {closingPositionId === position._id ? "Cancel" : "Close"}
                 </button>
               </div>
             </div>
@@ -253,9 +259,120 @@ function PositionsTab({ loading, positions, chainRows }: { loading: boolean; pos
               <span className={chainRow ? "text-teal-300" : ""}>LTP {liveLtp.toFixed(2)}{chainRow ? " ●" : ""}</span>
               <span className="text-right">PnL {livePnl.toFixed(2)}</span>
             </div>
+            {closingPositionId === position._id && (
+              <InlinePositionCloseForm 
+                position={position} 
+                liveLtp={liveLtp} 
+                chainRow={chainRow} 
+                onCancel={() => setClosingPositionId(null)} 
+              />
+            )}
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function InlinePositionCloseForm({
+  position,
+  liveLtp,
+  chainRow,
+  onCancel,
+}: {
+  position: OpenPosition;
+  liveLtp: number;
+  chainRow: any;
+  onCancel: () => void;
+}) {
+  const [type, setType] = useState<"MARKET" | "LIMIT">("MARKET");
+  const maxQty = Math.abs(position.lots);
+  const [qty, setQty] = useState<number>(maxQty);
+  const [price, setPrice] = useState<number>(liveLtp);
+  
+  const isLong = position.lots > 0;
+  const side = isLong ? "sell" : "buy";
+  const actionText = side === "sell" ? "Sell" : "Buy";
+  const { mutate: createOrder, isPending } = useCreateOrder();
+  
+  const handleSubmit = () => {
+    createOrder(
+      {
+        matchId: position.matchId,
+        marketId: position.marketId,
+        strike: position.strike,
+        side,
+        type,
+        quantity: qty,
+        price: type === "MARKET" ? 0 : price,
+      },
+      {
+        onSuccess: () => {
+          toast.success(`Successfully placed ${side} order to close position`);
+          onCancel();
+        },
+        onError: (error) => {
+          toast.error(getErrorMessage(error, "Failed to place order"));
+        }
+      }
+    );
+  };
+
+  return (
+    <div className="mt-3 rounded-lg border border-white/10 bg-[#040a17] p-3 shadow-inner space-y-3">
+      <div className="flex rounded border border-white/10 bg-[#071327] p-0.5">
+        <button
+          onClick={() => setType("MARKET")}
+          className={`flex-1 rounded-sm py-1.5 text-[10px] font-black uppercase transition-colors ${type === "MARKET" ? (side === "sell" ? "bg-bear-red text-white" : "bg-bull-green text-white") : "text-on-surface-variant hover:text-white"}`}
+        >
+          MARKET
+        </button>
+        <button
+          onClick={() => setType("LIMIT")}
+          className={`flex-1 rounded-sm py-1.5 text-[10px] font-black uppercase transition-colors ${type === "LIMIT" ? "bg-white/10 text-white" : "text-on-surface-variant hover:text-white"}`}
+        >
+          LIMIT
+        </button>
+      </div>
+
+      <div className="flex gap-3">
+        <div className="flex-1 space-y-1.5">
+          <label className="text-[9px] font-black text-on-surface-variant uppercase tracking-wider">QTY (MAX {maxQty})</label>
+          <input
+            type="number"
+            value={qty}
+            onChange={(e) => setQty(Math.min(maxQty, Math.max(1, parseInt(e.target.value) || 0)))}
+            className="w-full rounded border border-white/10 bg-[#071327] px-2 py-2 text-[12px] font-data-tabular font-bold text-white outline-none focus:border-cyan-500/50"
+          />
+        </div>
+        <div className="flex-1 space-y-1.5">
+          <label className="text-[9px] font-black text-on-surface-variant uppercase tracking-wider">{side === "sell" ? "BID" : "ASK"} (APPROX)</label>
+          <input
+            type="number"
+            value={type === "MARKET" ? liveLtp : price}
+            onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
+            disabled={type === "MARKET"}
+            className="w-full rounded border border-white/10 bg-[#071327] px-2 py-2 text-[12px] font-data-tabular font-bold text-white outline-none focus:border-cyan-500/50 disabled:opacity-50"
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-2 pt-1">
+        <button
+          onClick={handleSubmit}
+          disabled={isPending || qty <= 0}
+          className={`flex-[2] rounded py-2 text-[11px] font-black text-white transition-colors disabled:opacity-50 ${side === "sell" ? "bg-bear-red hover:bg-bear-red/80" : "bg-bull-green hover:bg-bull-green/80"}`}
+        >
+          {isPending ? "Executing..." : `${actionText} @ ${type}`}
+        </button>
+        <button
+          onClick={onCancel}
+          disabled={isPending}
+          className="flex-1 rounded border border-white/10 bg-[#071327] px-3 py-2 text-[11px] font-black text-white transition-colors hover:bg-white/10 disabled:opacity-50"
+        >
+          Cancel
+        </button>
+      </div>
     </div>
   );
 }

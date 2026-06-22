@@ -47,7 +47,13 @@ class PortfolioService {
     const totalUnrealizedPnL = positions.reduce((sum, position) => sum + position.unrealizedPnL, 0);
     const totalRealizedPnL = closedTrades.reduce((sum, trade) => sum + trade.realizedPnL, 0);
     const totalPnL = totalUnrealizedPnL + totalRealizedPnL;
-    const totalEquity = wallet.cashBalance + totalUnrealizedPnL;
+    
+    // Correct Total Equity Calculation: Cash + Value of Open Positions
+    const totalPositionValue = positions.reduce((sum, position) => {
+      return sum + (position.side === "BUY" ? position.notional : -position.notional);
+    }, 0);
+    const totalEquity = wallet.cashBalance + totalPositionValue;
+    
     const dailyPnL =
       positions.filter((position) => isToday(position.openedAt)).reduce((sum, position) => sum + position.unrealizedPnL, 0) +
       closedTrades.filter((trade) => isToday(trade.closedAt)).reduce((sum, trade) => sum + trade.realizedPnL, 0);
@@ -149,8 +155,8 @@ function adaptOpenPosition(
   };
 }
 
-function adaptClosedTrade(position: BackendPosition, market?: BackendMarket, match?: BackendMatch): ClosedTrade {
-  const quantity = Math.abs(numberOrZero(position.lots));
+function adaptClosedTrade(position: BackendPosition & { matchedLots?: number }, market?: BackendMarket, match?: BackendMatch): ClosedTrade {
+  const quantity = position.matchedLots ?? Math.abs(numberOrZero(position.lots));
   const entryPrice = numberOrZero(position.buyPrice);
   const exitPrice = numberOrZero(position.sellPrice);
   const pnl = numberOrZero(position.pnl);

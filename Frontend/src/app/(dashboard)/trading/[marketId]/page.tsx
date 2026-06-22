@@ -48,13 +48,14 @@ export default function TradingTerminalPage({ params }: PageProps) {
     { scope: terminalRef, dependencies: [marketId] }
   );
 
-  if (isLoading) {
-    return (
-      <div className="h-screen w-full flex items-center justify-center bg-background text-on-surface">
-        <div className="text-sm font-semibold animate-pulse text-outline">Loading trading terminal...</div>
-      </div>
-    );
-  }
+  // Remove blocking loading state to allow the UI mockup to render even if the backend is down
+  // if (isLoading) {
+  //   return (
+  //     <div className="h-screen w-full flex items-center justify-center bg-background text-on-surface">
+  //       <div className="text-sm font-semibold animate-pulse text-outline">Loading trading terminal...</div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div

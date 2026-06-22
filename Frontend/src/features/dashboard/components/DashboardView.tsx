@@ -2,14 +2,16 @@
 
 import React from "react";
 import { useDashboardOverview } from "@/features/dashboard/hooks";
-import { TerminalKPI } from "@/components/shared/TerminalComponents";
-import { MatchDNAMomentumChart } from "./MatchDNAMomentumChart";
-import { DashboardOrderBook } from "./DashboardOrderBook";
-import { ExposureTreemap } from "./ExposureTreemap";
-import { MarketMoversHeatmap } from "./MarketMoversHeatmap";
-import { DashboardTradeTicket } from "./DashboardTradeTicket";
-import { DashboardWatchlist } from "./DashboardWatchlist";
-import { OpportunityScanner } from "./OpportunityScanner";
+import { DashboardHeader } from "./DashboardHeader";
+import { LiveMatchArena } from "./LiveMatchArena";
+import { YourMatchday } from "./YourMatchday";
+import { ComingUp } from "./ComingUp";
+import { MatchdayDiscoveryHeader } from "./MatchdayDiscoveryHeader";
+import { WhatMovedTheMarket } from "./WhatMovedTheMarket";
+import { YourWatchlistWidget } from "./YourWatchlistWidget";
+import { MatchdayChallenges } from "./MatchdayChallenges";
+import { FriendsLeague } from "./FriendsLeague";
+import { LastMatchRecap } from "./LastMatchRecap";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardView() {
@@ -22,62 +24,38 @@ export default function DashboardView() {
     <div className="flex-1 overflow-hidden h-full">
       <div className="h-full overflow-y-auto p-4 space-y-4">
         {isLoading || !overview ? (
-          <div className="grid grid-cols-5 gap-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-[84px] rounded bg-white/5" />
-            ))}
-          </div>
+          <div className="h-20 w-full rounded-xl bg-white/5 animate-pulse" />
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <TerminalKPI
-              label="Portfolio Value"
-              value={`Rs ${overview.totalEquity.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
-              subText="Backend-derived mark value"
-            />
-            <TerminalKPI
-              label="Daily P&L"
-              value={`Rs ${overview.dailyPnL.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
-              changePercent={overview.dailyPnLPercentage}
-              trend={overview.dailyPnLPercentage >= 0 ? "UP" : "DOWN"}
-            />
-            <TerminalKPI
-              label="Margin Usage"
-              value={`Rs ${overview.marginUsed.toLocaleString()}`}
-              progress={marginUsagePct}
-            />
-            <TerminalKPI label="Active Signals" value="0" subText="No backend signal feed" />
-            <TerminalKPI
-              label="Risk Rating"
-              value={riskRating}
-              subText={`Stress score: ${Math.round(marginUsagePct)}/100`}
-            />
-          </div>
+          <DashboardHeader overview={overview} />
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-4">
-          <div className="lg:col-span-7">
-            <MatchDNAMomentumChart />
+          <div className="lg:col-span-7 h-full">
+            <LiveMatchArena />
           </div>
-          <div className="lg:col-span-3">
-            <DashboardOrderBook />
+          <div className="lg:col-span-3 flex flex-col gap-4 h-full">
+            <div className="flex-1">
+              <YourMatchday />
+            </div>
+            <ComingUp />
           </div>
         </div>
+
+        <MatchdayDiscoveryHeader />
 
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-4">
-          <div className="lg:col-span-4">
-            <ExposureTreemap />
+          <div className="lg:col-span-7 h-full">
+            <WhatMovedTheMarket />
           </div>
-          <div className="lg:col-span-3">
-            <MarketMoversHeatmap />
-          </div>
-          <div className="lg:col-span-3">
-            <DashboardTradeTicket />
+          <div className="lg:col-span-3 h-full">
+            <YourWatchlistWidget />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <DashboardWatchlist />
-          <OpportunityScanner />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <MatchdayChallenges />
+          <FriendsLeague />
+          <LastMatchRecap />
         </div>
       </div>
     </div>

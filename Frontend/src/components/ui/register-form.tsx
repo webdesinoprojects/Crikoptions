@@ -29,28 +29,23 @@ export default function RegisterForm() {
 
   return (
     <div className="h-screen w-full bg-black relative flex overflow-hidden text-white font-sans">
-      {/* Background Image spanning the entire page, centric to the 60% section on desktop */}
-      <div className="absolute inset-y-0 left-0 w-full md:w-[60%] h-full overflow-hidden md:overflow-visible pointer-events-none z-0">
+      {/* Background Image spanning the left half on desktop */}
+      <div className="absolute inset-y-0 left-0 w-full md:w-[50%] h-full overflow-hidden pointer-events-none z-0">
         <img
-          className="h-full w-full md:w-[100vw] md:max-w-none object-cover object-center absolute left-0 md:left-1/2 md:-translate-x-1/2 select-none"
-          src="/Welcome to.png"
+          className="h-full w-full object-cover object-[50%_20%] select-none"
+          src="/image.png"
           alt="Welcome to CricOptions"
         />
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
       </div>
 
-      {/* Left-side visual preview panel spacer (60% width) */}
-      <div className="hidden md:flex md:w-[60%] shrink-0 h-full relative z-10 justify-center">
-        {/* Top Centered Header text */}
-        <h2 className="absolute top-16 left-1/2 -translate-x-1/2 text-white font-display text-4xl font-black text-center w-full px-6 select-none uppercase tracking-tighter leading-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
-          Look first /<br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-white">Then leap.</span>
-        </h2>
+      {/* Left-side visual preview panel spacer (50% width) */}
+      <div className="hidden md:flex md:w-[50%] shrink-0 h-full relative z-10 justify-center">
       </div>
 
-      {/* Right-side register card panel (40% width, semi-transparent background) */}
-      <div className="w-full md:w-[40%] shrink-0 h-full flex flex-col justify-between py-8 px-6 md:px-12 bg-[#000d1a]/85 backdrop-blur-md relative z-10 overflow-y-auto border-l border-white/10 shadow-2xl">
+      {/* Right-side register card panel (50% width, semi-transparent background) */}
+      <div className="w-full md:w-[50%] shrink-0 h-full flex flex-col justify-between py-8 px-6 md:px-12 bg-[#000d1a]/85 backdrop-blur-md relative z-10 overflow-y-auto border-l border-white/10 shadow-2xl">
         {/* Top Header Row with Logo and Close Icon */}
         <div className="flex justify-between items-center w-full shrink-0">
           {/* Logo */}
