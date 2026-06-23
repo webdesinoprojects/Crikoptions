@@ -1,6 +1,8 @@
 import { QueryClient } from "@tanstack/react-query";
 import { walletKeys } from "@/features/wallet/hooks";
+import type { PositionUpdateEvent } from "@/lib/websocket/order.stream";
 import { Order } from "@/types";
+import type { OpenPosition } from "../types/position";
 
 export const tradingQueryKeys = {
   ordersRoot: ["orders"] as const,
@@ -21,6 +23,33 @@ export function refreshAfterOrderSubmit(queryClient: QueryClient, order: Order, 
 export function refreshAfterOrderCancel(queryClient: QueryClient, matchId?: string) {
   invalidateAndRefetch(queryClient, tradingQueryKeys.orders(matchId));
   invalidateAndRefetch(queryClient, walletKeys.wallet);
+}
+
+export function refreshAfterExit(queryClient: QueryClient, matchId?: string) {
+  if (matchId) invalidateAndRefetch(queryClient, tradingQueryKeys.orders(matchId));
+  invalidateAndRefetch(queryClient, tradingQueryKeys.openPositions);
+  invalidateAndRefetch(queryClient, walletKeys.wallet);
+  invalidateAndRefetch(queryClient, ["portfolio"]);
+  invalidateAndRefetch(queryClient, ["dashboard", "overview"]);
+}
+
+export function patchOpenPositionsCache(queryClient: QueryClient, event: PositionUpdateEvent) {
+  queryClient.setQueryData<OpenPosition[]>(tradingQueryKeys.openPositions, (current = []) =>
+    current
+      .map((position) => {
+        if (position.marketId !== event.marketId) return position;
+
+        return {
+          ...position,
+          lots: Math.abs(event.quantity),
+          buyPrice: event.averageEntryPrice,
+          ltp: event.averageEntryPrice,
+          pnl: event.unrealizedPnL,
+          updatedAt: event.timestamp,
+        };
+      })
+      .filter((position) => position.marketId !== event.marketId || event.quantity !== 0)
+  );
 }
 
 function refreshTerminalQueries(queryClient: QueryClient, matchId: string) {

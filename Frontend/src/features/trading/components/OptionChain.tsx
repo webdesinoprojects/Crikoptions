@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { ChevronLeft, LineChart, MoreHorizontal } from "lucide-react";
+import { CandlestickChart, ChevronLeft, MoreHorizontal } from "lucide-react";
 import { DataSourceBadge } from "@/components/shared/DataSourceBadge";
 import {
   DropdownMenu,
@@ -15,7 +15,7 @@ import { useTerminalStore } from "@/stores/terminal.store";
 import { Match } from "@/types";
 import { useOptionChain, useOptionChainHistory } from "../hooks";
 import { ChainRow, buildOptionRows, buildPricePayload, findAtmRow } from "../utils/terminal-context";
-import { OptionChainGraphDialog } from "./OptionChainGraphDialog";
+import { OptionChainCandlestickDialog } from "./OptionChainCandlestickDialog";
 
 interface OptionChainProps {
   marketId: string;
@@ -25,7 +25,7 @@ interface OptionChainProps {
 }
 
 export function OptionChain({ marketId, market, match, className }: OptionChainProps) {
-  const [graphRow, setGraphRow] = useState<ChainRow | null>(null);
+  const [candlestickRow, setCandlestickRow] = useState<ChainRow | null>(null);
   const selectedStrike = useTerminalStore((state) => state.selectedStrike);
   const selectedSide = useTerminalStore((state) => state.selectedSide ?? "BUY");
   const setOrderIntent = useTerminalStore((state) => state.setOrderIntent);
@@ -40,7 +40,7 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
   const visibleRows = rows;
   const firstStrike = visibleRows[0]?.strike;
   const lastStrike = visibleRows[visibleRows.length - 1]?.strike;
-  const graphSelectedRow = graphRow ? rows.find((row) => row.strike === graphRow.strike) ?? graphRow : null;
+  const candlestickSelectedRow = candlestickRow ? rows.find((row) => row.strike === candlestickRow.strike) ?? candlestickRow : null;
   const { getStrikeHistory } = useOptionChainHistory(marketId, rows);
 
   const selectRow = (row: ChainRow) => {
@@ -129,7 +129,7 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
                                 <button
                                   type="button"
                                   aria-label={`Actions for strike ${row.strike.toFixed(0)}`}
-                                  title="View graph"
+                                  title="View candlestick"
                                   className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/8 bg-white/[0.03] text-on-surface-variant opacity-100 transition-all hover:border-cyan-300/30 hover:bg-cyan-300/10 hover:text-cyan-100 md:opacity-65 md:group-hover:opacity-100"
                                 >
                                   <MoreHorizontal className="h-4 w-4" />
@@ -141,12 +141,12 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
                               >
                                 <DropdownMenuItem
                                   onSelect={() => {
-                                    setGraphRow(row);
+                                    setCandlestickRow(row);
                                   }}
                                   className="flex cursor-pointer items-center gap-2 rounded px-2 py-2 text-[12px] font-black text-cyan-100 focus:bg-cyan-300/10 focus:text-cyan-100"
                                 >
-                                  <LineChart className="h-4 w-4 text-cyan-300" />
-                                  View graph
+                                  <CandlestickChart className="h-4 w-4 text-cyan-300" />
+                                  View candlestick
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -187,16 +187,15 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
         </div>
       </section>
 
-      <OptionChainGraphDialog
-        key={graphSelectedRow?.strike ?? "closed-chain-graph"}
+      <OptionChainCandlestickDialog
+        key={candlestickSelectedRow?.strike ?? "closed-chain-candlestick"}
         atmRow={atmRow}
         getStrikeHistory={getStrikeHistory}
         onOpenChange={(open) => {
-          if (!open) setGraphRow(null);
+          if (!open) setCandlestickRow(null);
         }}
-        open={Boolean(graphRow)}
-        rows={rows}
-        selectedRow={graphSelectedRow}
+        open={Boolean(candlestickRow)}
+        selectedRow={candlestickSelectedRow}
       />
     </>
   );
