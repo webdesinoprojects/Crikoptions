@@ -76,4 +76,5 @@ function invalidateWalletQueries(queryClient: QueryClient, userId: string) {
   queryClient.invalidateQueries({ queryKey: walletKeys.adminLedger(userId) });
   queryClient.invalidateQueries({ queryKey: walletKeys.adminLedger() });
   queryClient.invalidateQueries({ queryKey: ["portfolio"] });
+  queryClient.invalidateQueries({ queryKey: ["dashboard", "overview"] });
 }

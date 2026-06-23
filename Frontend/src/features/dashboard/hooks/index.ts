@@ -5,6 +5,8 @@ export const useDashboardOverview = () => {
   return useQuery({
     queryKey: ["dashboard", "overview"],
     queryFn: dashboardService.getFinancialOverview,
+    refetchInterval: 10000,
+    refetchOnWindowFocus: true,
   });
 };
 

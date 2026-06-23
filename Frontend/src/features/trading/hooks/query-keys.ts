@@ -28,6 +28,7 @@ function refreshTerminalQueries(queryClient: QueryClient, matchId: string) {
   invalidateAndRefetch(queryClient, tradingQueryKeys.openPositions);
   invalidateAndRefetch(queryClient, walletKeys.wallet);
   invalidateAndRefetch(queryClient, ["portfolio"]);
+  invalidateAndRefetch(queryClient, ["dashboard", "overview"]);
 }
 
 function invalidateAndRefetch(queryClient: QueryClient, queryKey: readonly unknown[]) {

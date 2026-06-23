@@ -2,40 +2,71 @@
 
 import { useState, useEffect } from "react";
 import { useAuthStore } from "../hooks/useAuth";
-import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader2, Camera, Calendar, MapPin, TrendingUp, Trophy, Target, Shield, Info, Bell, Wallet } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getErrorMessage } from "@/lib/error-message";
+import { usePerformance } from "@/features/portfolio/hooks";
+
+// A reusable lightweight SVG sparkline
+function Sparkline({ data, color }: { data: number[], color: string }) {
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+  const width = 100;
+  const height = 30;
+  
+  const points = data.map((val, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((val - min) / range) * height;
+    return `${x},${y}`;
+  }).join(" ");
+
+  return (
+    <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="overflow-visible mt-2">
+      <polyline
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        points={points}
+      />
+      <path
+        fill={`url(#gradient-${color.replace('#', '')})`}
+        d={`M0,${height} L${points} L${width},${height} Z`}
+        opacity="0.2"
+      />
+      <defs>
+        <linearGradient id={`gradient-${color.replace('#', '')}`} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor={color} />
+          <stop offset="100%" stopColor="transparent" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
 
 export function ProfileManager() {
   const { user, updateProfile, isLoading } = useAuthStore();
+  const { portfolio } = usePerformance();
   
-  // Local state for all fields
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [maxExposure, setMaxExposure] = useState<number>(10000);
-  const [defaultLeverage, setDefaultLeverage] = useState<number>(1);
-  const [autoKillSwitch, setAutoKillSwitch] = useState<boolean>(false);
-  const [theme, setTheme] = useState<string>("TERMINAL_DARK");
-  const [dataDensity, setDataDensity] = useState<string>("COMPACT");
+  const [maxExposure, setMaxExposure] = useState<number>(20000);
+  const [dailyLossLimit, setDailyLossLimit] = useState<number>(10000);
+  const [highVolWarning, setHighVolWarning] = useState(true);
+  const [confirmOrders, setConfirmOrders] = useState(true);
 
   const [success, setSuccess] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
-
     const frame = requestAnimationFrame(() => {
       setName(user.name);
-      setPhone(user.phone || "");
       if (user.settings) {
-        setMaxExposure(user.settings.riskLimits?.maxExposure || 10000);
-        setDefaultLeverage(user.settings.riskLimits?.defaultLeverage || 1);
-        setAutoKillSwitch(user.settings.riskLimits?.autoKillSwitch || false);
-        setTheme(user.settings.preferences?.theme || "TERMINAL_DARK");
-        setDataDensity(user.settings.preferences?.dataDensity || "COMPACT");
+        setMaxExposure(user.settings.riskLimits?.maxExposure || 20000);
       }
     });
-
     return () => cancelAnimationFrame(frame);
   }, [user]);
 
@@ -46,10 +77,9 @@ export function ProfileManager() {
     try {
       await updateProfile({
         name,
-        phone: phone || undefined,
         settings: {
-          riskLimits: { maxExposure, defaultLeverage, autoKillSwitch },
-          preferences: { theme, dataDensity, notificationsEnabled: true }
+          riskLimits: { maxExposure, defaultLeverage: 1, autoKillSwitch: false },
+          preferences: { theme: "PREMIUM_DARK", dataDensity: "COMFORT", notificationsEnabled: true }
         }
       });
       setSuccess(true);
@@ -61,220 +91,297 @@ export function ProfileManager() {
 
   if (!user) {
     return (
-      <div className="flex h-[400px] items-center justify-center font-mono text-xs text-on-surface-variant uppercase tracking-widest border border-dashed border-white/10 bg-black/40">
-        [ NO ACTIVE SESSION FOUND ]
+      <div className="flex h-[400px] items-center justify-center font-mono text-xs text-slate-500 uppercase tracking-widest border border-dashed border-white/10 bg-black/40 rounded-2xl">
+        Loading Profile...
       </div>
     );
   }
 
-  const initials = user.name.substring(0, 2).toUpperCase();
-  const tierColor = user.tier === "INSTITUTIONAL" ? "#A855F7" : user.tier === "PRO" ? "#0EA5E9" : "#94a3b8";
+  const initials = user.name.substring(0, 1).toUpperCase();
+  const joinDate = user.createdAt 
+    ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+    : "Jun 2026";
+
+  // Derive real performance data
+  const walletBalance = portfolio?.totalEquity ?? 0;
+  const totalPnL = portfolio?.totalPnL ?? 0;
+  const pnlPercent = portfolio?.totalPnLPct ?? 0;
+  const winRate = portfolio?.winRate ?? 0;
+  
+  const closedTrades = portfolio?.closedTrades ?? [];
+  const winningTrades = closedTrades.filter(t => t.realizedPnL > 0).length;
+  const bestTradeAmount = closedTrades.length > 0 ? Math.max(...closedTrades.map(t => t.realizedPnL)) : 0;
+  
+  const totalTradesCount = (portfolio?.openPositionsCount ?? 0) + (portfolio?.closedTradesCount ?? 0);
+  
+  // Calculate Avg Holding Time
+  const avgHoldingMs = closedTrades.length > 0 
+    ? closedTrades.reduce((sum, t) => sum + (t.holdingPeriodMs || 0), 0) / closedTrades.length 
+    : 0;
+  const avgHoldingMins = Math.floor(avgHoldingMs / 60000);
+  const avgHoldingSecs = Math.floor((avgHoldingMs % 60000) / 1000);
+  
+  // Calculate Most Active Match
+  const matchCounts = closedTrades.reduce((acc, t) => {
+    acc[t.matchName] = (acc[t.matchName] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  const mostActiveMatch = Object.entries(matchCounts).sort((a, b) => b[1] - a[1])[0];
+
+  const perfData = {
+    balance: walletBalance.toLocaleString("en-IN", { maximumFractionDigits: 0 }),
+    totalPnl: totalPnL > 0 ? `+${totalPnL.toLocaleString("en-IN", { maximumFractionDigits: 0 })}` : totalPnL.toLocaleString("en-IN", { maximumFractionDigits: 0 }),
+    pnlPercent: pnlPercent > 0 ? `+${pnlPercent.toFixed(2)}%` : `${pnlPercent.toFixed(2)}%`,
+    winRate: `${winRate.toFixed(1)}%`,
+    winRateDesc: `${winningTrades} / ${closedTrades.length} Trades`,
+    totalTrades: totalTradesCount,
+    closedTrades: portfolio?.closedTradesCount ?? 0,
+    bestTrade: bestTradeAmount > 0 ? `+₹${bestTradeAmount.toLocaleString("en-IN")}` : `₹0`,
+    avgHoldingTime: avgHoldingMs > 0 ? `${avgHoldingMins}m ${avgHoldingSecs}s` : "-",
+    mostActiveMatch: mostActiveMatch ? mostActiveMatch[0] : "-",
+    mostActiveMatchCount: mostActiveMatch ? mostActiveMatch[1] : 0,
+  };
 
   return (
-    <div className="max-w-5xl mx-auto flex flex-col lg:flex-row gap-4 font-mono select-none">
+    <div className="max-w-[1400px] mx-auto flex flex-col gap-6 font-sans select-none pb-10">
       
-      {/* LEFT COLUMN: IDENTITY & ACCESS */}
-      <div className="flex-1 flex flex-col gap-4">
-        <div className="border border-white/10 bg-[#020617] rounded-none overflow-hidden relative group">
-          <div className="absolute top-0 left-0 w-1 h-full bg-primary/50 group-hover:bg-primary transition-colors"></div>
-          <div className="p-4 bg-black/40 border-b border-white/5 flex justify-between items-center">
-            <h2 className="text-[12px] font-bold text-white tracking-widest uppercase">[ IDENTITY & ACCESS ]</h2>
-            <div className="flex items-center gap-2">
-              <div
-                className={`px-2 py-0.5 border text-[9px] font-bold tracking-wider ${
-                  user.role === "admin"
-                    ? "border-[#4AF626]/40 text-[#4AF626] bg-[#4AF626]/10"
-                    : "border-white/20 text-on-surface-variant bg-black/40"
-                }`}
-              >
-                {(user.role || "user").toUpperCase()} ROLE
-              </div>
-              <div className="px-2 py-0.5 border text-[9px] font-bold tracking-wider shadow-[0_0_8px_rgba(0,0,0,0.5)]" style={{ borderColor: `${tierColor}40`, color: tierColor, backgroundColor: `${tierColor}10` }}>
-                {user.tier || "STANDARD"} TIER
-              </div>
+      {/* HEADER SECTION */}
+      <div className="flex flex-col xl:flex-row gap-6 items-start xl:items-center justify-between">
+        <div className="flex items-center gap-6">
+          <div className="relative group">
+            <div className="w-24 h-24 rounded-full border border-[#d4af37]/40 bg-[#0a0f1a] flex items-center justify-center relative overflow-hidden shadow-[0_0_30px_rgba(212,175,55,0.15)]">
+               <span className="text-4xl font-light text-[#d4af37]">{initials}</span>
+            </div>
+            <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-colors shadow-lg cursor-pointer">
+              <Camera className="w-4 h-4" />
+            </button>
+          </div>
+          <div>
+            <h1 className="text-3xl font-semibold text-white tracking-tight">{name}</h1>
+            <div className="flex items-center gap-3 mt-1.5">
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase">
+                {user.tier || "STANDARD TRADER"}
+              </span>
+            </div>
+            <div className="flex items-center gap-6 mt-3 text-sm text-slate-400 font-medium">
+              <span className="flex items-center gap-2"><Calendar className="w-4 h-4 opacity-70" /> Member Since {joinDate}</span>
+              <span className="flex items-center gap-2"><Trophy className="w-4 h-4 opacity-70" /> Favorite Team RCB</span>
+              <span className="flex items-center gap-2"><MapPin className="w-4 h-4 opacity-70" /> Location India</span>
             </div>
           </div>
-          
-          <div className="p-5 flex gap-5 items-start relative">
-            <div className="w-20 h-20 shrink-0 border border-white/20 bg-black flex items-center justify-center relative overflow-hidden group-hover:border-primary/50 transition-colors shadow-[0_0_15px_rgba(0,0,0,0.8)]">
-              <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(255,255,255,0.02)_4px,rgba(255,255,255,0.02)_8px)]"></div>
-              <span className="text-2xl font-black text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] tracking-tighter relative z-10">{initials}</span>
-            </div>
+        </div>
+
+        <div className="flex flex-wrap md:flex-nowrap gap-4 w-full xl:w-auto">
+          <div className="flex-1 xl:w-48 bg-slate-900/40 border border-white/5 rounded-2xl p-4 flex flex-col justify-center relative overflow-hidden backdrop-blur-md">
+             <div className="text-xs text-slate-400 font-medium flex items-center gap-2 mb-1"><Wallet className="w-4 h-4 text-sky-400" /> Paper Balance</div>
+             <div className="text-xl font-bold text-white tracking-tight">Rs {perfData.balance}</div>
+             <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-sky-500/50 rounded-t-full shadow-[0_0_10px_rgba(14,165,233,0.8)]"></div>
+          </div>
+          <div className="flex-1 xl:w-48 bg-slate-900/40 border border-white/5 rounded-2xl p-4 flex flex-col justify-center backdrop-blur-md">
+             <div className="text-xs text-slate-400 font-medium flex items-center gap-2 mb-1"><TrendingUp className="w-4 h-4 text-emerald-400" /> Total P&L</div>
+             <div className="text-xl font-bold text-emerald-400 tracking-tight">{perfData.totalPnl}</div>
+             <div className="text-xs text-emerald-400/80 mt-0.5">{perfData.pnlPercent}</div>
+          </div>
+          <div className="flex-1 xl:w-48 bg-slate-900/40 border border-white/5 rounded-2xl p-4 flex flex-col justify-center backdrop-blur-md">
+             <div className="text-xs text-slate-400 font-medium flex items-center gap-2 mb-1"><Target className="w-4 h-4 text-slate-300" /> Win Rate</div>
+             <div className="text-xl font-bold text-white tracking-tight">{perfData.winRate}</div>
+             <div className="text-xs text-slate-500 mt-0.5">{perfData.winRateDesc}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* MAIN GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-4">
+        
+        {/* LEFT COLUMN: TRADER CARD */}
+        <div className="lg:col-span-4 flex flex-col gap-6">
+          <div className="relative rounded-2xl border border-[#d4af37]/30 bg-gradient-to-br from-[#1a1500] to-[#050505] overflow-hidden p-6 shadow-[0_10px_40px_rgba(212,175,55,0.05)] h-full">
+             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#d4af37]/0 via-[#d4af37] to-[#d4af37]/0 opacity-50"></div>
+             <div className="flex items-center gap-2 text-[#d4af37] text-xs font-black tracking-widest uppercase mb-8">
+               <Trophy className="w-4 h-4" /> CricOptions Trader Card
+             </div>
+             
+             <div className="space-y-4 relative z-10">
+               <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                 <span className="text-xs text-slate-400 font-medium tracking-wide">TRADING STYLE</span>
+                 <span className="text-sm text-white font-semibold">Chase Trader</span>
+               </div>
+               <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                 <span className="text-xs text-slate-400 font-medium tracking-wide">FAVORITE MARKET</span>
+                 <span className="text-sm text-white font-semibold">Player Runs</span>
+               </div>
+               <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                 <span className="text-xs text-slate-400 font-medium tracking-wide">RISK PROFILE</span>
+                 <span className="text-sm text-[#d4af37] font-semibold">Balanced</span>
+               </div>
+               <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                 <span className="text-xs text-slate-400 font-medium tracking-wide">BEST PREDICTION</span>
+                 <span className="text-sm text-white font-semibold">Kohli 50+ Runs</span>
+               </div>
+             </div>
+
+             {/* Stylized background silhouette or gradient */}
+             <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-[#d4af37]/5 rounded-full blur-3xl pointer-events-none"></div>
+             <div className="mt-12 text-2xl font-[Brush_Script_MT,cursive] text-[#d4af37]/80 opacity-70 transform -rotate-2 select-none">
+               {name || "Trader"}
+             </div>
+             <div className="absolute bottom-4 left-6 right-6 flex gap-1 opacity-20 pointer-events-none">
+               {Array.from({length: 30}).map((_, i) => (
+                 <div key={i} className="h-4 w-1 bg-[#d4af37] rounded-sm" style={{ height: Math.random() * 16 + 8 }}></div>
+               ))}
+             </div>
+          </div>
+        </div>
+
+        {/* MIDDLE COLUMN: PERFORMANCE SNAPSHOT */}
+        <div className="lg:col-span-5 flex flex-col gap-6">
+          <div className="bg-slate-900/40 border border-white/5 rounded-2xl p-6 h-full flex flex-col backdrop-blur-md">
+            <h2 className="text-sm font-bold text-white tracking-wider uppercase mb-6">Performance Snapshot</h2>
             
-            <div className="flex-1 space-y-3">
-              <div className="space-y-1">
-                <label className="text-[9px] uppercase tracking-widest text-on-surface-variant font-bold">OPERATOR DESIGNATION</label>
-                <input
-                  type="text"
-                  className="w-full bg-black/60 border border-white/10 focus:border-primary focus:shadow-[0_0_10px_rgba(14,165,233,0.3)] outline-none rounded-none px-3 py-2 text-[12px] text-white font-bold transition-all uppercase"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
+            <div className="grid grid-cols-2 gap-4 flex-1">
+              <div className="bg-slate-950/50 border border-white/5 rounded-xl p-4 flex flex-col justify-between group hover:border-white/10 transition-colors">
+                <span className="text-xs text-slate-400 font-medium">Total Trades</span>
+                <div className="mt-2 text-2xl font-bold text-white">{perfData.totalTrades}</div>
+                <div className="h-8 mt-2 opacity-50 group-hover:opacity-100 transition-opacity"><Sparkline data={[1, 3, 2, 5, 4, 7, 6, 9]} color="#3b82f6" /></div>
               </div>
-              <div className="space-y-1">
-                <label className="text-[9px] uppercase tracking-widest text-on-surface-variant font-bold">SECURE COMMS LINK (PHONE)</label>
-                <input
-                  type="tel"
-                  className="w-full bg-black/60 border border-white/10 focus:border-primary focus:shadow-[0_0_10px_rgba(14,165,233,0.3)] outline-none rounded-none px-3 py-2 text-[12px] text-white font-bold transition-all"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+91..."
-                />
+              <div className="bg-slate-950/50 border border-white/5 rounded-xl p-4 flex flex-col justify-between group hover:border-white/10 transition-colors">
+                <span className="text-xs text-slate-400 font-medium">Closed Trades</span>
+                <div className="mt-2 text-2xl font-bold text-white">{perfData.closedTrades}</div>
+                <div className="h-8 mt-2 opacity-50 group-hover:opacity-100 transition-opacity"><Sparkline data={[0, 1, 1, 2, 4, 3, 5, 6]} color="#0ea5e9" /></div>
               </div>
-              <div className="space-y-1 opacity-70">
-                <label className="text-[9px] uppercase tracking-widest text-on-surface-variant font-bold">ENCRYPTED RELAY (EMAIL)</label>
-                <input
-                  type="email"
-                  className="w-full bg-transparent border border-transparent border-b-white/10 rounded-none px-3 py-2 text-[11px] text-white/50 cursor-not-allowed uppercase"
-                  value={user.email}
-                  disabled
-                />
+              <div className="bg-slate-950/50 border border-white/5 rounded-xl p-4 flex flex-col justify-between col-span-2 sm:col-span-1 group hover:border-white/10 transition-colors">
+                <span className="text-xs text-slate-400 font-medium">Best Trade</span>
+                <div className="mt-2 text-xl font-bold text-emerald-400">{perfData.bestTrade}</div>
+                <div className="h-8 mt-2 opacity-50 group-hover:opacity-100 transition-opacity"><Sparkline data={[2, 3, 5, 4, 8, 6, 9, 12]} color="#10b981" /></div>
               </div>
-              {user.role !== "admin" && (
-                <div className="rounded border border-[#FFB300]/30 bg-[#FFB300]/10 p-3 text-[9px] leading-relaxed text-[#FFB300]">
-                  Admin wallet funding requires <strong>admin</strong> role from the backend. If you added your email to
-                  <code className="mx-1">ADMIN_EMAILS</code>, restart the backend server, sign out, and sign in again so
-                  your session picks up the new role.
+              <div className="grid grid-rows-2 gap-4 col-span-2 sm:col-span-1">
+                <div className="bg-slate-950/50 border border-white/5 rounded-xl p-4 flex flex-col justify-center">
+                  <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider mb-1">Avg Holding Time</span>
+                  <div className="text-lg font-bold text-white">{perfData.avgHoldingTime}</div>
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* TERMINAL PREFERENCES */}
-        <div className="border border-white/10 bg-[#020617] rounded-none overflow-hidden relative">
-          <div className="p-4 bg-black/40 border-b border-white/5">
-            <h2 className="text-[12px] font-bold text-white tracking-widest uppercase">[ TERMINAL PREFERENCES ]</h2>
-          </div>
-          <div className="p-5 grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-[9px] uppercase tracking-widest text-on-surface-variant font-bold block">AESTHETIC PROTOCOL</label>
-              <div className="grid grid-cols-2 gap-2">
-                {["TERMINAL_DARK", "HIGH_CONTRAST"].map(t => (
-                  <button 
-                    key={t}
-                    type="button"
-                    onClick={() => setTheme(t)}
-                    className={`py-2 px-2 text-[9px] font-bold uppercase tracking-wider border transition-all ${theme === t ? "border-primary bg-primary/10 text-primary shadow-[inset_0_0_10px_rgba(14,165,233,0.2)]" : "border-white/10 bg-black/40 text-on-surface-variant hover:border-white/30 hover:text-white"}`}
-                  >
-                    {t.replace("_", " ")}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-[9px] uppercase tracking-widest text-on-surface-variant font-bold block">DATA DENSITY</label>
-              <div className="grid grid-cols-2 gap-2">
-                {["COMPACT", "COMFORT"].map(d => (
-                  <button 
-                    key={d}
-                    type="button"
-                    onClick={() => setDataDensity(d)}
-                    className={`py-2 px-2 text-[9px] font-bold uppercase tracking-wider border transition-all ${dataDensity === d ? "border-[#4AF626] bg-[#4AF626]/10 text-[#4AF626] shadow-[inset_0_0_10px_rgba(74,246,38,0.2)]" : "border-white/10 bg-black/40 text-on-surface-variant hover:border-white/30 hover:text-white"}`}
-                  >
-                    {d}
-                  </button>
-                ))}
+                <div className="bg-slate-950/50 border border-white/5 rounded-xl p-4 flex flex-col justify-center">
+                  <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider mb-1">Most Active Match</span>
+                  <div className="text-sm font-bold text-white truncate" title={perfData.mostActiveMatch}>{perfData.mostActiveMatch}</div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">{perfData.mostActiveMatchCount} Trades</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* RIGHT COLUMN: RISK LIMITS & SUBMIT */}
-      <div className="flex-1 lg:max-w-md flex flex-col gap-4">
-        <div className="border border-[#FF2A2A]/20 bg-[#020617] rounded-none overflow-hidden relative shadow-[0_0_30px_rgba(255,42,42,0.03)]">
-          <div className="absolute top-0 left-0 w-1 h-full bg-[#FF2A2A]/50"></div>
-          <div className="p-4 bg-black/40 border-b border-white/5 flex items-center justify-between">
-            <h2 className="text-[12px] font-bold text-[#FF2A2A] tracking-widest uppercase drop-shadow-[0_0_8px_rgba(255,42,42,0.5)]">[ RISK & EXECUTION LIMITS ]</h2>
-            <AlertCircle className="w-4 h-4 text-[#FF2A2A] opacity-80" />
-          </div>
-          
-          <div className="p-5 space-y-6">
-            <div className="space-y-2">
-              <div className="flex justify-between items-end">
-                <label className="text-[9px] uppercase tracking-widest text-on-surface-variant font-bold">MAX EXPOSURE PER TRADE</label>
-                <span className="text-[14px] font-black text-white tracking-wider">₹{maxExposure.toLocaleString("en-IN")}</span>
-              </div>
-              <input 
-                type="range" 
-                min="1000" 
-                max="500000" 
-                step="1000"
-                value={maxExposure}
-                onChange={(e) => setMaxExposure(Number(e.target.value))}
-                className="w-full accent-[#FF2A2A] h-1 bg-white/10 appearance-none outline-none cursor-ew-resize" 
-              />
-              <div className="flex justify-between text-[8px] text-on-surface-variant opacity-60">
-                <span>₹1K (MIN)</span>
-                <span>₹500K (MAX)</span>
-              </div>
-            </div>
-
-            <div className="space-y-2 pt-4 border-t border-white/5">
-              <div className="flex justify-between items-end">
-                <label className="text-[9px] uppercase tracking-widest text-on-surface-variant font-bold">DEFAULT LEVERAGE (X)</label>
-                <span className="text-[14px] font-black text-[#FFB300] tracking-wider">{defaultLeverage}x</span>
-              </div>
-              <input 
-                type="range" 
-                min="1" 
-                max="10" 
-                step="1"
-                value={defaultLeverage}
-                onChange={(e) => setDefaultLeverage(Number(e.target.value))}
-                className="w-full accent-[#FFB300] h-1 bg-white/10 appearance-none outline-none cursor-ew-resize" 
-              />
-            </div>
-
-            <div className="pt-4 border-t border-white/5 flex items-center justify-between">
-              <div>
-                <div className="text-[10px] font-bold text-white uppercase tracking-wider">AUTO-KILL SWITCH</div>
-                <div className="text-[8px] text-on-surface-variant max-w-[200px] mt-0.5">LIQUIDATES ALL POSITIONS IF PORTFOLIO DROPS &gt;10% DAILY</div>
-              </div>
-              <button 
-                type="button"
-                onClick={() => setAutoKillSwitch(!autoKillSwitch)}
-                className={`w-12 h-6 border ${autoKillSwitch ? 'bg-[#FF2A2A]/20 border-[#FF2A2A]' : 'bg-black border-white/20'} relative transition-colors`}
-              >
-                <motion.div 
-                  className={`w-4 h-4 absolute top-[3px] bg-${autoKillSwitch ? '[#FF2A2A]' : 'white/40'}`}
-                  animate={{ left: autoKillSwitch ? '26px' : '3px' }}
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        {/* RIGHT COLUMN: RISK & SETTINGS */}
+        <div className="lg:col-span-3 flex flex-col gap-6">
+          <div className="bg-slate-900/40 border border-white/5 rounded-2xl p-6 backdrop-blur-md">
+            <h2 className="text-sm font-bold text-white tracking-wider uppercase mb-6 flex items-center gap-2">
+              <Shield className="w-4 h-4 text-slate-400" /> Risk Controls
+            </h2>
+            
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs text-slate-300 font-medium flex items-center gap-1">
+                    Daily Paper Loss Limit <Info className="w-3 h-3 text-slate-500" />
+                  </label>
+                  <span className="text-sm font-bold text-white">Rs {dailyLossLimit.toLocaleString("en-IN")}</span>
+                </div>
+                <input 
+                  type="range" min="1000" max="50000" step="1000"
+                  value={dailyLossLimit} onChange={(e) => setDailyLossLimit(Number(e.target.value))}
+                  className="w-full accent-blue-500 h-1.5 bg-slate-800 rounded-full appearance-none outline-none cursor-pointer" 
                 />
-              </button>
+                <div className="flex justify-between text-[10px] text-slate-500 font-medium">
+                  <span>50% of balance</span>
+                  <span>Rs 50,000</span>
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs text-slate-300 font-medium flex items-center gap-1">
+                    Max Position Size <Info className="w-3 h-3 text-slate-500" />
+                  </label>
+                  <span className="text-sm font-bold text-white">Rs {maxExposure.toLocaleString("en-IN")}</span>
+                </div>
+                <input 
+                  type="range" min="1000" max="50000" step="1000"
+                  value={maxExposure} onChange={(e) => setMaxExposure(Number(e.target.value))}
+                  className="w-full accent-blue-500 h-1.5 bg-slate-800 rounded-full appearance-none outline-none cursor-pointer" 
+                />
+                <div className="flex justify-between text-[10px] text-slate-500 font-medium">
+                  <span>24% of balance</span>
+                  <span>Rs 50,000</span>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-white/5 space-y-4">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs text-slate-300 font-medium flex items-center gap-1">
+                    High Vol Warning <Info className="w-3 h-3 text-slate-500" />
+                  </label>
+                  <button onClick={() => setHighVolWarning(!highVolWarning)} className={`w-9 h-5 rounded-full relative transition-colors ${highVolWarning ? 'bg-blue-500' : 'bg-slate-700'}`}>
+                    <div className={`w-3.5 h-3.5 bg-white rounded-full absolute top-[3px] transition-all ${highVolWarning ? 'left-[19px]' : 'left-[3px]'}`} />
+                  </button>
+                </div>
+                <div className="flex justify-between items-center">
+                  <label className="text-xs text-slate-300 font-medium flex items-center gap-1">
+                    Confirm Orders <Info className="w-3 h-3 text-slate-500" />
+                  </label>
+                  <button onClick={() => setConfirmOrders(!confirmOrders)} className={`w-9 h-5 rounded-full relative transition-colors ${confirmOrders ? 'bg-blue-500' : 'bg-slate-700'}`}>
+                    <div className={`w-3.5 h-3.5 bg-white rounded-full absolute top-[3px] transition-all ${confirmOrders ? 'left-[19px]' : 'left-[3px]'}`} />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* NOTIFICATIONS SECTION */}
+          <div className="bg-slate-900/40 border border-white/5 rounded-2xl p-6 backdrop-blur-md">
+            <h2 className="text-sm font-bold text-white tracking-wider uppercase mb-5 flex items-center gap-2">
+              <Bell className="w-4 h-4 text-slate-400" /> Match Notifications
+            </h2>
+            <div className="space-y-4">
+               <div className="flex justify-between items-center">
+                  <div>
+                    <div className="text-xs font-semibold text-slate-200">Match starts</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">Get notified when a match begins</div>
+                  </div>
+                  <button className="w-9 h-5 bg-emerald-500 rounded-full relative shadow-[0_0_10px_rgba(16,185,129,0.3)]"><div className="w-3.5 h-3.5 bg-white rounded-full absolute top-[3px] left-[19px]"></div></button>
+               </div>
+               <div className="flex justify-between items-center">
+                  <div>
+                    <div className="text-xs font-semibold text-slate-200">Player market moves</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">Alert when followed market moves 10%</div>
+                  </div>
+                  <button className="w-9 h-5 bg-emerald-500 rounded-full relative shadow-[0_0_10px_rgba(16,185,129,0.3)]"><div className="w-3.5 h-3.5 bg-white rounded-full absolute top-[3px] left-[19px]"></div></button>
+               </div>
+               <button className="w-full mt-2 py-2 border border-white/10 rounded-lg text-xs font-semibold text-slate-300 hover:bg-white/5 transition-colors">Manage All Notifications</button>
+            </div>
+          </div>
+
+          <button
+            onClick={handleSubmit}
+            disabled={isLoading}
+            className="w-full py-4 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-sm rounded-xl transition-all shadow-[0_0_20px_rgba(14,165,233,0.2)] hover:shadow-[0_0_30px_rgba(14,165,233,0.4)] flex justify-center items-center gap-2 mt-2"
+          >
+            {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isLoading ? "Saving..." : "Save Settings"}
+          </button>
+
+          <AnimatePresence>
+            {localError && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="p-3 rounded-lg border border-red-500/20 bg-red-500/10 text-xs text-red-400 font-medium flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" /> {localError}
+              </motion.div>
+            )}
+            {success && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="p-3 rounded-lg border border-emerald-500/20 bg-emerald-500/10 text-xs text-emerald-400 font-medium flex items-center gap-2">
+                <CheckCircle className="w-4 h-4" /> Settings updated successfully
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* FEEDBACK & SUBMIT */}
-        <AnimatePresence>
-          {localError && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="p-3 border border-error/40 bg-error/10 text-[10px] text-error font-bold uppercase tracking-wider flex items-center gap-2">
-              <AlertCircle className="w-3.5 h-3.5" /> [ ERROR: {localError} ]
-            </motion.div>
-          )}
-          {success && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="p-3 border border-[#4AF626]/40 bg-[#4AF626]/10 text-[10px] text-[#4AF626] font-bold uppercase tracking-wider flex items-center gap-2">
-              <CheckCircle className="w-3.5 h-3.5" /> [ PROTOCOL UPDATED ]
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <button
-          onClick={handleSubmit}
-          disabled={isLoading}
-          className="w-full mt-2 py-3 bg-primary text-black font-black text-[12px] uppercase tracking-widest hover:bg-[#38bdf8] hover:shadow-[0_0_20px_rgba(14,165,233,0.4)] active:scale-[0.98] transition-all relative overflow-hidden group"
-        >
-          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none"></div>
-          <span className="relative z-10 flex items-center justify-center gap-2">
-            {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-            {isLoading ? "[ TRANSMITTING... ]" : "[ COMMIT PROTOCOL SETTINGS ]"}
-          </span>
-        </button>
       </div>
-
     </div>
   );
 }

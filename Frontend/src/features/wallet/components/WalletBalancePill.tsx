@@ -19,10 +19,10 @@ export function WalletBalancePill({ enabled = true }: WalletBalancePillProps) {
       </div>
       <div className="min-w-0 leading-none">
         <div className="truncate text-[8px] font-black uppercase tracking-wider text-muted-foreground xl:text-[9px]">
-          Paper Balance
+          Available Margin
         </div>
         <div className="mt-1 truncate font-data-tabular text-[12px] font-black text-on-surface xl:text-sm">
-          {isLoading ? "Loading" : isError ? "Unavailable" : `Rs ${formatMoney(overview?.totalEquity ?? 0)}`}
+          {isLoading ? "Loading" : isError ? "Unavailable" : `Rs ${formatMoney(overview?.marginAvailable ?? 0)}`}
         </div>
       </div>
     </div>

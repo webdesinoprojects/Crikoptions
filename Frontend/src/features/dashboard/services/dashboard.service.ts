@@ -36,7 +36,15 @@ export const dashboardService = {
   },
 
   getFinancialOverview: async (): Promise<PortfolioSummary> => {
-    return portfolioService.getPortfolioSummary();
+    const portfolio = await portfolioService.getPortfolioSummary();
+    return {
+      totalEquity: portfolio.totalEquity,
+      dailyPnL: portfolio.dailyPnL,
+      dailyPnLPercentage: portfolio.dailyPnLPct,
+      marginAvailable: portfolio.availableMargin,
+      marginUsed: portfolio.usedMargin,
+      openPositionsCount: portfolio.openPositionsCount,
+    };
   },
 
   getLiveTicker: async (): Promise<TickerItem[]> => {

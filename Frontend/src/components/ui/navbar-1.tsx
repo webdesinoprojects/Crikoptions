@@ -22,8 +22,8 @@ export function Navbar1() {
   const primaryLabel = isAuthenticated ? "Workspace" : "Start trading"
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#020711]/86 backdrop-blur-2xl">
-      <div className="mx-auto flex h-24 max-w-[1500px] items-center justify-between px-4 sm:px-8 lg:px-12">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/5 bg-[#020711]/30 backdrop-blur-xl transition-all duration-300">
+      <div className="mx-auto flex h-16 max-w-[1500px] items-center justify-between px-4 sm:px-8 lg:px-12">
         <Link
           href="/"
           className="group flex min-w-0 items-center gap-3 rounded-full pr-2"

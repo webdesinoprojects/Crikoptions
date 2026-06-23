@@ -10,6 +10,8 @@ import { Wallet, Activity, ChevronRight } from "lucide-react";
 type AdminMatch = {
   _id: string;
   teams?: { home?: string; away?: string };
+  teamAName?: string;
+  teamBName?: string;
   tournament?: string;
   status?: string;
 };
@@ -22,8 +24,6 @@ export default function AdminConsolePage() {
     const fetchMatches = async () => {
       try {
         const response = await apiClient.get<{ data?: AdminMatch[] }>("/v1/matches/home");
-        // /v1/matches/home usually returns a list of active matches. 
-        // If there's an admin endpoint for all matches later, we can switch to it.
         setMatches(response.data?.data || []);
       } catch (error) {
         console.error("Failed to fetch matches", error);
@@ -87,19 +87,24 @@ export default function AdminConsolePage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {matches.map((match) => (
-            <div key={match._id} className="flex items-center justify-between p-4 border border-gray-800 rounded-lg bg-gray-950">
-              <div className="flex flex-col">
-                <span className="font-bold text-lg">{match.teams?.home} vs {match.teams?.away}</span>
-                <span className="text-sm text-gray-400">
-                  {match.tournament} • Status: <span className="text-sky-500 uppercase">{match.status}</span>
-                </span>
+          {matches.map((match) => {
+            const teamA = match.teamAName || match.teams?.home || "Unknown";
+            const teamB = match.teamBName || match.teams?.away || "Unknown";
+            
+            return (
+              <div key={match._id} className="flex items-center justify-between p-4 border border-gray-800 rounded-lg bg-gray-950">
+                <div className="flex flex-col">
+                  <span className="font-bold text-lg">{teamA} vs {teamB}</span>
+                  <span className="text-sm text-gray-400">
+                    {match.tournament || "Tournament"} • Status: <span className="text-sky-500 uppercase">{match.status}</span>
+                  </span>
+                </div>
+                <Link href={`/admin/matches/${match._id}`}>
+                  <Button variant="secondary">Open Simulator: {teamA} vs {teamB}</Button>
+                </Link>
               </div>
-              <Link href={`/admin/matches/${match._id}`}>
-                <Button variant="secondary">Open Simulator</Button>
-              </Link>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

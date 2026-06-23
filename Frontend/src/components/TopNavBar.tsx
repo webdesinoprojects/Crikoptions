@@ -53,7 +53,7 @@ export default function TopNavBar() {
     { name: "Portfolio Hub", href: "/portfolio", icon: <Activity className="w-4 h-4" /> },
     { name: "Intelligence HQ", href: primaryInsightHref, icon: <Compass className="w-4 h-4" /> },
     ...(user?.role === "admin"
-      ? [{ name: "Admin Wallets", href: "/admin/wallets", icon: <Wallet className="w-4 h-4" /> }]
+      ? [{ name: "Admin", href: "/admin", icon: <Settings className="w-4 h-4" /> }]
       : []),
   ];
 
