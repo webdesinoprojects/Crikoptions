@@ -15,6 +15,7 @@ interface BackendPosition {
   userId: string;
   matchId: string;
   marketId: string;
+  strike?: number;
   status: "open" | "closed" | string;
   lots: number;
   buyPrice: number;
@@ -143,6 +144,7 @@ function adaptOpenPosition(
     marketId: position.marketId,
     symbol: symbolFromMarket(market, position.marketId),
     matchName: matchName(match, position.matchId),
+    strike: (position.strike && position.strike > 0) ? position.strike.toString() : extractStrike(market?.title),
     side,
     quantity,
     averageEntryPrice: round2(entryPrice),
@@ -255,6 +257,12 @@ function symbolFromMarket(market: BackendMarket | undefined, marketId: string): 
 function matchName(match: BackendMatch | undefined, matchId: string): string {
   if (!match) return matchId || "0";
   return `${match.teamAName || "0"} vs ${match.teamBName || "0"}`;
+}
+
+function extractStrike(title?: string): string {
+  if (!title) return "-";
+  const match = title.match(/(\d+(?:\.\d+)?)/);
+  return match ? match[1] : title;
 }
 
 function average(values: number[]): number {

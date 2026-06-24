@@ -11,6 +11,7 @@ export interface PortfolioPosition {
   symbol: string;
   /** Derived from matchId stored in order */
   matchName: string;
+  strike?: string;
   side: "BUY" | "SELL";
   quantity: number;
   averageEntryPrice: number;

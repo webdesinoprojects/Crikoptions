@@ -121,7 +121,7 @@ function PositionsScreen({
             <th className="px-4 py-3 text-right">Entry</th>
             <th className="px-4 py-3 text-right">LTP</th>
             <th className="px-4 py-3 text-right">Unrealized</th>
-            <th className="px-4 py-3 text-right">Risk</th>
+            <th className="px-4 py-3 text-right">Strike</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-outline/5">
@@ -145,8 +145,8 @@ function PositionsScreen({
                   <td className={`px-4 py-3 text-right font-black ${positive ? "text-bull-green drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]" : "text-bear-red drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]"}`}>
                     {positive ? "+" : "-"}Rs {Math.abs(position.unrealizedPnL).toFixed(2)}
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    <RiskBar value={position.allocation} />
+                  <td className="px-4 py-3 text-right text-on-surface-variant font-medium">
+                    {position.strike}
                   </td>
                 </tr>
               );
