@@ -6,6 +6,7 @@ import { Execution } from "../types/execution";
 import { OpenPosition } from "../types/position";
 
 export interface CreateOrderPayload {
+  clientOrderId?: string;
   matchId: string;
   marketId: string;
   strike: number;
@@ -13,6 +14,7 @@ export interface CreateOrderPayload {
   type: "LIMIT" | "MARKET";
   quantity: number;
   price: number;
+  pricingSnapshot?: CalculatePricePayload;
 }
 
 export interface CalculatePricePayload {

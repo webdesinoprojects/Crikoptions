@@ -17,7 +17,7 @@ export const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (mounted && !isLoading && !token && !isAuthenticated) {
       // If we are on a dashboard route and definitely not logged in, redirect to login
-      if (pathname?.startsWith("/dashboard") || pathname?.startsWith("/insights") || pathname?.startsWith("/portfolio") || pathname?.startsWith("/trading") || pathname?.startsWith("/profile")) {
+      if (pathname?.startsWith("/dashboard") || pathname?.startsWith("/insights") || pathname?.startsWith("/portfolio") || pathname?.startsWith("/trading") || pathname?.startsWith("/profile") || pathname?.startsWith("/market-scanner")) {
         router.replace("/login");
       }
     }
@@ -35,7 +35,7 @@ export const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   }
 
   // If not logged in and on a protected route, we return null to prevent flash of content before redirect
-  if (!isAuthenticated && !token && (pathname?.startsWith("/dashboard") || pathname?.startsWith("/insights") || pathname?.startsWith("/portfolio") || pathname?.startsWith("/trading") || pathname?.startsWith("/profile"))) {
+  if (!isAuthenticated && !token && (pathname?.startsWith("/dashboard") || pathname?.startsWith("/insights") || pathname?.startsWith("/portfolio") || pathname?.startsWith("/trading") || pathname?.startsWith("/profile") || pathname?.startsWith("/market-scanner"))) {
     return null; 
   }
 

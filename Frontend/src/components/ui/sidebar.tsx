@@ -147,10 +147,11 @@ export function SessionNavBar() {
                     </Link>
                     
                     <Link
-                      href="#"
+                      href="/market-scanner"
                       className={cn(
                         "flex h-11 w-full flex-row items-center rounded-md px-3 py-2 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
                         isCollapsed && "justify-center px-0",
+                        pathname?.startsWith("/market-scanner") && "bg-primary/15 text-primary font-bold hover:bg-primary/20 hover:text-primary",
                       )}
                     >
                       <Activity className="h-5 w-5 shrink-0" />
