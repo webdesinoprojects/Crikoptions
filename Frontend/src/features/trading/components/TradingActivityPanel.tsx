@@ -449,7 +449,9 @@ function InlinePositionCloseForm({
           <label className="text-[9px] font-black text-on-surface-variant uppercase tracking-wider">QTY (MAX {maxQty})</label>
           <input
             type="number"
+            min="0"
             value={qty}
+            onKeyDown={(e) => { if (e.key === '-') e.preventDefault(); }}
             onChange={(e) => setQty(Math.min(maxQty, Math.max(1, parseInt(e.target.value) || 0)))}
             className="w-full rounded border border-white/10 bg-[#071327] px-2 py-2 text-[12px] font-data-tabular font-bold text-white outline-none focus:border-cyan-500/50"
           />
@@ -458,8 +460,10 @@ function InlinePositionCloseForm({
           <label className="text-[9px] font-black text-on-surface-variant uppercase tracking-wider">{side === "sell" ? "BID" : "ASK"} (APPROX)</label>
           <input
             type="number"
+            min="0"
             value={type === "MARKET" ? liveLtp : price}
-            onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
+            onKeyDown={(e) => { if (e.key === '-') e.preventDefault(); }}
+            onChange={(e) => setPrice(Math.max(0, parseFloat(e.target.value) || 0))}
             disabled={type === "MARKET"}
             className="w-full rounded border border-white/10 bg-[#071327] px-2 py-2 text-[12px] font-data-tabular font-bold text-white outline-none focus:border-cyan-500/50 disabled:opacity-50"
           />

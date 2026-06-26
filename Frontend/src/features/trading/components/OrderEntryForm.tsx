@@ -244,8 +244,10 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
             <div className="relative w-full">
               <input
                 type="number"
+                min="0"
                 step="0.05"
                 value={displayPrice}
+                onKeyDown={(e) => { if (e.key === '-') e.preventDefault(); }}
                 onChange={(e) => setPriceOverride({ key: priceKey, value: e.target.value })}
                 className="h-10 w-full min-w-0 rounded-lg border border-white/5 bg-[#040a17] pl-6 pr-3 font-data-tabular text-[14px] font-black text-on-surface shadow-inner transition-colors focus:border-cyan-400/80 focus:bg-[#071327] focus:outline-none focus:ring-1 focus:ring-cyan-400/50"
               />
@@ -265,7 +267,9 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
           <div className="relative w-full">
             <input
               type="number"
+              min="0"
               value={qty}
+              onKeyDown={(e) => { if (e.key === '-') e.preventDefault(); }}
               onChange={(e) => setQtyOverride(e.target.value)}
               className="h-10 w-full min-w-0 rounded-lg border border-white/5 bg-[#040a17] pl-6 pr-3 font-data-tabular text-[14px] font-black text-on-surface shadow-inner transition-colors focus:border-cyan-400/80 focus:bg-[#071327] focus:outline-none focus:ring-1 focus:ring-cyan-400/50"
             />

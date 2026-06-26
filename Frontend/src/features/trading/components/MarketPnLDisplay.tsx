@@ -1,5 +1,5 @@
 import React, { useMemo, useRef } from "react";
-import { Zap, Target } from "lucide-react";
+import { Zap } from "lucide-react";
 import NumberFlow from "@number-flow/react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -55,11 +55,7 @@ export function MarketPnLDisplay({ marketId }: MarketPnLDisplayProps) {
   const totalPnL = openPnL + closedPnL;
   const isPositive = totalPnL >= 0;
 
-  // Milestone logic
-  const step = 1000;
-  const prevMilestone = Math.floor(totalPnL / step) * step;
-  const nextMilestone = totalPnL < 0 ? 0 : prevMilestone + step;
-  const progressPercent = totalPnL < 0 ? 0 : ((totalPnL - prevMilestone) / step) * 100;
+
 
   useGSAP(() => {
     if (totalPnL > prevPnLRef.current) {
@@ -93,19 +89,7 @@ export function MarketPnLDisplay({ marketId }: MarketPnLDisplayProps) {
         </span>
       </div>
       
-      {/* Milestone Tracker */}
-      <div className="mt-1 flex flex-col gap-0.5">
-        <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-wider text-on-surface-variant opacity-80">
-          <span>{totalPnL < 0 ? "Recovery" : "Progress"}</span>
-          <span className="flex items-center gap-0.5"><Target className="w-2.5 h-2.5 text-cyan-500" /> ₹{nextMilestone}</span>
-        </div>
-        <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-          <div 
-            className={`h-full rounded-full transition-all duration-1000 ease-out ${isPositive ? 'bg-gradient-to-r from-primary via-teal-400 to-bull-green shadow-[0_0_12px_rgba(20,184,166,0.6)]' : 'bg-bear-red/50'}`}
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
-      </div>
+
     </div>
   );
 }
