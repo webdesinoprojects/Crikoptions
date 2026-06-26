@@ -3,7 +3,7 @@
 import React from "react";
 import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Match } from "@/types";
+import type { Market, Match } from "@/types";
 import { cn } from "@/lib/utils";
 import { scoreParts } from "../utils/terminal-context";
 import { useMarkets } from "../hooks";
@@ -19,6 +19,27 @@ function liveMatchesOnly(matches: Match[]): Match[] {
   return matches
     .filter((match) => match.status?.toUpperCase() === "LIVE")
     .sort((a, b) => new Date(a.startTime ?? 0).getTime() - new Date(b.startTime ?? 0).getTime());
+}
+
+const PRIMARY_MARKET_PRIORITY: Record<string, number> = {
+  match_depth: 0,
+  team_total: 1,
+};
+
+function selectPrimaryMarket(markets: Market[]): Market | undefined {
+  let primary = markets[0];
+  let primaryRank = Number.POSITIVE_INFINITY;
+
+  for (const market of markets) {
+    const rank = PRIMARY_MARKET_PRIORITY[(market.type ?? "").toLowerCase()] ?? Number.POSITIVE_INFINITY;
+    if (rank < primaryRank) {
+      primary = market;
+      primaryRank = rank;
+      if (rank === 0) break;
+    }
+  }
+
+  return primary;
 }
 
 export function MatchScheduleStrip({ matches, selectedMatchId, marketId }: MatchScheduleStripProps) {
@@ -46,23 +67,20 @@ export function MatchScheduleStrip({ matches, selectedMatchId, marketId }: Match
   );
 }
 
-function MatchCard({ match, selected }: { match: Match; selected: boolean }) {
+const MatchCard = React.memo(function MatchCard({ match, selected }: { match: Match; selected: boolean }) {
   const router = useRouter();
   const score = scoreParts(match.homeScore);
   const { data: markets = [] } = useMarkets(match.id);
 
-  const handleClick = () => {
+  const handleClick = React.useCallback(() => {
     if (selected) return;
 
-    const primary =
-      markets.find((market) => (market.type ?? "").toLowerCase() === "match_depth") ??
-      markets.find((market) => (market.type ?? "").toLowerCase() === "team_total") ??
-      markets[0];
+    const primary = selectPrimaryMarket(markets);
 
     if (primary?.id) {
       router.push(`/trading/${primary.id}`);
     }
-  };
+  }, [markets, router, selected]);
 
   return (
     <button
@@ -93,4 +111,4 @@ function MatchCard({ match, selected }: { match: Match; selected: boolean }) {
       )}
     </button>
   );
-}
+});

@@ -2,6 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { walletKeys } from "@/features/wallet/hooks";
 import type { PositionUpdateEvent } from "@/lib/websocket/order.stream";
 import { Order } from "@/types";
+import type { PositionQueryFilters } from "../services/trading.service";
 import type { OpenPosition } from "../types/position";
 
 export const tradingQueryKeys = {
@@ -9,6 +10,11 @@ export const tradingQueryKeys = {
   orders: (matchId?: string) => ["orders", matchId] as const,
   executions: (matchId: string, marketId: string) => ["executions", matchId, marketId] as const,
   openPositions: ["openPositions"] as const,
+  openPositionsFiltered: (filters?: PositionQueryFilters) =>
+    hasPositionFilters(filters) ? ["openPositions", normalizePositionFilters(filters)] as const : ["openPositions"] as const,
+  closedPositions: ["closedPositions"] as const,
+  closedPositionsFiltered: (filters?: PositionQueryFilters) =>
+    hasPositionFilters(filters) ? ["closedPositions", normalizePositionFilters(filters)] as const : ["closedPositions"] as const,
 };
 
 const TERMINAL_POLL_MS = 4000;
@@ -28,6 +34,7 @@ export function refreshAfterOrderCancel(queryClient: QueryClient, matchId?: stri
 export function refreshAfterExit(queryClient: QueryClient, matchId?: string) {
   if (matchId) invalidateAndRefetch(queryClient, tradingQueryKeys.orders(matchId));
   invalidateAndRefetch(queryClient, tradingQueryKeys.openPositions);
+  invalidateAndRefetch(queryClient, tradingQueryKeys.closedPositions);
   invalidateAndRefetch(queryClient, walletKeys.wallet);
   invalidateAndRefetch(queryClient, ["portfolio"]);
   invalidateAndRefetch(queryClient, ["dashboard", "overview"]);
@@ -55,6 +62,7 @@ export function patchOpenPositionsCache(queryClient: QueryClient, event: Positio
 function refreshTerminalQueries(queryClient: QueryClient, matchId: string) {
   invalidateAndRefetch(queryClient, tradingQueryKeys.orders(matchId));
   invalidateAndRefetch(queryClient, tradingQueryKeys.openPositions);
+  invalidateAndRefetch(queryClient, tradingQueryKeys.closedPositions);
   invalidateAndRefetch(queryClient, walletKeys.wallet);
   invalidateAndRefetch(queryClient, ["portfolio"]);
   invalidateAndRefetch(queryClient, ["dashboard", "overview"]);
@@ -71,4 +79,15 @@ function upsertOrderInCache(queryClient: QueryClient, order: Order, matchId: str
     next.unshift(order);
     return next.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   });
+}
+
+function normalizePositionFilters(filters?: PositionQueryFilters) {
+  return {
+    matchId: filters?.matchId ?? "",
+    marketId: filters?.marketId ?? "",
+  };
+}
+
+function hasPositionFilters(filters?: PositionQueryFilters) {
+  return Boolean(filters?.matchId || filters?.marketId);
 }

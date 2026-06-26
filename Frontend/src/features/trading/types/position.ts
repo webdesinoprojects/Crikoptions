@@ -6,8 +6,11 @@ export interface OpenPosition {
   strike: number;
   lots: number;
   buyPrice: number;
+  sellPrice?: number;
   ltp: number;
   pnl: number;
+  realizedPnl?: number;
+  matchedLots?: number;
   status?: string;
   createdAt?: string;
   updatedAt?: string;

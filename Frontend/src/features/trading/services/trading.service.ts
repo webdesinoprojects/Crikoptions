@@ -44,6 +44,11 @@ export interface CalculatedPrice {
   optionChain?: OptionChainStrike[];
 }
 
+export interface PositionQueryFilters {
+  matchId?: string;
+  marketId?: string;
+}
+
 class TradingService {
   async fetchMarkets(matchId: string): Promise<FrontendMarket[]> {
     const response = await apiClient.get<{ success: boolean; data: BackendMarket[] }>(`/v1/matches/${matchId}/markets`);
@@ -80,8 +85,17 @@ class TradingService {
     return response.data.data ?? [];
   }
 
-  async fetchOpenPositions(): Promise<OpenPosition[]> {
-    const response = await apiClient.get<{ success: boolean; data: OpenPosition[] }>("/v1/positions/open");
+  async fetchOpenPositions(filters?: PositionQueryFilters): Promise<OpenPosition[]> {
+    const response = await apiClient.get<{ success: boolean; data: OpenPosition[] }>("/v1/positions/open", {
+      params: compactPositionFilters(filters),
+    });
+    return normalizeOpenPositions(response.data.data ?? []);
+  }
+
+  async fetchClosedPositions(filters?: PositionQueryFilters): Promise<OpenPosition[]> {
+    const response = await apiClient.get<{ success: boolean; data: OpenPosition[] }>("/v1/positions/closed", {
+      params: compactPositionFilters(filters),
+    });
     return normalizeOpenPositions(response.data.data ?? []);
   }
 
@@ -136,9 +150,21 @@ function normalizeOpenPositions(positions: OpenPosition[]): OpenPosition[] {
     strike: numberOrZero(position.strike),
     lots: numberOrZero(position.lots),
     buyPrice: numberOrZero(position.buyPrice),
+    sellPrice: numberOrZero(position.sellPrice),
     ltp: numberOrZero(position.ltp),
     pnl: numberOrZero(position.pnl),
+    realizedPnl: numberOrZero(position.realizedPnl),
+    matchedLots: numberOrZero(position.matchedLots),
   }));
+}
+
+function compactPositionFilters(filters?: PositionQueryFilters): PositionQueryFilters {
+  if (!filters) return {};
+
+  return {
+    ...(filters.matchId ? { matchId: filters.matchId } : {}),
+    ...(filters.marketId ? { marketId: filters.marketId } : {}),
+  };
 }
 
 function numberOrZero(value: unknown): number {

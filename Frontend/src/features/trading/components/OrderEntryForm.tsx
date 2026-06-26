@@ -1,9 +1,9 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { CheckCircle2, Clock3, Loader2, RotateCcw, ShieldCheck, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { useWallet } from "@/features/wallet/hooks";
 import { useTerminalStore } from "@/stores/terminal.store";
-import { Match, Order } from "@/types";
+import type { Match, Order } from "@/types";
 import { terminalPollInterval } from "../hooks/query-keys";
 import { useCreateOrder, useMarketDetail, useOptionChain } from "../hooks";
 import { buildOptionRows, buildPricePayload, findAtmRow } from "../utils/terminal-context";
@@ -16,6 +16,31 @@ interface OrderEntryFormProps {
 
 type OrderMode = "LIMIT" | "MARKET";
 
+const EXECUTION_PRICE_EPSILON = 0.005;
+
+function canExecuteNow({
+  hasExecutableQuote,
+  price,
+  quoteAsk,
+  quoteBid,
+  side,
+  type,
+}: {
+  hasExecutableQuote: boolean;
+  price: number;
+  quoteAsk: number;
+  quoteBid: number;
+  side: "BUY" | "SELL";
+  type: OrderMode;
+}) {
+  if (type === "MARKET") return true;
+  if (!hasExecutableQuote) return false;
+
+  return side === "BUY"
+    ? price + EXECUTION_PRICE_EPSILON >= quoteAsk
+    : price - EXECUTION_PRICE_EPSILON <= quoteBid;
+}
+
 export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps) {
   const [type, setType] = useState<OrderMode>("LIMIT");
   const [priceOverride, setPriceOverride] = useState<{ key: string; value: string } | null>(null);
@@ -23,11 +48,9 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const [lastOrderTime, setLastOrderTime] = useState<Date | null>(null);
 
   const orderSize = useTerminalStore((state) => state.orderSize);
-  const [qty, setQty] = useState(String(orderSize));
+  const [qtyOverride, setQtyOverride] = useState<string | null>(null);
+  const qty = qtyOverride ?? String(orderSize);
 
-  useEffect(() => {
-    setQty(String(orderSize));
-  }, [orderSize]);
   const selectedPriceStore = useTerminalStore((state) => state.selectedPrice);
   const selectedSideStore = useTerminalStore((state) => state.selectedSide);
   const setSelectedSide = useTerminalStore((state) => state.setSelectedSide);
@@ -38,8 +61,11 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const payload = useMemo(() => buildPricePayload(match, market), [match, market]);
   const { data: calculated } = useOptionChain(marketId, payload);
   const rows = useMemo(() => buildOptionRows(calculated, market), [calculated, market]);
-  const selectedRow = rows.find((row) => row.strike === selectedStrike) ?? findAtmRow(rows);
-  const createOrderMutation = useCreateOrder();
+  const selectedRow = useMemo(
+    () => rows.find((row) => row.strike === selectedStrike) ?? findAtmRow(rows),
+    [rows, selectedStrike]
+  );
+  const { isPending: isCreatingOrder, mutate: createOrder } = useCreateOrder();
 
   const side = selectedSideStore ?? "BUY";
   const quoteBid = selectedRow?.bid ?? 0;
@@ -55,30 +81,33 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const availableBalance = wallet?.availableBalance ?? 0;
   const isBuyBalanceExceeded = side === "BUY" && cashRequired > availableBalance;
   const hasExecutableQuote = Boolean(selectedRow && routedPrice > 0);
-  const willExecuteNow =
-    type === "MARKET" ||
-    (type === "LIMIT" &&
-      hasExecutableQuote &&
-      (side === "BUY" ? priceValue + 0.005 >= quoteAsk : priceValue - 0.005 <= quoteBid));
+  const willExecuteNow = canExecuteNow({
+    hasExecutableQuote,
+    price: priceValue,
+    quoteAsk,
+    quoteBid,
+    side,
+    type,
+  });
   const submitDisabled =
-    createOrderMutation.isPending ||
+    isCreatingOrder ||
     !matchId ||
     !marketId ||
     !selectedRow ||
     isBuyBalanceExceeded ||
     (type === "MARKET" && !hasExecutableQuote);
 
-  const alignLimitToQuote = () => {
+  const alignLimitToQuote = useCallback(() => {
     if (!hasExecutableQuote) return;
     setPriceOverride({ key: priceKey, value: routedPrice.toFixed(2) });
-  };
+  }, [hasExecutableQuote, priceKey, routedPrice]);
 
-  const resetTicket = () => {
+  const resetTicket = useCallback(() => {
     setPriceOverride(null);
-    setQty(String(orderSize));
-  };
+    setQtyOverride(null);
+  }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
 
     if (!matchId || !marketId) {
@@ -106,7 +135,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
       return;
     }
 
-    createOrderMutation.mutate(
+    createOrder(
       {
         matchId,
         marketId,
@@ -132,7 +161,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
                 : `Working order: limit Rs ${formatMoney(data.price ?? 0)} is above market bid.`
             );
           }
-          setQty(String(orderSize));
+          setQtyOverride(null);
         },
         onError: (error: unknown) => {
           const errMsg = getErrorMessage(error, "Failed to place order");
@@ -140,7 +169,18 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
         },
       }
     );
-  };
+  }, [
+    createOrder,
+    hasExecutableQuote,
+    isBuyBalanceExceeded,
+    marketId,
+    matchId,
+    priceValue,
+    qtyValue,
+    selectedRow,
+    side,
+    type,
+  ]);
 
   return (
     <form
@@ -245,7 +285,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
           <input
             type="number"
             value={qty}
-            onChange={(e) => setQty(e.target.value)}
+            onChange={(e) => setQtyOverride(e.target.value)}
             className="h-10 min-w-0 rounded-lg border border-white/10 bg-[#040a17] px-3 font-data-tabular text-[14px] font-black text-on-surface focus:border-cyan-400/50 focus:bg-[#071327] transition-colors focus:outline-none shadow-inner"
           />
         </div>
@@ -271,7 +311,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
             side === "BUY" ? "bg-bull-green hover:bg-bull-green/90 shadow-bull-green/20" : "bg-bear-red hover:bg-bear-red/90 shadow-bear-red/20"
           } disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none`}
         >
-          {createOrderMutation.isPending ? (
+          {isCreatingOrder ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
               Routing...

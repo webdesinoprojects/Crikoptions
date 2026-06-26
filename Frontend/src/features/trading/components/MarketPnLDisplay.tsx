@@ -3,8 +3,7 @@ import { Zap, Target } from "lucide-react";
 import NumberFlow from "@number-flow/react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { useMarketDetail, useOptionChain, useOpenPositions } from "../hooks";
-import { useClosedTrades } from "@/features/portfolio/hooks";
+import { useClosedPositions, useMarketDetail, useOpenPositions, useOptionChain } from "../hooks";
 import { buildOptionRows, buildPricePayload } from "../utils/terminal-context";
 import { useMatchDetails } from "@/features/dashboard/hooks";
 
@@ -22,29 +21,37 @@ export function MarketPnLDisplay({ marketId }: MarketPnLDisplayProps) {
   const payload = useMemo(() => buildPricePayload(match, market), [match, market]);
   const { data: calculated } = useOptionChain(marketId, payload);
   const rows = useMemo(() => buildOptionRows(calculated, market), [calculated, market]);
+  const rowByStrike = useMemo(() => new Map(rows.map((row) => [row.strike, row])), [rows]);
+  const positionFilters = useMemo(() => ({ marketId }), [marketId]);
 
-  const { data: positions = [] } = useOpenPositions();
-  const { data: allClosedTrades = [] } = useClosedTrades();
+  const { data: positions = [] } = useOpenPositions(positionFilters);
+  const { data: closedPositions = [] } = useClosedPositions(positionFilters);
   
   const marketPositions = useMemo(
     () => positions.filter((position) => position.marketId === marketId && position.strike > 0 && position.lots !== 0),
     [marketId, positions]
   );
-  
-  const marketClosedTrades = useMemo(
-    () => allClosedTrades.filter(t => t.marketId === marketId),
-    [allClosedTrades, marketId]
+
+  const openPnL = useMemo(
+    () =>
+      marketPositions.reduce((total, position) => {
+        const chainRow = rowByStrike.get(position.strike);
+        if (!chainRow) return total + position.pnl;
+
+        const liveLtp = position.lots > 0 ? chainRow.bid : chainRow.ask;
+        return total + roundCurrency((liveLtp - position.buyPrice) * position.lots);
+      }, 0),
+    [marketPositions, rowByStrike]
   );
 
-  let openPnL = 0;
-  marketPositions.forEach(position => {
-    const chainRow = rows.find((row) => row.strike === position.strike);
-    const liveLtp = chainRow ? (position.lots > 0 ? chainRow.bid : chainRow.ask) : position.ltp;
-    const livePnl = chainRow ? Math.round((liveLtp - position.buyPrice) * position.lots * 100) / 100 : position.pnl;
-    openPnL += livePnl;
-  });
-
-  const closedPnL = marketClosedTrades.reduce((acc, t) => acc + t.realizedPnL, 0);
+  const closedPnL = useMemo(
+    () =>
+      closedPositions.reduce((total, position) => {
+        if (position.marketId !== marketId) return total;
+        return total + (position.realizedPnl ?? position.pnl);
+      }, 0),
+    [closedPositions, marketId]
+  );
   const totalPnL = openPnL + closedPnL;
   const isPositive = totalPnL >= 0;
 
@@ -110,4 +117,9 @@ export function MarketPnLDisplay({ marketId }: MarketPnLDisplayProps) {
       </div>
     </div>
   );
+}
+
+function roundCurrency(value: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.round(value * 100) / 100;
 }
