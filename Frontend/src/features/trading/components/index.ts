@@ -10,3 +10,5 @@ export * from "./OrderBook";
 export * from "./OrderEntryForm";
 export * from "./PositionSummary";
 export * from "./MatchAnalyticsPanel";
+export * from "./MarketPnLDisplay";
+

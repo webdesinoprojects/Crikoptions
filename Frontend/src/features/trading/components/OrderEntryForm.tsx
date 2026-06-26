@@ -5,8 +5,7 @@ import { useWallet } from "@/features/wallet/hooks";
 import { useTerminalStore } from "@/stores/terminal.store";
 import { Match, Order } from "@/types";
 import { terminalPollInterval } from "../hooks/query-keys";
-import { useCreateOrder, useMarketDetail, useOptionChain, useOpenPositions } from "../hooks";
-import { useClosedTrades } from "@/features/portfolio/hooks";
+import { useCreateOrder, useMarketDetail, useOptionChain } from "../hooks";
 import { buildOptionRows, buildPricePayload, findAtmRow } from "../utils/terminal-context";
 
 interface OrderEntryFormProps {
@@ -41,29 +40,6 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const rows = useMemo(() => buildOptionRows(calculated, market), [calculated, market]);
   const selectedRow = rows.find((row) => row.strike === selectedStrike) ?? findAtmRow(rows);
   const createOrderMutation = useCreateOrder();
-
-  const { data: positions = [] } = useOpenPositions();
-  const { data: allClosedTrades = [] } = useClosedTrades();
-  
-  const marketPositions = useMemo(
-    () => positions.filter((position) => position.marketId === marketId && position.strike > 0 && position.lots !== 0),
-    [marketId, positions]
-  );
-  const marketClosedTrades = useMemo(
-    () => allClosedTrades.filter(t => t.marketId === marketId),
-    [allClosedTrades, marketId]
-  );
-
-  let openPnL = 0;
-  marketPositions.forEach(position => {
-    const chainRow = rows.find((row) => row.strike === position.strike);
-    const liveLtp = chainRow ? (position.lots > 0 ? chainRow.bid : chainRow.ask) : position.ltp;
-    const livePnl = chainRow ? Math.round((liveLtp - position.buyPrice) * position.lots * 100) / 100 : position.pnl;
-    openPnL += livePnl;
-  });
-
-  const closedPnL = marketClosedTrades.reduce((acc, t) => acc + t.realizedPnL, 0);
-  const totalPnL = openPnL + closedPnL;
 
   const side = selectedSideStore ?? "BUY";
   const quoteBid = selectedRow?.bid ?? 0;
@@ -184,17 +160,6 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
             {selectedRow ? `Strike ${selectedRow.strike.toFixed(0)} selected` : market?.title ?? "Select a strike"}
           </p>
         </div>
-      </div>
-
-      {/* P&L Banner */}
-      <div className="flex items-center justify-between rounded-xl bg-gradient-to-r from-[#071327] to-[#040a17] border border-white/10 px-4 py-2.5 shadow-inner">
-        <span className="text-[11px] font-black uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
-          <Zap className="w-3.5 h-3.5 text-cyan-400" />
-          Market P&L
-        </span>
-        <span className={`text-[15px] font-black tracking-tight ${totalPnL >= 0 ? 'text-bull-green drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]' : 'text-bear-red drop-shadow-[0_0_12px_rgba(239,68,68,0.4)]'}`}>
-          {totalPnL >= 0 ? '+' : ''}₹{totalPnL.toFixed(2)}
-        </span>
       </div>
 
       <QuoteFocusPanel

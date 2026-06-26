@@ -84,7 +84,7 @@ export default function TradingTerminalPage({ params }: PageProps) {
       />
 
       <div className="relative z-10" data-terminal-panel>
-        <MatchScheduleStrip matches={visibleMatches} selectedMatchId={matchId} />
+        <MatchScheduleStrip matches={visibleMatches} selectedMatchId={matchId} marketId={marketId} />
       </div>
 
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto lg:overflow-hidden">
