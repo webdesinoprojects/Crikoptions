@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import * as echarts from "echarts";
-import { Activity, CandlestickChart, TrendingDown, TrendingUp, X } from "lucide-react";
+import { CandlestickChart, TrendingDown, TrendingUp, X } from "lucide-react";
 import { EChartsWrapper } from "@/components/shared/EChartsWrapper";
 import {
   Dialog,
@@ -40,7 +40,6 @@ export function OptionChainCandlestickDialog({
   selectedRow,
 }: OptionChainCandlestickDialogProps) {
   const [bucketMs, setBucketMs] = useState(DEFAULT_BUCKET_MS);
-  const [showQuoteBands, setShowQuoteBands] = useState(false);
 
   const selectedHistory = useMemo(
     () => getStrikeHistory(selectedRow?.strike),
@@ -55,13 +54,12 @@ export function OptionChainCandlestickDialog({
   const currentPremium = latestCandle?.close ?? latestPoint?.premium ?? selectedRow?.premium ?? 0;
   const currentOpen = latestCandle?.open ?? currentPremium;
   const move = previousPoint ? currentPremium - previousPoint.premium : candleStats.move;
-  const spread = selectedRow ? Math.max(0, selectedRow.ask - selectedRow.bid) : 0;
   const activitySize = Math.max(selectedRow?.bidQty ?? 0, selectedRow?.askQty ?? 0);
   const chartReady = Boolean(selectedRow && candles.length > 0);
 
   const chartOption = useMemo<echarts.EChartsOption>(
-    () => buildCandleOption(candles, showQuoteBands),
-    [candles, showQuoteBands]
+    () => buildCandleOption(candles),
+    [candles]
   );
 
   return (
@@ -99,19 +97,17 @@ export function OptionChainCandlestickDialog({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="grid w-full grid-cols-2 gap-1.5 sm:grid-cols-3 xl:w-auto xl:grid-cols-6">
+            <div className="grid w-full grid-cols-2 gap-1.5 sm:grid-cols-4 xl:w-auto xl:grid-cols-4">
               <MetricCell label="Last" tone={move >= 0 ? "up" : "down"} value={`Rs ${formatMoney(currentPremium)}`} />
               <MetricCell label="Open" value={`Rs ${formatMoney(currentOpen)}`} />
               <MetricCell label="High" value={`Rs ${formatMoney(candleStats.high || currentPremium)}`} />
               <MetricCell label="Low" value={`Rs ${formatMoney(candleStats.low || currentPremium)}`} />
-              <MetricCell label="Spread" value={`Rs ${formatMoney(spread)}`} />
-              <MetricCell label="Ticks" value={String(selectedHistory.length)} />
             </div>
           </div>
         </div>
 
         <div className="flex shrink-0 flex-col gap-2 border-b border-white/8 bg-[#050d1d] px-3 py-2 md:flex-row md:items-center md:justify-between">
-          <div className="grid w-full grid-cols-4 gap-1 rounded-lg border border-white/8 bg-[#071327] p-0.5 md:w-auto">
+          <div className="grid w-full grid-cols-5 gap-1 rounded-lg border border-white/8 bg-[#071327] p-0.5 md:w-auto">
             {CANDLE_BUCKETS.map((bucket) => (
               <ControlButton
                 key={bucket.value}
@@ -124,19 +120,6 @@ export function OptionChainCandlestickDialog({
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] uppercase tracking-wide text-on-surface-variant md:justify-end">
-            <button
-              type="button"
-              onClick={() => setShowQuoteBands((value) => !value)}
-              className={cn(
-                "inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 font-black transition-all",
-                showQuoteBands
-                  ? "border-cyan-300/30 bg-cyan-300/12 text-cyan-100"
-                  : "border-white/8 bg-white/[0.03] text-on-surface-variant hover:bg-white/6 hover:text-on-surface"
-              )}
-            >
-              <Activity className="h-3.5 w-3.5" />
-              Bid/Ask
-            </button>
             <span>{candles.length} candles</span>
             <span className={move >= 0 ? "text-bull-green" : "text-bear-red"}>
               {previousPoint || candleStats.previous
@@ -152,12 +135,6 @@ export function OptionChainCandlestickDialog({
               <div className="pointer-events-none absolute left-4 top-3 z-10 flex flex-wrap items-center gap-2">
                 <LegendPill color="#22c55e" label="Premium" />
                 <LegendPill color="rgba(148,163,184,0.5)" label="Volume" />
-                {showQuoteBands && (
-                  <>
-                    <LegendPill color="#38bdf8" label="Bid" />
-                    <LegendPill color="#fb7185" label="Ask" />
-                  </>
-                )}
               </div>
               <EChartsWrapper option={chartOption} />
             </div>
@@ -171,24 +148,20 @@ export function OptionChainCandlestickDialog({
           <FooterStat label="Size" value={compactSize(activitySize)} />
           <FooterStat label="ATM" value={atmRow ? formatStrike(atmRow.strike) : "--"} />
           <FooterStat label="Bucket" value={formatBucket(bucketMs)} />
-          <FooterStat label="Last Tick" value={latestPoint ? formatClock(latestPoint.timestamp) : "--:--"} align="right" />
+          <FooterStat label="Last" value={latestPoint ? formatClock(latestPoint.timestamp) : "--:--"} align="right" />
         </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-function buildCandleOption(candles: StrikeCandle[], showQuoteBands: boolean): echarts.EChartsOption {
+function buildCandleOption(candles: StrikeCandle[]): echarts.EChartsOption {
   const labels = candles.map((candle) => formatTimeLabel(candle.time));
   const candleData = candles.map((candle) => [candle.open, candle.close, candle.low, candle.high]);
   const latestCandle = candles[candles.length - 1];
   const priceValues =
     candles.length > 0
-      ? candles.flatMap((candle) =>
-          showQuoteBands
-            ? [candle.open, candle.close, candle.low, candle.high, candle.bid, candle.ask]
-            : [candle.open, candle.close, candle.low, candle.high]
-        )
+      ? candles.flatMap((candle) => [candle.open, candle.close, candle.low, candle.high])
       : [0, 1];
   const minPrice = Math.min(...priceValues);
   const maxPrice = Math.max(...priceValues);
@@ -259,43 +232,6 @@ function buildCandleOption(candles: StrikeCandle[], showQuoteBands: boolean): ec
       silent: true,
     },
   ];
-
-  if (showQuoteBands) {
-    series.push(
-      {
-        name: "Bid",
-        type: "line",
-        data: candles.map((candle) => candle.bid),
-        smooth: false,
-        showSymbol: false,
-        lineStyle: {
-          color: "#38bdf8",
-          type: "dashed",
-          opacity: 0.7,
-          width: 1,
-        },
-        emphasis: {
-          focus: "series",
-        },
-      },
-      {
-        name: "Ask",
-        type: "line",
-        data: candles.map((candle) => candle.ask),
-        smooth: false,
-        showSymbol: false,
-        lineStyle: {
-          color: "#fb7185",
-          type: "dashed",
-          opacity: 0.7,
-          width: 1,
-        },
-        emphasis: {
-          focus: "series",
-        },
-      }
-    );
-  }
 
   return {
     animationDuration: 220,
@@ -429,8 +365,6 @@ function formatCandleTooltip(params: unknown, candles: StrikeCandle[]) {
     tooltipLine("High", `Rs ${formatMoney(candle.high)}`),
     tooltipLine("Low", `Rs ${formatMoney(candle.low)}`),
     tooltipLine("Close", `Rs ${formatMoney(candle.close)}`),
-    tooltipLine("Bid / Ask", `Rs ${formatMoney(candle.bid)} / Rs ${formatMoney(candle.ask)}`),
-    tooltipLine("Ticks", String(candle.ticks)),
     `</div>`,
   ].join("");
 }

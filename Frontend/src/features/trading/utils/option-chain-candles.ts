@@ -5,6 +5,7 @@ export const CANDLE_BUCKETS = [
   { label: "30s", value: 30_000 },
   { label: "1m", value: 60_000 },
   { label: "5m", value: 300_000 },
+  { label: "15m", value: 900_000 },
 ] as const;
 
 export interface StrikeCandle {
