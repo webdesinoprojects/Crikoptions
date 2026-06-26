@@ -58,9 +58,9 @@ export function PortfolioOverview() {
         icon={isTotalUp ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
       />
 
-      {/* Daily PnL */}
+      {/* Today's PnL */}
       <PremiumKpiCard
-        label="Daily P&L"
+        label="Today's P&L"
         value={`Rs ${formatWhole(Math.abs(data.dailyPnL))}`}
         prefix={isDailyUp ? "+" : "-"}
         positive={isDailyUp}

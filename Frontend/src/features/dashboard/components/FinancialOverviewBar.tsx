@@ -22,7 +22,7 @@ export function FinancialOverviewBar() {
 
   const metrics = [
     { label: "Total Equity", value: `Rs ${data.totalEquity.toLocaleString("en-IN")}` },
-    { label: "Daily P&L", value: `Rs ${data.dailyPnL.toLocaleString("en-IN")}`, trend: data.dailyPnLPercentage },
+    { label: "Today's P&L", value: `Rs ${data.dailyPnL.toLocaleString("en-IN")}`, trend: data.dailyPnLPercentage },
     { label: "Margin Available", value: `Rs ${data.marginAvailable.toLocaleString("en-IN")}` },
     { label: "Open Positions", value: data.openPositionsCount },
   ];

@@ -9,6 +9,8 @@ import {
   PortfolioSummary,
   RiskMetrics,
 } from "../types/portfolio";
+import { buildPricePayload, buildOptionRows, ChainRow } from "@/features/trading/utils/terminal-context";
+import { tradingService } from "@/features/trading/services/trading.service";
 
 interface BackendPosition {
   _id: string;
@@ -38,8 +40,25 @@ class PortfolioService {
     const marketMap = await this.fetchMarketMap(allPositions.map((position) => position.marketId));
     const matchMap = await this.fetchMatchMap(allPositions.map((position) => position.matchId));
 
+    // Fetch live chains to perfectly match trading terminal PnL
+    const chainMap = new Map<string, ChainRow[]>();
+    await Promise.allSettled(
+      Array.from(marketMap.values()).map(async (market) => {
+        const match = matchMap.get(market.matchId);
+        const payload = buildPricePayload(match as any, market as any);
+        if (payload) {
+          try {
+            const calculated = await tradingService.calculateMarketPrice(market._id, payload);
+            chainMap.set(market._id, buildOptionRows(calculated, market as any));
+          } catch (e) {
+            // fallback to empty
+          }
+        }
+      })
+    );
+
     const positions = openPositions.map((position) =>
-      adaptOpenPosition(position, marketMap.get(position.marketId), matchMap.get(position.matchId))
+      adaptOpenPosition(position, marketMap.get(position.marketId), matchMap.get(position.matchId), chainMap.get(position.marketId))
     );
     const closedTrades = closedPositions.map((position) =>
       adaptClosedTrade(position, marketMap.get(position.marketId), matchMap.get(position.matchId))
@@ -130,14 +149,24 @@ export const portfolioService = new PortfolioService();
 function adaptOpenPosition(
   position: BackendPosition,
   market?: BackendMarket,
-  match?: BackendMatch
+  match?: BackendMatch,
+  chainRows?: ChainRow[]
 ): PortfolioPosition {
   const side: PortfolioPosition["side"] = numberOrZero(position.lots) >= 0 ? "BUY" : "SELL";
   const quantity = Math.abs(numberOrZero(position.lots));
-  const entryPrice = side === "BUY" ? numberOrZero(position.buyPrice) : numberOrZero(position.sellPrice);
-  const currentPrice = numberOrZero(position.ltp);
+  const entryPrice = numberOrZero(position.buyPrice);
+  
+  let currentPrice = numberOrZero(position.ltp);
+  if (chainRows && position.strike && position.strike > 0) {
+    const row = chainRows.find((r) => r.strike === position.strike);
+    if (row) {
+      currentPrice = numberOrZero(position.lots) > 0 ? row.bid : row.ask;
+    }
+  }
+
   const notional = quantity * currentPrice;
-  const pnl = numberOrZero(position.pnl);
+  const calculatedPnL = (currentPrice - numberOrZero(position.buyPrice)) * numberOrZero(position.lots);
+  const pnl = currentPrice > 0 || calculatedPnL !== 0 ? calculatedPnL : numberOrZero(position.pnl);
 
   return {
     id: position._id || `${position.marketId}-${side}-${position.createdAt || position.updatedAt || "open"}`,

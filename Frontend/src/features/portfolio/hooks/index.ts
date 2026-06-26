@@ -9,8 +9,8 @@ export function usePortfolio() {
   return useQuery({
     queryKey: PORTFOLIO_QUERY_KEY,
     queryFn: () => portfolioService.getPortfolioSummary(),
-    staleTime: 30_000,
-    refetchInterval: 60_000,
+    staleTime: 2_000,
+    refetchInterval: 5_000,
     refetchOnWindowFocus: true,
   });
 }

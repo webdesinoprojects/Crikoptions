@@ -28,7 +28,14 @@ export function MarketPnLDisplay({ marketId }: MarketPnLDisplayProps) {
   const { data: closedPositions = [] } = useClosedPositions(positionFilters);
   
   const marketPositions = useMemo(
-    () => positions.filter((position) => position.marketId === marketId && position.strike > 0 && position.lots !== 0),
+    () => {
+      const today = new Date().setHours(0, 0, 0, 0);
+      return positions.filter((position) => {
+        if (position.marketId !== marketId || position.strike <= 0 || position.lots === 0) return false;
+        const positionDate = new Date(position.createdAt || position.updatedAt || Date.now()).getTime();
+        return positionDate >= today;
+      });
+    },
     [marketId, positions]
   );
 
@@ -48,6 +55,15 @@ export function MarketPnLDisplay({ marketId }: MarketPnLDisplayProps) {
     () =>
       closedPositions.reduce((total, position) => {
         if (position.marketId !== marketId) return total;
+        
+        // Check if closed today
+        const today = new Date().setHours(0, 0, 0, 0);
+        // @ts-ignore - position might be a Trade object with closedAt
+        const closedAt = position.closedAt || position.updatedAt || Date.now();
+        const closeDate = new Date(closedAt).getTime();
+        
+        if (closeDate < today) return total;
+        
         return total + (position.realizedPnl ?? position.pnl);
       }, 0),
     [closedPositions, marketId]
@@ -77,7 +93,7 @@ export function MarketPnLDisplay({ marketId }: MarketPnLDisplayProps) {
       <div className="flex items-center justify-between gap-4 w-full">
         <span className="text-[11px] font-black uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5 whitespace-nowrap">
           <Zap className={`w-3.5 h-3.5 ${isPositive ? 'text-cyan-400' : 'text-on-surface-variant'}`} />
-          Market P&L
+          Today's P&L
         </span>
         <span className={`text-[17px] font-black tracking-tight flex items-center whitespace-nowrap ${isPositive ? 'text-bull-green drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]' : 'text-bear-red drop-shadow-[0_0_12px_rgba(239,68,68,0.4)]'}`}>
           {totalPnL >= 0 ? '+' : ''}₹

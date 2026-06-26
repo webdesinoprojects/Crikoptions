@@ -281,9 +281,13 @@ function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading
                               setOrderSize(Math.abs(position.lots));
                             }
                           }}
-                          className="rounded border border-white/20 bg-white/5 px-2 py-0.5 text-[9px] font-black text-on-surface hover:bg-white/10 active:scale-95 transition-all"
+                          className={`rounded border px-2 py-0.5 text-[9px] font-black active:scale-95 transition-all ${
+                            closingPositionId === position._id
+                              ? "border-white/20 bg-white/5 text-on-surface hover:bg-white/10"
+                              : "border-bear-red/50 bg-bear-red/10 text-bear-red hover:bg-bear-red/20 shadow-[0_0_10px_rgba(239,68,68,0.15)]"
+                          }`}
                         >
-                          {closingPositionId === position._id ? "Cancel" : "Close"}
+                          {closingPositionId === position._id ? "Cancel" : "Exit"}
                         </button>
                       </div>
                     </div>
