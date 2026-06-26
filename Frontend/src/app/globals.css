@@ -138,10 +138,7 @@ body {
   font-family: "Space Grotesk", sans-serif;
 }
 
-/* Custom Cursor for Terminal */
-.terminal-area {
-  cursor: crosshair;
-}
+
 
 /* Animations */
 @keyframes ticker {

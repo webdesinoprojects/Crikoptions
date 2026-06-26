@@ -65,7 +65,7 @@ export default function TradingTerminalPage({ params }: PageProps) {
   return (
     <div
       ref={terminalRef}
-      className="terminal-area noise-overlay relative flex h-full flex-grow flex-col overflow-hidden bg-[#01040a] text-on-surface"
+      className="noise-overlay relative flex h-full flex-grow flex-col overflow-hidden bg-[#01040a] text-on-surface"
     >
       <div
         aria-hidden
