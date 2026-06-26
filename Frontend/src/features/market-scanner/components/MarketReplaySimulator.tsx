@@ -1257,7 +1257,10 @@ function displayStatus(status: Order["status"]) {
 }
 
 function overBallLabel(event: ReplayEvent) {
-  return `${event.over}.${event.ball}`;
+  const legalBallNumber = Math.max(0, event.legalBallNumber);
+  const displayOver = Math.floor(legalBallNumber / 6);
+  const displayBall = legalBallNumber % 6;
+  return `${displayOver}.${displayBall}`;
 }
 
 function scoreLabel(event: ReplayEvent) {
