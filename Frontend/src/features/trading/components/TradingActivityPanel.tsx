@@ -240,7 +240,6 @@ function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-black uppercase text-on-surface">Open Position</span>
-            {filteredOpen.length > 0 && <button className="text-[9px] font-bold text-primary hover:underline">Exit All</button>}
           </div>
           <button onClick={() => setOpenExpanded(!openExpanded)} className="text-on-surface-variant hover:text-white">
             {openExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
