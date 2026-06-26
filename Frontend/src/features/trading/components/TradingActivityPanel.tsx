@@ -6,6 +6,7 @@ import { Order } from "@/types";
 import { OpenPosition } from "../types/position";
 import { cn } from "@/lib/utils";
 import { useCancelOrder, useOpenPositions, useOrders, useOptionChain, useCreateOrder } from "../hooks";
+import { useClosedTrades } from "@/features/portfolio/hooks";
 import { buildPricePayload, buildOptionRows } from "../utils/terminal-context";
 import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { Match } from "@/types";
@@ -40,6 +41,13 @@ export function TradingActivityPanel({ className, matchId, marketId, market, mat
     () => positions.filter((position) => position.marketId === marketId && position.strike > 0 && position.lots !== 0),
     [marketId, positions]
   );
+  
+  const { data: allClosedTrades = [] } = useClosedTrades();
+  const marketClosedTrades = useMemo(
+    () => allClosedTrades.filter(t => t.marketId === marketId),
+    [allClosedTrades, marketId]
+  );
+  
   const isSyncing = ordersFetching || positionsFetching || cancelOrderMutation.isPending;
 
   const handleCancel = (orderId: string) => {
@@ -88,7 +96,7 @@ export function TradingActivityPanel({ className, matchId, marketId, market, mat
           />
         )}
         {tab === "POSITIONS" && (
-          <PositionsTab loading={positionsLoading} positions={marketPositions} chainRows={chainRows} />
+          <PositionsTab loading={positionsLoading} positions={marketPositions} closedTrades={marketClosedTrades} chainRows={chainRows} />
         )}
       </div>
     </section>
@@ -197,79 +205,181 @@ function OrdersTab({
   );
 }
 
-function PositionsTab({ loading, positions, chainRows }: { loading: boolean; positions: OpenPosition[]; chainRows: ReturnType<typeof buildOptionRows> }) {
+import { Search, ChevronUp, ChevronDown } from "lucide-react";
+
+function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading: boolean; positions: OpenPosition[]; closedTrades: any[]; chainRows: ReturnType<typeof buildOptionRows> }) {
   const setOrderIntent = useTerminalStore((state) => state.setOrderIntent);
   const setOrderSize = useTerminalStore((state) => state.setOrderSize);
   const [closingPositionId, setClosingPositionId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [openExpanded, setOpenExpanded] = useState(true);
+  const [closedExpanded, setClosedExpanded] = useState(true);
 
   if (loading) return <PanelState label="Loading positions..." />;
-  if (positions.length === 0) {
-    return <PanelState label="No open position yet. Positions appear after an order executes." />;
-  }
+
+  // Calculate live open PnL
+  let openPnL = 0;
+  const enrichedPositions = positions.map(position => {
+    const chainRow = chainRows.find((row) => row.strike === position.strike);
+    const liveLtp = chainRow ? (position.lots > 0 ? chainRow.bid : chainRow.ask) : position.ltp;
+    const livePnl = chainRow ? Math.round((liveLtp - position.buyPrice) * position.lots * 100) / 100 : position.pnl;
+    openPnL += livePnl;
+    return { ...position, liveLtp, livePnl, chainRow };
+  });
+
+  const closedPnL = closedTrades.reduce((acc, t) => acc + t.realizedPnL, 0);
+  const totalPnL = openPnL + closedPnL;
+
+  const filteredOpen = enrichedPositions.filter(p => !search || p.strike.toString().includes(search));
+  const filteredClosed = closedTrades.filter(t => !search || t.symbol.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="space-y-1.5">
-      {positions.map((position) => {
-        // Try to find live price from option chain for this strike
-        const chainRow = chainRows.find((row) => row.strike === position.strike);
-        // Use bid if long (we sell to close), use ask if short (we buy to close)
-        const liveLtp = chainRow
-          ? (position.lots > 0 ? chainRow.bid : chainRow.ask)
-          : position.ltp;
-        const livePnl = chainRow
-          ? Math.round((liveLtp - position.buyPrice) * position.lots * 100) / 100
-          : position.pnl;
-        const positive = livePnl >= 0;
-        return (
-          <div key={position._id} className="rounded-lg border border-white/8 bg-[#071327]/72 px-2.5 py-2">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex min-w-0 items-center gap-2">
-                <span className="font-data-tabular text-[11px] font-black text-on-surface">
-                  Strike {position.strike}
-                </span>
-                <span className="text-[10px] text-on-surface-variant">{position.lots} lots</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`font-data-tabular text-[12px] font-black ${positive ? "text-bull-green" : "text-bear-red"}`}>
-                  {positive ? "+" : "-"}Rs {Math.abs(livePnl).toFixed(2)}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (closingPositionId === position._id) {
-                      setClosingPositionId(null);
-                    } else {
-                      setClosingPositionId(position._id);
-                      setOrderIntent({
-                        side: position.lots > 0 ? "SELL" : "BUY",
-                        strike: position.strike,
-                        price: liveLtp,
-                      });
-                      setOrderSize(Math.abs(position.lots));
-                    }
-                  }}
-                  className="rounded border border-white/20 bg-white/5 px-2 py-0.5 text-[9px] font-black text-on-surface hover:bg-white/10 active:scale-95 transition-all"
-                >
-                  {closingPositionId === position._id ? "Cancel" : "Close"}
-                </button>
-              </div>
-            </div>
-            <div className="mt-1 grid grid-cols-3 gap-2 font-data-tabular text-[10px] text-on-surface-variant">
-              <span>Buy {position.buyPrice.toFixed(2)}</span>
-              <span className={chainRow ? "text-teal-300" : ""}>LTP {liveLtp.toFixed(2)}{chainRow ? " ●" : ""}</span>
-              <span className="text-right">PnL {livePnl.toFixed(2)}</span>
-            </div>
-            {closingPositionId === position._id && (
-              <InlinePositionCloseForm 
-                position={position} 
-                liveLtp={liveLtp} 
-                chainRow={chainRow} 
-                onCancel={() => setClosingPositionId(null)} 
-              />
+    <div className="space-y-3 h-full overflow-y-auto scrollbar-hide pb-4">
+      {/* Open Positions Accordion */}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-black uppercase text-on-surface">Open Position</span>
+            {filteredOpen.length > 0 && <button className="text-[9px] font-bold text-primary hover:underline">Exit All</button>}
+          </div>
+          <button onClick={() => setOpenExpanded(!openExpanded)} className="text-on-surface-variant hover:text-white">
+            {openExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+        </div>
+
+        {openExpanded && (
+          <div className="space-y-1.5">
+            {filteredOpen.length === 0 ? (
+              <PanelState label="No open positions found" />
+            ) : (
+              filteredOpen.map((position) => {
+                const positive = position.livePnl >= 0;
+                return (
+                  <div key={position._id} className="rounded-lg border border-white/8 bg-[#040a17]/50 px-2.5 py-2 hover:bg-[#040a17] transition-colors">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className="font-data-tabular text-[11px] font-black text-on-surface">
+                          Strike {position.strike}
+                        </span>
+                        <span className="text-[10px] font-semibold text-on-surface-variant px-1 rounded bg-white/5 border border-white/5">{Math.abs(position.lots)} lots</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`font-data-tabular text-[12px] font-black ${positive ? "text-bull-green" : "text-bear-red"}`}>
+                          {positive ? "+" : "-"}Rs {Math.abs(position.livePnl).toFixed(2)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (closingPositionId === position._id) {
+                              setClosingPositionId(null);
+                            } else {
+                              setClosingPositionId(position._id);
+                              setOrderIntent({
+                                side: position.lots > 0 ? "SELL" : "BUY",
+                                strike: position.strike,
+                                price: position.liveLtp,
+                              });
+                              setOrderSize(Math.abs(position.lots));
+                            }
+                          }}
+                          className="rounded border border-white/20 bg-white/5 px-2 py-0.5 text-[9px] font-black text-on-surface hover:bg-white/10 active:scale-95 transition-all"
+                        >
+                          {closingPositionId === position._id ? "Cancel" : "Close"}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2 font-data-tabular text-[10px] text-center">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[8px] text-on-surface-variant uppercase font-black">Lots</span>
+                        <span className="text-on-surface font-bold">{Math.abs(position.lots)}</span>
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[8px] text-on-surface-variant uppercase font-black">LTP</span>
+                        <span className={`font-bold ${position.chainRow ? "text-teal-300" : "text-on-surface"}`}>{position.liveLtp.toFixed(2)}</span>
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[8px] text-on-surface-variant uppercase font-black">Buy price</span>
+                        <span className="text-on-surface font-bold">₹{position.lots > 0 ? position.buyPrice.toFixed(2) : '--'}</span>
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[8px] text-on-surface-variant uppercase font-black">Sell price</span>
+                        <span className="text-on-surface font-bold">₹{position.lots < 0 ? position.buyPrice.toFixed(2) : '--'}</span>
+                      </div>
+                    </div>
+                    
+                    {closingPositionId === position._id && (
+                      <InlinePositionCloseForm 
+                        position={position} 
+                        liveLtp={position.liveLtp} 
+                        chainRow={position.chainRow} 
+                        onCancel={() => setClosingPositionId(null)} 
+                      />
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
-        );
-      })}
+        )}
+      </div>
+
+      {/* Closed Positions Accordion */}
+      <div className="space-y-1.5 pt-2">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-[11px] font-black uppercase text-on-surface">Closed Position</span>
+          <button onClick={() => setClosedExpanded(!closedExpanded)} className="text-on-surface-variant hover:text-white">
+            {closedExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+        </div>
+
+        {closedExpanded && (
+          <div className="space-y-1.5">
+            {filteredClosed.length === 0 ? (
+              <PanelState label="No closed positions" />
+            ) : (
+              filteredClosed.map((trade) => {
+                const positive = trade.realizedPnL >= 0;
+                return (
+                  <div key={trade.orderId} className="rounded-lg border border-white/8 bg-[#040a17]/30 px-2.5 py-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex flex-col">
+                        <span className="font-data-tabular text-[11px] font-black text-on-surface">
+                          {trade.symbol}
+                        </span>
+                        <span className="text-[9px] text-on-surface-variant mt-0.5">
+                          {new Date(trade.openedAt).toLocaleDateString("en-IN", { day: 'numeric', month: 'short' })}
+                        </span>
+                      </div>
+                      <span className={`font-data-tabular text-[12px] font-black ${positive ? "text-bull-green" : "text-bear-red"}`}>
+                        {positive ? "+" : "-"}Rs {Math.abs(trade.realizedPnL).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2 font-data-tabular text-[10px] text-center opacity-80">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[8px] text-on-surface-variant uppercase font-black">Lots</span>
+                        <span className="text-on-surface font-bold">{Math.abs(trade.quantity)}</span>
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[8px] text-on-surface-variant uppercase font-black">LTP</span>
+                        <span className="text-on-surface font-bold">{trade.exitPrice.toFixed(2)}</span>
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[8px] text-on-surface-variant uppercase font-black">Buy price</span>
+                        <span className="text-on-surface font-bold">₹{trade.entryPrice.toFixed(2)}</span>
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[8px] text-on-surface-variant uppercase font-black">Sell price</span>
+                        <span className="text-on-surface font-bold">₹{trade.exitPrice.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

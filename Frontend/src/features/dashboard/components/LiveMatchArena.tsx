@@ -26,7 +26,7 @@ export function LiveMatchArena() {
   const rrr = need > 0 && ballsLeft > 0 ? ((need / ballsLeft) * 6).toFixed(2) : "9.27";
 
   return (
-    <div className="relative w-full h-[400px] md:h-[480px] rounded-2xl overflow-hidden border border-white/10 group">
+    <div className="relative w-full h-[400px] md:h-[480px] rounded-2xl overflow-hidden group shadow-[0_24px_80px_rgba(0,0,0,0.5)]">
       {/* Background Image */}
       <img
         src="/stadium.png"
@@ -53,9 +53,12 @@ export function LiveMatchArena() {
         </div>
 
         {/* Main Scorecard Glass Pane */}
-        <div className="mt-4 w-full max-w-sm bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-5 shadow-2xl">
+        <div className="mt-4 w-full max-w-sm bg-black/20 backdrop-blur-xl border border-white/5 rounded-2xl p-5 shadow-[0_8px_32px_rgba(0,0,0,0.4)] relative overflow-hidden">
+          {/* Subtle gradient shine inside the glass pane */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
+          
           {/* Team Score */}
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-4 mb-4 relative z-10">
             <div className="w-12 h-12 rounded-lg bg-[#d4af37]/20 border border-[#d4af37]/30 flex items-center justify-center font-display text-2xl font-black text-[#d4af37] text-center leading-none px-1 break-words">
               {match?.homeTeam?.shortName || "RCB"}
             </div>
@@ -69,21 +72,21 @@ export function LiveMatchArena() {
           </div>
 
           {/* Match Equation */}
-          <div className="flex items-center justify-between text-xs mb-5 py-2 border-y border-white/10">
-            <div className="text-white">Need <span className="text-cyan-400 font-bold">{need}</span> from <span className="text-cyan-400 font-bold">{ballsLeft}</span></div>
+          <div className="flex items-center justify-between text-xs mb-5 py-3 border-y border-white/5 relative z-10">
+            <div className="text-white">Need <span className="text-cyan-400 font-black">{need}</span> from <span className="text-cyan-400 font-black">{ballsLeft}</span></div>
             <div className="text-white/60">CRR <span className="text-white font-bold">{crr}</span></div>
             <div className="text-white/60">RRR <span className="text-white font-bold">{rrr}</span></div>
           </div>
 
           {/* Batsmen */}
-          <div className="grid grid-cols-2 gap-4 mb-5">
-            <div className="flex justify-between items-center">
+          <div className="grid grid-cols-2 gap-4 mb-5 relative z-10">
+            <div className="flex justify-between items-center bg-white/[0.02] rounded px-2 py-1.5">
               <span className="text-xs font-bold text-cyan-400 truncate pr-1">{match?.liveContext?.striker?.name || "V. Kohli"}*</span>
               <div className="text-xs font-data-tabular shrink-0">
                 <span className="text-white font-bold">{match?.liveContext?.striker?.runs || 71}</span> <span className="text-white/50">({match?.liveContext?.striker?.balls || 46})</span>
               </div>
             </div>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center bg-white/[0.02] rounded px-2 py-1.5">
               <span className="text-xs font-bold text-cyan-400 truncate pr-1">{match?.liveContext?.nonStriker?.name || "D. Karthik"}</span>
               <div className="text-xs font-data-tabular shrink-0">
                 <span className="text-white font-bold">{match?.liveContext?.nonStriker?.runs || 12}</span> <span className="text-white/50">({match?.liveContext?.nonStriker?.balls || 7})</span>
@@ -92,16 +95,16 @@ export function LiveMatchArena() {
           </div>
 
           {/* Over Timeline */}
-          <div className="flex gap-1.5 mb-4">
+          <div className="flex gap-2 mb-4 relative z-10">
             {["1", "4", "0", "6", "W", "2"].map((ball, i) => (
               <div
                 key={i}
                 className={cn(
-                  "w-8 h-8 rounded flex items-center justify-center text-xs font-black",
-                  ball === "4" ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30" :
-                  ball === "6" ? "bg-[#d4af37]/20 text-[#d4af37] border border-[#d4af37]/30" :
-                  ball === "W" ? "bg-error/20 text-error border border-error/30" :
-                  "bg-white/5 text-white/80 border border-white/10"
+                  "w-8 h-8 rounded-lg flex items-center justify-center text-[13px] font-black transition-all",
+                  ball === "4" ? "bg-cyan-500/20 text-cyan-400 shadow-[inset_0_0_8px_rgba(6,182,212,0.2)]" :
+                  ball === "6" ? "bg-[#d4af37]/20 text-[#d4af37] border border-[#d4af37]/40 shadow-[0_0_12px_rgba(212,175,55,0.4)]" :
+                  ball === "W" ? "bg-error/20 text-error border border-error/40 shadow-[0_0_12px_rgba(239,68,68,0.4)]" :
+                  "bg-white/5 text-white/80 border border-transparent"
                 )}
               >
                 {ball}
@@ -110,7 +113,7 @@ export function LiveMatchArena() {
           </div>
 
           {/* Commentary */}
-          <div className="text-[11px] text-white/60 bg-black/40 p-2 rounded border border-white/5">
+          <div className="text-[11px] text-white/60 bg-black/20 p-2.5 rounded-lg border border-white/5 relative z-10">
             <span className="text-white font-bold mr-1">{currentOver}</span>
             <span className="text-cyan-400 font-bold mr-1">TWO -</span>
             driven into the gap at cover
@@ -118,7 +121,7 @@ export function LiveMatchArena() {
         </div>
 
         {/* Bottom Market Cards */}
-        <div className="mt-auto grid grid-cols-1 md:grid-cols-4 gap-3 pt-6">
+        <div className="mt-auto grid grid-cols-1 md:grid-cols-4 gap-4 pt-6">
           <MarketMiniCard title={`${match?.homeTeam?.shortName || "RCB"} WIN`} value="64.2%" trend="+6.8%" isUp />
           <MarketMiniCard title="KOHLI 75+" value="Rs 72" trend="+18.4%" isUp />
           <MarketMiniCard title="NEXT WICKET <18 OV" value="Rs 38" trend="-5.2%" isUp={false} />
@@ -136,8 +139,8 @@ export function LiveMatchArena() {
 
 function MarketMiniCard({ title, value, trend, isUp }: { title: string, value: string, trend: string, isUp: boolean }) {
   return (
-    <div className="bg-[#0a1428]/80 backdrop-blur-md border border-white/10 hover:border-white/20 transition-colors rounded-xl p-3 flex flex-col justify-between">
-      <div className="text-[10px] text-on-surface-variant font-bold tracking-wider uppercase mb-2 line-clamp-1">
+    <div className="bg-[#0a1428]/40 backdrop-blur-xl border border-white/5 shadow-inner hover:bg-[#0a1428]/60 transition-colors rounded-2xl p-3.5 flex flex-col justify-between group">
+      <div className="text-[10px] text-on-surface-variant font-bold tracking-wider uppercase mb-2 line-clamp-1 group-hover:text-cyan-100 transition-colors">
         {title}
       </div>
       <div className="flex items-end justify-between">

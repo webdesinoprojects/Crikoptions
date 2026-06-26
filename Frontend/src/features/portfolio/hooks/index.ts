@@ -22,6 +22,13 @@ export function usePositions() {
   return { data: positions, portfolio: data, ...rest };
 }
 
+/** Convenience hook: closed trades slice */
+export function useClosedTrades() {
+  const { data, ...rest } = usePortfolio();
+  const closedTrades = useMemo(() => data?.closedTrades ?? [], [data]);
+  return { data: closedTrades, portfolio: data, ...rest };
+}
+
 /** Convenience hook: performance & equity curve */
 export function usePerformance() {
   const { data, ...rest } = usePortfolio();

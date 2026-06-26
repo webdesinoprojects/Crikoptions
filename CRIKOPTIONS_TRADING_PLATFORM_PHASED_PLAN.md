@@ -1101,6 +1101,7 @@ Keep the target trading layout:
 
 Give admin enough control to run the paper platform, manage wallets, seed matches, and operate demos.
 
+
 ### Admin Features
 
 User management:
@@ -1169,6 +1170,7 @@ Audit:
 ### Done Criteria
 
 - Admin can run a full paper-trading demo without developer intervention.
+
 
 ## 15. Phase 8: Cricbuzz Integration Adapter
 

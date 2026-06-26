@@ -1,22 +1,24 @@
 "use client";
 
 import React, { useState } from "react";
-import { Clock, ListChecks, ShieldCheck } from "lucide-react";
+import { Clock, ListChecks, ShieldCheck, ChevronDown, ChevronUp, Search } from "lucide-react";
 import { TerminalPanel } from "@/components/shared/TerminalComponents";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOrders } from "@/features/trading/hooks";
 import { Order } from "@/types";
-import { usePositions } from "../hooks";
-import { PortfolioPosition } from "../types/portfolio";
+import { usePositions, useClosedTrades } from "../hooks";
+import { PortfolioPosition, ClosedTrade } from "../types/portfolio";
 
 type TradeOpsTab = "POSITIONS" | "ORDERS";
 
 export function TradeOperationsWorkspace() {
   const [tab, setTab] = useState<TradeOpsTab>("POSITIONS");
   const { data: positions = [], isLoading: positionsLoading } = usePositions();
+  const { data: closedTrades = [], isLoading: closedLoading } = useClosedTrades();
   const { data: orders = [], isLoading: ordersLoading } = useOrders(undefined, true);
 
   const positionRows = positions.length > 0 ? positions : samplePositions;
+  const closedRows = closedTrades.length > 0 ? closedTrades : sampleClosedTrades;
   const orderRows = orders.length > 0 ? orders : sampleOrders;
   const isSample =
     (tab === "POSITIONS" && positions.length === 0) ||
@@ -56,7 +58,12 @@ export function TradeOperationsWorkspace() {
 
       <div className="h-[350px] overflow-hidden rounded-md border border-outline/10 bg-background/45">
         {tab === "POSITIONS" && (
-          <PositionsScreen rows={positionRows} loading={positionsLoading && positions.length === 0} sample={positions.length === 0} />
+          <PositionsScreen 
+            rows={positionRows} 
+            closedRows={closedRows}
+            loading={(positionsLoading && positions.length === 0) || (closedLoading && closedTrades.length === 0)} 
+            sample={positions.length === 0} 
+          />
         )}
         {tab === "ORDERS" && (
           <OrdersScreen rows={orderRows} loading={ordersLoading && orders.length === 0} sample={orders.length === 0} />
@@ -103,56 +110,151 @@ function TabButton({
 function PositionsScreen({
   loading,
   rows,
+  closedRows,
   sample,
 }: {
   loading: boolean;
   rows: PortfolioPosition[];
+  closedRows: ClosedTrade[];
   sample: boolean;
 }) {
+  const [search, setSearch] = useState("");
+  const [openExpanded, setOpenExpanded] = useState(true);
+  const [closedExpanded, setClosedExpanded] = useState(true);
+
+  const filteredOpen = rows.filter(r => r.symbol.toLowerCase().includes(search.toLowerCase()) || r.matchName.toLowerCase().includes(search.toLowerCase()));
+  const filteredClosed = closedRows.filter(r => r.symbol.toLowerCase().includes(search.toLowerCase()) || r.matchName.toLowerCase().includes(search.toLowerCase()));
+
+  const totalPnL = rows.reduce((acc, r) => acc + r.unrealizedPnL, 0) + closedRows.reduce((acc, r) => acc + r.realizedPnL, 0);
+
+  if (loading) {
+    return (
+      <div className="p-4 space-y-4">
+        <Skeleton className="h-10 w-full bg-white/5 rounded-full" />
+        <Skeleton className="h-12 w-full bg-white/5 rounded-full" />
+        <Skeleton className="h-24 w-full bg-white/5 rounded-xl" />
+        <Skeleton className="h-24 w-full bg-white/5 rounded-xl" />
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full overflow-auto bg-surface-dim/20">
-      <table className="w-full min-w-[800px] border-collapse font-data-tabular text-[12px]">
-        <thead className="sticky top-0 z-10 bg-surface-dim/95 backdrop-blur-md shadow-sm border-b border-outline/10 text-[10px] uppercase tracking-widest text-on-surface-variant font-black">
-          <tr>
-            <th className="px-4 py-3 text-left">Market</th>
-            <th className="px-4 py-3 text-left">Match</th>
-            <th className="px-4 py-3 text-center">Side</th>
-            <th className="px-4 py-3 text-right">Qty</th>
-            <th className="px-4 py-3 text-right">Entry</th>
-            <th className="px-4 py-3 text-right">LTP</th>
-            <th className="px-4 py-3 text-right">Unrealized</th>
-            <th className="px-4 py-3 text-right">Strike</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-outline/5">
-          {loading ? <LoadingRows columns={8} /> : null}
-          {!loading &&
-            rows.map((position, index) => {
-              const positive = position.unrealizedPnL >= 0;
-              return (
-                <tr key={position.id || `${position.marketId}-${position.side}-${index}`} className="group hover:bg-white/[0.04] transition-all duration-200 cursor-default">
-                  <td className="px-4 py-3 font-bold text-on-surface group-hover:text-primary transition-colors">
-                    {position.symbol}
-                    {sample && <span className="ml-2 inline-block px-1.5 py-0.5 bg-primary/10 text-primary text-[8px] rounded uppercase font-black tracking-widest border border-primary/20">SAMPLE</span>}
-                  </td>
-                  <td className="px-4 py-3 text-on-surface-variant font-medium">{position.matchName}</td>
-                  <td className="px-4 py-3 text-center">
-                    <SideBadge side={position.side} />
-                  </td>
-                  <td className="px-4 py-3 text-right text-on-surface font-semibold">{position.quantity.toLocaleString("en-IN")}</td>
-                  <td className="px-4 py-3 text-right text-on-surface-variant font-medium">Rs {position.averageEntryPrice.toFixed(2)}</td>
-                  <td className="px-4 py-3 text-right text-on-surface font-medium">Rs {position.currentPrice.toFixed(2)}</td>
-                  <td className={`px-4 py-3 text-right font-black ${positive ? "text-bull-green drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]" : "text-bear-red drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]"}`}>
-                    {positive ? "+" : "-"}Rs {Math.abs(position.unrealizedPnL).toFixed(2)}
-                  </td>
-                  <td className="px-4 py-3 text-right text-on-surface-variant font-medium">
-                    {position.strike}
-                  </td>
-                </tr>
-              );
-            })}
-        </tbody>
-      </table>
+    <div className="h-full overflow-y-auto bg-surface-dim/20 p-3 space-y-4 text-on-surface">
+      {/* Search Bar */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-on-surface-variant" />
+        <input 
+          type="text" 
+          placeholder="Search eg: team name and order ID" 
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full bg-surface-container border border-outline/10 rounded-full pl-9 pr-4 py-2 text-[11px] text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary transition-colors"
+        />
+      </div>
+
+      {/* P&L Banner */}
+      <div className="flex items-center justify-between bg-surface-container border border-outline/10 rounded-full px-5 py-3">
+        <span className="text-[11px] font-black uppercase tracking-wider text-on-surface-variant">P&L</span>
+        <span className={`text-sm font-black ${totalPnL >= 0 ? 'text-bull-green drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'text-bear-red drop-shadow-[0_0_8px_rgba(239,68,68,0.3)]'}`}>
+          {totalPnL >= 0 ? '+' : ''}₹{totalPnL.toFixed(2)}
+        </span>
+      </div>
+
+      {/* Open Positions */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between px-2 py-1">
+          <div className="flex items-center gap-3">
+            <span className="text-[12px] font-black text-on-surface">Open Position</span>
+            <button className="text-[10px] font-bold text-primary hover:underline">Exit All Trade</button>
+          </div>
+          <button onClick={() => setOpenExpanded(!openExpanded)} className="text-on-surface-variant hover:text-on-surface bg-surface-container hover:bg-surface-bright rounded-full p-1 transition-colors">
+            {openExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+        
+        {openExpanded && (
+          <div className="space-y-2 pb-2">
+            {filteredOpen.length === 0 ? (
+              <div className="text-center py-6 text-xs text-on-surface-variant bg-surface-container/50 rounded-xl border border-dashed border-outline/10">No open positions</div>
+            ) : (
+              filteredOpen.map(pos => (
+                <PositionCard key={pos.id} position={pos} type="open" sample={sample} />
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Closed Positions */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between px-2 py-1">
+          <span className="text-[12px] font-black text-on-surface">Closed Position</span>
+          <button onClick={() => setClosedExpanded(!closedExpanded)} className="text-on-surface-variant hover:text-on-surface bg-surface-container hover:bg-surface-bright rounded-full p-1 transition-colors">
+            {closedExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+        
+        {closedExpanded && (
+          <div className="space-y-2 pb-4">
+            {filteredClosed.length === 0 ? (
+              <div className="text-center py-6 text-xs text-on-surface-variant bg-surface-container/50 rounded-xl border border-dashed border-outline/10">No closed positions</div>
+            ) : (
+              filteredClosed.map(pos => (
+                <PositionCard key={pos.orderId} position={pos} type="closed" sample={sample} />
+              ))
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PositionCard({ position, type, sample }: { position: any, type: "open" | "closed", sample: boolean }) {
+  const isUp = type === "open" ? position.unrealizedPnL >= 0 : position.realizedPnL >= 0;
+  const pnl = type === "open" ? position.unrealizedPnL : position.realizedPnL;
+  const lots = position.quantity;
+  const ltp = type === "open" ? position.currentPrice : position.exitPrice; 
+  const buyPrice = type === "open" ? (position.side === "BUY" ? position.averageEntryPrice : 0) : position.entryPrice; 
+  const sellPrice = type === "open" ? (position.side === "SELL" ? position.averageEntryPrice : 0) : position.exitPrice;
+
+  return (
+    <div className="bg-surface-container border border-outline/10 hover:border-outline/20 hover:bg-surface-container-high transition-colors rounded-xl p-3.5 flex flex-col gap-3.5">
+      <div className="flex justify-between items-start">
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2">
+            <span className="font-black text-[13px] text-on-surface">{position.matchName}</span>
+            <span className="text-[11px] font-bold text-on-surface-variant px-1.5 py-0.5 bg-background/50 rounded border border-outline/5">{position.symbol}</span>
+            {sample && <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[8px] rounded uppercase font-black">SAMPLE</span>}
+          </div>
+          <span className="text-[10px] font-semibold text-on-surface-variant mt-1 flex items-center gap-1.5">
+            <Clock className="w-2.5 h-2.5" />
+            {new Date(position.openedAt).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' })}
+          </span>
+        </div>
+        <span className={`text-[13px] font-black ${isUp ? 'text-bull-green drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'text-bear-red drop-shadow-[0_0_8px_rgba(239,68,68,0.3)]'}`}>
+          {isUp ? '+' : ''}₹{Math.abs(pnl).toFixed(2)}
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between pt-2.5 border-t border-outline/5">
+        <div className="flex flex-col gap-1 w-1/4">
+          <span className="text-[9px] text-on-surface-variant uppercase font-black tracking-widest">Lots</span>
+          <span className="text-[11px] font-bold font-data-tabular">{lots}</span>
+        </div>
+        <div className="flex flex-col gap-1 w-1/4">
+          <span className="text-[9px] text-on-surface-variant uppercase font-black tracking-widest">LTP</span>
+          <span className="text-[11px] font-bold font-data-tabular">{ltp.toFixed(2)}</span>
+        </div>
+        <div className="flex flex-col gap-1 w-1/4">
+          <span className="text-[9px] text-on-surface-variant uppercase font-black tracking-widest">Buy price</span>
+          <span className="text-[11px] font-bold font-data-tabular">₹{buyPrice ? buyPrice.toFixed(2) : '--'}</span>
+        </div>
+        <div className="flex flex-col gap-1 w-1/4">
+          <span className="text-[9px] text-on-surface-variant uppercase font-black tracking-widest">Sell price</span>
+          <span className="text-[11px] font-bold font-data-tabular">₹{sellPrice ? sellPrice.toFixed(2) : '--'}</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -415,4 +517,23 @@ const sampleOrders: Order[] = [
     createdAt: now,
   },
 ];
+
+const sampleClosedTrades: ClosedTrade[] = [
+  {
+    orderId: "closed-001",
+    marketId: "MI200",
+    symbol: "MI200",
+    matchName: "MI vs RCB",
+    side: "BUY",
+    quantity: 50,
+    entryPrice: 15.5,
+    exitPrice: 18.2,
+    realizedPnL: 135.0,
+    realizedPnLPct: 17.4,
+    openedAt: new Date(Date.now() - 86400000).toISOString(),
+    closedAt: now,
+    holdingPeriodMs: 86400000,
+  },
+];
+
 

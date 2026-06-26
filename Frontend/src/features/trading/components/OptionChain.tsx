@@ -42,6 +42,10 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
   const lastStrike = visibleRows[visibleRows.length - 1]?.strike;
   const candlestickSelectedRow = candlestickRow ? rows.find((row) => row.strike === candlestickRow.strike) ?? candlestickRow : null;
   const { getStrikeHistory } = useOptionChainHistory(marketId, rows);
+  
+  const maxSize = useMemo(() => {
+    return visibleRows.reduce((max, row) => Math.max(max, row.bidQty, row.askQty), 100);
+  }, [visibleRows]);
 
   const selectRow = (row: ChainRow) => {
     setOrderIntent({
@@ -97,6 +101,8 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
                   const selected = activeRow?.strike === row.strike;
                   const isAtm = row.moneyness === "ATM";
                   const size = Math.max(row.bidQty, row.askQty);
+                  const bidWidth = Math.min(100, (row.bidQty / maxSize) * 100);
+                  const askWidth = Math.min(100, (row.askQty / maxSize) * 100);
 
                   return (
                     <tr
@@ -153,9 +159,17 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-3 text-right text-base font-black text-cyan-300 transition-colors group-hover:text-cyan-200">{row.bid.toFixed(2)}</td>
-                      <td className="px-3 py-3 text-right text-base font-black text-red-300 transition-colors group-hover:text-red-200">{row.ask.toFixed(2)}</td>
-                      <td className="px-3 py-3 text-right text-on-surface-variant">{compactSize(size)}</td>
+                      <td className="px-3 py-3 text-right text-base font-black text-cyan-300 transition-colors group-hover:text-cyan-200 relative">
+                        <div className="absolute inset-y-0 right-0 bg-cyan-500/10 transition-all duration-300 pointer-events-none" style={{ width: `${bidWidth}%` }} />
+                        <span className="relative z-10">{row.bid.toFixed(2)}</span>
+                      </td>
+                      <td className="px-3 py-3 text-right text-base font-black text-red-300 transition-colors group-hover:text-red-200 relative">
+                        <div className="absolute inset-y-0 right-0 bg-red-500/10 transition-all duration-300 pointer-events-none" style={{ width: `${askWidth}%` }} />
+                        <span className="relative z-10">{row.ask.toFixed(2)}</span>
+                      </td>
+                      <td className="px-3 py-3 text-right text-on-surface-variant relative">
+                        <span className="relative z-10">{compactSize(size)}</span>
+                      </td>
                       <td className="px-3 py-3 text-center">
                         <span
                           className={cn(
