@@ -56,27 +56,18 @@ export function MarketPnLDisplay({ marketId }: MarketPnLDisplayProps) {
   const isPositive = totalPnL >= 0;
 
   // Milestone logic
-  const getNextMilestone = (pnl: number) => {
-    if (pnl < 0) return 0;
-    const milestoneStep = 1000;
-    return Math.floor(pnl / milestoneStep) * milestoneStep + milestoneStep;
-  };
-  const getPrevMilestone = (pnl: number) => {
-    if (pnl < 0) return Math.floor(pnl / 1000) * 1000;
-    return Math.floor(pnl / 1000) * 1000;
-  };
-
-  const nextMilestone = getNextMilestone(totalPnL);
-  const prevMilestone = getPrevMilestone(totalPnL);
-  const progressPercent = totalPnL < 0 ? 0 : Math.max(0, Math.min(100, ((totalPnL - prevMilestone) / (nextMilestone - prevMilestone)) * 100));
+  const step = 1000;
+  const prevMilestone = Math.floor(totalPnL / step) * step;
+  const nextMilestone = totalPnL < 0 ? 0 : prevMilestone + step;
+  const progressPercent = totalPnL < 0 ? 0 : ((totalPnL - prevMilestone) / step) * 100;
 
   useGSAP(() => {
     if (totalPnL > prevPnLRef.current) {
       // Flash green when profit increases
       gsap.fromTo(
         containerRef.current,
-        { boxShadow: "0 0 25px rgba(16, 185, 129, 0.8)", borderColor: "rgba(16, 185, 129, 0.6)" },
-        { boxShadow: isPositive ? "0 0 10px rgba(16, 185, 129, 0.2)" : "none", borderColor: "rgba(255, 255, 255, 0.1)", duration: 1, ease: "power2.out" }
+        { boxShadow: "0 0 35px rgba(20, 184, 166, 1)", borderColor: "rgba(20, 184, 166, 0.8)" },
+        { boxShadow: isPositive ? "0 0 15px rgba(20, 184, 166, 0.3)" : "none", borderColor: "rgba(255, 255, 255, 0.1)", duration: 1, ease: "power2.out" }
       );
     }
     prevPnLRef.current = totalPnL;
@@ -110,7 +101,7 @@ export function MarketPnLDisplay({ marketId }: MarketPnLDisplayProps) {
         </div>
         <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
           <div 
-            className={`h-full rounded-full transition-all duration-1000 ease-out ${isPositive ? 'bg-gradient-to-r from-cyan-500 to-bull-green shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-bear-red/50'}`}
+            className={`h-full rounded-full transition-all duration-1000 ease-out ${isPositive ? 'bg-gradient-to-r from-primary via-teal-400 to-bull-green shadow-[0_0_12px_rgba(20,184,166,0.6)]' : 'bg-bear-red/50'}`}
             style={{ width: `${progressPercent}%` }}
           />
         </div>

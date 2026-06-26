@@ -7,6 +7,7 @@ import type { Match, Order } from "@/types";
 import { terminalPollInterval } from "../hooks/query-keys";
 import { useCreateOrder, useMarketDetail, useOptionChain } from "../hooks";
 import { buildOptionRows, buildPricePayload, findAtmRow } from "../utils/terminal-context";
+import { formatMoney, formatTime } from "@/utils/format";
 
 interface OrderEntryFormProps {
   matchId: string;
@@ -18,28 +19,7 @@ type OrderMode = "LIMIT" | "MARKET";
 
 const EXECUTION_PRICE_EPSILON = 0.005;
 
-function canExecuteNow({
-  hasExecutableQuote,
-  price,
-  quoteAsk,
-  quoteBid,
-  side,
-  type,
-}: {
-  hasExecutableQuote: boolean;
-  price: number;
-  quoteAsk: number;
-  quoteBid: number;
-  side: "BUY" | "SELL";
-  type: OrderMode;
-}) {
-  if (type === "MARKET") return true;
-  if (!hasExecutableQuote) return false;
 
-  return side === "BUY"
-    ? price + EXECUTION_PRICE_EPSILON >= quoteAsk
-    : price - EXECUTION_PRICE_EPSILON <= quoteBid;
-}
 
 export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps) {
   const [type, setType] = useState<OrderMode>("LIMIT");
@@ -61,9 +41,10 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const payload = useMemo(() => buildPricePayload(match, market), [match, market]);
   const { data: calculated } = useOptionChain(marketId, payload);
   const rows = useMemo(() => buildOptionRows(calculated, market), [calculated, market]);
+  const rowMap = useMemo(() => new Map(rows.map(r => [r.strike, r])), [rows]);
   const selectedRow = useMemo(
-    () => rows.find((row) => row.strike === selectedStrike) ?? findAtmRow(rows),
-    [rows, selectedStrike]
+    () => rowMap.get(selectedStrike ?? 0) ?? findAtmRow(rows),
+    [rowMap, selectedStrike, rows]
   );
   const { isPending: isCreatingOrder, mutate: createOrder } = useCreateOrder();
 
@@ -81,14 +62,10 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const availableBalance = wallet?.availableBalance ?? 0;
   const isBuyBalanceExceeded = side === "BUY" && cashRequired > availableBalance;
   const hasExecutableQuote = Boolean(selectedRow && routedPrice > 0);
-  const willExecuteNow = canExecuteNow({
-    hasExecutableQuote,
-    price: priceValue,
-    quoteAsk,
-    quoteBid,
-    side,
-    type,
-  });
+  const isMarketOrder = type === "MARKET";
+  const isLimitWithQuote = type === "LIMIT" && hasExecutableQuote;
+  const buyWithinSpread = side === "BUY" ? priceValue + EXECUTION_PRICE_EPSILON >= quoteAsk : priceValue - EXECUTION_PRICE_EPSILON <= quoteBid;
+  const willExecuteNow = isMarketOrder || (isLimitWithQuote && buyWithinSpread);
   const submitDisabled =
     isCreatingOrder ||
     !matchId ||
@@ -193,7 +170,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
       <div className="flex shrink-0 items-start justify-between gap-2 pb-1">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-black text-white tracking-wide shadow-sm">Order Ticket</h3>
+            <h3 className="font-display text-lg font-black text-white tracking-wide shadow-sm">Order Ticket</h3>
             <StatusPill side={side} />
           </div>
           <p className="truncate text-xs font-semibold text-cyan-200/70 mt-0.5">
@@ -264,13 +241,16 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
             )}
           </div>
           {type === "LIMIT" ? (
-            <input
-              type="number"
-              step="0.05"
-              value={displayPrice}
-              onChange={(e) => setPriceOverride({ key: priceKey, value: e.target.value })}
-              className="h-10 min-w-0 rounded-lg border border-white/10 bg-[#040a17] px-3 font-data-tabular text-[14px] font-black text-on-surface focus:border-cyan-400/50 focus:bg-[#071327] transition-colors focus:outline-none shadow-inner"
-            />
+            <div className="relative w-full">
+              <input
+                type="number"
+                step="0.05"
+                value={displayPrice}
+                onChange={(e) => setPriceOverride({ key: priceKey, value: e.target.value })}
+                className="h-10 w-full min-w-0 rounded-lg border border-white/5 bg-[#040a17] pl-6 pr-3 font-data-tabular text-[14px] font-black text-on-surface shadow-inner transition-colors focus:border-cyan-400/80 focus:bg-[#071327] focus:outline-none focus:ring-1 focus:ring-cyan-400/50"
+              />
+              <div className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 w-1 h-3 border-l-[1.5px] border-cyan-500/50" />
+            </div>
           ) : (
             <div className="flex h-10 min-w-0 items-center justify-center rounded-lg border border-bull-green/30 bg-bull-green/15 px-3 font-data-tabular text-[14px] font-black text-bull-green shadow-inner">
               Rs {formatMoney(priceValue)}
@@ -282,12 +262,15 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
           <label className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant">
             Quantity
           </label>
-          <input
-            type="number"
-            value={qty}
-            onChange={(e) => setQtyOverride(e.target.value)}
-            className="h-10 min-w-0 rounded-lg border border-white/10 bg-[#040a17] px-3 font-data-tabular text-[14px] font-black text-on-surface focus:border-cyan-400/50 focus:bg-[#071327] transition-colors focus:outline-none shadow-inner"
-          />
+          <div className="relative w-full">
+            <input
+              type="number"
+              value={qty}
+              onChange={(e) => setQtyOverride(e.target.value)}
+              className="h-10 w-full min-w-0 rounded-lg border border-white/5 bg-[#040a17] pl-6 pr-3 font-data-tabular text-[14px] font-black text-on-surface shadow-inner transition-colors focus:border-cyan-400/80 focus:bg-[#071327] focus:outline-none focus:ring-1 focus:ring-cyan-400/50"
+            />
+            <div className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 w-1 h-3 border-l-[1.5px] border-cyan-500/50" />
+          </div>
         </div>
 
       </div>
@@ -307,7 +290,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
         <button
           type="submit"
           disabled={submitDisabled}
-          className={`inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl text-[14px] font-black text-white shadow-[0_8px_20px_rgba(0,0,0,0.2)] transition-all hover:shadow-[0_12px_25px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 active:translate-y-0 ${
+          className={`inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl text-[14px] font-black text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_8px_20px_rgba(0,0,0,0.4)] transition-all hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_12px_25px_rgba(0,0,0,0.6)] hover:-translate-y-0.5 active:translate-y-0 ${
             side === "BUY" ? "bg-bull-green hover:bg-bull-green/90 shadow-bull-green/20" : "bg-bear-red hover:bg-bear-red/90 shadow-bear-red/20"
           } disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none`}
         >
@@ -336,7 +319,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   );
 }
 
-function QuoteFocusPanel({
+const QuoteFocusPanel = React.memo(function QuoteFocusPanel({
   activeSide,
   ask,
   bid,
@@ -353,9 +336,9 @@ function QuoteFocusPanel({
       </div>
     </div>
   );
-}
+});
 
-function QuoteBox({
+const QuoteBox = React.memo(function QuoteBox({
   active,
   label,
   tone,
@@ -377,9 +360,9 @@ function QuoteBox({
       <div className="font-data-tabular text-base font-black leading-tight">Rs {formatMoney(value)}</div>
     </div>
   );
-}
+});
 
-function OrderImpactPanel({
+const OrderImpactPanel = React.memo(function OrderImpactPanel({
   availableBalance,
   cashRequired,
   danger,
@@ -408,9 +391,9 @@ function OrderImpactPanel({
       </div>
     </div>
   );
-}
+});
 
-function ImpactCell({
+const ImpactCell = React.memo(function ImpactCell({
   align,
   danger,
   label,
@@ -431,9 +414,9 @@ function ImpactCell({
       <div className={`truncate font-black ${strong || !danger ? "text-on-surface" : ""}`}>{value}</div>
     </div>
   );
-}
+});
 
-function StatusPill({ side }: { side: "BUY" | "SELL" }) {
+const StatusPill = React.memo(function StatusPill({ side }: { side: "BUY" | "SELL" }) {
   return (
     <span
       className={`rounded-md border px-2 py-1 text-[10px] font-black ${
@@ -445,9 +428,9 @@ function StatusPill({ side }: { side: "BUY" | "SELL" }) {
       {side}
     </span>
   );
-}
+});
 
-function OrderReceipt({ order, submittedAt }: { order: Order; submittedAt: Date | null }) {
+const OrderReceipt = React.memo(function OrderReceipt({ order, submittedAt }: { order: Order; submittedAt: Date | null }) {
   const executed = order.status === "FILLED";
   const partial = order.status === "PARTIAL";
   const tone = executed
@@ -474,16 +457,9 @@ function OrderReceipt({ order, submittedAt }: { order: Order; submittedAt: Date 
       </div>
     </div>
   );
-}
+});
 
-function formatMoney(value: number) {
-  if (!Number.isFinite(value)) return "0.00";
-  return value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
 
-function formatTime(value: Date) {
-  return value.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
 
 function getErrorMessage(error: unknown, defaultMessage: string) {
   if (

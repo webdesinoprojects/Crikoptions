@@ -11,4 +11,4 @@ export * from "./OrderEntryForm";
 export * from "./PositionSummary";
 export * from "./MatchAnalyticsPanel";
 export * from "./MarketPnLDisplay";
-
+export * from "./MatchCard";

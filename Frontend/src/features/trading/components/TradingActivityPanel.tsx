@@ -473,7 +473,7 @@ function InlinePositionCloseForm({
           disabled={isPending || qty <= 0}
           className={`flex-[2] rounded py-2 text-[11px] font-black text-white transition-colors disabled:opacity-50 ${side === "sell" ? "bg-bear-red hover:bg-bear-red/80" : "bg-bull-green hover:bg-bull-green/80"}`}
         >
-          {isPending ? "Executing..." : `${actionText} @ ${type}`}
+          {isPending ? "Executing..." : actionText}
         </button>
         <button
           onClick={onCancel}

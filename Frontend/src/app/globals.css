@@ -52,14 +52,14 @@
   --color-background: #020617;
   --color-on-background: #f8fafc;
   --color-surface-variant: #081225;
-  --color-bull-green: #22c55e;
-  --color-bear-red: #ef4444;
-  --color-ipl-blue-dark: #020617;
+  --color-bull-green: #14b8a6;
+  --color-bear-red: #f43f5e;
+  --color-ipl-blue-dark: #01040a;
   --color-premium-gold: #ffd700;
-  --color-neutral-bg: #020617;
+  --color-neutral-bg: #01040a;
 
-  --font-display: var(--font-display-xl), "Outfit", sans-serif;
-  --font-sans: var(--font-body-md), "Plus Jakarta Sans", sans-serif;
+  --font-display: var(--font-display-xl), "Space Grotesk", sans-serif;
+  --font-sans: var(--font-body-md), "Space Grotesk", sans-serif;
   --font-mono: var(--font-data-tabular), "JetBrains Mono", monospace;
 
   --radius-sm: 0.125rem;
@@ -117,25 +117,30 @@
 /* Scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #434654 transparent;
+  scrollbar-color: #0891b2 transparent;
 }
 
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 3px;
+  height: 3px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #434654;
-  border-radius: 10px;
+  background: #0891b2;
+  border-radius: 4px;
 }
 
 body {
-  background: #020617;
+  background: #01040a;
   color: #c4d2ff;
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+/* Custom Cursor for Terminal */
+.terminal-area {
+  cursor: crosshair;
 }
 
 /* Animations */
@@ -208,65 +213,65 @@ body {
 }
 
 :root {
-  --background: #020617;
+  --background: #01040a;
   --foreground: #f8fafc;
-  --card: #081225;
+  --card: #040914;
   --card-foreground: #f8fafc;
-  --popover: #081225;
+  --popover: #040914;
   --popover-foreground: #f8fafc;
-  --primary: #0ea5e9;
-  --primary-foreground: #020617;
-  --secondary: #081225;
+  --primary: #0891b2;
+  --primary-foreground: #01040a;
+  --secondary: #040914;
   --secondary-foreground: #f8fafc;
-  --muted: #050b18;
+  --muted: #02050f;
   --muted-foreground: #94a3b8;
-  --accent: #0a1428;
+  --accent: #0891b2;
   --accent-foreground: #f8fafc;
-  --destructive: #ef4444;
+  --destructive: #f43f5e;
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.05);
-  --ring: #0ea5e9;
+  --ring: #0891b2;
   --radius: 0.25rem;
-  --sidebar: #020617;
+  --sidebar: #01040a;
   --sidebar-foreground: #94a3b8;
-  --sidebar-primary: #0ea5e9;
-  --sidebar-primary-foreground: #020617;
-  --sidebar-accent: #0a1428;
+  --sidebar-primary: #0891b2;
+  --sidebar-primary-foreground: #01040a;
+  --sidebar-accent: #061124;
   --sidebar-accent-foreground: #f8fafc;
   --sidebar-border: rgba(255, 255, 255, 0.1);
-  --sidebar-ring: #0ea5e9;
-  --gradient-color: #0ea5e9;
-  --sparkles-color: #0ea5e9;
+  --sidebar-ring: #0891b2;
+  --gradient-color: #0891b2;
+  --sparkles-color: #0891b2;
 }
 
 .dark {
-  --background: #020617;
+  --background: #01040a;
   --foreground: #f8fafc;
-  --card: #081225;
+  --card: #040914;
   --card-foreground: #f8fafc;
-  --popover: #081225;
+  --popover: #040914;
   --popover-foreground: #f8fafc;
-  --primary: #0ea5e9;
-  --primary-foreground: #020617;
-  --secondary: #0a1428;
+  --primary: #0891b2;
+  --primary-foreground: #01040a;
+  --secondary: #061124;
   --secondary-foreground: #f8fafc;
-  --muted: #050b18;
+  --muted: #02050f;
   --muted-foreground: #94a3b8;
-  --accent: #0a1428;
+  --accent: #0891b2;
   --accent-foreground: #f8fafc;
-  --destructive: #ef4444;
+  --destructive: #f43f5e;
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.05);
-  --ring: #0ea5e9;
-  --sidebar: #020617;
+  --ring: #0891b2;
+  --sidebar: #01040a;
   --sidebar-foreground: #94a3b8;
-  --sidebar-primary: #0ea5e9;
-  --sidebar-primary-foreground: #020617;
-  --sidebar-accent: #0a1428;
+  --sidebar-primary: #0891b2;
+  --sidebar-primary-foreground: #01040a;
+  --sidebar-accent: #061124;
   --sidebar-accent-foreground: #f8fafc;
   --sidebar-border: rgba(255, 255, 255, 0.1);
-  --sidebar-ring: #0ea5e9;
-  --gradient-color: #0ea5e9;
+  --sidebar-ring: #0891b2;
+  --gradient-color: #0891b2;
   --sparkles-color: #ffffff;
 }
 

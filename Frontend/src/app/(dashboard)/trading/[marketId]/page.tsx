@@ -30,17 +30,24 @@ export default function TradingTerminalPage({ params }: PageProps) {
     () => {
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-      gsap.fromTo(
+      const tl = gsap.timeline();
+
+      tl.fromTo(
+        "[data-terminal-header]",
+        { opacity: 0, y: -20 },
+        { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }
+      ).fromTo(
         "[data-terminal-panel]",
-        { opacity: 0, y: 14, filter: "blur(8px)" },
+        { opacity: 0, y: 20, filter: "blur(10px)" },
         {
           opacity: 1,
           y: 0,
           filter: "blur(0px)",
-          duration: 0.55,
+          duration: 0.7,
           ease: "power3.out",
-          stagger: 0.055,
-        }
+          stagger: 0.1,
+        },
+        "-=0.4"
       );
     },
     { scope: terminalRef, dependencies: [marketId] }
@@ -58,18 +65,19 @@ export default function TradingTerminalPage({ params }: PageProps) {
   return (
     <div
       ref={terminalRef}
-      className="relative flex h-full flex-grow flex-col overflow-hidden bg-[#020511] text-on-surface"
+      className="terminal-area noise-overlay relative flex h-full flex-grow flex-col overflow-hidden bg-[#01040a] text-on-surface"
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(14,165,233,0.16),transparent_34%),radial-gradient(ellipse_at_bottom_right,rgba(16,185,129,0.08),transparent_32%),linear-gradient(180deg,#020511_0%,#030712_44%,#01030a_100%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(8,145,178,0.15),transparent_40%),radial-gradient(ellipse_at_bottom_right,rgba(20,184,166,0.1),transparent_40%),radial-gradient(ellipse_at_center,rgba(245,158,11,0.05),transparent_50%)] animate-pulse"
+        style={{ animationDuration: '12s' }}
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(56,189,248,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(56,189,248,0.035)_1px,transparent_1px)] bg-[size:48px_48px] opacity-30"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(8,145,178,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(8,145,178,0.05)_1px,transparent_1px)] bg-[size:64px_64px] opacity-20"
       />
 
-      <div className="relative z-10" data-terminal-panel>
+      <div className="relative z-10" data-terminal-header>
         <MatchScheduleStrip matches={matches} selectedMatchId={matchId} marketId={marketId} />
       </div>
 

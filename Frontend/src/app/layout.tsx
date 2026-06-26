@@ -1,20 +1,20 @@
 import type { Metadata } from "next";
-import { Outfit, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Providers from "@/components/Providers";
 import { Toaster } from "@/components/ui/sonner";
 
-const outfit = Outfit({
+const spaceGroteskDisplay = Space_Grotesk({
   variable: "--font-display-xl",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const plusJakarta = Plus_Jakarta_Sans({
+const spaceGroteskBody = Space_Grotesk({
   variable: "--font-body-md",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -37,10 +37,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${plusJakarta.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
+      className={`${spaceGroteskDisplay.variable} ${spaceGroteskBody.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
       suppressHydrationWarning
     >
-      <body className="min-h-screen flex flex-col bg-[#000d1a] text-on-primary-container font-sans">
+      <body className="min-h-screen flex flex-col bg-[#01040a] text-on-primary-container font-sans">
         <Providers>
           <ThemeProvider
             attribute="class"
