@@ -61,9 +61,7 @@ export function buildOptionRows(calculated?: CalculatedPrice, market?: BackendMa
 
   return chain.map((item, index) => {
     const ladderEntry = ladder[index % Math.max(ladder.length, 1)];
-    const spread = item.premium >= 20 ? 1 : item.premium >= 5 ? 0.5 : 0.1;
-    const bid = round2(Math.max(0, item.premium - spread / 2));
-    const ask = round2(item.premium + spread / 2);
+    const { bid, ask } = quoteFromPremium(item.premium);
 
     return {
       strike: item.strike,
@@ -472,4 +470,11 @@ function wicketsFromDisplay(score?: string) {
 
 function round2(value: number) {
   return Math.round(value * 100) / 100;
+}
+
+function quoteFromPremium(premium: number) {
+  const spread = premium >= 20 ? 1 : premium >= 5 ? 0.5 : 0.1;
+  const bid = Math.max(0, round2(premium - spread / 2));
+  const ask = Math.max(bid, round2(premium + spread / 2));
+  return { bid, ask };
 }

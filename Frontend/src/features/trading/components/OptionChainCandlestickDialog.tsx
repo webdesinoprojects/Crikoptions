@@ -58,8 +58,8 @@ export function OptionChainCandlestickDialog({
   const chartReady = Boolean(selectedRow && candles.length > 0);
 
   const chartOption = useMemo<echarts.EChartsOption>(
-    () => buildCandleOption(candles),
-    [candles]
+    () => buildCandleOption(candles, bucketMs),
+    [bucketMs, candles]
   );
 
   return (
@@ -155,8 +155,8 @@ export function OptionChainCandlestickDialog({
   );
 }
 
-function buildCandleOption(candles: StrikeCandle[]): echarts.EChartsOption {
-  const labels = candles.map((candle) => formatTimeLabel(candle.time));
+function buildCandleOption(candles: StrikeCandle[], bucketMs: number): echarts.EChartsOption {
+  const labels = candles.map((candle) => formatTimeLabel(candle.time, bucketMs));
   const candleData = candles.map((candle) => [candle.open, candle.close, candle.low, candle.high]);
   const latestCandle = candles[candles.length - 1];
   const priceValues =
@@ -174,7 +174,19 @@ function buildCandleOption(candles: StrikeCandle[]): echarts.EChartsOption {
       color: candle.close >= candle.open ? "rgba(34,197,94,0.22)" : "rgba(239,68,68,0.22)",
     },
   }));
-  const series: echarts.EChartsOption["series"] = [
+  const flatCandleMarkers = candles.flatMap((candle, index) =>
+    isFlatCandle(candle)
+      ? [
+          {
+            value: [index, candle.close],
+            itemStyle: {
+              color: flatCandleColor(candles, index),
+            },
+          },
+        ]
+      : []
+  );
+  const series: echarts.SeriesOption[] = [
     {
       name: "Premium",
       type: "candlestick",
@@ -232,6 +244,21 @@ function buildCandleOption(candles: StrikeCandle[]): echarts.EChartsOption {
       silent: true,
     },
   ];
+
+  if (flatCandleMarkers.length > 0) {
+    series.push({
+      name: "Flat candles",
+      type: "scatter",
+      xAxisIndex: 0,
+      yAxisIndex: 0,
+      data: flatCandleMarkers,
+      symbol: "rect",
+      symbolSize: [14, 5],
+      silent: true,
+      tooltip: { show: false },
+      z: 4,
+    });
+  }
 
   return {
     animationDuration: 220,
@@ -492,11 +519,26 @@ function formatClock(timestamp: number) {
   return new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
-function formatTimeLabel(timestamp: number) {
-  return new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+function formatTimeLabel(timestamp: number, bucketMs: number) {
+  const options: Intl.DateTimeFormatOptions =
+    bucketMs < 60_000
+      ? { hour: "2-digit", minute: "2-digit", second: "2-digit" }
+      : { hour: "2-digit", minute: "2-digit" };
+
+  return new Date(timestamp).toLocaleTimeString([], options);
 }
 
 function compactSize(value: number) {
   if (value >= 1000) return `${(value / 1000).toFixed(value >= 10_000 ? 0 : 1)}k`;
   return value.toLocaleString("en-IN");
+}
+
+function isFlatCandle(candle: StrikeCandle) {
+  return candle.open === candle.close && candle.high === candle.low;
+}
+
+function flatCandleColor(candles: StrikeCandle[], index: number) {
+  const candle = candles[index];
+  const previous = candles[index - 1];
+  return candle.close >= (previous?.close ?? candle.open) ? "#22c55e" : "#ef4444";
 }

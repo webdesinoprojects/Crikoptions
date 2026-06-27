@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChainRow } from "../utils/terminal-context";
 
 const MAX_POINTS_PER_STRIKE = 240;
-const TEST_HISTORY_POINTS_PER_STRIKE = 20;
-const TEST_HISTORY_STEP_MS = 30_000;
+const TEST_HISTORY_POINTS_PER_STRIKE = 120;
+const TEST_HISTORY_STEP_MS = 5_000;
 const ENABLE_CANDLE_TEST_HISTORY = process.env.NODE_ENV !== "production";
 
 export interface ChainHistoryPoint {

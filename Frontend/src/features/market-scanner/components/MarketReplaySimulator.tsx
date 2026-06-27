@@ -62,6 +62,7 @@ const REPLAY_MATCHES: Array<{
     disabled: true,
   },
 ];
+const FIRST_INNINGS_MODEL_SCORE_CAP = 260;
 
 export function MarketReplaySimulator() {
   const [matchKey, setMatchKey] = useState<ReplayMatchKey>("csk-mi");
@@ -168,6 +169,7 @@ export function MarketReplaySimulator() {
   const risk = buildRiskSnapshot({
     event: selectedEvent,
     lots,
+    maxModelScore: maxModeledSettlementScore(selectedEvent, pricingPayload),
     orderPrice: expectedPrice,
     positionMark: selectedPositionMark,
     row: selectedRow,
@@ -176,7 +178,6 @@ export function MarketReplaySimulator() {
 
   const getDisabledReason = (side: TradeSide, quantity = lots) =>
     getTradeDisabledReason({
-      availableBalance,
       expectedPrice: orderPriceForSide(side),
       lots: quantity,
       openLotsForStrike,
@@ -233,12 +234,15 @@ export function MarketReplaySimulator() {
     }
     if (!selectedRow || !pricingPayload || !orderMatchId || !selectedEvent) return;
 
+    const orderStrike = selectedRow.strike;
+    setSelectedStrike(orderStrike);
+
     createOrderMutation.mutate(
       {
-        clientOrderId: `scanner-${matchConfig.key}-${selectedEvent.id}-${selectedRow.strike}-${side}-${Date.now()}`,
+        clientOrderId: `scanner-${matchConfig.key}-${selectedEvent.id}-${orderStrike}-${side}-${Date.now()}`,
         matchId: orderMatchId,
         marketId: matchConfig.marketId,
-        strike: selectedRow.strike,
+        strike: orderStrike,
         side: side.toLowerCase() as "buy" | "sell",
         type: orderType,
         quantity,
@@ -247,6 +251,7 @@ export function MarketReplaySimulator() {
       },
       {
         onSuccess: (order) => {
+          setSelectedStrike(order.strike || orderStrike);
           if (order.status === "FILLED") {
             toast.success(
               `Executed ${side} ${order.filledQuantity} lots @ Rs ${formatMoney(order.averageFillPrice || order.price || price)}`
@@ -1151,18 +1156,49 @@ interface RiskSnapshot {
 function buildReplayPositionMarks(positions: OpenPosition[], rows: ChainRow[]): PositionMark[] {
   return positions.map((position) => {
     const row = rows.find((item) => sameStrike(item.strike, position.strike));
-    const markPrice = row?.bid ?? position.ltp;
+    const markPrice = replayMarkPrice(position, row);
     return {
       markPrice,
-      pnl: round2((markPrice - position.buyPrice) * position.lots),
+      pnl: replayPositionPnL(position, markPrice),
       position,
     };
   });
 }
 
+function replayMarkPrice(position: OpenPosition, row?: ChainRow) {
+  if (!row) return position.ltp;
+  if (position.lots < 0) return positiveOrFallback(row.ask, row.premium, position.ltp);
+  return positiveOrFallback(row.bid, row.premium, position.ltp);
+}
+
+function replayPositionPnL(position: OpenPosition, markPrice: number) {
+  const lots = Math.abs(position.lots);
+  if (lots === 0 || !Number.isFinite(markPrice)) return roundMoney(position.pnl);
+
+  if (position.lots > 0 && position.buyPrice > 0) {
+    return roundMoney((markPrice - position.buyPrice) * lots);
+  }
+
+  if (position.lots < 0 && (position.sellPrice ?? 0) > 0) {
+    return roundMoney(((position.sellPrice ?? 0) - markPrice) * lots);
+  }
+
+  return roundMoney(position.pnl);
+}
+
+function positiveOrFallback(...values: number[]) {
+  return values.find((value) => Number.isFinite(value) && value > 0) ?? 0;
+}
+
+function roundMoney(value: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.round(value * 100) / 100;
+}
+
 function buildRiskSnapshot({
   event,
   lots,
+  maxModelScore,
   orderPrice,
   positionMark,
   row,
@@ -1170,6 +1206,7 @@ function buildRiskSnapshot({
 }: {
   event: ReplayEvent | null;
   lots: number;
+  maxModelScore?: number;
   orderPrice: number;
   positionMark?: PositionMark;
   row?: ChainRow;
@@ -1180,10 +1217,14 @@ function buildRiskSnapshot({
   const activeLots = positionMark?.position.lots ?? lots;
   const margin = Math.max(0, entryPrice * activeLots);
   const pnl = positionMark?.pnl ?? 0;
+  const longMaxProfit = modeledLongMaxProfit({ activeLots, entryPrice, maxModelScore, strike });
 
   return {
     pnl,
-    maxProfit: side === "BUY" ? "Unlimited" : `Rs ${formatMoney(Math.max(0, orderPrice * lots))}`,
+    maxProfit:
+      positionMark || side === "BUY"
+        ? longMaxProfit
+        : `Rs ${formatMoney(Math.max(0, orderPrice * lots))}`,
     maxLoss: `Rs ${formatMoney(margin)}`,
     marginRequired: `Rs ${formatMoney(margin)}`,
     breakEven: strike > 0 && entryPrice > 0 ? formatMoney(strike + entryPrice) : "--",
@@ -1192,8 +1233,31 @@ function buildRiskSnapshot({
   };
 }
 
+function maxModeledSettlementScore(event: ReplayEvent | null, payload: CalculatePricePayload | null) {
+  if (!event || !payload) return undefined;
+  if (payload.innings === 2) {
+    return Math.max(event.currentScore, payload.targetScore ?? event.currentScore);
+  }
+  return Math.max(FIRST_INNINGS_MODEL_SCORE_CAP, event.currentScore);
+}
+
+function modeledLongMaxProfit({
+  activeLots,
+  entryPrice,
+  maxModelScore,
+  strike,
+}: {
+  activeLots: number;
+  entryPrice: number;
+  maxModelScore?: number;
+  strike: number;
+}) {
+  if (!Number.isFinite(maxModelScore) || strike <= 0 || entryPrice <= 0 || activeLots <= 0) return "--";
+  const maxPayoff = Math.max(0, (maxModelScore ?? 0) - strike);
+  return `Rs ${formatMoney(Math.max(0, (maxPayoff - entryPrice) * activeLots))}`;
+}
+
 function getTradeDisabledReason({
-  availableBalance,
   expectedPrice,
   lots,
   openLotsForStrike,
@@ -1203,7 +1267,6 @@ function getTradeDisabledReason({
   row,
   side,
 }: {
-  availableBalance?: number;
   expectedPrice: number;
   lots: number;
   openLotsForStrike: number;
@@ -1219,9 +1282,6 @@ function getTradeDisabledReason({
   if (pricingError) return "Backend pricing is unavailable for this event.";
   if (expectedPrice <= 0) return "No executable quote is available for this strike.";
   if (lots <= 0) return "Enter a valid lot quantity.";
-  if (side === "BUY" && availableBalance !== undefined && expectedPrice * lots > availableBalance) {
-    return "Insufficient paper wallet balance.";
-  }
   if (side === "SELL" && openLotsForStrike <= 0) return "Buy this strike before selling it.";
   if (side === "SELL" && lots > openLotsForStrike) return `Only ${openLotsForStrike} lots are open for this strike.`;
   return "";
@@ -1260,6 +1320,7 @@ function overBallLabel(event: ReplayEvent) {
   const legalBallNumber = Math.max(0, event.legalBallNumber);
   const displayOver = Math.floor(legalBallNumber / 6);
   const displayBall = legalBallNumber % 6;
+  if (displayBall === 0) return String(displayOver);
   return `${displayOver}.${displayBall}`;
 }
 
@@ -1291,10 +1352,6 @@ function formatTime(value: string) {
 
 function sameStrike(left: number, right: number) {
   return Math.abs(left - right) < 0.0001;
-}
-
-function round2(value: number) {
-  return Math.round(value * 100) / 100;
 }
 
 const inputClassName =
