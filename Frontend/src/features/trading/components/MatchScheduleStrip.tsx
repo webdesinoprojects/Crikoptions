@@ -3,13 +3,13 @@
 import React from "react";
 import type { Match } from "@/types";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ExitAllPositionsButton } from "./ExitAllPositionsButton";
 import { MatchCard } from "./MatchCard";
-import { MarketPnLDisplay } from "./MarketPnLDisplay";
+import { TodayPnLDisplay } from "./TodayPnLDisplay";
 
 interface MatchScheduleStripProps {
   matches: Match[];
   selectedMatchId?: string;
-  marketId?: string;
 }
 
 function liveMatchesOnly(matches: Match[]): Match[] {
@@ -18,7 +18,7 @@ function liveMatchesOnly(matches: Match[]): Match[] {
     .sort((a, b) => new Date(a.startTime ?? 0).getTime() - new Date(b.startTime ?? 0).getTime());
 }
 
-export function MatchScheduleStrip({ matches, selectedMatchId, marketId }: MatchScheduleStripProps) {
+export function MatchScheduleStrip({ matches, selectedMatchId }: MatchScheduleStripProps) {
   const visible = React.useMemo(() => liveMatchesOnly(matches), [matches]);
 
   return (
@@ -34,13 +34,14 @@ export function MatchScheduleStrip({ matches, selectedMatchId, marketId }: Match
           ))
         )}
       </div>
-      {marketId && (
-        <div className="shrink-0 px-2 pb-2 sm:px-3 lg:px-3 lg:py-2.5 lg:pl-0">
-          <ErrorBoundary>
-            <MarketPnLDisplay marketId={marketId} />
-          </ErrorBoundary>
-        </div>
-      )}
+      <div className="flex shrink-0 items-center gap-2 px-3 py-2.5 pl-0">
+        <ErrorBoundary>
+          <TodayPnLDisplay />
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <ExitAllPositionsButton />
+        </ErrorBoundary>
+      </div>
     </section>
   );
 }

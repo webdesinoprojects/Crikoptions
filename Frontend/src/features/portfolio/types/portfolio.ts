@@ -86,6 +86,7 @@ export interface PortfolioSummary {
   /** Available cash when backend provides it */
   availableMargin: number;
   usedMargin: number;
+  marginUsagePct: number;
   wallet: WalletAccount;
   positions: PortfolioPosition[];
   closedTrades: ClosedTrade[];

@@ -5,7 +5,7 @@ import { useWallet } from "@/features/wallet/hooks";
 import { useTerminalStore } from "@/stores/terminal.store";
 import type { Match, Order } from "@/types";
 import { terminalPollInterval } from "../hooks/query-keys";
-import { useCreateOrder, useMarketDetail, useOptionChain } from "../hooks";
+import { useCreateOrder, useMarketDetail, useOptionChain, useOrderPreview } from "../hooks";
 import { buildOptionRows, buildPricePayload, findAtmRow } from "../utils/terminal-context";
 import { formatMoney, formatTime } from "@/utils/format";
 
@@ -57,21 +57,37 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const displayPrice = priceOverride?.key === priceKey ? priceOverride.value : backendPrice.toFixed(2);
   const priceValue = type === "MARKET" ? backendPrice : Number.parseFloat(displayPrice) || 0;
   const qtyValue = Number.parseInt(qty, 10) || 0;
-  const notional = priceValue * qtyValue;
-  const cashRequired = side === "BUY" ? notional : 0;
-  const availableBalance = wallet?.availableBalance ?? 0;
-  const isBuyBalanceExceeded = side === "BUY" && cashRequired > availableBalance;
   const hasExecutableQuote = Boolean(selectedRow && routedPrice > 0);
   const isMarketOrder = type === "MARKET";
   const isLimitWithQuote = type === "LIMIT" && hasExecutableQuote;
   const buyWithinSpread = side === "BUY" ? priceValue + EXECUTION_PRICE_EPSILON >= quoteAsk : priceValue - EXECUTION_PRICE_EPSILON <= quoteBid;
-  const willExecuteNow = isMarketOrder || (isLimitWithQuote && buyWithinSpread);
+  const selectedStrikeValue = selectedRow?.strike;
+  const previewPayload = useMemo(() => {
+    if (!matchId || !marketId || !selectedStrikeValue || qtyValue <= 0) return undefined;
+    if (type === "LIMIT" && priceValue <= 0) return undefined;
+
+    return {
+      matchId,
+      marketId,
+      strike: selectedStrikeValue,
+      side: side.toLowerCase() as "buy" | "sell",
+      type,
+      quantity: qtyValue,
+      price: type === "MARKET" ? 0 : priceValue,
+      pricingSnapshot: payload,
+    };
+  }, [marketId, matchId, payload, priceValue, qtyValue, selectedStrikeValue, side, type]);
+  const { data: orderPreview } = useOrderPreview(previewPayload);
+  const notional = orderPreview?.notional ?? 0;
+  const cashRequired = orderPreview?.marginRequired ?? 0;
+  const availableBalance = orderPreview?.availableBalance ?? wallet?.availableBalance ?? 0;
+  const showBalanceWarning = side === "BUY" && orderPreview ? !orderPreview.sufficientBalance : false;
+  const willExecuteNow = orderPreview?.willExecuteNow ?? (isMarketOrder || (isLimitWithQuote && buyWithinSpread));
   const submitDisabled =
     isCreatingOrder ||
     !matchId ||
     !marketId ||
     !selectedRow ||
-    isBuyBalanceExceeded ||
     (type === "MARKET" && !hasExecutableQuote);
 
   const alignLimitToQuote = useCallback(() => {
@@ -107,11 +123,6 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
       toast.error(type === "MARKET" ? "No executable quote is available" : "Please enter a valid price");
       return;
     }
-    if (isBuyBalanceExceeded) {
-      toast.error("Insufficient paper wallet balance");
-      return;
-    }
-
     createOrder(
       {
         matchId,
@@ -149,7 +160,6 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   }, [
     createOrder,
     hasExecutableQuote,
-    isBuyBalanceExceeded,
     marketId,
     matchId,
     priceValue,
@@ -282,7 +292,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
       <OrderImpactPanel
         availableBalance={availableBalance}
         cashRequired={cashRequired}
-        danger={isBuyBalanceExceeded}
+        danger={showBalanceWarning}
         notional={notional}
         price={priceValue}
         side={side}

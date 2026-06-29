@@ -2,7 +2,6 @@ import { apiClient } from "@/lib/api/client";
 import { portfolioService } from "@/features/portfolio/services/portfolio.service";
 import { adaptMatch, adaptMatches, BackendMatch } from "@/lib/adapters/match.adapter";
 import { BackendMarket } from "@/lib/adapters/market.adapter";
-import { BackendOrder } from "@/lib/adapters/order.adapter";
 import {
   MarketMover,
   Match,
@@ -11,18 +10,6 @@ import {
   Signal,
   TickerItem,
 } from "@/types";
-
-interface BackendPosition {
-  _id: string;
-  matchId: string;
-  marketId: string;
-  lots: number;
-  buyPrice: number;
-  sellPrice: number;
-  ltp: number;
-  pnl: number;
-  updatedAt: string;
-}
 
 export const dashboardService = {
   fetchHomeMatches: async (): Promise<Match[]> => {
@@ -43,6 +30,7 @@ export const dashboardService = {
       dailyPnLPercentage: portfolio.dailyPnLPct,
       marginAvailable: portfolio.availableMargin,
       marginUsed: portfolio.usedMargin,
+      marginUsagePct: portfolio.marginUsagePct,
       openPositionsCount: portfolio.openPositionsCount,
     };
   },
@@ -131,21 +119,6 @@ async function fetchAllMarkets(): Promise<BackendMarket[]> {
     .map((entry) => entry.market);
 }
 
-async function fetchOpenPositions(): Promise<BackendPosition[]> {
-  const response = await apiClient.get<{ success: boolean; data: BackendPosition[] }>("/v1/positions/open");
-  return response.data.data ?? [];
-}
-
-async function fetchClosedPositions(): Promise<BackendPosition[]> {
-  const response = await apiClient.get<{ success: boolean; data: BackendPosition[] }>("/v1/positions/closed");
-  return response.data.data ?? [];
-}
-
-async function fetchOrders(): Promise<BackendOrder[]> {
-  const response = await apiClient.get<{ success: boolean; data: BackendOrder[] }>("/v1/orders");
-  return response.data.data ?? [];
-}
-
 function symbolFromTitle(title: string): string {
   const words = (title || "0")
     .split(/[\s/_-]+/)
@@ -162,17 +135,6 @@ function numberOrZero(value: unknown): number {
 
 function round2(value: number): number {
   return Math.round(numberOrZero(value) * 100) / 100;
-}
-
-function isToday(value: string): boolean {
-  if (!value) return false;
-  const date = new Date(value);
-  const now = new Date();
-  return (
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate()
-  );
 }
 
 function matchPriority(status?: string) {

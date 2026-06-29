@@ -19,6 +19,7 @@ export interface PortfolioSummary {
   dailyPnLPercentage: number;
   marginAvailable: number;
   marginUsed: number;
+  marginUsagePct: number;
   openPositionsCount: number;
 }
 

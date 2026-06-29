@@ -13,7 +13,7 @@ type TradeOpsTab = "POSITIONS" | "ORDERS";
 
 export function TradeOperationsWorkspace() {
   const [tab, setTab] = useState<TradeOpsTab>("POSITIONS");
-  const { data: positions = [], isLoading: positionsLoading } = usePositions();
+  const { data: positions = [], portfolio, isLoading: positionsLoading } = usePositions();
   const { data: closedTrades = [], isLoading: closedLoading } = useClosedTrades();
   const { data: orders = [], isLoading: ordersLoading } = useOrders(undefined, true);
 
@@ -25,6 +25,7 @@ export function TradeOperationsWorkspace() {
     (tab === "ORDERS" && orders.length === 0);
 
   const totalExposure = positionRows.reduce((sum, position) => sum + position.notional, 0);
+  const backendTotalPnL = portfolio?.totalPnL;
   const workingOrders = orderRows.filter((order) => order.status === "PENDING" || order.status === "PARTIAL").length;
   const executedOrders = orderRows.filter((order) => order.status === "FILLED").length;
 
@@ -61,6 +62,7 @@ export function TradeOperationsWorkspace() {
           <PositionsScreen 
             rows={positionRows} 
             closedRows={closedRows}
+            totalPnL={backendTotalPnL ?? sampleTotalPnL}
             loading={(positionsLoading && positions.length === 0) || (closedLoading && closedTrades.length === 0)} 
             sample={positions.length === 0} 
           />
@@ -112,11 +114,13 @@ function PositionsScreen({
   rows,
   closedRows,
   sample,
+  totalPnL,
 }: {
   loading: boolean;
   rows: PortfolioPosition[];
   closedRows: ClosedTrade[];
   sample: boolean;
+  totalPnL: number;
 }) {
   const [search, setSearch] = useState("");
   const [openExpanded, setOpenExpanded] = useState(true);
@@ -124,8 +128,6 @@ function PositionsScreen({
 
   const filteredOpen = rows.filter(r => r.symbol.toLowerCase().includes(search.toLowerCase()) || r.matchName.toLowerCase().includes(search.toLowerCase()));
   const filteredClosed = closedRows.filter(r => r.symbol.toLowerCase().includes(search.toLowerCase()) || r.matchName.toLowerCase().includes(search.toLowerCase()));
-
-  const totalPnL = rows.reduce((acc, r) => acc + r.unrealizedPnL, 0) + closedRows.reduce((acc, r) => acc + r.realizedPnL, 0);
 
   if (loading) {
     return (
@@ -210,13 +212,17 @@ function PositionsScreen({
   );
 }
 
-function PositionCard({ position, type, sample }: { position: any, type: "open" | "closed", sample: boolean }) {
-  const isUp = type === "open" ? position.unrealizedPnL >= 0 : position.realizedPnL >= 0;
-  const pnl = type === "open" ? position.unrealizedPnL : position.realizedPnL;
+type PositionCardRow = PortfolioPosition | ClosedTrade;
+
+function PositionCard({ position, type, sample }: { position: PositionCardRow, type: "open" | "closed", sample: boolean }) {
+  const openPosition = type === "open" ? position as PortfolioPosition : null;
+  const closedPosition = type === "closed" ? position as ClosedTrade : null;
+  const pnl = openPosition ? openPosition.unrealizedPnL : closedPosition?.realizedPnL ?? 0;
+  const isUp = pnl >= 0;
   const lots = position.quantity;
-  const ltp = type === "open" ? position.currentPrice : position.exitPrice; 
-  const buyPrice = type === "open" ? (position.side === "BUY" ? position.averageEntryPrice : 0) : position.entryPrice; 
-  const sellPrice = type === "open" ? (position.side === "SELL" ? position.averageEntryPrice : 0) : position.exitPrice;
+  const ltp = openPosition ? openPosition.currentPrice : closedPosition?.exitPrice ?? 0; 
+  const buyPrice = openPosition ? (openPosition.side === "BUY" ? openPosition.averageEntryPrice : 0) : closedPosition?.entryPrice ?? 0; 
+  const sellPrice = openPosition ? (openPosition.side === "SELL" ? openPosition.averageEntryPrice : 0) : closedPosition?.exitPrice ?? 0;
 
   return (
     <div className="bg-surface-container border border-outline/10 hover:border-outline/20 hover:bg-surface-container-high transition-colors rounded-xl p-3.5 flex flex-col gap-3.5">
@@ -383,25 +389,6 @@ function displayStatus(status: Order["status"]) {
   return status;
 }
 
-function RiskBar({ value }: { value: number }) {
-  const bounded = Math.min(100, Math.max(0, value));
-  
-  // Dynamic color based on concentration
-  const isHighRisk = bounded > 40;
-  const isMedRisk = bounded > 20;
-  const colorClass = isHighRisk ? "bg-bear-red" : isMedRisk ? "bg-fuchsia-500" : "bg-primary";
-  const glowClass = isHighRisk ? "shadow-[0_0_8px_rgba(239,68,68,0.6)]" : isMedRisk ? "shadow-[0_0_8px_rgba(217,70,239,0.6)]" : "shadow-[0_0_8px_rgba(14,165,233,0.6)]";
-  
-  return (
-    <div className="inline-flex items-center justify-end gap-2.5 w-full">
-      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-white/5 border border-white/5">
-        <div className={`h-full rounded-full transition-all duration-700 ease-out ${colorClass} ${glowClass}`} style={{ width: `${bounded}%` }} />
-      </div>
-      <span className={`w-10 text-right text-[10px] font-black ${isHighRisk ? "text-bear-red drop-shadow-[0_0_4px_rgba(239,68,68,0.5)]" : "text-on-surface"}`}>{bounded.toFixed(1)}%</span>
-    </div>
-  );
-}
-
 function shortId(value: string) {
   if (!value) return "--";
   return value.length > 10 ? `${value.slice(0, 6)}...${value.slice(-4)}` : value;
@@ -536,4 +523,6 @@ const sampleClosedTrades: ClosedTrade[] = [
   },
 ];
 
-
+const sampleTotalPnL =
+  samplePositions.reduce((total, position) => total + position.unrealizedPnL, 0) +
+  sampleClosedTrades.reduce((total, trade) => total + trade.realizedPnL, 0);

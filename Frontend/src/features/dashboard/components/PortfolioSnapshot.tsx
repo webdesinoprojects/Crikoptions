@@ -9,7 +9,7 @@ export function PortfolioSnapshot() {
 
   if (isLoading || !data) return null;
 
-  const usagePercent = Math.round((data.marginUsed / (data.marginUsed + data.marginAvailable)) * 100);
+  const usagePercent = Math.round(data.marginUsagePct);
 
   return (
     <Card className="bg-surface-container-lowest border-outline-variant flex-1">

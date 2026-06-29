@@ -12,13 +12,9 @@ import { YourWatchlistWidget } from "./YourWatchlistWidget";
 import { MatchdayChallenges } from "./MatchdayChallenges";
 import { FriendsLeague } from "./FriendsLeague";
 import { LastMatchRecap } from "./LastMatchRecap";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardView() {
   const { data: overview, isLoading } = useDashboardOverview();
-  const marginBase = (overview?.marginUsed ?? 0) + (overview?.marginAvailable ?? 0);
-  const marginUsagePct = marginBase > 0 ? ((overview?.marginUsed ?? 0) / marginBase) * 100 : 0;
-  const riskRating = marginUsagePct > 70 ? "HIGH" : marginUsagePct > 0 ? "ACTIVE" : "0";
 
   return (
     <div className="min-h-full flex-1 overflow-x-hidden lg:h-full lg:overflow-hidden">

@@ -49,6 +49,53 @@ export interface PositionQueryFilters {
   marketId?: string;
 }
 
+export interface MarketPnL {
+  marketId: string;
+  openPnl: number;
+  closedPnl: number;
+  totalPnl: number;
+}
+
+export interface DailyPnL {
+  dailyPnL: number;
+  dailyPnLPct: number;
+}
+
+export interface ExitAllPositionFailure {
+  matchId: string;
+  marketId: string;
+  strike: number;
+  quantity: number;
+  message: string;
+}
+
+export interface ExitAllPositionsResult {
+  requested: number;
+  submitted: number;
+  failed: number;
+  failures: ExitAllPositionFailure[];
+}
+
+export interface OrderPreview {
+  matchId: string;
+  marketId: string;
+  strike: number;
+  side: "buy" | "sell";
+  type: "LIMIT" | "MARKET";
+  quantity: number;
+  requestedPrice: number;
+  orderPrice: number;
+  executablePrice: number;
+  bid: number;
+  ask: number;
+  notional: number;
+  marginRequired: number;
+  availableBalance: number;
+  sufficientBalance: boolean;
+  willExecuteNow: boolean;
+  message: string;
+}
+
 class TradingService {
   async fetchMarkets(matchId: string): Promise<FrontendMarket[]> {
     const response = await apiClient.get<{ success: boolean; data: BackendMarket[] }>(`/v1/matches/${matchId}/markets`);
@@ -78,6 +125,11 @@ class TradingService {
     return adaptOrder(response.data.data);
   }
 
+  async previewOrder(payload: CreateOrderPayload): Promise<OrderPreview> {
+    const response = await apiClient.post<{ success: boolean; data: OrderPreview }>("/v1/orders/preview", payload);
+    return normalizeOrderPreview(response.data.data);
+  }
+
   async fetchExecutions(matchId: string, marketId: string): Promise<Execution[]> {
     const response = await apiClient.get<{ success: boolean; data: Execution[] }>("/v1/executions", {
       params: { matchId, marketId },
@@ -97,6 +149,26 @@ class TradingService {
       params: compactPositionFilters(filters),
     });
     return normalizeOpenPositions(response.data.data ?? []);
+  }
+
+  async fetchMarketPnL(marketId: string): Promise<MarketPnL> {
+    const response = await apiClient.get<{ success: boolean; data: MarketPnL }>(
+      `/v1/portfolio/markets/${marketId}/pnl`
+    );
+    return normalizeMarketPnL(response.data.data);
+  }
+
+  async fetchDailyPnL(): Promise<DailyPnL> {
+    const response = await apiClient.get<{ success: boolean; data: DailyPnL }>("/v1/portfolio/daily-pnl");
+    return normalizeDailyPnL(response.data.data);
+  }
+
+  async exitAllPositions(): Promise<ExitAllPositionsResult> {
+    const response = await apiClient.post<{ success: boolean; data: ExitAllPositionsResult }>(
+      "/v1/positions/close-all",
+      { type: "MARKET" }
+    );
+    return normalizeExitAllPositions(response.data.data);
   }
 
   async calculateMarketPrice(marketId: string, payload: CalculatePricePayload): Promise<CalculatedPrice> {
@@ -156,6 +228,59 @@ function normalizeOpenPositions(positions: OpenPosition[]): OpenPosition[] {
     realizedPnl: numberOrZero(position.realizedPnl),
     matchedLots: numberOrZero(position.matchedLots),
   }));
+}
+
+function normalizeMarketPnL(pnl: MarketPnL): MarketPnL {
+  return {
+    marketId: pnl?.marketId ?? "",
+    openPnl: numberOrZero(pnl?.openPnl),
+    closedPnl: numberOrZero(pnl?.closedPnl),
+    totalPnl: numberOrZero(pnl?.totalPnl),
+  };
+}
+
+function normalizeDailyPnL(pnl: DailyPnL): DailyPnL {
+  return {
+    dailyPnL: numberOrZero(pnl?.dailyPnL),
+    dailyPnLPct: numberOrZero(pnl?.dailyPnLPct),
+  };
+}
+
+function normalizeExitAllPositions(result: ExitAllPositionsResult): ExitAllPositionsResult {
+  return {
+    requested: numberOrZero(result?.requested),
+    submitted: numberOrZero(result?.submitted),
+    failed: numberOrZero(result?.failed),
+    failures: (result?.failures ?? []).map((failure) => ({
+      matchId: failure?.matchId ?? "",
+      marketId: failure?.marketId ?? "",
+      strike: numberOrZero(failure?.strike),
+      quantity: numberOrZero(failure?.quantity),
+      message: failure?.message ?? "Exit failed",
+    })),
+  };
+}
+
+function normalizeOrderPreview(preview: OrderPreview): OrderPreview {
+  return {
+    matchId: preview?.matchId ?? "",
+    marketId: preview?.marketId ?? "",
+    strike: numberOrZero(preview?.strike),
+    side: preview?.side === "sell" ? "sell" : "buy",
+    type: preview?.type === "MARKET" ? "MARKET" : "LIMIT",
+    quantity: numberOrZero(preview?.quantity),
+    requestedPrice: numberOrZero(preview?.requestedPrice),
+    orderPrice: numberOrZero(preview?.orderPrice),
+    executablePrice: numberOrZero(preview?.executablePrice),
+    bid: numberOrZero(preview?.bid),
+    ask: numberOrZero(preview?.ask),
+    notional: numberOrZero(preview?.notional),
+    marginRequired: numberOrZero(preview?.marginRequired),
+    availableBalance: numberOrZero(preview?.availableBalance),
+    sufficientBalance: Boolean(preview?.sufficientBalance),
+    willExecuteNow: Boolean(preview?.willExecuteNow),
+    message: preview?.message ?? "",
+  };
 }
 
 function compactPositionFilters(filters?: PositionQueryFilters): PositionQueryFilters {

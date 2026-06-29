@@ -1,12 +1,15 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Order } from "@/types";
 import { OpenPosition } from "../types/position";
 import { cn } from "@/lib/utils";
 import { useCancelOrder, useOpenPositions, useOrders, useOptionChain, useCreateOrder } from "../hooks";
 import { useClosedTrades } from "@/features/portfolio/hooks";
+import type { ClosedTrade } from "@/features/portfolio/types/portfolio";
 import { buildPricePayload, buildOptionRows } from "../utils/terminal-context";
 import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { Match } from "@/types";
@@ -28,7 +31,7 @@ export function TradingActivityPanel({ className, matchId, marketId, market, mat
   const { data: positions = [], isFetching: positionsFetching, isLoading: positionsLoading } = useOpenPositions();
   const cancelOrderMutation = useCancelOrder(matchId);
 
-  // Live option chain for real-time PnL computation
+  // Live option chain for executable close quotes.
   const payload = useMemo(() => buildPricePayload(match, market), [match, market]);
   const { data: calculated } = useOptionChain(marketId, payload);
   const chainRows = useMemo(() => buildOptionRows(calculated, market), [calculated, market]);
@@ -141,8 +144,6 @@ function OrdersTab({
   onCancel: (orderId: string) => void;
   orders: Order[];
 }) {
-  const router = import("next/navigation").then(m => m.useRouter);
-  const { useRouter } = require("next/navigation");
   const nextRouter = useRouter();
 
   if (loading) return <PanelState label="Loading orders..." />;
@@ -153,7 +154,6 @@ function OrdersTab({
   });
 
   const displayedOrders = sortedOrders.slice(0, 10);
-  const hasMore = sortedOrders.length > 10;
 
   return (
     <div className="space-y-1.5 flex flex-col h-full">
@@ -205,33 +205,24 @@ function OrdersTab({
   );
 }
 
-import { Search, ChevronUp, ChevronDown } from "lucide-react";
-
-function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading: boolean; positions: OpenPosition[]; closedTrades: any[]; chainRows: ReturnType<typeof buildOptionRows> }) {
+function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading: boolean; positions: OpenPosition[]; closedTrades: ClosedTrade[]; chainRows: ReturnType<typeof buildOptionRows> }) {
   const setOrderIntent = useTerminalStore((state) => state.setOrderIntent);
   const setOrderSize = useTerminalStore((state) => state.setOrderSize);
   const [closingPositionId, setClosingPositionId] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
   const [openExpanded, setOpenExpanded] = useState(true);
   const [closedExpanded, setClosedExpanded] = useState(true);
 
   if (loading) return <PanelState label="Loading positions..." />;
 
-  // Calculate live open PnL
-  let openPnL = 0;
   const enrichedPositions = positions.map(position => {
     const chainRow = chainRows.find((row) => row.strike === position.strike);
     const liveLtp = chainRow ? (position.lots > 0 ? chainRow.bid : chainRow.ask) : position.ltp;
-    const livePnl = chainRow ? Math.round((liveLtp - position.buyPrice) * position.lots * 100) / 100 : position.pnl;
-    openPnL += livePnl;
+    const livePnl = position.pnl;
     return { ...position, liveLtp, livePnl, chainRow };
   });
 
-  const closedPnL = closedTrades.reduce((acc, t) => acc + t.realizedPnL, 0);
-  const totalPnL = openPnL + closedPnL;
-
-  const filteredOpen = enrichedPositions.filter(p => !search || p.strike.toString().includes(search));
-  const filteredClosed = closedTrades.filter(t => !search || t.symbol.toLowerCase().includes(search.toLowerCase()));
+  const filteredOpen = enrichedPositions;
+  const filteredClosed = closedTrades;
 
   return (
     <div className="space-y-3 h-full overflow-y-auto scrollbar-hide pb-4">
@@ -315,7 +306,6 @@ function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading
                       <InlinePositionCloseForm 
                         position={position} 
                         liveLtp={position.liveLtp} 
-                        chainRow={position.chainRow} 
                         onCancel={() => setClosingPositionId(null)} 
                       />
                     )}
@@ -390,12 +380,10 @@ function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading
 function InlinePositionCloseForm({
   position,
   liveLtp,
-  chainRow,
   onCancel,
 }: {
   position: OpenPosition;
   liveLtp: number;
-  chainRow: any;
   onCancel: () => void;
 }) {
   const [type, setType] = useState<"MARKET" | "LIMIT">("MARKET");

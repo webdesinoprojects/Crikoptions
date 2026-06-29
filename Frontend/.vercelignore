@@ -1,0 +1,4 @@
+.codex-chrome-*
+.next
+node_modules
+coverage

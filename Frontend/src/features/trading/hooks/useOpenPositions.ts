@@ -20,3 +20,13 @@ export const useClosedPositions = (filters?: PositionQueryFilters) => {
     refetchOnWindowFocus: true,
   });
 };
+
+export const useMarketPnL = (marketId: string) => {
+  return useQuery({
+    queryKey: tradingQueryKeys.marketPnL(marketId),
+    queryFn: () => tradingService.fetchMarketPnL(marketId),
+    enabled: !!marketId,
+    refetchInterval: terminalPollInterval,
+    refetchOnWindowFocus: true,
+  });
+};

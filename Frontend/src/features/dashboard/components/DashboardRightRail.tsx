@@ -10,8 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function DashboardRightRail() {
   const { data: signals, isLoading } = useIntelligenceFeed();
   const { data: overview } = useDashboardOverview();
-  const marginBase = (overview?.marginUsed ?? 0) + (overview?.marginAvailable ?? 0);
-  const marginUtil = marginBase > 0 ? ((overview?.marginUsed ?? 0) / marginBase) * 100 : 0;
+  const marginUtil = overview?.marginUsagePct ?? 0;
   const stressLevel = marginUtil > 70 ? "HIGH" : marginUtil > 0 ? "ACTIVE" : "0";
 
   const riskGaugeOption = useMemo(() => {

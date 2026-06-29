@@ -29,12 +29,23 @@ export const useCreateOrder = () => {
   });
 };
 
+export const useOrderPreview = (payload?: CreateOrderPayload) => {
+  return useQuery({
+    queryKey: tradingQueryKeys.orderPreview(payload),
+    queryFn: () => tradingService.previewOrder(payload as CreateOrderPayload),
+    enabled: Boolean(payload),
+    staleTime: 1000,
+    refetchInterval: payload ? terminalPollInterval : false,
+  });
+};
+
 export const useCancelOrder = (matchId?: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (orderId: string) => tradingService.cancelOrder(orderId),
     onSuccess: (data) => {
       refreshAfterOrderCancel(queryClient, matchId);
+      queryClient.invalidateQueries({ queryKey: tradingQueryKeys.marketPnL(data.marketId) });
       queryClient.invalidateQueries({ queryKey: ["marketDepth", data.marketId] });
       queryClient.invalidateQueries({ queryKey: ["orderBook", data.marketId] });
     },

@@ -84,7 +84,7 @@ export default function TradingTerminalPage({ params }: PageProps) {
       />
 
       <div className="relative z-10" data-terminal-header>
-        <MatchScheduleStrip matches={matches} selectedMatchId={matchId} marketId={marketId} />
+        <MatchScheduleStrip matches={matches} selectedMatchId={matchId} />
       </div>
 
       <MobileTradingTabs activePanel={mobilePanel} onChange={setMobilePanel} />

@@ -3,6 +3,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePortfolio } from "../hooks";
 import { TrendingUp, TrendingDown, Wallet, Activity, ShieldCheck, Target } from "lucide-react";
+import type { ReactNode } from "react";
 
 export function PortfolioOverview() {
   const { data, isLoading } = usePortfolio();
@@ -21,7 +22,7 @@ export function PortfolioOverview() {
 
   const isTotalUp = data.totalPnL >= 0;
   const isDailyUp = data.dailyPnL >= 0;
-  const marginPct = data.usedMargin > 0 ? (data.usedMargin / Math.max(data.usedMargin + data.availableMargin, 1)) * 100 : 0;
+  const marginPct = data.marginUsagePct;
 
   return (
     <div className="grid grid-cols-2 gap-3 select-none md:grid-cols-6">
@@ -100,7 +101,16 @@ export function PortfolioOverview() {
   );
 }
 
-function PremiumKpiCard({ label, value, prefix, positive, pct, icon }: any) {
+interface PremiumKpiCardProps {
+  label: string;
+  value: string;
+  prefix: string;
+  positive: boolean;
+  pct: number;
+  icon: ReactNode;
+}
+
+function PremiumKpiCard({ label, value, prefix, positive, pct, icon }: PremiumKpiCardProps) {
   const colorClass = positive ? "text-bull-green" : "text-bear-red";
   const glowClass = positive ? "shadow-[0_0_15px_rgba(16,185,129,0.15)]" : "shadow-[0_0_15px_rgba(239,68,68,0.15)]";
   const bgClass = positive ? "bg-bull-green/10" : "bg-bear-red/10";

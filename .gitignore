@@ -5,11 +5,13 @@ bin/
 
 .vscode/
 .idea/
+.codex/
 
 .DS_Store
 *.md
 !CRIKOPTIONS_TRADING_PLATFORM_PHASED_PLAN.md
 !TRADING_EXECUTION_PRODUCTION_SPEC.md
+*.txt
 *.pdf
 *.docx
 

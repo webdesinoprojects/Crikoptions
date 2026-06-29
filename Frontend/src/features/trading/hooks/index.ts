@@ -4,6 +4,7 @@ export * from "./useOrderBook";
 export * from "./useExecutions";
 export * from "./useOpenPositions";
 export * from "./useOrders";
+export * from "./usePortfolioMetrics";
 export * from "./useMatchScoreStream";
 export * from "./useThisOverBalls";
 export * from "./query-keys";
