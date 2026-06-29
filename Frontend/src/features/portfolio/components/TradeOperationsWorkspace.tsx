@@ -165,10 +165,7 @@ function PositionsScreen({
       {/* Open Positions */}
       <div className="space-y-2">
         <div className="flex items-center justify-between px-2 py-1">
-          <div className="flex items-center gap-3">
-            <span className="text-[12px] font-black text-on-surface">Open Position</span>
-            <button className="text-[10px] font-bold text-primary hover:underline">Exit All Trade</button>
-          </div>
+          <span className="text-[12px] font-black text-on-surface">Open Position</span>
           <button onClick={() => setOpenExpanded(!openExpanded)} className="text-on-surface-variant hover:text-on-surface bg-surface-container hover:bg-surface-bright rounded-full p-1 transition-colors">
             {openExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>

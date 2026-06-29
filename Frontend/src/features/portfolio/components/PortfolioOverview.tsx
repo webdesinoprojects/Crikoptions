@@ -2,7 +2,7 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePortfolio } from "../hooks";
-import { TrendingUp, TrendingDown, Wallet, Activity, ShieldCheck, Target } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet, ShieldCheck, Target } from "lucide-react";
 import type { ReactNode } from "react";
 
 export function PortfolioOverview() {
@@ -21,7 +21,6 @@ export function PortfolioOverview() {
   if (!data) return null;
 
   const isTotalUp = data.totalPnL >= 0;
-  const isDailyUp = data.dailyPnL >= 0;
   const marginPct = data.marginUsagePct;
 
   return (
@@ -59,18 +58,15 @@ export function PortfolioOverview() {
         icon={isTotalUp ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
       />
 
-      {/* Today's PnL */}
-      <PremiumKpiCard
-        label="Today's P&L"
-        value={`Rs ${formatWhole(Math.abs(data.dailyPnL))}`}
-        prefix={isDailyUp ? "+" : "-"}
-        positive={isDailyUp}
-        pct={data.dailyPnLPct}
-        icon={<Activity className="w-4 h-4" />}
-      />
+      {/* Available Wallet (Moved up to fill Row 1) */}
+      <div className="col-span-2 rounded-xl border border-primary/20 bg-[linear-gradient(180deg,rgba(14,165,233,0.05),transparent)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
+        <div className="text-[9px] font-black uppercase tracking-widest text-primary mb-1">Available to Trade</div>
+        <div className="text-2xl font-bold text-white mb-0.5">Rs {formatWhole(data.availableMargin)}</div>
+        <div className="text-[10px] text-primary/70">Paper wallet balance</div>
+      </div>
 
-      {/* Win Rate */}
-      <div className="col-span-1 rounded-xl border border-white/5 bg-surface-dim/40 p-4 backdrop-blur-sm hover:bg-surface-dim/60 transition-colors">
+      {/* Win Rate (Expanded to col-span-2) */}
+      <div className="col-span-2 rounded-xl border border-white/5 bg-surface-dim/40 p-4 backdrop-blur-sm hover:bg-surface-dim/60 transition-colors">
         <div className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant mb-1 flex items-center justify-between">
           Win Rate (30D)
           <Target className="w-3.5 h-3.5 text-on-surface-variant opacity-50" />
@@ -79,8 +75,8 @@ export function PortfolioOverview() {
         <div className="text-[10px] text-on-surface-variant">{data.closedTradesCount} trades closed</div>
       </div>
 
-      {/* Margin Usage */}
-      <div className="col-span-1 rounded-xl border border-white/5 bg-surface-dim/40 p-4 backdrop-blur-sm hover:bg-surface-dim/60 transition-colors">
+      {/* Margin Usage (Expanded to col-span-2) */}
+      <div className="col-span-2 rounded-xl border border-white/5 bg-surface-dim/40 p-4 backdrop-blur-sm hover:bg-surface-dim/60 transition-colors">
         <div className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant mb-1 flex items-center justify-between">
           Reserved Margin
           <ShieldCheck className="w-3.5 h-3.5 text-on-surface-variant opacity-50" />
@@ -89,13 +85,6 @@ export function PortfolioOverview() {
         <div className="h-1 bg-white/10 rounded-full overflow-hidden">
           <div className="h-full bg-primary rounded-full" style={{ width: `${Math.min(marginPct, 100)}%` }} />
         </div>
-      </div>
-
-      {/* Available Wallet */}
-      <div className="col-span-2 rounded-xl border border-primary/20 bg-[linear-gradient(180deg,rgba(14,165,233,0.05),transparent)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
-        <div className="text-[9px] font-black uppercase tracking-widest text-primary mb-1">Available to Trade</div>
-        <div className="text-2xl font-bold text-white mb-0.5">Rs {formatWhole(data.availableMargin)}</div>
-        <div className="text-[10px] text-primary/70">Paper wallet balance</div>
       </div>
     </div>
   );

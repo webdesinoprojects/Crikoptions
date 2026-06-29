@@ -146,9 +146,9 @@ export function ProfileManager() {
     <div className="max-w-[1400px] mx-auto flex flex-col gap-6 font-sans select-none pb-10">
       
       {/* HEADER SECTION */}
-      <div className="flex flex-col xl:flex-row gap-6 items-start xl:items-center justify-between">
-        <div className="flex items-center gap-6">
-          <div className="relative group">
+      <div className="flex flex-col xl:flex-row gap-6 items-center xl:items-start justify-between">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-left">
+          <div className="relative group mx-auto sm:mx-0">
             <div className="w-24 h-24 rounded-full border border-[#d4af37]/40 bg-[#0a0f1a] flex items-center justify-center relative overflow-hidden shadow-[0_0_30px_rgba(212,175,55,0.15)]">
                <span className="text-4xl font-light text-[#d4af37]">{initials}</span>
             </div>
@@ -156,14 +156,14 @@ export function ProfileManager() {
               <Camera className="w-4 h-4" />
             </button>
           </div>
-          <div>
+          <div className="flex flex-col items-center sm:items-start">
             <h1 className="text-3xl font-semibold text-white tracking-tight">{name}</h1>
             <div className="flex items-center gap-3 mt-1.5">
               <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase">
                 {user.tier || "STANDARD TRADER"}
               </span>
             </div>
-            <div className="flex items-center gap-6 mt-3 text-sm text-slate-400 font-medium">
+            <div className="flex flex-col sm:flex-row flex-wrap items-center sm:items-start justify-center sm:justify-start gap-2 sm:gap-6 mt-3 text-sm text-slate-400 font-medium">
               <span className="flex items-center gap-2"><Calendar className="w-4 h-4 opacity-70" /> Member Since {joinDate}</span>
               <span className="flex items-center gap-2"><Trophy className="w-4 h-4 opacity-70" /> Favorite Team RCB</span>
               <span className="flex items-center gap-2"><MapPin className="w-4 h-4 opacity-70" /> Location India</span>
