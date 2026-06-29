@@ -1,4 +1,7 @@
 .codex-chrome-*
+.env*
+!.env.example
+.vercel
 .next
 node_modules
 coverage
