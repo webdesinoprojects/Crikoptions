@@ -45,7 +45,7 @@ export function YourMatchday() {
           <div className="text-[10px] bg-error px-1.5 py-0.5 inline-block rounded font-bold uppercase tracking-widest mb-1 text-white">
             LIVE
           </div>
-          <div className={cn("max-w-full break-words font-data-tabular text-[clamp(1.05rem,7vw,1.25rem)] font-black leading-tight sm:text-xl", combinedPnL >= 0 ? "text-bull-green" : "text-bear-red")}>
+          <div className={cn("max-w-full break-words font-data-tabular text-lg font-black leading-tight sm:text-xl", combinedPnL >= 0 ? "text-bull-green" : "text-bear-red")}>
             {combinedPnL >= 0 ? "+" : "-"}Rs {Math.abs(combinedPnL).toLocaleString("en-IN")}
           </div>
           <div className="text-[10px] text-on-surface-variant tracking-wider uppercase">

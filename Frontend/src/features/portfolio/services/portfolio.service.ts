@@ -12,6 +12,10 @@ class PortfolioService {
     const response = await apiClient.get<ApiResponse<PortfolioSummary>>("/v1/portfolio/summary");
     return normalizePortfolioSummary(response.data.data);
   }
+
+  async closeAllPositions(): Promise<void> {
+    await apiClient.post(`/v1/positions/close-all`);
+  }
 }
 
 export const portfolioService = new PortfolioService();

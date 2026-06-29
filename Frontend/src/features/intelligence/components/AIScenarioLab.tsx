@@ -17,7 +17,7 @@ export function AIScenarioLab({ matchId }: AIScenarioLabProps) {
     <TerminalPanel
       title="[ AI SCENARIO LAB ]"
       subtitle="Backend scenario projections"
-      className="h-[280px] border-primary/20 bg-surface relative rounded-none font-mono"
+      className="h-auto lg:h-[280px] border-primary/20 bg-surface relative rounded-none font-mono"
     >
       <div className="flex-1 flex flex-col justify-between min-h-0 select-none text-[10px]">
         <div className="p-2 rounded-none bg-[#020617] border border-white/20 shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] relative group">

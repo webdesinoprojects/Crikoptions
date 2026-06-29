@@ -146,7 +146,7 @@ function MarketMiniCard({ title, value, trend, isUp }: { title: string, value: s
       <div className="flex min-w-0 items-end justify-between gap-2">
         <div className="min-w-0 truncate font-data-tabular text-lg font-black text-white sm:text-xl">{value}</div>
         <div className={cn("flex shrink-0 items-center font-data-tabular text-[11px] font-bold sm:text-xs", isUp ? "text-bull-green" : "text-bear-red")}>
-          {isUp ? "▲" : "▼"} {trend}
+          {isUp ? "UP" : "DN"} {trend}
         </div>
       </div>
     </div>

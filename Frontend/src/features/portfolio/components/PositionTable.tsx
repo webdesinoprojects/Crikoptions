@@ -1,13 +1,22 @@
 "use client";
 
 import React, { useState } from "react";
-import { usePositions } from "../hooks";
-import { Search } from "lucide-react";
+import { usePositions, useCloseAllPositions } from "../hooks";
+import { Search, LogOut } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { TerminalPanel } from "@/components/shared/TerminalComponents";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function PositionTable() {
   const { data: positions, isLoading } = usePositions();
+  const { mutate: closeAll, isPending: isClosingAll } = useCloseAllPositions();
   const [query, setQuery] = useState("");
 
   const filtered = positions
@@ -25,15 +34,44 @@ export function PositionTable() {
       subtitle="Active derivatives exposure tracker"
       className="h-[300px]"
       headerActions={
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-on-surface-variant" />
-          <input
-            type="text"
-            placeholder="Search exposure..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="bg-surface-dim border border-outline/10 rounded pl-7 pr-2 py-0.5 text-[10px] text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary w-40"
-          />
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-on-surface-variant" />
+            <input
+              type="text"
+              placeholder="Search exposure..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="bg-surface-dim border border-outline/10 rounded pl-7 pr-2 py-0.5 text-[10px] text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary w-40"
+            />
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button 
+                disabled={isClosingAll || !positions || positions.length === 0}
+                className="flex items-center gap-1.5 px-3 py-1 bg-bear-red/20 text-bear-red border border-bear-red/30 rounded text-[10px] font-bold hover:bg-bear-red/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <LogOut className="w-3 h-3" />
+                {isClosingAll ? "EXITING..." : "EXIT ALL"}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64 bg-[#0a0a0a] border border-bear-red/50 shadow-[0_0_15px_rgba(255,42,42,0.15)] rounded">
+              <DropdownMenuLabel className="text-[11px] uppercase tracking-wider text-bear-red font-bold flex items-center gap-2">
+                <LogOut className="w-3.5 h-3.5" /> Confirm Exit All
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-white/10" />
+              <div className="px-2 py-3 text-[11px] text-on-surface-variant space-y-3">
+                <p>You are about to close <strong className="text-white">{positions?.length || 0} active positions</strong> immediately at the current market price.</p>
+                <DropdownMenuItem asChild onSelect={(e) => { e.preventDefault(); closeAll(); }}>
+                  <button
+                    className="w-full flex items-center justify-center bg-bear-red text-white hover:bg-bear-red/80 hover:shadow-[0_0_10px_rgba(255,42,42,0.5)] text-xs font-bold py-2 rounded transition-all cursor-pointer border border-transparent hover:border-bear-red"
+                  >
+                    SELL ALL POSITIONS
+                  </button>
+                </DropdownMenuItem>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       }
     >

@@ -42,7 +42,7 @@ export function PredictiveSignals({ matchId }: PredictiveSignalsProps) {
     <TerminalPanel
       title="[ PREDICTIVE AI SIGNALS ]"
       subtitle="DNA and Neural Net quantitative buy/sell triggers"
-      className="h-[320px] rounded-none font-mono"
+      className="h-auto lg:h-[320px] rounded-none font-mono"
     >
       <div className="flex-1 overflow-y-auto text-xs min-h-0 select-none pr-2">
         <table className="w-full text-left border-collapse font-mono relative">

@@ -19,8 +19,8 @@ export default function DashboardView() {
   return (
     <div className="min-h-full flex-1 overflow-x-hidden lg:h-full lg:overflow-hidden">
       <div className="space-y-3 p-2.5 sm:p-4 lg:h-full lg:overflow-y-auto">
-        {isLoading || !overview ? (
-          <div className="h-12 w-full animate-pulse rounded-xl bg-white/5 sm:h-20" />
+        {isLoading ? (
+          <div className="h-10 w-full animate-pulse rounded-xl bg-white/5 sm:h-16" />
         ) : (
           <DashboardHeader overview={overview} />
         )}

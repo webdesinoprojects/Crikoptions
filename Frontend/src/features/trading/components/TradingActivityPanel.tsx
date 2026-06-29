@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Order } from "@/types";
@@ -205,7 +205,19 @@ function OrdersTab({
   );
 }
 
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useCloseAllPositions } from "@/features/portfolio/hooks";
+
 function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading: boolean; positions: OpenPosition[]; closedTrades: ClosedTrade[]; chainRows: ReturnType<typeof buildOptionRows> }) {
+  const { mutate: closeAll, isPending: isClosingAll } = useCloseAllPositions();
   const setOrderIntent = useTerminalStore((state) => state.setOrderIntent);
   const setOrderSize = useTerminalStore((state) => state.setOrderSize);
   const [closingPositionId, setClosingPositionId] = useState<string | null>(null);
@@ -231,6 +243,35 @@ function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-black uppercase text-on-surface">Open Position</span>
+            {positions.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    disabled={isClosingAll}
+                    className="flex items-center gap-1 px-1.5 py-0.5 bg-bear-red/20 text-bear-red border border-bear-red/30 rounded text-[9px] font-bold hover:bg-bear-red/30 transition-colors disabled:opacity-50"
+                  >
+                    <LogOut className="w-2.5 h-2.5" />
+                    {isClosingAll ? "EXITING..." : "EXIT ALL"}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64 bg-[#0a0a0a] border border-bear-red/50 shadow-[0_0_15px_rgba(255,42,42,0.15)] rounded z-[100]">
+                  <DropdownMenuLabel className="text-[11px] uppercase tracking-wider text-bear-red font-bold flex items-center gap-2 p-2">
+                    <LogOut className="w-3.5 h-3.5" /> Confirm Exit
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-white/10 m-0" />
+                  <div className="px-2 py-3 text-[11px] text-on-surface-variant space-y-3">
+                    <p>Close <strong className="text-white">{positions.length} active positions</strong> in this market immediately at the current market price?</p>
+                    <DropdownMenuItem asChild onSelect={(e) => { e.preventDefault(); closeAll(); }}>
+                      <button
+                        className="w-full flex items-center justify-center bg-bear-red text-white hover:bg-bear-red/80 hover:shadow-[0_0_10px_rgba(255,42,42,0.5)] text-xs font-bold py-2 rounded transition-all cursor-pointer border border-transparent hover:border-bear-red"
+                      >
+                        SELL ALL
+                      </button>
+                    </DropdownMenuItem>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
           <button onClick={() => setOpenExpanded(!openExpanded)} className="text-on-surface-variant hover:text-white">
             {openExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}

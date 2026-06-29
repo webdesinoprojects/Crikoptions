@@ -20,7 +20,7 @@ interface IntelligenceWorkspaceProps {
 
 export function IntelligenceWorkspace({ matchId }: IntelligenceWorkspaceProps) {
   return (
-    <div className="flex-grow flex overflow-hidden h-full bg-[#000d1a]">
+    <div className="flex-grow flex flex-col lg:flex-row overflow-hidden h-full bg-[#000d1a]">
       {/* Center workspace (Fluid width) */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Persistent Match Context Header */}
@@ -33,23 +33,23 @@ export function IntelligenceWorkspace({ matchId }: IntelligenceWorkspaceProps) {
 
         {/* Tabbed Navigation Shell */}
         <Tabs defaultValue="live" className="flex-1 flex flex-col mt-4 overflow-hidden">
-          <div className="px-4 shrink-0">
-            <TabsList className="bg-surface border border-outline/20 rounded-none h-10 p-1 mb-4 flex w-fit gap-1">
+          <div className="px-4 shrink-0 overflow-hidden">
+            <TabsList className="bg-surface border border-outline/20 rounded-none h-auto lg:h-10 p-1 mb-4 flex overflow-x-auto w-full lg:w-fit gap-1 snap-x scrollbar-hide">
               <TabsTrigger 
                 value="live" 
-                className="rounded-none data-[state=active]:bg-primary data-[state=active]:text-on-primary text-xs uppercase tracking-widest font-bold px-6"
+                className="rounded-none data-[state=active]:bg-primary data-[state=active]:text-on-primary text-[10px] lg:text-xs uppercase tracking-widest font-bold px-4 lg:px-6 whitespace-nowrap snap-start h-8 lg:h-auto"
               >
                 [01] Live Core & Momentum
               </TabsTrigger>
               <TabsTrigger 
                 value="predictive" 
-                className="rounded-none data-[state=active]:bg-primary data-[state=active]:text-on-primary text-xs uppercase tracking-widest font-bold px-6"
+                className="rounded-none data-[state=active]:bg-primary data-[state=active]:text-on-primary text-[10px] lg:text-xs uppercase tracking-widest font-bold px-4 lg:px-6 whitespace-nowrap snap-start h-8 lg:h-auto"
               >
                 [02] Predictive Labs
               </TabsTrigger>
               <TabsTrigger 
                 value="archives" 
-                className="rounded-none data-[state=active]:bg-primary data-[state=active]:text-on-primary text-xs uppercase tracking-widest font-bold px-6"
+                className="rounded-none data-[state=active]:bg-primary data-[state=active]:text-on-primary text-[10px] lg:text-xs uppercase tracking-widest font-bold px-4 lg:px-6 whitespace-nowrap snap-start h-8 lg:h-auto"
               >
                 [03] Historical Archives
               </TabsTrigger>
@@ -112,8 +112,8 @@ export function IntelligenceWorkspace({ matchId }: IntelligenceWorkspaceProps) {
         </Tabs>
       </div>
 
-      {/* Right Intelligence Feed rail (fixed 300px) */}
-      <aside className="w-[300px] shrink-0 flex flex-col border-l border-white/10 pl-4 h-full select-none bg-surface/30 backdrop-blur-md">
+      {/* Right Intelligence Feed rail (stacked on mobile, fixed on desktop) */}
+      <aside className="w-full lg:w-[300px] shrink-0 flex flex-col border-t lg:border-t-0 lg:border-l border-white/10 lg:pl-4 h-auto lg:h-full select-none bg-surface/30 backdrop-blur-md pb-8 lg:pb-0">
         <IntelligenceFeed matchId={matchId} />
       </aside>
     </div>

@@ -39,7 +39,7 @@ export function EventImpactEngine({ matchId }: EventImpactEngineProps) {
     <TerminalPanel
       title="[ EVENT IMPACT ENGINE ]"
       subtitle="Estimated volatility delta shifts triggered per game event"
-      className="h-[320px] rounded-none font-mono"
+      className="h-auto lg:h-[320px] rounded-none font-mono"
     >
       <div className="flex-1 overflow-y-auto min-h-0 select-none text-[10px] pr-2">
         {isLoading ? (

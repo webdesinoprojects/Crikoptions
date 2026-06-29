@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { portfolioService } from "../services/portfolio.service";
 import { useMemo } from "react";
 
@@ -50,4 +50,14 @@ export function usePerformance() {
   }, [data]);
 
   return { data: performance, portfolio: data, ...rest };
+}
+
+export function useCloseAllPositions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => portfolioService.closeAllPositions(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PORTFOLIO_QUERY_KEY });
+    },
+  });
 }

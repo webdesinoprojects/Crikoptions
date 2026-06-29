@@ -87,11 +87,11 @@ export function MatchDNAEngine({ matchId }: MatchDNAEngineProps) {
     <TerminalPanel
       title="[ MATCH DNA ENGINE ]"
       subtitle="Backend historical similarity data"
-      className="h-[320px] rounded-none font-mono relative overflow-hidden group"
+      className="h-auto lg:h-[320px] rounded-none font-mono relative overflow-hidden group"
     >
-      <div className="flex-1 grid grid-cols-12 gap-4 min-h-0 select-none pr-8">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-0 select-none pr-0 lg:pr-8">
         {/* Heatmap */}
-        <div className="col-span-8 bg-[#020617]/40 rounded-none p-2 border border-white/10 relative flex flex-col min-h-0 overflow-hidden">
+        <div className="col-span-1 lg:col-span-8 bg-[#020617]/40 rounded-none p-2 border border-white/10 relative flex flex-col min-h-[220px] lg:min-h-0 overflow-hidden">
           <span className="absolute top-2 left-2 z-10 text-[8px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 border border-primary/45 rounded-none">
             [ BACKEND GRID ]
           </span>
@@ -112,7 +112,7 @@ export function MatchDNAEngine({ matchId }: MatchDNAEngineProps) {
         </div>
 
         {/* Similar Matches */}
-        <div className="col-span-4 flex flex-col gap-3 overflow-y-auto pr-1">
+        <div className="col-span-1 lg:col-span-4 flex flex-col gap-3 overflow-y-auto pr-1 mt-4 lg:mt-0">
           <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block">
             [ TOP FINGERPRINTS ]
           </span>

@@ -53,7 +53,7 @@ export function OutcomeDistribution({ matchId }: OutcomeDistributionProps) {
     <TerminalPanel
       title="[ OUTCOME DISTRIBUTIONS ]"
       subtitle="Backend outcome probability data"
-      className="h-[320px] rounded-none font-mono group"
+      className="h-auto lg:h-[320px] rounded-none font-mono group"
     >
       <div className="flex-1 flex flex-col justify-between min-h-0 select-none">
         <div className="h-20 relative">

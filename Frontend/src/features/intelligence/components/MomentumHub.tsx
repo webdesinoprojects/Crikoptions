@@ -81,7 +81,7 @@ export function MomentumHub({ matchId }: MomentumHubProps) {
     <TerminalPanel
       title="[ MOMENTUM ENGINE ]"
       subtitle="Win probability & tactical pressure index"
-      className="h-[320px] rounded-none font-mono group"
+      className="h-auto lg:h-[320px] rounded-none font-mono group"
       headerActions={
         momentum && (
           <motion.span
