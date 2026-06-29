@@ -126,8 +126,17 @@ function PositionsScreen({
   const [openExpanded, setOpenExpanded] = useState(true);
   const [closedExpanded, setClosedExpanded] = useState(true);
 
-  const filteredOpen = rows.filter(r => r.symbol.toLowerCase().includes(search.toLowerCase()) || r.matchName.toLowerCase().includes(search.toLowerCase()));
-  const filteredClosed = closedRows.filter(r => r.symbol.toLowerCase().includes(search.toLowerCase()) || r.matchName.toLowerCase().includes(search.toLowerCase()));
+  const s = search.toLowerCase();
+  const filteredOpen = rows.filter(r => 
+    (r.symbol?.toLowerCase() || "").includes(s) || 
+    (r.matchName?.toLowerCase() || "").includes(s) ||
+    (r.id?.toLowerCase() || "").includes(s)
+  );
+  const filteredClosed = closedRows.filter(r => 
+    (r.symbol?.toLowerCase() || "").includes(s) || 
+    (r.matchName?.toLowerCase() || "").includes(s) ||
+    (r.orderId?.toLowerCase() || "").includes(s)
+  );
 
   if (loading) {
     return (
