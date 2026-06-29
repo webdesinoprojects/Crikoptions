@@ -3,7 +3,7 @@
 import { usePerformance } from "../hooks";
 import { TerminalPanel } from "@/components/shared/TerminalComponents";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Activity, Target, AlertTriangle, Scale } from "lucide-react";
+import { Target, Scale } from "lucide-react";
 
 export function PnLBreakdown() {
   const { data: perf, isLoading } = usePerformance();
@@ -86,25 +86,6 @@ export function PnLBreakdown() {
             <span className="text-base font-bold text-bear-red tabular-nums leading-none drop-shadow-sm">
               {perf.avgLoss > 0 ? `-₹${perf.avgLoss.toFixed(0)}` : "—"}
             </span>
-          </div>
-        </div>
-
-        {/* Daily PnL Highlight */}
-        <div className="col-span-2 rounded-xl border border-white/10 bg-surface-dim/30 p-4 hover:bg-surface-dim/50 transition-all flex items-center justify-between">
-          <div className="flex flex-col">
-             <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant flex items-center gap-1.5 mb-1">
-               <Activity className="w-3.5 h-3.5" /> Daily PnL
-             </span>
-             <span className={`text-xl font-black tracking-tighter tabular-nums leading-none ${perf.dailyPnL >= 0 ? "text-bull-green drop-shadow-sm" : "text-bear-red drop-shadow-sm"}`}>
-                {perf.dailyPnL >= 0 ? "+" : "-"}₹{Math.abs(perf.dailyPnL).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
-             </span>
-          </div>
-          <div className="w-px h-8 bg-white/10 mx-2" />
-          <div className="flex flex-col text-right">
-             <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-1">Total PnL</span>
-             <span className={`text-lg font-bold tabular-nums leading-none ${perf.totalPnL >= 0 ? "text-bull-green" : "text-bear-red"}`}>
-                {perf.totalPnL >= 0 ? "+" : "-"}₹{Math.abs(perf.totalPnL).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
-             </span>
           </div>
         </div>
       </div>
