@@ -15,7 +15,6 @@ import {
   Settings,
   TrendingUp,
   User,
-  Wallet,
 } from "lucide-react";
 import { useAuthStore } from "@/features/auth/hooks/useAuth";
 import { useHomeMatches, useLiveTicker } from "@/features/dashboard/hooks";
@@ -33,6 +32,7 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 export default function TopNavBar() {
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const { user, isAuthenticated, logout } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
@@ -44,6 +44,7 @@ export default function TopNavBar() {
 
   const handleLogout = () => {
     logout();
+    setMobileMenuOpen(false);
     router.push("/login");
   };
 
@@ -63,13 +64,13 @@ export default function TopNavBar() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 flex h-16 items-center justify-between border-b border-border/10 bg-background/95 px-6 shadow-[0_12px_48px_rgba(0,0,0,0.25)] backdrop-blur-xl select-none">
-      <div className="flex items-center gap-8">
-        <Link href="/dashboard" className="font-headline-md flex items-center gap-3 text-lg font-black uppercase tracking-wide text-white transition-opacity hover:opacity-95">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-[12px] font-extrabold tracking-normal text-black shadow-[0_0_28px_rgba(14,165,233,0.28)]">
+    <header className="fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between border-b border-border/10 bg-background/95 px-3 shadow-[0_12px_48px_rgba(0,0,0,0.25)] backdrop-blur-xl select-none sm:px-4 lg:h-16 lg:px-6">
+      <div className="flex min-w-0 items-center gap-3 lg:gap-8">
+        <Link href="/dashboard" className="font-headline-md flex min-w-0 items-center gap-2 text-sm font-black uppercase tracking-wide text-white transition-opacity hover:opacity-95 sm:text-base lg:gap-3 lg:text-lg">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-[11px] font-extrabold tracking-normal text-black shadow-[0_0_28px_rgba(14,165,233,0.28)] lg:h-9 lg:w-9 lg:text-[12px]">
             CO
           </span>
-          CricOptions
+          <span className="truncate">CricOptions</span>
         </Link>
         <nav className="hidden lg:flex items-center gap-1">
           {navItems.map((item) => (
@@ -88,8 +89,10 @@ export default function TopNavBar() {
         </nav>
       </div>
 
-      <div className="flex items-center gap-4">
-        <WalletBalancePill enabled={isAuthenticated} />
+      <div className="flex min-w-0 items-center gap-2 sm:gap-3 lg:gap-4">
+        <div className="hidden md:block">
+          <WalletBalancePill enabled={isAuthenticated} />
+        </div>
 
         <div className="hidden sm:flex items-center gap-3 border-r border-border/15 pr-4">
           <button className="rounded-md p-2 text-muted-foreground transition-all hover:bg-muted/40 hover:text-foreground cursor-pointer">
@@ -153,16 +156,16 @@ export default function TopNavBar() {
         </div>
 
         <div className="block lg:hidden">
-          <Sheet>
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="h-8 w-8 rounded bg-transparent border-border/15 hover:bg-muted/40">
                 <Menu className="w-4 h-4 text-foreground" />
               </Button>
             </SheetTrigger>
-            <SheetContent className="overflow-y-auto bg-background border-l border-border/10 text-foreground w-72">
+            <SheetContent className="w-[min(21rem,calc(100vw-2rem))] overflow-y-auto border-l border-border/10 bg-background pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-foreground">
               <SheetHeader className="text-left">
                 <SheetTitle>
-                  <Link href="/dashboard" className="font-bold text-base text-white tracking-wider flex items-center gap-2">
+                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="font-bold text-base text-white tracking-wider flex items-center gap-2">
                     <span className="w-5 h-5 rounded bg-primary flex items-center justify-center text-[10px] text-black font-extrabold">
                       CO
                     </span>
@@ -177,6 +180,7 @@ export default function TopNavBar() {
                     <Link
                       key={item.name}
                       href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
                       className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                         isActive(item.href)
                           ? "bg-primary/10 text-primary border-l-2 border-primary pl-2.5"
@@ -188,6 +192,9 @@ export default function TopNavBar() {
                     </Link>
                   ))}
                 </nav>
+                <div className="rounded-lg border border-white/10 bg-white/5 p-3 md:hidden">
+                  <WalletBalancePill enabled={isAuthenticated} />
+                </div>
               </div>
             </SheetContent>
           </Sheet>

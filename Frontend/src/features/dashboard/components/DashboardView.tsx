@@ -21,19 +21,19 @@ export default function DashboardView() {
   const riskRating = marginUsagePct > 70 ? "HIGH" : marginUsagePct > 0 ? "ACTIVE" : "0";
 
   return (
-    <div className="flex-1 overflow-hidden h-full">
-      <div className="h-full overflow-y-auto p-4 space-y-4">
+    <div className="min-h-full flex-1 overflow-x-hidden lg:h-full lg:overflow-hidden">
+      <div className="space-y-3 p-2.5 sm:p-4 lg:h-full lg:overflow-y-auto">
         {isLoading || !overview ? (
-          <div className="h-20 w-full rounded-xl bg-white/5 animate-pulse" />
+          <div className="h-12 w-full animate-pulse rounded-xl bg-white/5 sm:h-20" />
         ) : (
           <DashboardHeader overview={overview} />
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-10 gap-4">
-          <div className="lg:col-span-7 h-full">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-10 lg:gap-4">
+          <div className="h-full lg:col-span-7">
             <LiveMatchArena />
           </div>
-          <div className="lg:col-span-3 flex flex-col gap-4 h-full">
+          <div className="flex h-full flex-col gap-3 lg:col-span-3 lg:gap-4">
             <div className="flex-1">
               <YourMatchday />
             </div>
@@ -43,16 +43,16 @@ export default function DashboardView() {
 
         <MatchdayDiscoveryHeader />
 
-        <div className="grid grid-cols-1 lg:grid-cols-10 gap-4">
-          <div className="lg:col-span-7 h-full">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-10 lg:gap-4">
+          <div className="h-full lg:col-span-7">
             <WhatMovedTheMarket />
           </div>
-          <div className="lg:col-span-3 h-full">
+          <div className="h-full lg:col-span-3">
             <YourWatchlistWidget />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3 lg:gap-4">
           <MatchdayChallenges />
           <FriendsLeague />
           <LastMatchRecap />

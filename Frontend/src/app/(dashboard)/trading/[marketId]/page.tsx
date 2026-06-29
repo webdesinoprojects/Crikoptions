@@ -3,6 +3,7 @@
 import React from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { Activity, BarChart3, ListOrdered, TicketCheck } from "lucide-react";
 import {
   LiveMatchStatsPanel,
   MatchScheduleStrip,
@@ -17,8 +18,22 @@ interface PageProps {
   params: Promise<{ marketId: string }>;
 }
 
+type MobileTradingPanel = "match" | "chain" | "order" | "activity";
+
+const mobilePanels: Array<{
+  value: MobileTradingPanel;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
+  { value: "match", label: "Match", icon: BarChart3 },
+  { value: "chain", label: "Chain", icon: ListOrdered },
+  { value: "order", label: "Order", icon: TicketCheck },
+  { value: "activity", label: "Activity", icon: Activity },
+];
+
 export default function TradingTerminalPage({ params }: PageProps) {
   const terminalRef = React.useRef<HTMLDivElement>(null);
+  const [mobilePanel, setMobilePanel] = React.useState<MobileTradingPanel>("chain");
   const { marketId } = React.use(params);
   const { data: market } = useMarketDetail(marketId);
   const matchId = market?.matchId ?? "";
@@ -53,19 +68,10 @@ export default function TradingTerminalPage({ params }: PageProps) {
     { scope: terminalRef, dependencies: [marketId] }
   );
 
-  // Remove blocking loading state to allow the UI mockup to render even if the backend is down
-  // if (isLoading) {
-  //   return (
-  //     <div className="h-screen w-full flex items-center justify-center bg-background text-on-surface">
-  //       <div className="text-sm font-semibold animate-pulse text-outline">Loading trading terminal...</div>
-  //     </div>
-  //   );
-  // }
-
   return (
     <div
       ref={terminalRef}
-      className="noise-overlay relative flex h-full flex-grow flex-col overflow-hidden bg-[#01040a] text-on-surface"
+      className="noise-overlay relative flex min-h-[calc(100dvh-3.5rem)] flex-grow flex-col overflow-x-hidden bg-[#01040a] text-on-surface lg:h-full lg:min-h-0 lg:overflow-hidden"
     >
       <div
         aria-hidden
@@ -81,8 +87,25 @@ export default function TradingTerminalPage({ params }: PageProps) {
         <MatchScheduleStrip matches={matches} selectedMatchId={matchId} marketId={marketId} />
       </div>
 
+      <MobileTradingTabs activePanel={mobilePanel} onChange={setMobilePanel} />
+
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto lg:overflow-hidden">
-        <div className="grid min-h-full grid-cols-1 gap-3 p-3 lg:h-full lg:min-h-0 lg:grid-cols-[320px_minmax(0,1fr)_370px] xl:grid-cols-[370px_minmax(0,1fr)_420px] 2xl:grid-cols-[410px_minmax(0,1fr)_440px]">
+        <div className="grid gap-3 p-3 lg:hidden" data-terminal-panel>
+          {mobilePanel === "match" && (
+            <LiveMatchStatsPanel className="min-h-[520px]" match={match} market={market} />
+          )}
+          {mobilePanel === "chain" && (
+            <OptionChain className="min-h-[620px]" marketId={marketId} market={market} match={match} />
+          )}
+          {mobilePanel === "order" && (
+            <OrderEntryForm matchId={matchId} marketId={marketId} match={match} />
+          )}
+          {mobilePanel === "activity" && (
+            <TradingActivityPanel className="min-h-[560px]" matchId={matchId} marketId={marketId} match={match} market={market} />
+          )}
+        </div>
+
+        <div className="hidden min-h-full grid-cols-1 gap-3 p-3 lg:grid lg:h-full lg:min-h-0 lg:grid-cols-[320px_minmax(0,1fr)_370px] xl:grid-cols-[370px_minmax(0,1fr)_420px] 2xl:grid-cols-[410px_minmax(0,1fr)_440px]">
           <div className="min-h-0 lg:h-full" data-terminal-panel>
             <LiveMatchStatsPanel className="lg:h-full lg:min-h-0" match={match} market={market} />
           </div>
@@ -95,6 +118,41 @@ export default function TradingTerminalPage({ params }: PageProps) {
           </section>
         </div>
       </main>
+    </div>
+  );
+}
+
+function MobileTradingTabs({
+  activePanel,
+  onChange,
+}: {
+  activePanel: MobileTradingPanel;
+  onChange: (panel: MobileTradingPanel) => void;
+}) {
+  return (
+    <div className="relative z-10 border-b border-white/10 bg-[#020817]/92 px-2 py-2 backdrop-blur-xl lg:hidden">
+      <div className="grid grid-cols-4 gap-1 rounded-lg border border-white/10 bg-[#061124]/85 p-1">
+        {mobilePanels.map((panel) => {
+          const Icon = panel.icon;
+          const selected = activePanel === panel.value;
+
+          return (
+            <button
+              key={panel.value}
+              type="button"
+              onClick={() => onChange(panel.value)}
+              className={`flex h-10 min-w-0 items-center justify-center gap-1 rounded-md px-1 text-[10px] font-black uppercase tracking-tight transition-all active:scale-[0.98] ${
+                selected
+                  ? "bg-primary/15 text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+                  : "text-on-surface-variant hover:bg-white/5 hover:text-on-surface"
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              <span className="truncate">{panel.label}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

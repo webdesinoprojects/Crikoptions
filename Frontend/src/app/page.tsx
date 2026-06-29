@@ -132,7 +132,7 @@ function PrimaryLink({
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-[100dvh] bg-slate-950 text-slate-100">
       <Navbar1 />
 
       <main className="w-full max-w-full overflow-x-hidden">
@@ -140,7 +140,7 @@ export default function Home() {
 
         <LandingMotionSections />
 
-        <section id="terminal" className="relative z-10 border-t border-white/10 bg-[#071120] px-4 py-24 sm:px-6 lg:px-8">
+        <section id="terminal" className="relative z-10 scroll-mt-20 border-t border-white/10 bg-[#071120] px-4 py-24 sm:px-6 lg:px-8">
           <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
             <div>
               <div className="flex size-12 items-center justify-center rounded-lg border border-sky-400/30 bg-sky-400/10 text-sky-300">
@@ -196,7 +196,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="pricing" className="bg-slate-950 px-4 py-20 sm:px-6 lg:px-8">
+        <section id="pricing" className="scroll-mt-20 bg-slate-950 px-4 py-20 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">
             <div className="max-w-3xl">
               <h2 className="text-3xl font-black leading-tight text-slate-50 sm:text-4xl">
@@ -243,7 +243,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="docs" className="bg-[#071120] px-4 py-20 sm:px-6 lg:px-8">
+        <section id="docs" className="scroll-mt-20 bg-[#071120] px-4 py-20 sm:px-6 lg:px-8">
           <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.86fr_1.14fr] lg:items-center">
             <div>
               <div className="flex size-12 items-center justify-center rounded-lg border border-sky-400/30 bg-sky-400/10 text-sky-300">

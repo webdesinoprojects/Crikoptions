@@ -116,7 +116,7 @@ export const FeatureCascade = () => {
   }, [])
 
   return (
-    <section id="terminal" ref={containerRef} className="relative w-full min-h-screen bg-[#020617] flex items-center justify-center py-20 lg:py-0 overflow-clip">
+    <section id="terminal" ref={containerRef} className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-clip bg-[#020617] py-16 sm:py-20 lg:py-0">
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_bottom,rgba(14,165,233,0.1)_0%,transparent_80%)]" />
 
       <div className="w-full max-w-5xl mx-auto px-4 relative flex flex-col lg:block h-auto lg:h-[70vh] justify-center mt-16 lg:mt-0 gap-10">

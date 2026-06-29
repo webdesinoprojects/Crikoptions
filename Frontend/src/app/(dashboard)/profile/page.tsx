@@ -7,11 +7,11 @@ export const metadata = {
 
 export default function ProfilePage() {
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden select-none bg-[#020617] relative">
+    <div className="relative flex min-h-full flex-1 flex-col overflow-x-hidden bg-[#020617] select-none lg:h-full lg:overflow-hidden">
       {/* Subtle background glow for the premium theme */}
       <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-sky-900/10 to-transparent pointer-events-none"></div>
       
-      <div className="flex-1 overflow-y-auto relative z-10 p-4 md:p-8">
+      <div className="relative z-10 flex-1 p-3 sm:p-4 md:p-8 lg:overflow-y-auto">
         <ProfileManager />
       </div>
     </div>

@@ -162,7 +162,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   return (
     <form
       onSubmit={handleSubmit}
-      className="relative flex h-fit w-full min-w-0 shrink-0 flex-col gap-3 overflow-hidden rounded-2xl border border-cyan-300/20 bg-[#040a17]/95 p-4 shadow-[0_30px_100px_rgba(0,0,0,0.5)] backdrop-blur-2xl"
+      className="relative flex h-fit w-full min-w-0 shrink-0 flex-col gap-2.5 overflow-hidden rounded-xl border border-cyan-300/20 bg-[#040a17]/95 p-3 shadow-[0_30px_100px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:gap-3 sm:rounded-2xl sm:p-4"
     >
       <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-cyan-400/70 to-transparent" />
       
@@ -170,10 +170,10 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
       <div className="flex shrink-0 items-start justify-between gap-2 pb-1">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-display text-lg font-black text-white tracking-wide shadow-sm">Order Ticket</h3>
+            <h3 className="font-display text-base font-black tracking-wide text-white shadow-sm sm:text-lg">Order Ticket</h3>
             <StatusPill side={side} />
           </div>
-          <p className="truncate text-xs font-semibold text-cyan-200/70 mt-0.5">
+          <p className="mt-0.5 truncate text-[11px] font-semibold text-cyan-200/70 sm:text-xs">
             {selectedRow ? `Strike ${selectedRow.strike.toFixed(0)} selected` : market?.title ?? "Select a strike"}
           </p>
         </div>
@@ -294,7 +294,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
         <button
           type="submit"
           disabled={submitDisabled}
-          className={`inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl text-[14px] font-black text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_8px_20px_rgba(0,0,0,0.4)] transition-all hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_12px_25px_rgba(0,0,0,0.6)] hover:-translate-y-0.5 active:translate-y-0 ${
+          className={`inline-flex h-11 min-w-0 shrink-0 items-center justify-center gap-2 rounded-xl px-2 text-[12px] font-black text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_8px_20px_rgba(0,0,0,0.4)] transition-all hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_12px_25px_rgba(0,0,0,0.6)] hover:-translate-y-0.5 active:translate-y-0 sm:text-[14px] ${
             side === "BUY" ? "bg-bull-green hover:bg-bull-green/90 shadow-bull-green/20" : "bg-bear-red hover:bg-bear-red/90 shadow-bear-red/20"
           } disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none`}
         >
@@ -383,7 +383,7 @@ const OrderImpactPanel = React.memo(function OrderImpactPanel({
 }) {
   return (
     <div className="shrink-0 rounded-lg border border-white/8 bg-[#071327]/90 p-1.5">
-      <div className="grid grid-cols-4 gap-1 font-data-tabular text-[10px]">
+      <div className="grid grid-cols-2 gap-1 font-data-tabular text-[10px] sm:grid-cols-4">
         <ImpactCell label="Price" value={`Rs ${formatMoney(price)}`} />
         <ImpactCell label="Notional" value={`Rs ${formatMoney(notional)}`} strong />
         <ImpactCell

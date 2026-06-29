@@ -40,7 +40,7 @@ export default function RootLayout({
       className={`${spaceGroteskDisplay.variable} ${spaceGroteskBody.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
       suppressHydrationWarning
     >
-      <body className="min-h-screen flex flex-col bg-[#01040a] text-on-primary-container font-sans">
+      <body className="flex min-h-[100dvh] flex-col overflow-x-hidden bg-[#01040a] text-on-primary-container font-sans">
         <Providers>
           <ThemeProvider
             attribute="class"

@@ -88,14 +88,14 @@ export function MarketPnLDisplay({ marketId }: MarketPnLDisplayProps) {
   return (
     <div 
       ref={containerRef}
-      className={`flex flex-col justify-center min-w-[220px] h-14 shrink-0 rounded-lg bg-gradient-to-r from-[#071327] to-[#040a17] border border-white/10 px-4 py-1.5 transition-all duration-500 relative overflow-hidden ${isPositive ? 'shadow-[0_0_10px_rgba(16,185,129,0.2)]' : ''}`}
+      className={`relative flex h-12 w-full min-w-0 shrink-0 flex-col justify-center overflow-hidden rounded-lg border border-white/10 bg-gradient-to-r from-[#071327] to-[#040a17] px-3 py-1.5 transition-all duration-500 sm:h-14 sm:min-w-[220px] sm:px-4 lg:w-auto ${isPositive ? 'shadow-[0_0_10px_rgba(16,185,129,0.2)]' : ''}`}
     >
-      <div className="flex items-center justify-between gap-4 w-full">
-        <span className="text-[11px] font-black uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5 whitespace-nowrap">
-          <Zap className={`w-3.5 h-3.5 ${isPositive ? 'text-cyan-400' : 'text-on-surface-variant'}`} />
+      <div className="flex w-full items-center justify-between gap-3">
+        <span className="flex items-center gap-1.5 whitespace-nowrap text-[10px] font-black uppercase tracking-wider text-on-surface-variant sm:text-[11px]">
+          <Zap className={`h-3.5 w-3.5 ${isPositive ? 'text-cyan-400' : 'text-on-surface-variant'}`} />
           Today's P&L
         </span>
-        <span className={`text-[17px] font-black tracking-tight flex items-center whitespace-nowrap ${isPositive ? 'text-bull-green drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]' : 'text-bear-red drop-shadow-[0_0_12px_rgba(239,68,68,0.4)]'}`}>
+        <span className={`flex items-center whitespace-nowrap text-[15px] font-black tracking-tight sm:text-[17px] ${isPositive ? 'text-bull-green drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]' : 'text-bear-red drop-shadow-[0_0_12px_rgba(239,68,68,0.4)]'}`}>
           {totalPnL >= 0 ? '+' : ''}₹
           <NumberFlow
             value={totalPnL}

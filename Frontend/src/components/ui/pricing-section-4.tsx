@@ -139,7 +139,7 @@ export default function PricingSection6() {
 
   return (
     <div
-      className="min-h-screen mx-auto relative bg-[#020617] overflow-x-hidden py-12 flex flex-col justify-center border-t border-white/5"
+      className="relative mx-auto flex min-h-[100dvh] flex-col justify-center overflow-x-hidden border-t border-white/5 bg-[#020617] py-12"
       ref={pricingRef}
       id="pricing"
     >

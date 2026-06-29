@@ -257,7 +257,7 @@ export function LandingMotionSections() {
 
   return (
     <div ref={rootRef}>
-      <section id="features" className="relative overflow-hidden bg-[#020617] px-4 py-28 text-slate-100 sm:px-6 md:py-36 lg:px-8">
+      <section id="features" className="relative scroll-mt-20 overflow-hidden bg-[#020617] px-4 py-28 text-slate-100 sm:px-6 md:py-36 lg:px-8">
         <div className="pointer-events-none absolute left-1/2 top-24 h-80 w-208 -translate-x-1/2 rounded-full bg-sky-500/10 blur-3xl" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/20 to-transparent" />
         <div className="relative mx-auto max-w-7xl">

@@ -1,5 +1,5 @@
 import TopNavBar from "@/components/TopNavBar";
-import { SessionNavBar } from "@/components/ui/sidebar";
+import { MobileSessionNavBar, SessionNavBar } from "@/components/ui/sidebar";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 
 export default function DashboardLayout({
@@ -10,11 +10,12 @@ export default function DashboardLayout({
   return (
     <AuthGuard>
       <TopNavBar />
-      <div className="mt-16 flex h-[calc(100vh-64px)] w-full overflow-hidden">
+      <div className="flex min-h-[100dvh] w-full pt-14 lg:h-[100dvh] lg:overflow-hidden lg:pt-16">
         <SessionNavBar />
-        <main className="flex-1 min-h-0 min-w-0 overflow-y-auto bg-background">
+        <main className="min-h-0 min-w-0 flex-1 overflow-y-auto bg-background pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:h-[calc(100dvh-4rem)] lg:pb-0">
           {children}
         </main>
+        <MobileSessionNavBar />
       </div>
     </AuthGuard>
   );

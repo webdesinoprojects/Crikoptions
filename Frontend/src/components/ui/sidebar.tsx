@@ -77,7 +77,7 @@ export function SessionNavBar() {
   return (
     <motion.div
       className={cn(
-        "sidebar z-40 shrink-0 border-r border-outline/10 relative",
+        "sidebar z-40 hidden shrink-0 border-r border-outline/10 relative lg:block",
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -85,7 +85,7 @@ export function SessionNavBar() {
       animate={isCollapsed ? "closed" : "open"}
       variants={sidebarVariants}
       transition={transitionProps}
-      style={{ height: "calc(100vh - 64px)" }}
+      style={{ height: "calc(100dvh - 64px)" }}
     >
       <motion.div
         className={`relative z-40 flex text-muted-foreground h-full shrink-0 flex-col bg-surface transition-all overflow-hidden`}
@@ -250,5 +250,47 @@ export function SessionNavBar() {
         </motion.ul>
       </motion.div>
     </motion.div>
+  );
+}
+
+export function MobileSessionNavBar() {
+  const pathname = usePathname();
+  const { data: tickers } = useLiveTicker();
+  const primaryMarketHref = tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/dashboard";
+
+  const items = [
+    { label: "Home", href: "/dashboard", icon: LayoutDashboard, active: pathname === "/dashboard" },
+    { label: "Trade", href: primaryMarketHref, icon: TrendingUp, active: pathname?.includes("/trading") },
+    { label: "Portfolio", href: "/portfolio", icon: Wallet, active: pathname?.includes("/portfolio") },
+    { label: "Profile", href: "/profile", icon: UserCircle, active: pathname?.includes("/profile") },
+  ];
+
+  return (
+    <nav
+      aria-label="Mobile workspace navigation"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#01040a]/96 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-18px_48px_rgba(0,0,0,0.42)] backdrop-blur-xl lg:hidden"
+    >
+      <div className="grid grid-cols-4 gap-1">
+        {items.map((item) => {
+          const Icon = item.icon;
+
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              className={cn(
+                "flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[10px] font-black uppercase tracking-tight transition-colors active:scale-[0.98]",
+                item.active
+                  ? "bg-primary/15 text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+                  : "text-on-surface-variant hover:bg-white/5 hover:text-on-surface"
+              )}
+            >
+              <Icon className="h-4 w-4" aria-hidden />
+              <span className="truncate">{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
   );
 }

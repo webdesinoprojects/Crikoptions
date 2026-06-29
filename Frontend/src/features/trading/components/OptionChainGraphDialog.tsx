@@ -158,7 +158,7 @@ export function OptionChainGraphDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="flex h-[min(760px,calc(100vh-1.5rem))] max-w-[min(1120px,calc(100vw-1.5rem))] grid-rows-none flex-col gap-0 overflow-hidden border border-cyan-300/14 bg-[#040a17] p-0 text-on-surface shadow-[0_30px_120px_rgba(0,0,0,0.58)] sm:max-w-[min(1120px,calc(100vw-2rem))]"
+        className="flex h-[min(760px,calc(100dvh-1.5rem))] max-w-[min(1120px,calc(100vw-1.5rem))] grid-rows-none flex-col gap-0 overflow-hidden border border-cyan-300/14 bg-[#040a17] p-0 text-on-surface shadow-[0_30px_120px_rgba(0,0,0,0.58)] sm:max-w-[min(1120px,calc(100vw-2rem))]"
         showCloseButton
       >
         <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-cyan-300/65 to-transparent" />

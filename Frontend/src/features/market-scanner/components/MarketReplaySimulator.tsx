@@ -324,8 +324,8 @@ export function MarketReplaySimulator() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#020511] text-on-surface">
-      <div className="border-b border-white/8 bg-[#071124]/95 px-4 py-3">
+    <div className="flex min-h-full flex-col overflow-x-hidden bg-[#020511] text-on-surface xl:h-full xl:min-h-0 xl:overflow-hidden">
+      <div className="border-b border-white/8 bg-[#071124]/95 px-3 py-3 sm:px-4">
         <div className="mx-auto flex max-w-[1180px] flex-wrap items-center justify-between gap-3">
           <div>
             <div className="flex flex-wrap items-center gap-2">
@@ -365,7 +365,7 @@ export function MarketReplaySimulator() {
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">
+      <div className="min-h-0 flex-1 overflow-y-auto p-2.5 sm:p-4">
         <div className="mx-auto max-w-[1180px] space-y-3">
           <TradeConsole
             availableBalance={availableBalance}
@@ -443,7 +443,7 @@ function SimulatorShell({
   title: string;
 }) {
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#020511] p-4 text-on-surface">
+    <div className="flex min-h-full flex-col overflow-x-hidden bg-[#020511] p-3 text-on-surface sm:p-4 lg:h-full lg:min-h-0 lg:overflow-hidden">
       <TerminalPanel title={title} subtitle={status} className="min-h-[240px]">
         {children ?? (
           <div className="flex flex-1 items-center justify-center text-sm font-black uppercase tracking-wider text-cyan-100/70">

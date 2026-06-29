@@ -32,7 +32,7 @@ export function HeroSection() {
     return (
         <>
             <Navbar1 />
-            <main className="overflow-hidden min-h-screen">
+            <main className="min-h-[100dvh] overflow-hidden">
                 <div
                     aria-hidden
                     className="z-[2] absolute inset-0 pointer-events-none isolate opacity-50 contain-strict hidden lg:block">

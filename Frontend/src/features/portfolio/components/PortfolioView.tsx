@@ -25,13 +25,13 @@ export function PortfolioView() {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden select-none">
-      <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 border-b border-outline/10 bg-background/95 backdrop-blur">
-        <div>
+    <div className="flex min-h-full flex-1 flex-col overflow-x-hidden select-none lg:h-full lg:overflow-hidden">
+      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-2 border-b border-outline/10 bg-background/95 px-3 py-2 backdrop-blur sm:px-4">
+        <div className="min-w-0">
           <h1 className="text-sm font-bold text-white uppercase tracking-wider font-display">
             Portfolio Hub
           </h1>
-          <p className="text-[9px] text-on-surface-variant">
+          <p className="max-w-[65ch] text-[9px] text-on-surface-variant">
             Aggregated exposure, order workflow, and holding period analytics.
           </p>
         </div>
@@ -48,7 +48,7 @@ export function PortfolioView() {
         </div>
       </div>
 
-      <div className="p-3 space-y-3 flex-1 overflow-y-auto">
+      <div className="flex-1 space-y-3 p-2.5 sm:p-3 lg:overflow-y-auto">
         <PortfolioOverview />
         <TradeOperationsWorkspace />
 
