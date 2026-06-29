@@ -83,7 +83,7 @@ export function LiveMatchArena() {
           </div>
           <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white sm:text-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]" />
-            {match?.innings ? `${match.innings}ND INNINGS` : "1ST INNINGS"}
+            {match?.innings ? `${ordinal(match.innings)} INNINGS` : "1ST INNINGS"}
           </div>
         </div>
 
@@ -196,4 +196,11 @@ function MarketMiniCard({ title, value, trend, isUp }: { title: string, value: s
       </div>
     </div>
   );
+}
+
+function ordinal(value: number) {
+  if (value === 1) return "1ST";
+  if (value === 2) return "2ND";
+  if (value === 3) return "3RD";
+  return `${value}TH`;
 }
