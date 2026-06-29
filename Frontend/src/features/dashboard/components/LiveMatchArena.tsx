@@ -4,26 +4,61 @@ import { cn } from "@/lib/utils";
 import { useLiveMatches, useLiveTicker } from "@/features/dashboard/hooks";
 import { useMarkets } from "@/features/trading/hooks";
 import Link from "next/link";
+import { useThisOverBalls } from "@/features/trading/hooks/useThisOverBalls";
+import { ballClassName, scoreParts } from "@/features/trading/utils/terminal-context";
 
 export function LiveMatchArena() {
   const { data: liveMatches, isLoading } = useLiveMatches();
   const { data: tickers } = useLiveTicker();
 
-  // Try to find a live match or fallback to a hardcoded representation for the UI mockup
   const match = liveMatches?.find(m => m.status === "LIVE") || null;
   const { data: matchMarkets } = useMarkets(match?.id || "");
   
   const liveMarketId = matchMarkets?.[0]?.id;
   const tradingHref = liveMarketId ? `/trading/${liveMarketId}` : (tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/dashboard");
   
-  const title = match?.title || "RCB vs KKR";
-  const score = match?.homeScore || "142/4";
-  const currentOver = match?.currentOver || "16.2";
-  const target = match?.targetScore || 176;
-  const need = match?.targetScore && match?.currentScore ? match.targetScore - match.currentScore : 34;
-  const ballsLeft = match?.ballsLeft || 22;
-  const crr = match?.currentOver && match?.currentScore ? (match.currentScore / parseFloat(match.currentOver)).toFixed(2) : "8.69";
-  const rrr = need > 0 && ballsLeft > 0 ? ((need / ballsLeft) * 6).toFixed(2) : "9.27";
+  const balls = useThisOverBalls(match || undefined);
+  
+  const title = match?.title || "No Live Match";
+  const scoreParsed = scoreParts(match?.homeScore);
+  const currentScore = match?.currentScore ?? (Number.isFinite(Number.parseInt(scoreParsed.runs, 10)) ? Number.parseInt(scoreParsed.runs, 10) : 0);
+  const wickets = match?.wicketsLost ?? (Number.isFinite(Number.parseInt(scoreParsed.wickets, 10)) ? Number.parseInt(scoreParsed.wickets, 10) : 0);
+  
+  const currentOver = match?.currentOver || "0.0";
+  const target = match?.targetScore || 0;
+  const need = match?.targetScore && match?.currentScore ? match.targetScore - match.currentScore : 0;
+  
+  const format = (match?.format || "T20").toUpperCase();
+  const totalBalls = format.includes("ODI") || format.includes("ONE") ? 300 : 120;
+  const ballsLeft = match?.ballsLeft ?? totalBalls;
+  const ballsBowled = totalBalls - ballsLeft;
+  
+  const crr = ballsBowled > 0 ? (currentScore / (ballsBowled / 6)).toFixed(2) : "0.00";
+  const rrr = need > 0 && ballsLeft > 0 ? ((need / ballsLeft) * 6).toFixed(2) : "0.00";
+  
+  const lastBall = balls.length > 0 ? balls.filter(b => b.kind !== "empty").pop() : null;
+  let commentarySummary = "Match is about to begin";
+  if (lastBall) {
+    if (["wicket", "bowled", "lbw", "caught", "runOut"].includes(lastBall.kind)) {
+      commentarySummary = "WICKET - big moment in the match!";
+    } else if (lastBall.kind === "four") {
+      commentarySummary = "FOUR runs - brilliantly timed";
+    } else if (lastBall.kind === "six") {
+      commentarySummary = "SIX - massive hit into the stands!";
+    } else if (lastBall.kind === "dot") {
+      commentarySummary = "Dot ball - solid defense";
+    } else {
+      commentarySummary = `${lastBall.label} run${lastBall.label === "1" ? "" : "s"} taken`;
+    }
+  }
+
+  // Filter out empty balls for timeline display, but keep at most 6 if none bowled yet
+  const displayBalls = balls.filter(b => b.kind !== "empty");
+  const timelineBalls = displayBalls.length > 0 ? displayBalls : balls.slice(0, 6);
+
+  const homeCode = match?.homeTeam?.shortName || match?.homeTeam?.name?.substring(0,3)?.toUpperCase() || "TBA";
+  const awayCode = match?.awayTeam?.shortName || match?.awayTeam?.name?.substring(0,3)?.toUpperCase() || "TBA";
+  const battingCode = match?.innings === 2 ? awayCode : homeCode;
 
   return (
     <div className="group relative min-h-[560px] w-full overflow-hidden rounded-xl shadow-[0_24px_80px_rgba(0,0,0,0.5)] sm:rounded-2xl md:h-[480px] md:min-h-0">
@@ -48,7 +83,7 @@ export function LiveMatchArena() {
           </div>
           <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white sm:text-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]" />
-            {match?.innings ? `${match.innings}ND INNINGS` : "2ND INNINGS"}
+            {match?.innings ? `${match.innings}ND INNINGS` : "1ST INNINGS"}
           </div>
         </div>
 
@@ -60,71 +95,81 @@ export function LiveMatchArena() {
           {/* Team Score */}
           <div className="relative z-10 mb-4 grid grid-cols-[44px_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[48px_minmax(0,1fr)] sm:gap-4">
             <div className="flex h-11 w-11 items-center justify-center break-words rounded-lg border border-[#d4af37]/30 bg-[#d4af37]/20 px-1 text-center font-display text-xl font-black leading-none text-[#d4af37] sm:h-12 sm:w-12 sm:text-2xl">
-              {match?.homeTeam?.shortName || "RCB"}
+              {battingCode}
             </div>
             <div className="min-w-0">
               <div className="flex min-w-0 flex-wrap items-end gap-x-2 gap-y-1">
-                <span className="break-words font-display text-2xl font-black leading-none text-white sm:text-3xl">{score}</span>
+                <span className="break-words font-display text-2xl font-black leading-none text-white sm:text-3xl">
+                  {currentScore}/{wickets}
+                </span>
                 <span className="mb-0.5 whitespace-nowrap text-xs font-medium text-white/70 sm:text-sm">{currentOver} OV</span>
               </div>
-              <div className="text-xs text-white/50 mt-1">Target {target}</div>
+              <div className="text-xs text-white/50 mt-1">Target {target > 0 ? target : "--"}</div>
             </div>
           </div>
 
           {/* Match Equation */}
           <div className="relative z-10 mb-4 grid grid-cols-3 gap-2 border-y border-white/5 py-3 text-[11px] sm:mb-5 sm:text-xs">
-            <div className="text-white">Need <span className="text-cyan-400 font-black">{need}</span> from <span className="text-cyan-400 font-black">{ballsLeft}</span></div>
+            <div className="text-white">Need <span className="text-cyan-400 font-black">{target > 0 ? need : "--"}</span> from <span className="text-cyan-400 font-black">{target > 0 ? ballsLeft : "--"}</span></div>
             <div className="text-right text-white/60">CRR <span className="text-white font-bold">{crr}</span></div>
-            <div className="text-right text-white/60">RRR <span className="text-white font-bold">{rrr}</span></div>
+            <div className="text-right text-white/60">RRR <span className="text-white font-bold">{target > 0 ? rrr : "--"}</span></div>
           </div>
 
           {/* Batsmen */}
-          <div className="relative z-10 mb-4 grid grid-cols-1 gap-2 sm:mb-5 sm:grid-cols-2 sm:gap-4">
-            <div className="flex justify-between items-center bg-white/[0.02] rounded px-2 py-1.5">
-              <span className="text-xs font-bold text-cyan-400 truncate pr-1">{match?.liveContext?.striker?.name || "V. Kohli"}*</span>
-              <div className="text-xs font-data-tabular shrink-0">
-                <span className="text-white font-bold">{match?.liveContext?.striker?.runs || 71}</span> <span className="text-white/50">({match?.liveContext?.striker?.balls || 46})</span>
+          {match?.liveContext ? (
+            <div className="relative z-10 mb-4 grid grid-cols-1 gap-2 sm:mb-5 sm:grid-cols-2 sm:gap-4">
+              <div className="flex justify-between items-center bg-white/[0.02] rounded px-2 py-1.5">
+                <span className="text-xs font-bold text-cyan-400 truncate pr-1">{match.liveContext.striker.name}*</span>
+                <div className="text-xs font-data-tabular shrink-0">
+                  <span className="text-white font-bold">{match.liveContext.striker.runs}</span> <span className="text-white/50">({match.liveContext.striker.balls})</span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center bg-white/[0.02] rounded px-2 py-1.5">
+                <span className="text-xs font-bold text-cyan-400 truncate pr-1">{match.liveContext.nonStriker.name}</span>
+                <div className="text-xs font-data-tabular shrink-0">
+                  <span className="text-white font-bold">{match.liveContext.nonStriker.runs}</span> <span className="text-white/50">({match.liveContext.nonStriker.balls})</span>
+                </div>
               </div>
             </div>
-            <div className="flex justify-between items-center bg-white/[0.02] rounded px-2 py-1.5">
-              <span className="text-xs font-bold text-cyan-400 truncate pr-1">{match?.liveContext?.nonStriker?.name || "D. Karthik"}</span>
-              <div className="text-xs font-data-tabular shrink-0">
-                <span className="text-white font-bold">{match?.liveContext?.nonStriker?.runs || 12}</span> <span className="text-white/50">({match?.liveContext?.nonStriker?.balls || 7})</span>
-              </div>
+          ) : (
+            <div className="relative z-10 mb-4 py-2 text-[10px] leading-relaxed text-amber-200/80">
+              Player context is not set for this match yet.
             </div>
-          </div>
+          )}
 
           {/* Over Timeline */}
           <div className="relative z-10 mb-4 flex flex-wrap gap-2">
-            {["1", "4", "0", "6", "W", "2"].map((ball, i) => (
+            {timelineBalls.map((ball, i) => (
               <div
                 key={i}
                 className={cn(
-                  "flex h-7 w-7 items-center justify-center rounded-lg text-[12px] font-black transition-all sm:h-8 sm:w-8 sm:text-[13px]",
-                  ball === "4" ? "bg-cyan-500/20 text-cyan-400 shadow-[inset_0_0_8px_rgba(6,182,212,0.2)]" :
-                  ball === "6" ? "bg-[#d4af37]/20 text-[#d4af37] border border-[#d4af37]/40 shadow-[0_0_12px_rgba(212,175,55,0.4)]" :
-                  ball === "W" ? "bg-error/20 text-error border border-error/40 shadow-[0_0_12px_rgba(239,68,68,0.4)]" :
-                  "bg-white/5 text-white/80 border border-transparent"
+                  "flex h-7 min-w-7 px-1.5 items-center justify-center rounded-lg text-[12px] font-black transition-all sm:h-8 sm:min-w-8 sm:px-2 sm:text-[13px] border",
+                  ballClassName(ball.kind),
+                  ball.kind === "empty" ? "bg-white/5 text-white/30 border-transparent shadow-none" : ""
                 )}
               >
-                {ball}
+                {ball.label}
               </div>
             ))}
           </div>
 
           {/* Commentary */}
           <div className="text-[11px] text-white/60 bg-black/20 p-2.5 rounded-lg border border-white/5 relative z-10">
-            <span className="text-white font-bold mr-1">{currentOver}</span>
-            <span className="text-cyan-400 font-bold mr-1">TWO -</span>
-            driven into the gap at cover
+            {lastBall && (
+              <>
+                <span className="text-white font-bold mr-1">{currentOver}</span>
+                <span className="text-cyan-400 font-bold mr-1">{lastBall.label} -</span>
+              </>
+            )}
+            {commentarySummary}
           </div>
         </div>
 
         {/* Bottom Market Cards */}
         <div className="grid grid-cols-1 gap-2 pt-1 sm:grid-cols-2 sm:gap-3 md:mt-auto md:grid-cols-4 md:gap-4 md:pt-6">
-          <MarketMiniCard title={`${match?.homeTeam?.shortName || "RCB"} WIN`} value="64.2%" trend="+6.8%" isUp />
-          <MarketMiniCard title="KOHLI 75+" value="Rs 72" trend="+18.4%" isUp />
-          <MarketMiniCard title="NEXT WICKET <18 OV" value="Rs 38" trend="-5.2%" isUp={false} />
+          <MarketMiniCard title={`${battingCode} WIN`} value="--" trend="--" isUp />
+          <MarketMiniCard title="MATCH WINNER" value="--" trend="--" isUp />
+          <MarketMiniCard title="NEXT WICKET" value="--" trend="--" isUp={false} />
           
           <Link href={tradingHref} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/50 bg-cyan-500 text-xs font-black uppercase tracking-widest text-[#000d1a] shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-colors hover:bg-cyan-400 md:h-full">
             Watch & Trade
