@@ -512,7 +512,7 @@ function TradeConsole({
         onSubmit(side);
       }}
     >
-      <div className="grid items-end gap-3 lg:grid-cols-[1.15fr_1fr_1fr_1fr_1fr_auto]">
+      <div className="grid items-end gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-[1.15fr_1fr_1fr_1fr_1fr_auto]">
         <ConsoleField label="Select Inning">
           <div className="grid grid-cols-2 gap-1 rounded-md border border-white/8 bg-[#040a17] p-1">
             {([1, 2] as const).map((innings) => (
@@ -568,24 +568,26 @@ function TradeConsole({
           </select>
         </ConsoleField>
 
-        <ConsoleField label="Option Price">
-          {orderType === "LIMIT" ? (
-            <input
-              type="number"
-              min={0}
-              step="0.05"
-              value={displayLimitPrice}
-              onChange={(inputEvent) => onLimitPriceChange(inputEvent.target.value)}
-              className={inputClassName}
-            />
-          ) : (
-            <div className="flex h-10 items-center rounded-md border border-white/10 bg-[#040a17] px-3 font-data-tabular text-sm font-black text-on-surface">
-              Rs {formatMoney(expectedPrice)}
-            </div>
-          )}
-        </ConsoleField>
+        <div className="col-span-2 sm:col-span-1 lg:col-span-1 min-w-0">
+          <ConsoleField label="Option Price">
+            {orderType === "LIMIT" ? (
+              <input
+                type="number"
+                min={0}
+                step="0.05"
+                value={displayLimitPrice}
+                onChange={(inputEvent) => onLimitPriceChange(inputEvent.target.value)}
+                className={inputClassName}
+              />
+            ) : (
+              <div className="flex h-10 items-center rounded-md border border-white/10 bg-[#040a17] px-3 font-data-tabular text-sm font-black text-on-surface">
+                Rs {formatMoney(expectedPrice)}
+              </div>
+            )}
+          </ConsoleField>
+        </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 col-span-2 sm:col-span-3 lg:col-span-1">
           <Button
             type="button"
             disabled={!canSubmitBuy}
@@ -676,13 +678,15 @@ function SideToggle({ activeSide, onChange }: { activeSide: TradeSide; onChange:
 function RiskStrip({ risk }: { risk: RiskSnapshot }) {
   return (
     <div className="rounded-md border border-white/8 bg-[#071327]/95 p-3">
-      <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-[1.2fr_1fr_1fr_1fr_1fr_0.7fr_0.8fr]">
-        <RiskCell
-          label="P&L"
-          value={`Rs ${formatMoney(risk.pnl)}`}
-          valueClassName={risk.pnl >= 0 ? "text-bull-green" : "text-bear-red"}
-          large
-        />
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-[1.2fr_1fr_1fr_1fr_1fr_0.7fr_0.8fr]">
+        <div className="col-span-2 sm:col-span-1 min-w-0">
+          <RiskCell
+            label="P&L"
+            value={`Rs ${formatMoney(risk.pnl)}`}
+            valueClassName={risk.pnl >= 0 ? "text-bull-green" : "text-bear-red"}
+            large
+          />
+        </div>
         <RiskCell label="Max Profit" value={risk.maxProfit} />
         <RiskCell label="Max Loss" value={risk.maxLoss} />
         <RiskCell label="Margin Required" value={risk.marginRequired} />

@@ -15,6 +15,7 @@ import {
   Settings,
   TrendingUp,
   User,
+  Wallet,
 } from "lucide-react";
 import { useAuthStore } from "@/features/auth/hooks/useAuth";
 import { useHomeMatches, useLiveTicker } from "@/features/dashboard/hooks";
@@ -51,13 +52,13 @@ export default function TopNavBar() {
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
     { name: "Trading Terminal", href: primaryMarketHref, icon: <TrendingUp className="w-4 h-4" /> },
-    { name: "Portfolio Hub", href: "/portfolio", icon: <Activity className="w-4 h-4" /> },
+    { name: "Market Scanner", href: "/market-scanner", icon: <Activity className="w-4 h-4" /> },
+    { name: "Portfolio Hub", href: "/portfolio", icon: <Wallet className="w-4 h-4" /> },
     { name: "Intelligence HQ", href: primaryInsightHref, icon: <Compass className="w-4 h-4" /> },
     ...(user?.role === "admin"
       ? [{ name: "Admin", href: "/admin", icon: <Settings className="w-4 h-4" /> }]
       : []),
   ];
-
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
     return pathname.startsWith(href.split("/").slice(0, 2).join("/"));
