@@ -41,6 +41,14 @@ class WalletService {
     return normalizeFundingResponse(response.data.data);
   }
 
+  async topUp(amount: number): Promise<FundingResponse> {
+    const response = await apiClient.post<ApiResponse<FundingResponse>>(
+      "/v1/wallet/topup",
+      { amount }
+    );
+    return normalizeFundingResponse(response.data.data);
+  }
+
   async getAdminLedger(userId?: string, limit = 50): Promise<WalletLedgerEntry[]> {
     const response = await apiClient.get<ApiResponse<WalletLedgerEntry[]>>("/v1/admin/wallet-ledger", {
       params: { userId: userId || undefined, limit },
