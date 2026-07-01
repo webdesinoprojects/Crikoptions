@@ -12,6 +12,7 @@ import { selectPrimaryMarket } from "../utils/market-helpers";
 export const MatchCard = React.memo(function MatchCard({ match, selected }: { match: Match; selected: boolean }) {
   const router = useRouter();
   const score = scoreParts(match.homeScore);
+  const isChase = (match.innings ?? 1) === 2 && (match.targetScore ?? 0) > 0;
   const { data: markets = [] } = useMarkets(match.id);
 
   const handleClick = React.useCallback(() => {
@@ -45,6 +46,11 @@ export const MatchCard = React.memo(function MatchCard({ match, selected }: { ma
         <div className="font-data-tabular text-[12px] font-black text-teal-300 sm:text-sm">
           {score.runs}/{score.wickets} - {match.currentOver ?? "0.0"} ov
         </div>
+        {isChase && (
+          <div className="truncate font-data-tabular text-[10px] font-semibold text-amber-200/90 sm:text-[11px]">
+            Target {match.targetScore}
+          </div>
+        )}
       </div>
       {selected ? (
         <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_14px_rgba(103,232,249,0.9)]" aria-hidden />

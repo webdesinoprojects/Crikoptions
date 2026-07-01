@@ -26,13 +26,17 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
   const crr = ballsBowled > 0 ? currentScore / (ballsBowled / 6) : 0;
   const projected = projectedFinal(currentScore, ballsLeft, crr, market);
   const projectionReady = ballsBowled >= 6;
+  const innings = match?.innings ?? 1;
   const liveContext = match?.liveContext;
+  const targetScore = match?.targetScore ?? 0;
+  const isChase = innings === 2 && targetScore > 0;
+  const runsNeeded = isChase ? Math.max(0, targetScore - currentScore) : 0;
+  const rrr = isChase && ballsLeft > 0 && runsNeeded > 0 ? (runsNeeded / ballsLeft) * 6 : 0;
   const bowlerEconomy = liveContext && liveContext.bowler.balls > 0
     ? liveContext.bowler.runs / (liveContext.bowler.balls / 6)
     : 0;
   const balls = useThisOverBalls(match, market?.matchId);
   const compactThisOver = balls.length > 6;
-  const innings = match?.innings ?? 1;
   const battingTeam = innings === 2 ? match?.awayTeam : match?.homeTeam;
   const bowlingTeam = innings === 2 ? match?.homeTeam : match?.awayTeam;
   const battingCode = teamCode(battingTeam?.shortName || battingTeam?.name);
@@ -80,22 +84,46 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
                 {bowlingCode} bowling <span className="mx-1 text-slate-600">•</span> {match?.format ?? "T20"}
                 <span className="mx-1 text-slate-600">•</span> {ordinal(innings)} innings
               </div>
+              {isChase && (
+                <div className="mt-1.5 font-data-tabular text-[11px] font-bold text-amber-200">
+                  Target {targetScore}
+                  <span className="mx-1.5 font-normal text-slate-500">·</span>
+                  Need {runsNeeded} off {ballsLeft}
+                </div>
+              )}
             </div>
             <TeamMark code={teamCode(match?.awayTeam.shortName || match?.awayTeam.name)} active={innings === 2} />
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className={cn("mt-3 grid gap-2", isChase ? "grid-cols-3" : "grid-cols-2")}>
             <StatBox
               label="CRR · runs/over"
               value={crr.toFixed(2)}
               hint={ballsBowled > 0 ? `${currentScore} ÷ ${ballsBowled} balls × 6` : "Starts after first ball"}
             />
-            <StatBox
-              label="Projected"
-              value={projectionReady ? String(projected) : "—"}
-              hint={projectionReady ? "At current run rate" : "Available after 1 over"}
-              tone="cyan"
-            />
+            {isChase ? (
+              <>
+                <StatBox
+                  label="Target"
+                  value={String(targetScore)}
+                  hint={`${battingCode} need ${targetScore} to win`}
+                  tone="cyan"
+                />
+                <StatBox
+                  label="RRR · required"
+                  value={rrr > 0 ? rrr.toFixed(2) : "—"}
+                  hint={runsNeeded > 0 ? `${runsNeeded} runs in ${ballsLeft} balls` : "Chase complete"}
+                  tone="cyan"
+                />
+              </>
+            ) : (
+              <StatBox
+                label="Projected"
+                value={projectionReady ? String(projected) : "—"}
+                hint={projectionReady ? "At current run rate" : "Available after 1 over"}
+                tone="cyan"
+              />
+            )}
           </div>
         </section>
 

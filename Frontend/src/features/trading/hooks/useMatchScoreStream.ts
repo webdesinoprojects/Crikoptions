@@ -11,6 +11,7 @@ function patchMatch(current: Match, event: MatchScoreUpdateEvent): Match {
   return {
     ...current,
     status,
+    innings: event.innings ?? current.innings,
     currentScore: event.currentScore,
     wicketsLost: event.wicketsLost,
     ballsLeft: event.ballsLeft,
