@@ -72,9 +72,9 @@ export default function AdminConsolePage() {
         </div>
       </div>
 
-      <h2 className="text-2xl font-bold tracking-tight mb-4">Live Match Simulators</h2>
+      <h2 className="text-2xl font-bold tracking-tight mb-4">Live Match Controls</h2>
       <p className="text-gray-400 mb-6">
-        Select an active match below to open the Match Control Simulator. From there, you can manually trigger ball events and watch the pricing engine and market snapshots react in real-time.
+        CSV ball replay runs automatically for live matches. Use the controls below only for manual overrides, testing, or debugging.
       </p>
 
       {loading ? (
@@ -100,7 +100,7 @@ export default function AdminConsolePage() {
                   </span>
                 </div>
                 <Link href={`/admin/matches/${match._id}`}>
-                  <Button variant="secondary">Open Simulator: {teamA} vs {teamB}</Button>
+                  <Button variant="secondary">Open Match Controls: {teamA} vs {teamB}</Button>
                 </Link>
               </div>
             );

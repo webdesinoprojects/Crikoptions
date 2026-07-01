@@ -30,7 +30,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
   const bowlerEconomy = liveContext && liveContext.bowler.balls > 0
     ? liveContext.bowler.runs / (liveContext.bowler.balls / 6)
     : 0;
-  const balls = useThisOverBalls(match);
+  const balls = useThisOverBalls(match, market?.matchId);
   const compactThisOver = balls.length > 6;
   const innings = match?.innings ?? 1;
   const battingTeam = innings === 2 ? match?.awayTeam : match?.homeTeam;

@@ -21,18 +21,31 @@ function patchMatch(current: Match, event: MatchScoreUpdateEvent): Match {
   };
 }
 
-export function useMatchScoreStream(matchId: string) {
+/**
+ * Live score over WebSocket.
+ * `matchId` = React Query cache key (often short id "1").
+ * `streamMatchId` = hex _id the backend broadcasts on.
+ */
+export function useMatchScoreStream(matchId: string, streamMatchId?: string) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!matchId) return;
 
-    return matchStream.subscribeMatchScore(matchId, (event) => {
-      queryClient.setQueryData<Match>(["matchDetails", matchId], (current) => (current ? patchMatch(current, event) : current));
+    const ids = Array.from(new Set([matchId, streamMatchId].filter(Boolean))) as string[];
 
-      queryClient.setQueryData<Match[]>(["homeMatches"], (current = []) =>
-        current.map((match) => (match.id === matchId ? patchMatch(match, event) : match))
+    const apply = (event: MatchScoreUpdateEvent) => {
+      queryClient.setQueryData<Match>(["matchDetails", matchId], (current) =>
+        current ? patchMatch(current, event) : current
       );
-    });
-  }, [matchId, queryClient]);
+
+      const homeKey = event.matchId || streamMatchId || matchId;
+      queryClient.setQueryData<Match[]>(["homeMatches"], (current = []) =>
+        current.map((match) => (match.id === homeKey ? patchMatch(match, event) : match))
+      );
+    };
+
+    const unsubscribers = ids.map((id) => matchStream.subscribeMatchScore(id, apply));
+    return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
+  }, [matchId, streamMatchId, queryClient]);
 }

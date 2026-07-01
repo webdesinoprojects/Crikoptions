@@ -1,0 +1,3 @@
+match_id,team_a,team_b,format,innings,replay_interval_sec,start_striker,start_non_striker,start_bowler,batting_team,bowling_team,status_on_start,target_score,script_name
+0000000000000000000000bb,RCB,KKR,T20,1,7,Virat Kohli,Faf du Plessis,Mitchell Starc,RCB,KKR,live,0,rcb_vs_kkr_innings1_v1
+0000000000000000000000bb,RCB,KKR,T20,2,7,Phil Salt,Sunil Narine,Mohammed Siraj,KKR,RCB,live,178,rcb_vs_kkr_innings2_v1

@@ -7,6 +7,7 @@ import { socketManager } from "@/lib/websocket/socket-manager";
 import {
   BallEvent,
   ballEventFromCommentary,
+  ballEventFromHistory,
   ballsBowledFromSnap,
   currentOverFromList,
   distributeRunsAcrossBalls,
@@ -15,42 +16,129 @@ import {
   padThisOverBalls,
   ScoreboardSnap,
   snapFromMatch,
+  trimBallLogToBowled,
 } from "../utils/terminal-context";
+import { tradingService } from "../services/trading.service";
 import { appendBall, clearBallLog, loadBallLog, setBallLog, subscribeBallLog } from "../utils/ball-log";
 
 const wsEnabled = process.env.NEXT_PUBLIC_WS_ENABLED === "true";
 
 /**
- * "This over" balls from an append-only delivery log shared across tabs.
+ * "This over" balls for live matches — simulator, admin, or real API.
  *
- * Two live sources keep it correct on ANY browser:
- *  1. WebSocket `match:commentary:{matchId}` — exact ball, used when the socket
- *     is actually connected.
- *  2. HTTP-poll reconciliation — when WS is down (or on a fresh browser), we
- *     infer the newly bowled deliveries from the score delta so balls still
- *     appear in order without WebSockets.
+ * 1. GET /matches/{id}/events?limit=6 — exact history on load
+ * 2. WS match:commentary:{hexId} (+ short id fallback) — append live balls
+ * 3. Score-delta inference — only when events API unavailable AND no WS yet
  */
-export function useThisOverBalls(match?: Match): BallEvent[] {
+export function useThisOverBalls(match?: Match, streamMatchId?: string): BallEvent[] {
   const matchId = match?.id ?? "";
+  const altMatchId = streamMatchId && streamMatchId !== matchId ? streamMatchId : "";
   const currentScore = match?.currentScore ?? null;
   const wicketsLost = match?.wicketsLost ?? null;
   const ballsLeft = match?.ballsLeft ?? null;
+  const innings = match?.innings ?? null;
 
   const prevSnapRef = useRef<ScoreboardSnap | null>(null);
+  const matchRef = useRef<Match | undefined>(match);
+  matchRef.current = match;
+
+  const wsCommentarySeenRef = useRef(false);
+  const seededRef = useRef(false);
+  const seedFailedRef = useRef(false);
+  const backfilledRef = useRef(false);
+
   const [balls, setBalls] = useState<BallEvent[]>(() => padThisOverBalls([]));
 
-  // Render from the shared log; react to same-tab + cross-tab writes.
-  useEffect(() => {
+  const renderThisOver = () => {
     if (!matchId) {
+      setBalls(padThisOverBalls([]));
       return;
     }
+    const current = matchRef.current;
+    const bowled = current ? ballsBowledFromSnap(snapFromMatch(current)) : undefined;
+    setBalls(currentOverFromList(loadBallLog(matchId), bowled));
+  };
 
-    const render = () => setBalls(currentOverFromList(loadBallLog(matchId)));
-    render();
-    return subscribeBallLog(matchId, render);
+  const syncLogToScoreboard = (id: string, snap: ScoreboardSnap) => {
+    const bowled = ballsBowledFromSnap(snap);
+    const log = loadBallLog(id);
+    const trimmed = trimBallLogToBowled(log, bowled);
+    if (trimmed.length !== log.length) {
+      setBallLog(id, trimmed);
+    }
+  };
+
+  const inferBackfill = (id: string) => {
+    if (backfilledRef.current || wsCommentarySeenRef.current) return;
+    const current = matchRef.current;
+    if (!current) return;
+
+    const snap = snapFromMatch(current);
+    const bowled = ballsBowledFromSnap(snap);
+    if (bowled <= 0) return;
+
+    const legalLogged = loadBallLog(id).filter(isLegalBallEvent).length;
+    if (legalLogged !== bowled) {
+      setBallLog(id, distributeRunsAcrossBalls(bowled, snap.currentScore, snap.wicketsLost));
+    }
+    backfilledRef.current = true;
+  };
+
+  useEffect(() => {
+    wsCommentarySeenRef.current = false;
+    seededRef.current = false;
+    seedFailedRef.current = false;
+    backfilledRef.current = false;
+    prevSnapRef.current = null;
   }, [matchId]);
 
-  // Reconcile the log against the score on every match update.
+  // Seed exact ball history on load.
+  useEffect(() => {
+    if (!matchId) return;
+
+    let cancelled = false;
+    const ids = [matchId, altMatchId].filter(Boolean);
+
+    const trySeed = async (index: number) => {
+      if (cancelled || index >= ids.length) {
+        if (!cancelled) {
+          seedFailedRef.current = true;
+          inferBackfill(matchId);
+        }
+        return;
+      }
+      try {
+        const events = await tradingService.fetchMatchEvents(ids[index], 6);
+        if (cancelled) return;
+        const ordered = events.map(ballEventFromHistory);
+        if (ordered.length > 0) {
+          setBallLog(matchId, ordered);
+          seededRef.current = true;
+          return;
+        }
+        await trySeed(index + 1);
+      } catch {
+        if (!cancelled) await trySeed(index + 1);
+      }
+    };
+
+    void trySeed(0);
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchId, altMatchId, innings]);
+
+  // Re-render when scoreboard OR ball log changes.
+  useEffect(() => {
+    if (!matchId) return;
+
+    renderThisOver();
+    return subscribeBallLog(matchId, renderThisOver);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchId, currentScore, wicketsLost, ballsLeft, innings]);
+
+  // Reconcile log against scoreboard.
   useEffect(() => {
     if (!matchId || !match) return;
 
@@ -58,9 +146,17 @@ export function useThisOverBalls(match?: Match): BallEvent[] {
     const bowled = ballsBowledFromSnap(snap);
     const log = loadBallLog(matchId);
 
-    // Innings reset.
+    syncLogToScoreboard(matchId, snap);
+
     if (snap.currentScore === 0 && snap.wicketsLost === 0 && bowled <= 0) {
       if (log.length > 0) clearBallLog(matchId);
+      prevSnapRef.current = snap;
+      backfilledRef.current = true;
+      wsCommentarySeenRef.current = false;
+      return;
+    }
+
+    if (seededRef.current) {
       prevSnapRef.current = snap;
       return;
     }
@@ -68,24 +164,22 @@ export function useThisOverBalls(match?: Match): BallEvent[] {
     const prev = prevSnapRef.current;
     const isFirstSync = !prev || prev.matchId !== snap.matchId;
 
-    // First load on this browser (incl. a brand new browser / late join):
-    // rebuild the current picture from the aggregate score.
+    if (!seedFailedRef.current && !backfilledRef.current && !wsCommentarySeenRef.current) {
+      prevSnapRef.current = snap;
+      return;
+    }
+
     if (isFirstSync) {
-      const legalLogged = log.filter(isLegalBallEvent).length;
-      if (bowled > 0 && legalLogged !== bowled) {
-        setBallLog(matchId, distributeRunsAcrossBalls(bowled, snap.currentScore, snap.wicketsLost));
-      }
+      inferBackfill(matchId);
       prevSnapRef.current = snap;
       return;
     }
 
-    // When WS is actively delivering commentary, let it own appends (no double).
-    if (wsEnabled && socketManager.isConnected()) {
+    if (wsEnabled && socketManager.isConnected() && wsCommentarySeenRef.current) {
       prevSnapRef.current = snap;
       return;
     }
 
-    // Polling path: append the deliveries implied by the score delta.
     const inferred = inferBallsFromScoreDelta(prev, snap);
     prevSnapRef.current = snap;
 
@@ -96,33 +190,25 @@ export function useThisOverBalls(match?: Match): BallEvent[] {
 
     if (inferred && inferred.length > 0) {
       inferred.forEach((ball) => appendBall(matchId, ball));
-
-      // A wide adds a run but no legal ball — keep the log aligned to bowled.
-      const after = loadBallLog(matchId);
-      const legalCount = after.filter(isLegalBallEvent).length;
-      if (legalCount > bowled) {
-        let remainingLegal = bowled;
-        setBallLog(
-          matchId,
-          after.filter((ball) => {
-            if (!isLegalBallEvent(ball)) return true;
-            if (remainingLegal <= 0) return false;
-            remainingLegal -= 1;
-            return true;
-          })
-        );
-      }
+      syncLogToScoreboard(matchId, snap);
     }
-  }, [matchId, match, currentScore, wicketsLost, ballsLeft]);
+  }, [matchId, match, currentScore, wicketsLost, ballsLeft, innings]);
 
-  // Live ball-by-ball via WebSocket (each connected client appends on receive).
+  // Live ball-by-ball via WebSocket (hex + short id fallback).
   useEffect(() => {
     if (!matchId || !wsEnabled) return;
 
-    return matchStream.subscribeMatchCommentary(matchId, (event: MatchCommentaryEvent) => {
+    const onCommentary = (event: MatchCommentaryEvent) => {
+      wsCommentarySeenRef.current = true;
       appendBall(matchId, ballEventFromCommentary(event));
-    });
-  }, [matchId]);
+    };
+
+    const unsubscribers = [matchId, altMatchId]
+      .filter((id): id is string => Boolean(id))
+      .map((id) => matchStream.subscribeMatchCommentary(id, onCommentary));
+
+    return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
+  }, [matchId, altMatchId]);
 
   return matchId ? balls : padThisOverBalls([]);
 }

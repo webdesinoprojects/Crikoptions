@@ -1,6 +1,6 @@
 import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { Match } from "@/types";
-import { CalculatedPrice, CalculatePricePayload, OptionChainStrike } from "../services/trading.service";
+import { CalculatedPrice, CalculatePricePayload, MatchBallHistoryEvent, OptionChainStrike } from "../services/trading.service";
 
 export type BallKind = "empty" | "dot" | "run" | "four" | "six" | "wicket" | "bowled" | "lbw" | "caught" | "runOut";
 
@@ -209,15 +209,37 @@ export function ballEventFromAdmin(event: {
   return ballFromRuns(event.runs);
 }
 
-/** Render the 6 "this over" slots from an append-only, click-ordered list of legal deliveries. */
-export function currentOverFromList(list: BallEvent[]): BallEvent[] {
+export function ballEventFromHistory(event: MatchBallHistoryEvent): BallEvent {
+  const extra = String(event.extra ?? "").toLowerCase().replace(/[\s_-]+/g, "");
+  if (extra === "wide" || extra === "wd") return { label: "Wd", kind: "run" };
+  if (extra === "noball" || extra === "nb") return { label: "Nb", kind: "run" };
+  if (event.isWicket === true) return { label: "W", kind: "wicket" };
+  return ballFromRuns(Number(event.runs) || 0);
+}
+
+/** Render the 6 "this over" slots from an append-only delivery log.
+ *  When `ballsBowled` is provided (from the live scoreboard), use it to decide
+ *  how many legal deliveries belong to the *current* over — not the log length. */
+export function currentOverFromList(list: BallEvent[], ballsBowled?: number): BallEvent[] {
+  if (typeof ballsBowled === "number" && ballsBowled <= 0) {
+    return padThisOverBalls([]);
+  }
+
   const filled = list.filter((ball) => ball.kind !== "empty");
   if (filled.length === 0) return padThisOverBalls([]);
 
-  const legalTotal = filled.filter(isLegalBallEvent).length;
-  if (legalTotal === 0) return padThisOverBalls(filled);
+  const legalInLog = filled.filter(isLegalBallEvent).length;
+  const legalInOver =
+    typeof ballsBowled === "number" && ballsBowled > 0
+      ? ballsBowled % 6 === 0
+        ? 6
+        : ballsBowled % 6
+      : legalInLog % 6 === 0
+        ? 6
+        : legalInLog % 6;
 
-  const legalInOver = legalTotal % 6 === 0 ? 6 : legalTotal % 6;
+  if (legalInOver === 0) return padThisOverBalls([]);
+
   let legalSeen = 0;
   let start = filled.length;
 
@@ -230,6 +252,21 @@ export function currentOverFromList(list: BallEvent[]): BallEvent[] {
   }
 
   return padThisOverBalls(filled.slice(start));
+}
+
+/** Drop the oldest legal deliveries when the log has more than the scoreboard says were bowled. */
+export function trimBallLogToBowled(list: BallEvent[], bowled: number): BallEvent[] {
+  if (bowled <= 0) return list;
+
+  const legalIndices: number[] = [];
+  list.forEach((ball, index) => {
+    if (isLegalBallEvent(ball)) legalIndices.push(index);
+  });
+
+  if (legalIndices.length <= bowled) return list;
+
+  const dropCount = legalIndices.length - bowled;
+  return list.slice(legalIndices[dropCount] ?? 0);
 }
 
 export function currentOverBallIndices(snap: ScoreboardSnap): { start: number; count: number } {

@@ -1,6 +1,7 @@
 import TopNavBar from "@/components/TopNavBar";
 import { MobileSessionNavBar, SessionNavBar } from "@/components/ui/sidebar";
 import { AuthGuard } from "@/components/auth/AuthGuard";
+import { LiveSimulatorBootstrap } from "@/features/simulator/components/LiveSimulatorBootstrap";
 
 export default function DashboardLayout({
   children,
@@ -9,6 +10,7 @@ export default function DashboardLayout({
 }) {
   return (
     <AuthGuard>
+      <LiveSimulatorBootstrap />
       <TopNavBar />
       <div className="flex min-h-[100dvh] w-full pt-14 lg:h-[100dvh] lg:overflow-hidden lg:pt-16">
         <SessionNavBar />

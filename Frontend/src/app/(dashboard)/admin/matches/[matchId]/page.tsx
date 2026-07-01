@@ -146,6 +146,7 @@ export default function AdminMatchControlPage() {
         status: "live",
       });
       clearBallLog(matchId);
+      if (match?._id && match._id !== matchId) clearBallLog(match._id);
       toast.success("Match reset to start of innings");
       await fetchData();
     } catch (error: unknown) {

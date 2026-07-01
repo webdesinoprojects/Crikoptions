@@ -1,0 +1,3 @@
+match_id,team_a,team_b,format,innings,replay_interval_sec,start_striker,start_non_striker,start_bowler,batting_team,bowling_team,status_on_start,target_score,script_name
+0000000000000000000000aa,CSK,MI,T20,1,7,Ruturaj Gaikwad,Devon Conway,Jasprit Bumrah,CSK,MI,live,0,csk_vs_mi_innings1_v1
+0000000000000000000000aa,CSK,MI,T20,2,7,Rohit Sharma,Ishan Kishan,Deepak Chahar,MI,CSK,live,206,csk_vs_mi_innings2_v1

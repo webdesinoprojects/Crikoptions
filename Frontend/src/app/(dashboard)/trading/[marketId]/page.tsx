@@ -38,7 +38,8 @@ export default function TradingTerminalPage({ params }: PageProps) {
   const { data: market } = useMarketDetail(marketId);
   const matchId = market?.matchId ?? "";
   const { data: match } = useMatchDetails(matchId);
-  useMatchScoreStream(matchId);
+  // Backend WS topics use hex _id; cache key stays on market short matchId.
+  useMatchScoreStream(matchId, match?.id);
   const { data: matches = [] } = useLiveMatches();
 
   useGSAP(
