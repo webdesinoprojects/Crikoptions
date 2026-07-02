@@ -16,12 +16,21 @@ export interface MatchScoreUpdateEvent {
 
 export interface MatchCommentaryEvent {
   matchId?: string;
-  ballNumber?: string;
+  innings?: number;
+  over?: number;
+  ball?: number;
+  legalBall?: boolean;
+  ballNumber?: string | number;
   runs: number;
   isWicket: boolean;
   extra?: "wide" | "noball" | null;
   wicketType?: string;
   description?: string;
+  currentScore?: number;
+  wicketsLost?: number;
+  ballsLeft?: number;
+  targetScore?: number;
+  oversText?: string;
   timestamp?: string;
 }
 

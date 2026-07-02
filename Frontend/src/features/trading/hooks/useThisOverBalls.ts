@@ -40,14 +40,16 @@ export function useThisOverBalls(match?: Match, streamMatchId?: string): BallEve
 
   const prevSnapRef = useRef<ScoreboardSnap | null>(null);
   const matchRef = useRef<Match | undefined>(match);
-  matchRef.current = match;
 
   const wsCommentarySeenRef = useRef(false);
-  const seededRef = useRef(false);
-  const seedFailedRef = useRef(false);
-  const backfilledRef = useRef(false);
+  const historyFailedRef = useRef(false);
+  const historyRequestRef = useRef(0);
 
   const [balls, setBalls] = useState<BallEvent[]>(() => padThisOverBalls([]));
+
+  useEffect(() => {
+    matchRef.current = match;
+  }, [match]);
 
   const renderThisOver = () => {
     if (!matchId) {
@@ -69,7 +71,7 @@ export function useThisOverBalls(match?: Match, streamMatchId?: string): BallEve
   };
 
   const inferBackfill = (id: string) => {
-    if (backfilledRef.current || wsCommentarySeenRef.current) return;
+    if (wsCommentarySeenRef.current) return;
     const current = matchRef.current;
     if (!current) return;
 
@@ -81,64 +83,87 @@ export function useThisOverBalls(match?: Match, streamMatchId?: string): BallEve
     if (legalLogged !== bowled) {
       setBallLog(id, distributeRunsAcrossBalls(bowled, snap.currentScore, snap.wicketsLost));
     }
-    backfilledRef.current = true;
   };
 
   useEffect(() => {
     wsCommentarySeenRef.current = false;
-    seededRef.current = false;
-    seedFailedRef.current = false;
-    backfilledRef.current = false;
+    historyFailedRef.current = false;
     prevSnapRef.current = null;
-  }, [matchId]);
+  }, [matchId, innings]);
 
-  // Seed exact ball history on load.
+  // Keep exact backend history in sync with every scoreboard movement. This is
+  // the polling-safe path when WebSocket commentary is unavailable or delayed.
   useEffect(() => {
-    if (!matchId) return;
+    if (!matchId || !match) return;
 
     let cancelled = false;
-    const ids = [matchId, altMatchId].filter(Boolean);
+    const requestId = ++historyRequestRef.current;
+    const ids = Array.from(new Set([matchId, altMatchId].filter(Boolean)));
+    const snap = snapFromMatch(match);
+    const bowled = ballsBowledFromSnap(snap);
 
-    const trySeed = async (index: number) => {
+    const trySync = async (index: number) => {
       if (cancelled || index >= ids.length) {
         if (!cancelled) {
-          seedFailedRef.current = true;
+          if (bowled <= 0) {
+            if (loadBallLog(matchId).length > 0) clearBallLog(matchId);
+            historyFailedRef.current = false;
+            return;
+          }
+          historyFailedRef.current = true;
           inferBackfill(matchId);
         }
         return;
       }
       try {
         const events = await tradingService.fetchMatchEvents(ids[index], 6);
-        if (cancelled) return;
+        if (cancelled || requestId !== historyRequestRef.current) return;
         const ordered = events.map(ballEventFromHistory);
-        if (ordered.length > 0) {
-          setBallLog(matchId, ordered);
-          seededRef.current = true;
+        if (ordered.length > 0 || bowled <= 0) {
+          const currentLog = loadBallLog(matchId);
+          if (ordered.length > 0) {
+            historyFailedRef.current = false;
+          }
+          if (!sameBallEvents(currentLog, ordered)) {
+            if (ordered.length > 0) {
+              setBallLog(matchId, ordered);
+            } else {
+              clearBallLog(matchId);
+            }
+          }
+          if (ordered.length === 0) {
+            historyFailedRef.current = false;
+          }
           return;
         }
-        await trySeed(index + 1);
+        await trySync(index + 1);
       } catch {
-        if (!cancelled) await trySeed(index + 1);
+        if (!cancelled) await trySync(index + 1);
       }
     };
 
-    void trySeed(0);
+    void trySync(0);
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [matchId, altMatchId, innings]);
+  }, [matchId, altMatchId, innings, currentScore, wicketsLost, ballsLeft]);
 
   // Re-render when scoreboard OR ball log changes.
   useEffect(() => {
     if (!matchId) return;
 
-    renderThisOver();
-    return subscribeBallLog(matchId, renderThisOver);
+    const initialRender = window.setTimeout(renderThisOver, 0);
+    const unsubscribe = subscribeBallLog(matchId, renderThisOver);
+    return () => {
+      window.clearTimeout(initialRender);
+      unsubscribe();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchId, currentScore, wicketsLost, ballsLeft, innings]);
 
-  // Reconcile log against scoreboard.
+  // Reconcile log against scoreboard and use score deltas only if exact history
+  // could not be fetched.
   useEffect(() => {
     if (!matchId || !match) return;
 
@@ -151,26 +176,21 @@ export function useThisOverBalls(match?: Match, streamMatchId?: string): BallEve
     if (snap.currentScore === 0 && snap.wicketsLost === 0 && bowled <= 0) {
       if (log.length > 0) clearBallLog(matchId);
       prevSnapRef.current = snap;
-      backfilledRef.current = true;
+      historyFailedRef.current = false;
       wsCommentarySeenRef.current = false;
-      return;
-    }
-
-    if (seededRef.current) {
-      prevSnapRef.current = snap;
       return;
     }
 
     const prev = prevSnapRef.current;
     const isFirstSync = !prev || prev.matchId !== snap.matchId;
 
-    if (!seedFailedRef.current && !backfilledRef.current && !wsCommentarySeenRef.current) {
+    if (isFirstSync) {
+      if (historyFailedRef.current) inferBackfill(matchId);
       prevSnapRef.current = snap;
       return;
     }
 
-    if (isFirstSync) {
-      inferBackfill(matchId);
+    if (!historyFailedRef.current) {
       prevSnapRef.current = snap;
       return;
     }
@@ -199,6 +219,10 @@ export function useThisOverBalls(match?: Match, streamMatchId?: string): BallEve
     if (!matchId || !wsEnabled) return;
 
     const onCommentary = (event: MatchCommentaryEvent) => {
+      const eventInnings = Number(event.innings ?? innings);
+      if (innings && Number.isFinite(eventInnings) && eventInnings !== innings) {
+        return;
+      }
       wsCommentarySeenRef.current = true;
       appendBall(matchId, ballEventFromCommentary(event));
     };
@@ -208,7 +232,15 @@ export function useThisOverBalls(match?: Match, streamMatchId?: string): BallEve
       .map((id) => matchStream.subscribeMatchCommentary(id, onCommentary));
 
     return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
-  }, [matchId, altMatchId]);
+  }, [matchId, altMatchId, innings]);
 
   return matchId ? balls : padThisOverBalls([]);
+}
+
+function sameBallEvents(left: BallEvent[], right: BallEvent[]) {
+  if (left.length !== right.length) return false;
+  return left.every((ball, index) => {
+    const other = right[index];
+    return ball.label === other?.label && ball.kind === other?.kind && ball.detail === other?.detail;
+  });
 }
