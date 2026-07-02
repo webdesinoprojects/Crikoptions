@@ -73,12 +73,18 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
       side: side.toLowerCase() as "buy" | "sell",
       type,
       quantity: qtyValue,
-      price: type === "MARKET" ? 0 : priceValue,
+      price: priceValue,
       pricingSnapshot: payload,
     };
   }, [marketId, matchId, payload, priceValue, qtyValue, selectedStrikeValue, side, type]);
   const { data: orderPreview } = useOrderPreview(previewPayload);
-  const notional = orderPreview?.notional ?? 0;
+  const estimatedNotional = priceValue * qtyValue;
+  const notional =
+    (orderPreview?.notional ?? 0) > 0
+      ? orderPreview!.notional
+      : (orderPreview?.executablePrice ?? 0) > 0
+        ? orderPreview!.executablePrice * qtyValue
+        : estimatedNotional;
   const cashRequired = orderPreview?.marginRequired ?? 0;
   const availableBalance = orderPreview?.availableBalance ?? wallet?.availableBalance ?? 0;
   const showBalanceWarning = side === "BUY" && orderPreview ? !orderPreview.sufficientBalance : false;
@@ -316,7 +322,8 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
           ) : (
             <>
               {willExecuteNow ? <Zap className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
-              {side === "BUY" ? "Buy" : "Sell"} {type} - Rs {formatMoney(notional)}
+              {side === "BUY" ? "Buy" : "Sell"} {type} @ Rs {formatMoney(priceValue)}
+              {qtyValue > 1 ? ` · ${formatMoney(notional)}` : ""}
             </>
           )}
         </button>

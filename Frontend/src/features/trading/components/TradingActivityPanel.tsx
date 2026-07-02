@@ -217,8 +217,9 @@ function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading
   if (loading) return <PanelState label="Loading positions..." />;
 
   const enrichedPositions = positions.map(position => {
-    const chainRow = chainRows.find((row) => row.strike === position.strike);
-    const liveLtp = chainRow ? (position.lots > 0 ? chainRow.bid : chainRow.ask) : position.ltp;
+    const chainRow = chainRows.find((row) => Math.abs(row.strike - position.strike) < 0.01);
+    const quoteExit = chainRow ? (position.lots > 0 ? chainRow.bid : chainRow.ask) : 0;
+    const liveLtp = quoteExit > 0 ? quoteExit : position.ltp > 0 ? position.ltp : position.buyPrice;
     const livePnl = position.pnl;
     return { ...position, liveLtp, livePnl, chainRow };
   });
@@ -298,7 +299,9 @@ function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading
                       </div>
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[8px] text-on-surface-variant uppercase font-black">Sell price</span>
-                        <span className="text-on-surface font-bold">₹{position.lots < 0 ? position.buyPrice.toFixed(2) : '--'}</span>
+                        <span className="text-on-surface font-bold">
+                          ₹{position.lots > 0 ? position.liveLtp.toFixed(2) : position.lots < 0 ? position.buyPrice.toFixed(2) : "--"}
+                        </span>
                       </div>
                     </div>
                     
