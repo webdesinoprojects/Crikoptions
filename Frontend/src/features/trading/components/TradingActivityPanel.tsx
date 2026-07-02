@@ -220,7 +220,7 @@ function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading
     const chainRow = chainRows.find((row) => Math.abs(row.strike - position.strike) < 0.01);
     const quoteExit = chainRow ? (position.lots > 0 ? chainRow.bid : chainRow.ask) : 0;
     const liveLtp = quoteExit > 0 ? quoteExit : position.ltp > 0 ? position.ltp : position.buyPrice;
-    const livePnl = position.pnl;
+    const livePnl = computeLivePnl(position, liveLtp);
     return { ...position, liveLtp, livePnl, chainRow };
   });
 
@@ -295,12 +295,12 @@ function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading
                       </div>
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[8px] text-on-surface-variant uppercase font-black">Buy price</span>
-                        <span className="text-on-surface font-bold">₹{position.lots > 0 ? position.buyPrice.toFixed(2) : '--'}</span>
+                        <span className="text-on-surface font-bold">{position.buyPrice > 0 ? `Rs ${position.buyPrice.toFixed(2)}` : "--"}</span>
                       </div>
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[8px] text-on-surface-variant uppercase font-black">Sell price</span>
                         <span className="text-on-surface font-bold">
-                          ₹{position.lots > 0 ? position.liveLtp.toFixed(2) : position.lots < 0 ? position.buyPrice.toFixed(2) : "--"}
+                          {position.lots > 0 ? `Rs ${position.liveLtp.toFixed(2)}` : position.sellPrice && position.sellPrice > 0 ? `Rs ${position.sellPrice.toFixed(2)}` : "--"}
                         </span>
                       </div>
                     </div>
@@ -362,11 +362,11 @@ function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading
                       </div>
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[8px] text-on-surface-variant uppercase font-black">Buy price</span>
-                        <span className="text-on-surface font-bold">₹{trade.entryPrice.toFixed(2)}</span>
+                        <span className="text-on-surface font-bold">Rs {trade.entryPrice.toFixed(2)}</span>
                       </div>
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[8px] text-on-surface-variant uppercase font-black">Sell price</span>
-                        <span className="text-on-surface font-bold">₹{trade.exitPrice.toFixed(2)}</span>
+                        <span className="text-on-surface font-bold">Rs {trade.exitPrice.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
@@ -533,6 +533,26 @@ function formatTime(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "--:--";
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function computeLivePnl(position: OpenPosition, liveLtp: number) {
+  const lots = Math.abs(position.lots);
+  if (lots <= 0 || !Number.isFinite(liveLtp) || liveLtp <= 0) return position.pnl;
+
+  if (position.lots > 0 && position.buyPrice > 0) {
+    return roundMoney((liveLtp - position.buyPrice) * lots);
+  }
+
+  if (position.lots < 0 && position.sellPrice && position.sellPrice > 0) {
+    return roundMoney((position.sellPrice - liveLtp) * lots);
+  }
+
+  return position.pnl;
+}
+
+function roundMoney(value: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.round(value * 100) / 100;
 }
 
 function getErrorMessage(error: unknown, defaultMessage: string) {

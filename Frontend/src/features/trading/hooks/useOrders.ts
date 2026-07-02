@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { tradingService, CreateOrderPayload } from "../services/trading.service";
 import {
   refreshAfterOrderCancel,
@@ -34,6 +34,7 @@ export const useOrderPreview = (payload?: CreateOrderPayload) => {
     queryKey: tradingQueryKeys.orderPreview(payload),
     queryFn: () => tradingService.previewOrder(payload as CreateOrderPayload),
     enabled: Boolean(payload),
+    placeholderData: keepPreviousData,
     staleTime: 1000,
     refetchInterval: payload ? terminalPollInterval : false,
   });

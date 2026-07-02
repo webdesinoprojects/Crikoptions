@@ -6,7 +6,14 @@ import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { cn } from "@/lib/utils";
 import { BatterStats, Match } from "@/types";
 import { useThisOverBalls } from "../hooks/useThisOverBalls";
-import { BallEvent, ballClassName, scoreParts } from "../utils/terminal-context";
+import {
+  BallEvent,
+  ballClassName,
+  battingTeamForMatch,
+  bowlingTeamForMatch,
+  currentInningsScoreParts,
+  teamCode,
+} from "../utils/terminal-context";
 
 interface LiveMatchStatsPanelProps {
   match?: Match;
@@ -15,10 +22,11 @@ interface LiveMatchStatsPanelProps {
 }
 
 export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStatsPanelProps) {
-  const score = scoreParts(match?.homeScore);
+  const score = currentInningsScoreParts(match);
   const parsedRuns = Number.parseInt(score.runs, 10);
-  const currentScore = match?.currentScore ?? (Number.isFinite(parsedRuns) ? parsedRuns : 0);
-  const wickets = (match?.wicketsLost ?? Number.parseInt(score.wickets, 10)) || 0;
+  const parsedWickets = Number.parseInt(score.wickets, 10);
+  const currentScore = Number.isFinite(parsedRuns) ? parsedRuns : 0;
+  const wickets = Number.isFinite(parsedWickets) ? parsedWickets : 0;
   const totalBalls = totalBallsForFormat(match?.format);
   const ballsLeft = Math.max(0, Math.min(totalBalls, match?.ballsLeft ?? totalBalls));
   const ballsBowled = totalBalls - ballsLeft;
@@ -37,8 +45,8 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
     : 0;
   const balls = useThisOverBalls(match, market?.matchId);
   const compactThisOver = balls.length > 6;
-  const battingTeam = innings === 2 ? match?.awayTeam : match?.homeTeam;
-  const bowlingTeam = innings === 2 ? match?.homeTeam : match?.awayTeam;
+  const battingTeam = battingTeamForMatch(match);
+  const bowlingTeam = bowlingTeamForMatch(match);
   const battingCode = teamCode(battingTeam?.shortName || battingTeam?.name);
   const bowlingCode = teamCode(bowlingTeam?.shortName || bowlingTeam?.name);
   const lastWicket = [...balls].reverse().find((ball) => isWicket(ball));
@@ -357,13 +365,6 @@ function volatilityLabel(market?: BackendMarket) {
 
 function isWicket(ball: BallEvent) {
   return ["wicket", "bowled", "lbw", "caught", "runOut"].includes(ball.kind);
-}
-
-function teamCode(value?: string) {
-  const normalized = (value ?? "TEAM").trim();
-  const words = normalized.split(/\s+/).filter(Boolean);
-  if (words.length > 1) return words.map((word) => word[0]).join("").slice(0, 3).toUpperCase();
-  return normalized.slice(0, 3).toUpperCase();
 }
 
 function projectedFinal(currentScore: number, ballsLeft: number, crr: number, market?: BackendMarket) {

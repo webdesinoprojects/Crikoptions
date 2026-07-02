@@ -34,6 +34,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const selectedPriceStore = useTerminalStore((state) => state.selectedPrice);
   const selectedSideStore = useTerminalStore((state) => state.selectedSide);
   const setSelectedSide = useTerminalStore((state) => state.setSelectedSide);
+  const setOrderIntent = useTerminalStore((state) => state.setOrderIntent);
   const selectedStrike = useTerminalStore((state) => state.selectedStrike);
 
   const { data: market } = useMarketDetail(marketId);
@@ -42,9 +43,10 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const { data: calculated } = useOptionChain(marketId, payload);
   const rows = useMemo(() => buildOptionRows(calculated, market), [calculated, market]);
   const rowMap = useMemo(() => new Map(rows.map(r => [r.strike, r])), [rows]);
+  const atmRow = useMemo(() => findAtmRow(rows), [rows]);
   const selectedRow = useMemo(
-    () => rowMap.get(selectedStrike ?? 0) ?? findAtmRow(rows),
-    [rowMap, selectedStrike, rows]
+    () => (selectedStrike == null ? atmRow : rowMap.get(selectedStrike)),
+    [atmRow, rowMap, selectedStrike]
   );
   const { isPending: isCreatingOrder, mutate: createOrder } = useCreateOrder();
 
@@ -53,15 +55,15 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const quoteAsk = selectedRow?.ask ?? 0;
   const routedPrice = side === "BUY" ? quoteAsk : quoteBid;
   const backendPrice = routedPrice || selectedPriceStore || market?.ltp || market?.buyerPrice || market?.sellerPrice || 0;
-  const priceKey = `${selectedStrike ?? "market"}:${backendPrice.toFixed(2)}`;
-  const displayPrice = priceOverride?.key === priceKey ? priceOverride.value : backendPrice.toFixed(2);
+  const selectedStrikeValue = selectedRow?.strike ?? selectedStrike ?? null;
+  const priceKey = `${marketId}:${selectedStrikeValue ?? "market"}:${side}`;
+  const displayPrice = priceOverride?.key === priceKey ? priceOverride.value : backendPrice > 0 ? backendPrice.toFixed(2) : "";
   const priceValue = type === "MARKET" ? backendPrice : Number.parseFloat(displayPrice) || 0;
   const qtyValue = Number.parseInt(qty, 10) || 0;
   const hasExecutableQuote = Boolean(selectedRow && routedPrice > 0);
   const isMarketOrder = type === "MARKET";
   const isLimitWithQuote = type === "LIMIT" && hasExecutableQuote;
   const buyWithinSpread = side === "BUY" ? priceValue + EXECUTION_PRICE_EPSILON >= quoteAsk : priceValue - EXECUTION_PRICE_EPSILON <= quoteBid;
-  const selectedStrikeValue = selectedRow?.strike;
   const previewPayload = useMemo(() => {
     if (!matchId || !marketId || !selectedStrikeValue || qtyValue <= 0) return undefined;
     if (type === "LIMIT" && priceValue <= 0) return undefined;
@@ -78,28 +80,34 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
     };
   }, [marketId, matchId, payload, priceValue, qtyValue, selectedStrikeValue, side, type]);
   const { data: orderPreview } = useOrderPreview(previewPayload);
-  const estimatedNotional = priceValue * qtyValue;
-  const notional =
-    (orderPreview?.notional ?? 0) > 0
-      ? orderPreview!.notional
-      : (orderPreview?.executablePrice ?? 0) > 0
-        ? orderPreview!.executablePrice * qtyValue
-        : estimatedNotional;
-  const cashRequired = orderPreview?.marginRequired ?? 0;
+  const localNotional = roundMoney(priceValue * qtyValue);
+  const notional = localNotional;
+  const cashRequired = side === "BUY" ? localNotional : 0;
   const availableBalance = orderPreview?.availableBalance ?? wallet?.availableBalance ?? 0;
-  const showBalanceWarning = side === "BUY" && orderPreview ? !orderPreview.sufficientBalance : false;
-  const willExecuteNow = orderPreview?.willExecuteNow ?? (isMarketOrder || (isLimitWithQuote && buyWithinSpread));
+  const showBalanceWarning = side === "BUY" && cashRequired > availableBalance;
+  const willExecuteNow = isMarketOrder || (isLimitWithQuote && buyWithinSpread);
   const submitDisabled =
     isCreatingOrder ||
     !matchId ||
     !marketId ||
-    !selectedRow ||
+    !selectedStrikeValue ||
     (type === "MARKET" && !hasExecutableQuote);
+
+  React.useEffect(() => {
+    if (selectedStrike != null || !atmRow) return;
+
+    setOrderIntent({
+      side,
+      strike: atmRow.strike,
+      price: side === "BUY" ? atmRow.ask : atmRow.bid,
+      source: "auto",
+    });
+  }, [atmRow, selectedStrike, setOrderIntent, side]);
 
   const alignLimitToQuote = useCallback(() => {
     if (!hasExecutableQuote) return;
-    setPriceOverride({ key: priceKey, value: routedPrice.toFixed(2) });
-  }, [hasExecutableQuote, priceKey, routedPrice]);
+    setPriceOverride(null);
+  }, [hasExecutableQuote]);
 
   const resetTicket = useCallback(() => {
     setPriceOverride(null);
@@ -113,7 +121,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
       toast.error("No backend market context available");
       return;
     }
-    if (!selectedRow?.strike) {
+    if (!selectedStrikeValue) {
       toast.error("Select a strike from the option chain before placing an order");
       return;
     }
@@ -133,7 +141,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
       {
         matchId,
         marketId,
-        strike: selectedRow.strike,
+        strike: selectedStrikeValue,
         side: side.toLowerCase() as "buy" | "sell",
         type,
         quantity: qtyValue,
@@ -145,7 +153,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
           setLastOrderTime(new Date());
 
           if (data.status === "FILLED") {
-            toast.success(`Executed: ${side} ${qtyValue} @ strike ${selectedRow.strike} - Rs ${formatMoney(data.averageFillPrice || data.price || 0)}`);
+            toast.success(`Executed: ${side} ${qtyValue} @ strike ${selectedStrikeValue} - Rs ${formatMoney(data.averageFillPrice || data.price || 0)}`);
           } else if (data.status === "PARTIAL") {
             toast.success(`Partially executed: ${data.filledQuantity}/${data.quantity} lots - ${data.remainingQuantity} remaining`);
           } else {
@@ -170,7 +178,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
     matchId,
     priceValue,
     qtyValue,
-    selectedRow,
+    selectedStrikeValue,
     side,
     type,
   ]);
@@ -190,7 +198,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
             <StatusPill side={side} />
           </div>
           <p className="mt-0.5 truncate text-[11px] font-semibold text-cyan-200/70 sm:text-xs">
-            {selectedRow ? `Strike ${selectedRow.strike.toFixed(0)} selected` : market?.title ?? "Select a strike"}
+            {selectedStrikeValue ? `Strike ${selectedStrikeValue.toFixed(0)} selected` : market?.title ?? "Select a strike"}
           </p>
         </div>
       </div>
@@ -206,7 +214,10 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
           <button
             key={option}
             type="button"
-            onClick={() => setSelectedSide(option)}
+            onClick={() => {
+              setSelectedSide(option);
+              setPriceOverride(null);
+            }}
             className={`h-7 rounded-md text-[11px] font-black transition-all ${
               side === option
                 ? option === "BUY"
@@ -498,4 +509,9 @@ function getErrorMessage(error: unknown, defaultMessage: string) {
     return error.response.data.message;
   }
   return defaultMessage;
+}
+
+function roundMoney(value: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.round(value * 100) / 100;
 }

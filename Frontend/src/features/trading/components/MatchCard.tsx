@@ -5,13 +5,15 @@ import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { Match } from "@/types";
 import { cn } from "@/lib/utils";
-import { scoreParts } from "../utils/terminal-context";
+import { battingTeamForMatch, currentInningsScoreParts, teamCode } from "../utils/terminal-context";
 import { useMarkets } from "../hooks";
 import { selectPrimaryMarket } from "../utils/market-helpers";
 
 export const MatchCard = React.memo(function MatchCard({ match, selected }: { match: Match; selected: boolean }) {
   const router = useRouter();
-  const score = scoreParts(match.homeScore);
+  const score = currentInningsScoreParts(match);
+  const battingTeam = battingTeamForMatch(match);
+  const battingCode = teamCode(battingTeam?.shortName || battingTeam?.name);
   const isChase = (match.innings ?? 1) === 2 && (match.targetScore ?? 0) > 0;
   const { data: markets = [] } = useMarkets(match.id);
 
@@ -44,7 +46,7 @@ export const MatchCard = React.memo(function MatchCard({ match, selected }: { ma
       <div className="min-w-0">
         <div className="truncate text-[12px] font-black leading-tight text-on-surface sm:text-sm">{match.title}</div>
         <div className="font-data-tabular text-[12px] font-black text-teal-300 sm:text-sm">
-          {score.runs}/{score.wickets} - {match.currentOver ?? "0.0"} ov
+          {battingCode} {score.runs}/{score.wickets} - {match.currentOver ?? "0.0"} ov
         </div>
         {isChase && (
           <div className="truncate font-data-tabular text-[10px] font-semibold text-amber-200/90 sm:text-[11px]">

@@ -40,9 +40,9 @@ export function useMatchScoreStream(matchId: string, streamMatchId?: string) {
         current ? patchMatch(current, event) : current
       );
 
-      const homeKey = event.matchId || streamMatchId || matchId;
+      const homeKeys = new Set([event.matchId, streamMatchId, matchId].filter(Boolean));
       queryClient.setQueryData<Match[]>(["homeMatches"], (current = []) =>
-        current.map((match) => (match.id === homeKey ? patchMatch(match, event) : match))
+        current.map((match) => (homeKeys.has(match.id) ? patchMatch(match, event) : match))
       );
     };
 

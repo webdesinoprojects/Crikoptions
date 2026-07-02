@@ -36,18 +36,29 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
   const rows = useMemo(() => buildOptionRows(calculated, market), [calculated, market]);
   const hasApiChain = Boolean(calculated?.optionChain?.length);
   const atmRow = findAtmRow(rows);
-  const activeRow = rows.find((row) => row.strike === selectedStrike) ?? atmRow;
+  const activeRow = selectedStrike == null ? atmRow : rows.find((row) => row.strike === selectedStrike);
   const visibleRows = rows;
   const firstStrike = visibleRows[0]?.strike;
   const lastStrike = visibleRows[visibleRows.length - 1]?.strike;
   const candlestickSelectedRow = candlestickRow ? rows.find((row) => row.strike === candlestickRow.strike) ?? candlestickRow : null;
   const { getStrikeHistory } = useOptionChainHistory(marketId, rows);
   
-  const selectRow = (row: ChainRow) => {
+  React.useEffect(() => {
+    if (selectedStrike != null || !atmRow) return;
+
     setOrderIntent({
       side: selectedSide,
+      strike: atmRow.strike,
+      price: selectedSide === "BUY" ? atmRow.ask : atmRow.bid,
+      source: "auto",
+    });
+  }, [atmRow, selectedSide, selectedStrike, setOrderIntent]);
+
+  const selectRow = (row: ChainRow, side: "BUY" | "SELL" = selectedSide) => {
+    setOrderIntent({
+      side,
       strike: row.strike,
-      price: selectedSide === "BUY" ? row.ask : row.bid,
+      price: side === "BUY" ? row.ask : row.bid,
     });
   };
 
@@ -119,28 +130,30 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
                             {row.strike.toFixed(0)}
                             {isAtm && <ChevronLeft className="h-4 w-4 text-cyan-300" />}
                           </span>
-                          <div
-                            className="ml-auto"
-                            onClick={(event) => event.stopPropagation()}
-                            onPointerDown={(event) => event.stopPropagation()}
-                          >
+                          <div className="ml-auto">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <button
                                   type="button"
                                   aria-label={`Actions for strike ${row.strike.toFixed(0)}`}
-                                  title="View candlestick"
+                                  title="Strike actions"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    selectRow(row);
+                                  }}
                                   className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/8 bg-white/[0.03] text-on-surface-variant opacity-100 transition-all hover:border-cyan-300/30 hover:bg-cyan-300/10 hover:text-cyan-100 md:opacity-65 md:group-hover:opacity-100"
                                 >
                                   <MoreHorizontal className="h-4 w-4" />
                                 </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent
-                                align="start"
+                                align="end"
+                                side="bottom"
                                 className="min-w-40 border-white/10 bg-[#071327] p-1 text-on-surface shadow-[0_16px_44px_rgba(0,0,0,0.45)]"
                               >
                                 <DropdownMenuItem
                                   onSelect={() => {
+                                    selectRow(row);
                                     setCandlestickRow(row);
                                   }}
                                   className="flex cursor-pointer items-center gap-2 rounded px-2 py-2 text-[12px] font-black text-cyan-100 focus:bg-cyan-300/10 focus:text-cyan-100"

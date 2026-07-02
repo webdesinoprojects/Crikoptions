@@ -13,6 +13,7 @@ import {
 } from "@/features/trading/components";
 import { useMarketDetail, useMatchScoreStream } from "@/features/trading/hooks";
 import { useLiveMatches, useMatchDetails } from "@/features/dashboard/hooks";
+import { useTerminalStore } from "@/stores/terminal.store";
 
 interface PageProps {
   params: Promise<{ marketId: string }>;
@@ -35,12 +36,17 @@ export default function TradingTerminalPage({ params }: PageProps) {
   const terminalRef = React.useRef<HTMLDivElement>(null);
   const [mobilePanel, setMobilePanel] = React.useState<MobileTradingPanel>("chain");
   const { marketId } = React.use(params);
+  const setActiveMarket = useTerminalStore((state) => state.setActiveMarket);
   const { data: market } = useMarketDetail(marketId);
   const matchId = market?.matchId ?? "";
   const { data: match } = useMatchDetails(matchId);
   // Backend WS topics use hex _id; cache key stays on market short matchId.
   useMatchScoreStream(matchId, match?.id);
   const { data: matches = [] } = useLiveMatches();
+
+  React.useEffect(() => {
+    if (marketId) setActiveMarket(marketId);
+  }, [marketId, setActiveMarket]);
 
   useGSAP(
     () => {
@@ -85,7 +91,7 @@ export default function TradingTerminalPage({ params }: PageProps) {
       />
 
       <div className="relative z-10" data-terminal-header>
-        <MatchScheduleStrip matches={matches} selectedMatchId={matchId} />
+        <MatchScheduleStrip matches={matches} selectedMatchId={match?.id ?? matchId} />
       </div>
 
       <MobileTradingTabs activePanel={mobilePanel} onChange={setMobilePanel} />

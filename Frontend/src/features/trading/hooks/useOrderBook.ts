@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { CalculatePricePayload, tradingService } from "../services/trading.service";
 
 export const useOrderBook = (marketId: string) => {
@@ -36,6 +36,7 @@ export const useOptionChain = (marketId: string, payload?: CalculatePricePayload
     queryKey: ["optionChain", marketId, payload],
     queryFn: () => tradingService.calculateMarketPrice(marketId, payload as CalculatePricePayload),
     enabled: !!marketId && !!payload,
+    placeholderData: keepPreviousData,
     staleTime: 1000,
     refetchInterval: 5000,
   });

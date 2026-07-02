@@ -25,8 +25,9 @@ export function buildPricePayload(match?: Match, market?: BackendMarket): Calcul
 
   const innings = match.innings ?? 1;
   const totalBalls = totalBallsForFormat(match.format);
-  const currentScore = match.currentScore ?? scoreFromDisplay(match.homeScore);
-  const wicketsLost = match.wicketsLost ?? wicketsFromDisplay(match.homeScore);
+  const currentScoreDisplay = currentInningsScoreParts(match);
+  const currentScore = numberFromDisplay(currentScoreDisplay.runs);
+  const wicketsLost = numberFromDisplay(currentScoreDisplay.wickets);
   const ballsLeft = Math.max(0, Math.min(totalBalls, match.ballsLeft ?? totalBalls));
 
   if (innings === 2) {
@@ -168,10 +169,12 @@ export interface ScoreboardSnap {
 
 export function snapFromMatch(match: Match): ScoreboardSnap {
   const totalBalls = totalBallsForFormat(match.format);
+  const score = currentInningsScoreParts(match);
+
   return {
     matchId: match.id,
-    currentScore: match.currentScore ?? scoreFromDisplay(match.homeScore),
-    wicketsLost: match.wicketsLost ?? wicketsFromDisplay(match.homeScore),
+    currentScore: numberFromDisplay(score.runs),
+    wicketsLost: numberFromDisplay(score.wickets),
     ballsLeft: Math.max(0, Math.min(totalBalls, match.ballsLeft ?? totalBalls)),
     totalBalls,
   };
@@ -479,6 +482,34 @@ export function scoreParts(score?: string) {
   };
 }
 
+export function currentInningsScoreParts(match?: Match) {
+  const innings = match?.innings ?? 1;
+  const scoreText = innings === 2 ? match?.awayScore || match?.homeScore : match?.homeScore || match?.awayScore;
+  const parsed = scoreParts(scoreText);
+
+  return {
+    runs: String(match?.currentScore ?? numberFromDisplay(parsed.runs)),
+    wickets: String(match?.wicketsLost ?? numberFromDisplay(parsed.wickets)),
+  };
+}
+
+export function battingTeamForMatch(match?: Match) {
+  if (!match) return undefined;
+  return (match.innings ?? 1) === 2 ? match.awayTeam : match.homeTeam;
+}
+
+export function bowlingTeamForMatch(match?: Match) {
+  if (!match) return undefined;
+  return (match.innings ?? 1) === 2 ? match.homeTeam : match.awayTeam;
+}
+
+export function teamCode(value?: string) {
+  const normalized = (value ?? "TEAM").trim();
+  const words = normalized.split(/\s+/).filter(Boolean);
+  if (words.length > 1) return words.map((word) => word[0]).join("").slice(0, 3).toUpperCase();
+  return normalized.slice(0, 3).toUpperCase();
+}
+
 export function projectedRange(projected?: number) {
   if (!projected) return "0-0";
   return `${Math.max(0, Math.floor(projected - 3))}-${Math.ceil(projected + 5)}`;
@@ -495,14 +526,9 @@ function totalBallsForFormat(format?: string) {
   return upper.includes("ODI") || upper.includes("ONE") ? 300 : 120;
 }
 
-function scoreFromDisplay(score?: string) {
-  const value = Number.parseInt((score ?? "0").split("/")[0], 10);
-  return Number.isFinite(value) ? value : 0;
-}
-
-function wicketsFromDisplay(score?: string) {
-  const value = Number.parseInt((score ?? "0/0").split("/")[1] ?? "0", 10);
-  return Number.isFinite(value) ? value : 0;
+function numberFromDisplay(value?: string) {
+  const parsed = Number.parseInt(value ?? "0", 10);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function round2(value: number) {
