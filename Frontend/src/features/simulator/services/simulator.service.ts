@@ -95,7 +95,6 @@ export async function ensureMatchSimulatorRunning(
   }
 
   if (isFinished(status)) {
-    await resetSimulator(hexMatchId);
     await startSimulator(hexMatchId, scriptName);
     return;
   }
