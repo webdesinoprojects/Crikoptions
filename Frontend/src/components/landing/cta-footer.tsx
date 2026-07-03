@@ -71,7 +71,6 @@ export const CtaFooter = () => {
           <div className="flex flex-col gap-4">
             <span className="text-white font-bold mb-2">PLATFORM</span>
             <Link href="/dashboard" className="text-slate-500 hover:text-white transition-colors">Markets</Link>
-            <Link href="/insights/1" className="text-slate-500 hover:text-white transition-colors">Intelligence</Link>
             <Link href="/portfolio" className="text-slate-500 hover:text-white transition-colors">Portfolio</Link>
           </div>
 

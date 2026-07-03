@@ -6,7 +6,6 @@ const footerGroups = [
     links: [
       { label: "Markets", href: "/dashboard" },
       { label: "Portfolio", href: "/portfolio" },
-      { label: "Intelligence", href: "/insights/1" },
     ],
   },
   {

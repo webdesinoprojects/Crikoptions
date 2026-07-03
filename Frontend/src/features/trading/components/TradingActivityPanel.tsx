@@ -44,13 +44,13 @@ export function TradingActivityPanel({ className, matchId, marketId, market, mat
     () => positions.filter((position) => position.marketId === marketId && position.strike > 0 && position.lots !== 0),
     [marketId, positions]
   );
-  
+
   const { data: allClosedTrades = [] } = useClosedTrades();
   const marketClosedTrades = useMemo(
     () => allClosedTrades.filter(t => t.marketId === marketId),
     [allClosedTrades, marketId]
   );
-  
+
   const isSyncing = ordersFetching || positionsFetching || cancelOrderMutation.isPending;
 
   const handleCancel = (orderId: string) => {
@@ -73,9 +73,8 @@ export function TradingActivityPanel({ className, matchId, marketId, market, mat
           <h3 className="truncate text-[12px] font-black text-on-surface">Orders & Positions</h3>
           <p className="truncate text-[10px] text-cyan-100/62">Live order status and open positions</p>
         </div>
-        <span className={`rounded border px-2 py-0.5 text-[9px] font-black ${
-          isSyncing ? "border-[#FFB300]/25 bg-[#FFB300]/10 text-[#FFB300]" : "border-primary/20 bg-primary/10 text-primary"
-        }`}>
+        <span className={`rounded border px-2 py-0.5 text-[9px] font-black ${isSyncing ? "border-[#FFB300]/25 bg-[#FFB300]/10 text-[#FFB300]" : "border-primary/20 bg-primary/10 text-primary"
+          }`}>
           {isSyncing ? "SYNCING" : "LIVE"}
         </span>
       </div>
@@ -121,11 +120,10 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`flex h-7 items-center justify-center gap-1 rounded text-[10px] font-black transition-colors ${
-        active
+      className={`flex h-7 items-center justify-center gap-1 rounded text-[10px] font-black transition-colors ${active
           ? "bg-primary/15 text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
           : "text-on-surface-variant hover:bg-white/5 hover:text-on-surface"
-      }`}
+        }`}
     >
       <span>{children}</span>
       <span className="font-data-tabular opacity-80">({count})</span>
@@ -273,17 +271,16 @@ function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading
                               setOrderSize(Math.abs(position.lots));
                             }
                           }}
-                          className={`rounded border px-2 py-0.5 text-[9px] font-black active:scale-95 transition-all ${
-                            closingPositionId === position._id
+                          className={`rounded border px-2 py-0.5 text-[9px] font-black active:scale-95 transition-all ${closingPositionId === position._id
                               ? "border-white/20 bg-white/5 text-on-surface hover:bg-white/10"
                               : "border-bear-red/50 bg-bear-red/10 text-bear-red hover:bg-bear-red/20 shadow-[0_0_10px_rgba(239,68,68,0.15)]"
-                          }`}
+                            }`}
                         >
                           {closingPositionId === position._id ? "Cancel" : "Exit"}
                         </button>
                       </div>
                     </div>
-                    
+
                     <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2 font-data-tabular text-[10px] text-center">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[8px] text-on-surface-variant uppercase font-black">Lots</span>
@@ -304,12 +301,12 @@ function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading
                         </span>
                       </div>
                     </div>
-                    
+
                     {closingPositionId === position._id && (
-                      <InlinePositionCloseForm 
-                        position={position} 
-                        liveLtp={position.liveLtp} 
-                        onCancel={() => setClosingPositionId(null)} 
+                      <InlinePositionCloseForm
+                        position={position}
+                        liveLtp={position.liveLtp}
+                        onCancel={() => setClosingPositionId(null)}
                       />
                     )}
                   </div>
@@ -393,12 +390,12 @@ function InlinePositionCloseForm({
   const maxQty = Math.abs(position.lots);
   const [qty, setQty] = useState<number>(maxQty);
   const [price, setPrice] = useState<number>(liveLtp);
-  
+
   const isLong = position.lots > 0;
   const side = isLong ? "sell" : "buy";
   const actionText = side === "sell" ? "Sell" : "Buy";
   const { mutate: createOrder, isPending } = useCreateOrder();
-  
+
   const handleSubmit = () => {
     createOrder(
       {
@@ -496,11 +493,10 @@ function PanelState({ label }: { label: string }) {
 function SidePill({ side }: { side: "BUY" | "SELL" }) {
   return (
     <span
-      className={`rounded border px-1.5 py-0.5 text-[9px] font-black ${
-        side === "BUY"
+      className={`rounded border px-1.5 py-0.5 text-[9px] font-black ${side === "BUY"
           ? "border-bull-green/25 bg-bull-green/10 text-bull-green"
           : "border-bear-red/25 bg-bear-red/10 text-bear-red"
-      }`}
+        }`}
     >
       {side}
     </span>

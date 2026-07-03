@@ -19,11 +19,7 @@ export default function SideNavBar() {
     { label: "Match Analysis", icon: "analytics", href: primaryInsightHref },
   ];
 
-  const intelligenceLinks = [
-    { label: "Intelligence HQ", icon: "psychology", href: primaryInsightHref },
-    { label: "DNA Engine", icon: "biotech", href: primaryInsightHref },
-    { label: "News Terminal", icon: "newspaper", href: "/dashboard" },
-  ];
+
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
@@ -65,23 +61,7 @@ export default function SideNavBar() {
           </Link>
         ))}
 
-        <p className="px-3 py-1 mt-3 text-[8px] font-bold text-on-surface-variant uppercase tracking-widest">
-          Intelligence HQ
-        </p>
-        {intelligenceLinks.map((link) => (
-          <Link
-            key={link.label}
-            href={link.href}
-            className={
-              isActive(link.href)
-                ? "bg-primary/15 text-primary font-bold rounded flex items-center gap-2 px-3 py-1.5 text-[11px]"
-                : "text-on-surface-variant hover:text-on-surface hover:bg-surface-bright flex items-center gap-2 px-3 py-1.5 transition-all rounded text-[11px]"
-            }
-          >
-            <span className="material-symbols-outlined text-[16px]">{link.icon}</span>
-            <span>{link.label}</span>
-          </Link>
-        ))}
+
 
         <p className="px-3 py-1 mt-3 text-[8px] font-bold text-on-surface-variant uppercase tracking-widest">
           Account Settings

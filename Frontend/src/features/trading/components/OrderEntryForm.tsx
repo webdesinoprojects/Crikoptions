@@ -189,7 +189,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
       className="relative flex h-fit w-full min-w-0 shrink-0 flex-col gap-2.5 overflow-hidden rounded-xl border border-cyan-300/20 bg-[#040a17]/95 p-3 shadow-[0_30px_100px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:gap-3 sm:rounded-2xl sm:p-4"
     >
       <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-cyan-400/70 to-transparent" />
-      
+
       {/* Header Area */}
       <div className="flex shrink-0 items-start justify-between gap-2 pb-1">
         <div className="min-w-0">
@@ -218,13 +218,12 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
               setSelectedSide(option);
               setPriceOverride(null);
             }}
-            className={`h-7 rounded-md text-[11px] font-black transition-all ${
-              side === option
+            className={`h-7 rounded-md text-[11px] font-black transition-all ${side === option
                 ? option === "BUY"
                   ? "bg-bull-green text-white shadow-[0_8px_22px_rgba(34,197,94,0.18)]"
                   : "bg-bear-red text-white shadow-[0_8px_22px_rgba(239,68,68,0.18)]"
                 : "text-on-surface-variant hover:text-on-surface"
-            }`}
+              }`}
           >
             {option}
           </button>
@@ -237,11 +236,10 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
             key={option}
             type="button"
             onClick={() => setType(option)}
-            className={`flex h-7 items-center justify-center gap-1 rounded-md text-[10px] font-black transition-all ${
-              type === option
+            className={`flex h-7 items-center justify-center gap-1 rounded-md text-[10px] font-black transition-all ${type === option
                 ? "bg-primary/15 text-primary"
                 : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
-            }`}
+              }`}
           >
             {option === "MARKET" ? <Zap className="h-3 w-3" /> : <ShieldCheck className="h-3 w-3" />}
             {option}
@@ -321,9 +319,8 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
         <button
           type="submit"
           disabled={submitDisabled}
-          className={`inline-flex h-11 min-w-0 shrink-0 items-center justify-center gap-2 rounded-xl px-2 text-[12px] font-black text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_8px_20px_rgba(0,0,0,0.4)] transition-all hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_12px_25px_rgba(0,0,0,0.6)] hover:-translate-y-0.5 active:translate-y-0 sm:text-[14px] ${
-            side === "BUY" ? "bg-bull-green hover:bg-bull-green/90 shadow-bull-green/20" : "bg-bear-red hover:bg-bear-red/90 shadow-bear-red/20"
-          } disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none`}
+          className={`inline-flex h-11 min-w-0 shrink-0 items-center justify-center gap-2 rounded-xl px-2 text-[12px] font-black text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_8px_20px_rgba(0,0,0,0.4)] transition-all hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_12px_25px_rgba(0,0,0,0.6)] hover:-translate-y-0.5 active:translate-y-0 sm:text-[14px] ${side === "BUY" ? "bg-bull-green hover:bg-bull-green/90 shadow-bull-green/20" : "bg-bear-red hover:bg-bear-red/90 shadow-bear-red/20"
+            } disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none`}
         >
           {isCreatingOrder ? (
             <>
@@ -439,9 +436,8 @@ const ImpactCell = React.memo(function ImpactCell({
   value: string;
 }) {
   return (
-    <div className={`min-w-0 rounded border px-1.5 py-1 ${align === "right" ? "text-right" : ""} ${
-      danger ? "border-bear-red/30 bg-bear-red/10 text-bear-red" : "border-white/8 bg-[#040a17] text-on-surface-variant"
-    }`}>
+    <div className={`min-w-0 rounded border px-1.5 py-1 ${align === "right" ? "text-right" : ""} ${danger ? "border-bear-red/30 bg-bear-red/10 text-bear-red" : "border-white/8 bg-[#040a17] text-on-surface-variant"
+      }`}>
       <div className="truncate">{label}</div>
       <div className={`truncate font-black ${strong || !danger ? "text-on-surface" : ""}`}>{value}</div>
     </div>
@@ -451,11 +447,10 @@ const ImpactCell = React.memo(function ImpactCell({
 const StatusPill = React.memo(function StatusPill({ side }: { side: "BUY" | "SELL" }) {
   return (
     <span
-      className={`rounded-md border px-2 py-1 text-[10px] font-black ${
-        side === "BUY"
+      className={`rounded-md border px-2 py-1 text-[10px] font-black ${side === "BUY"
           ? "border-bull-green/20 bg-bull-green/10 text-bull-green"
           : "border-bear-red/20 bg-bear-red/10 text-bear-red"
-      }`}
+        }`}
     >
       {side}
     </span>

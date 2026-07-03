@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import NumberFlow from "@number-flow/react";
 import { Activity, Gauge, Info, Radio, Swords } from "lucide-react";
 import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { cn } from "@/lib/utils";
@@ -85,7 +86,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
             <TeamMark code={teamCode(match?.homeTeam.shortName || match?.homeTeam.name)} active={innings === 1} />
             <div className="min-w-0 text-center">
               <div className="font-data-tabular text-[25px] font-black leading-none tracking-[-0.04em] text-cyan-300">
-                {battingCode} {currentScore}/{wickets}
+                {battingCode} <NumberFlow value={currentScore} />/<NumberFlow value={wickets} />
                 <span className="ml-1.5 text-[12px] font-semibold tracking-normal text-slate-400">({overs} ov)</span>
               </div>
               <div className="mt-2 truncate text-[10px] text-slate-400">
@@ -94,9 +95,9 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
               </div>
               {isChase && (
                 <div className="mt-1.5 font-data-tabular text-[11px] font-bold text-amber-200">
-                  Target {targetScore}
+                  Target <NumberFlow value={targetScore} />
                   <span className="mx-1.5 font-normal text-slate-500">·</span>
-                  Need {runsNeeded} off {ballsLeft}
+                  Need <NumberFlow value={runsNeeded} /> off <NumberFlow value={ballsLeft} />
                 </div>
               )}
             </div>
@@ -106,20 +107,20 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
           <div className={cn("mt-3 grid gap-2", isChase ? "grid-cols-3" : "grid-cols-2")}>
             <StatBox
               label="CRR · runs/over"
-              value={crr.toFixed(2)}
+              value={<NumberFlow value={crr} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} />}
               hint={ballsBowled > 0 ? `${currentScore} ÷ ${ballsBowled} balls × 6` : "Starts after first ball"}
             />
             {isChase ? (
               <>
                 <StatBox
                   label="Target"
-                  value={String(targetScore)}
+                  value={<NumberFlow value={targetScore} />}
                   hint={`${battingCode} need ${targetScore} to win`}
                   tone="cyan"
                 />
                 <StatBox
                   label="RRR · required"
-                  value={rrr > 0 ? rrr.toFixed(2) : "—"}
+                  value={rrr > 0 ? <NumberFlow value={rrr} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} /> : "—"}
                   hint={runsNeeded > 0 ? `${runsNeeded} runs in ${ballsLeft} balls` : "Chase complete"}
                   tone="cyan"
                 />
@@ -127,7 +128,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
             ) : (
               <StatBox
                 label="Projected"
-                value={projectionReady ? String(projected) : "—"}
+                value={projectionReady ? <NumberFlow value={projected} /> : "—"}
                 hint={projectionReady ? "At current run rate" : "Available after 1 over"}
                 tone="cyan"
               />
@@ -334,7 +335,7 @@ function PulseRow({ label, tone = "muted", value }: { label: string; tone?: "cya
   );
 }
 
-function StatBox({ hint, label, tone, value }: { hint: string; label: string; tone?: "cyan"; value: string }) {
+function StatBox({ hint, label, tone, value }: { hint: string; label: string; tone?: "cyan"; value: React.ReactNode }) {
   return (
     <div className="rounded-[6px] border border-cyan-100/12 bg-[#07152a]/90 px-3 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
       <div className="text-[9px] uppercase tracking-[0.1em] text-slate-400">{label}</div>

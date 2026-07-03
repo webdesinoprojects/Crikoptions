@@ -54,7 +54,7 @@ export default function TopNavBar() {
     { name: "Trading Terminal", href: primaryMarketHref, icon: <TrendingUp className="w-4 h-4" /> },
     { name: "Market Scanner", href: "/market-scanner", icon: <Activity className="w-4 h-4" /> },
     { name: "Portfolio Hub", href: "/portfolio", icon: <Wallet className="w-4 h-4" /> },
-    { name: "Intelligence HQ", href: primaryInsightHref, icon: <Compass className="w-4 h-4" /> },
+
     ...(user?.role === "admin"
       ? [{ name: "Admin", href: "/admin", icon: <Settings className="w-4 h-4" /> }]
       : []),

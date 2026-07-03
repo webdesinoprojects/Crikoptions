@@ -160,60 +160,7 @@ export function SessionNavBar() {
                       </motion.li>
                     </Link>
 
-                    <Separator className="w-full my-2 bg-outline/10" />
 
-                    {!isCollapsed && (
-                        <p className="px-2 py-1 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest whitespace-nowrap">
-                          Intelligence HQ
-                        </p>
-                    )}
-
-                    <Link
-                      href={primaryInsightHref}
-                      className={cn(
-                        "flex h-11 w-full flex-row items-center rounded-md px-3 py-2 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
-                        isCollapsed && "justify-center px-0",
-                        pathname?.includes("/insights") && "bg-primary/15 text-primary font-bold shadow-[inset_3px_0_0_rgba(14,165,233,0.9)] hover:bg-primary/20 hover:text-primary",
-                      )}
-                    >
-                      <BrainCircuit className="h-5 w-5 shrink-0" />
-                      <motion.li variants={variants}>
-                        {!isCollapsed && (
-                          <div className="ml-3 flex items-center gap-2 whitespace-nowrap">
-                            <p className="text-sm">Intelligence HQ</p>
-                            <Badge className="h-fit w-fit items-center gap-1.5 rounded border-none bg-primary/20 px-1.5 text-primary text-[10px]" variant="outline">
-                              BETA
-                            </Badge>
-                          </div>
-                        )}
-                      </motion.li>
-                    </Link>
-
-                    <Link
-                      href={primaryInsightHref}
-                      className={cn(
-                        "flex h-11 w-full flex-row items-center rounded-md px-3 py-2 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
-                        isCollapsed && "justify-center px-0",
-                      )}
-                    >
-                      <Dna className="h-5 w-5 shrink-0" />
-                      <motion.li variants={variants}>
-                        {!isCollapsed && <p className="ml-3 text-sm whitespace-nowrap">DNA Engine</p>}
-                      </motion.li>
-                    </Link>
-                    
-                    <Link
-                      href="#"
-                      className={cn(
-                        "flex h-11 w-full flex-row items-center rounded-md px-3 py-2 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
-                        isCollapsed && "justify-center px-0",
-                      )}
-                    >
-                      <Newspaper className="h-5 w-5 shrink-0" />
-                      <motion.li variants={variants}>
-                        {!isCollapsed && <p className="ml-3 text-sm whitespace-nowrap">News Terminal</p>}
-                      </motion.li>
-                    </Link>
 
                   </div>
                 </ScrollArea>

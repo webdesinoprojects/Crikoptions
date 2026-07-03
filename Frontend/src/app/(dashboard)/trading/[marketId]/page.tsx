@@ -121,7 +121,7 @@ export default function TradingTerminalPage({ params }: PageProps) {
           </div>
           <section className="flex min-h-0 flex-col gap-2 overflow-y-auto pr-1 lg:h-full" data-terminal-panel>
             <OrderEntryForm matchId={matchId} marketId={marketId} match={match} />
-            <TradingActivityPanel className="min-h-[260px] shrink-0 lg:flex-1" matchId={matchId} marketId={marketId} match={match} market={market} />
+            <TradingActivityPanel className="min-h-[500px] shrink-0 lg:flex-1" matchId={matchId} marketId={marketId} match={match} market={market} />
           </section>
         </div>
       </main>
