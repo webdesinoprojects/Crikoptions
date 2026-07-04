@@ -1,5 +1,5 @@
 import { socketManager } from "./socket-manager";
-import type { PortfolioSummary } from "@/types";
+import type { PortfolioSummary } from "@/features/portfolio/types/portfolio";
 
 /**
  * Interface contract for WebSocket Portfolio subscriptions.
