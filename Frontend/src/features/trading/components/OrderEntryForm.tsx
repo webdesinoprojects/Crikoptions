@@ -8,6 +8,7 @@ import { terminalPollInterval } from "../hooks/query-keys";
 import { useCreateOrder, useMarketDetail, useOptionChain, useOrderPreview } from "../hooks";
 import { buildOptionRows, buildPricePayload, findAtmRow } from "../utils/terminal-context";
 import { formatMoney, formatTime } from "@/utils/format";
+import { v4 as uuidv4 } from "uuid";
 
 interface OrderEntryFormProps {
   matchId: string;
@@ -141,6 +142,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
     }
     createOrder(
       {
+        clientOrderId: uuidv4(),
         matchId,
         marketId,
         strike: selectedStrikeValue,
@@ -190,7 +192,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   return (
     <form
       onSubmit={handleSubmit}
-      className="relative flex h-fit w-full min-w-0 shrink-0 flex-col gap-2.5 overflow-hidden rounded-xl border border-cyan-300/20 bg-[#040a17]/95 p-3 shadow-[0_30px_100px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:gap-3 sm:rounded-2xl sm:p-4"
+      className="relative flex h-fit w-full min-w-0 shrink-0 flex-col gap-2 overflow-hidden rounded-xl border border-cyan-300/20 bg-[#040a17]/95 p-2.5 shadow-[0_30px_100px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:gap-2.5 sm:rounded-2xl sm:p-3"
     >
       <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-cyan-400/70 to-transparent" />
 

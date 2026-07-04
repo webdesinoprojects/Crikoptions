@@ -11,7 +11,7 @@ import {
   OrderEntryForm,
   TradingActivityPanel,
 } from "@/features/trading/components";
-import { useMarketDetail, useMatchScoreStream } from "@/features/trading/hooks";
+import { useMarketDetail, useMatchScoreStream, useUserStream } from "@/features/trading/hooks";
 import { useLiveMatches, useMatchDetails } from "@/features/dashboard/hooks";
 import { useTerminalStore } from "@/stores/terminal.store";
 
@@ -42,6 +42,7 @@ export default function TradingTerminalPage({ params }: PageProps) {
   const { data: match } = useMatchDetails(matchId);
   // Backend WS topics use hex _id; cache key stays on market short matchId.
   useMatchScoreStream(matchId, match?.id);
+  useUserStream(matchId);
   const { data: matches = [] } = useLiveMatches();
 
   React.useEffect(() => {

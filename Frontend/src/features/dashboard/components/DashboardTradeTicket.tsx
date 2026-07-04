@@ -34,7 +34,7 @@ export function DashboardTradeTicket() {
   };
 
   return (
-    <TerminalPanel title="Quick Trade Ticket" subtitle="Backend order routing" className="h-[260px] text-xs">
+    <TerminalPanel title="Quick Trade Ticket" subtitle="Backend order routing" className="h-[250px] text-[11px]">
       <form onSubmit={handleTrade} className="flex-1 flex flex-col justify-between min-h-0 select-none">
         <div className="grid grid-cols-2 gap-1.5 p-0.5 bg-surface-dim border border-outline/5 rounded">
           {(["BUY", "SELL"] as const).map((option) => (
@@ -65,7 +65,7 @@ export function DashboardTradeTicket() {
                   setMarketId(e.target.value);
                   setPrice(0);
                 }}
-                className="bg-surface-dim border border-outline/10 rounded px-2 py-1 text-xs text-on-surface focus:outline-none focus:border-primary font-bold font-data-tabular"
+                className="bg-surface-dim border border-outline/10 rounded px-1.5 py-0.5 text-[11px] text-on-surface focus:outline-none focus:border-primary font-bold font-data-tabular"
               >
                 <option value="">0</option>
                 {tickers?.map((ticker) => (
@@ -82,7 +82,7 @@ export function DashboardTradeTicket() {
                 step="0.05"
                 value={price || backendPrice}
                 onChange={(e) => setPrice(Number.parseFloat(e.target.value) || 0)}
-                className="bg-surface-dim border border-outline/10 rounded px-2 py-1 text-xs text-on-surface focus:outline-none focus:border-primary font-data-tabular"
+                className="bg-surface-dim border border-outline/10 rounded px-1.5 py-0.5 text-[11px] text-on-surface focus:outline-none focus:border-primary font-data-tabular"
               />
             </div>
           </div>
@@ -94,7 +94,7 @@ export function DashboardTradeTicket() {
                 type="number"
                 value={qty}
                 onChange={(e) => setQty(Number.parseInt(e.target.value, 10) || 0)}
-                className="bg-surface-dim border border-outline/10 rounded px-2 py-1 text-xs text-on-surface focus:outline-none focus:border-primary font-data-tabular"
+                className="bg-surface-dim border border-outline/10 rounded px-1.5 py-0.5 text-[11px] text-on-surface focus:outline-none focus:border-primary font-data-tabular"
               />
             </div>
             <div className="flex flex-col gap-0.5 justify-end">

@@ -399,7 +399,7 @@ function InlinePositionCloseForm({
 
   const isLong = position.lots > 0;
   const side = isLong ? "sell" : "buy";
-  const actionText = side === "sell" ? "Sell" : "Buy";
+  const actionText = side === "sell" ? "Sell to Exit" : "Buy to Exit";
   const { mutate: createOrder, isPending } = useCreateOrder();
 
   const handleSubmit = () => {

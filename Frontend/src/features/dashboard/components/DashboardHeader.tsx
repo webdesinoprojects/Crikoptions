@@ -4,10 +4,10 @@ import React, { useState, useEffect } from "react";
 import { Wallet, TrendingUp, Briefcase, Trophy, Plus } from "lucide-react";
 import { useAuthStore } from "@/features/auth/hooks/useAuth";
 import { usePositions } from "@/features/portfolio/hooks";
-import { AddFundsModal } from "@/features/wallet/components/AddFundsModal";
+import { AddFundsModal } from "@/features/wallet/components/AddFundsModal";import { PortfolioSummary } from "@/types";
 
 interface DashboardHeaderProps {
-  overview: any;
+  overview: PortfolioSummary | undefined;
 }
 
 function getGreeting(name: string) {
@@ -36,9 +36,14 @@ export function DashboardHeader({ overview }: DashboardHeaderProps) {
   const pnlPositive = todaysPnL >= 0;
 
   useEffect(() => {
-    setGreeting(getGreeting(userName));
-    const timer = setInterval(() => setGreeting(getGreeting(userName)), 60_000);
-    return () => clearInterval(timer);
+    const timerId = setTimeout(() => {
+      setGreeting(getGreeting(userName));
+    }, 0);
+    const intervalId = setInterval(() => setGreeting(getGreeting(userName)), 60_000);
+    return () => {
+      clearTimeout(timerId);
+      clearInterval(intervalId);
+    };
   }, [userName]);
 
   return (

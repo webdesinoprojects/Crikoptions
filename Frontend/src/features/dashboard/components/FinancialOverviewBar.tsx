@@ -39,9 +39,9 @@ export function FinancialOverviewBar() {
               <DataSourceBadge source="derived" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-xl font-headline-md font-bold">{metric.value}</span>
+              <span className="text-xl font-headline-md font-bold font-data-tabular">{metric.value}</span>
               {metric.trend !== undefined && (
-                <span className={`text-xs font-bold ${metric.trend >= 0 ? "text-bull-green" : "text-bear-red"}`}>
+                <span className={`text-xs font-bold font-data-tabular ${metric.trend >= 0 ? "text-bull-green" : "text-bear-red"}`}>
                   {metric.trend >= 0 ? "+" : ""}
                   {metric.trend}%
                 </span>

@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { X, Plus, Wallet, Loader2, Check } from "lucide-react";
 import { walletService } from "../services/wallet.service";
 import { useQueryClient } from "@tanstack/react-query";
+import { PortfolioSummary } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface AddFundsModalProps {
@@ -34,8 +35,11 @@ export function AddFundsModal({ isOpen, onClose, onSuccess }: AddFundsModalProps
   // Fetch initial balance so we have the 'previous' balance ready
   useEffect(() => {
     if (isOpen) {
-      const currentOverview = queryClient.getQueryData<any>(["dashboard", "overview"]);
-      setPreviousBalance(currentOverview?.marginAvailable ?? 0);
+      const timer = setTimeout(() => {
+        const currentOverview = queryClient.getQueryData<PortfolioSummary>(["dashboard", "overview"]);
+        setPreviousBalance(currentOverview?.marginAvailable ?? 0);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [isOpen, queryClient]);
 

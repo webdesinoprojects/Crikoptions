@@ -6,6 +6,7 @@ import { walletKeys } from "@/features/wallet/hooks";
 import { useAuthStore } from "@/features/auth/hooks/useAuth";
 import { orderStream } from "@/lib/websocket/order.stream";
 import { patchOpenPositionsCache, refreshAfterExit, tradingQueryKeys } from "./query-keys";
+import { usePortfolioStream } from "./usePortfolioMetrics";
 
 /**
  * Subscribes to the authenticated user's private order/position topics
@@ -16,6 +17,9 @@ import { patchOpenPositionsCache, refreshAfterExit, tradingQueryKeys } from "./q
 export function useUserStream(matchId?: string) {
   const queryClient = useQueryClient();
   const userId = useAuthStore((state) => state.user?.id);
+
+  // Mount portfolio stream here so it's active wherever user streams are needed
+  usePortfolioStream(userId);
 
   useEffect(() => {
     if (!userId) return;

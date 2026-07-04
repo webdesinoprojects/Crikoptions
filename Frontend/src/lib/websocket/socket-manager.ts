@@ -1,7 +1,7 @@
 export type WebSocketCallback<T = unknown> = (data: T) => void;
 
-const MAX_RECONNECT_ATTEMPTS = 5;
-const RECONNECT_BASE_MS = 3000;
+const RECONNECT_BASE_MS = 1000;
+const RECONNECT_MAX_MS = 30000;
 
 function isWebSocketEnabled() {
   return process.env.NEXT_PUBLIC_WS_ENABLED === "true";
@@ -64,11 +64,6 @@ class SocketManager {
       return this.socket;
     }
 
-    if (this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-      this.disableWithWarning("max reconnect attempts reached");
-      return null;
-    }
-
     this.isConnecting = true;
 
     try {
@@ -113,11 +108,6 @@ class SocketManager {
       this.socket = null;
       this.reconnectAttempts += 1;
 
-      if (this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-        this.disableWithWarning("server closed connection");
-        return;
-      }
-
       this.scheduleReconnect();
     };
 
@@ -131,12 +121,6 @@ class SocketManager {
 
   private handleConnectionFailure(reason: string) {
     this.reconnectAttempts += 1;
-
-    if (this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-      this.disableWithWarning(reason);
-      return;
-    }
-
     this.scheduleReconnect();
   }
 
@@ -164,7 +148,11 @@ class SocketManager {
   private scheduleReconnect() {
     if (this.disabled || this.reconnectTimer) return;
 
-    const delay = RECONNECT_BASE_MS * Math.min(this.reconnectAttempts, 3);
+    // Exponential backoff with jitter (max 30s)
+    const base = RECONNECT_BASE_MS * Math.pow(1.5, this.reconnectAttempts - 1);
+    const jitter = Math.random() * 1000;
+    const delay = Math.min(base + jitter, RECONNECT_MAX_MS);
+
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
       this.connect();
