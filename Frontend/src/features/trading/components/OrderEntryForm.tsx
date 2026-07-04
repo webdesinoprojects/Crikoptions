@@ -81,13 +81,15 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   }, [marketId, matchId, payload, priceValue, qtyValue, selectedStrikeValue, side, type]);
   const { data: orderPreview } = useOrderPreview(previewPayload);
   const localNotional = roundMoney(priceValue * qtyValue);
-  const notional = localNotional;
-  const cashRequired = side === "BUY" ? localNotional : 0;
+  const notional = orderPreview?.notional ?? localNotional;
+  const marginRequired = orderPreview?.marginRequired ?? localNotional;
   const availableBalance = orderPreview?.availableBalance ?? wallet?.availableBalance ?? 0;
-  const showBalanceWarning = side === "BUY" && cashRequired > availableBalance;
+  const showBalanceWarning = orderPreview ? !orderPreview.sufficientBalance : marginRequired > availableBalance;
+  const previewMessage = orderPreview?.message ?? "";
   const willExecuteNow = isMarketOrder || (isLimitWithQuote && buyWithinSpread);
   const submitDisabled =
     isCreatingOrder ||
+    showBalanceWarning ||
     !matchId ||
     !marketId ||
     !selectedStrikeValue ||
@@ -146,6 +148,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
         type,
         quantity: qtyValue,
         price: priceValue,
+        pricingSnapshot: payload,
       },
       {
         onSuccess: (data) => {
@@ -177,6 +180,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
     marketId,
     matchId,
     priceValue,
+    payload,
     qtyValue,
     selectedStrikeValue,
     side,
@@ -198,7 +202,9 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
             <StatusPill side={side} />
           </div>
           <p className="mt-0.5 truncate text-[11px] font-semibold text-cyan-200/70 sm:text-xs">
-            {selectedStrikeValue ? `Strike ${selectedStrikeValue.toFixed(0)} selected` : market?.title ?? "Select a strike"}
+            {selectedStrikeValue
+              ? `Strike ${selectedStrikeValue.toFixed(0)}${previewMessage ? ` - ${previewMessage}` : " selected"}`
+              : market?.title ?? "Select a strike"}
           </p>
         </div>
       </div>
@@ -306,11 +312,10 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
 
       <OrderImpactPanel
         availableBalance={availableBalance}
-        cashRequired={cashRequired}
         danger={showBalanceWarning}
+        marginRequired={marginRequired}
         notional={notional}
         price={priceValue}
-        side={side}
       />
 
       {lastOrder && <OrderReceipt order={lastOrder} submittedAt={lastOrderTime} />}
@@ -331,7 +336,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
             <>
               {willExecuteNow ? <Zap className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
               {side === "BUY" ? "Buy" : "Sell"} {type} @ Rs {formatMoney(priceValue)}
-              {qtyValue > 1 ? ` · ${formatMoney(notional)}` : ""}
+              {qtyValue > 1 ? ` - ${formatMoney(notional)}` : ""}
             </>
           )}
         </button>
@@ -393,18 +398,16 @@ const QuoteBox = React.memo(function QuoteBox({
 
 const OrderImpactPanel = React.memo(function OrderImpactPanel({
   availableBalance,
-  cashRequired,
   danger,
+  marginRequired,
   notional,
   price,
-  side,
 }: {
   availableBalance: number;
-  cashRequired: number;
   danger: boolean;
+  marginRequired: number;
   notional: number;
   price: number;
-  side: "BUY" | "SELL";
 }) {
   return (
     <div className="shrink-0 rounded-lg border border-white/8 bg-[#071327]/90 p-1.5">
@@ -414,7 +417,7 @@ const OrderImpactPanel = React.memo(function OrderImpactPanel({
         <ImpactCell
           danger={danger}
           label="Margin"
-          value={`Rs ${formatMoney(side === "BUY" ? cashRequired : 0)}`}
+          value={`Rs ${formatMoney(marginRequired)}`}
         />
         <ImpactCell danger={danger} label="Available" value={`Rs ${formatMoney(availableBalance)}`} align="right" />
       </div>

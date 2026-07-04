@@ -15,9 +15,17 @@ export interface OrderUpdateEvent {
 export interface PositionUpdateEvent {
   userId: string;
   marketId: string;
-  quantity: number; // positive for long, negative for short
-  averageEntryPrice: number;
-  unrealizedPnL: number;
+  strike?: number;
+  quantity?: number; // legacy: positive for long, negative for short
+  lots?: number;
+  averageEntryPrice?: number;
+  buyPrice?: number;
+  sellPrice?: number;
+  ltp?: number;
+  pnl?: number;
+  unrealizedPnL?: number;
+  realizedPnl?: number;
+  status?: string;
   timestamp: string;
 }
 

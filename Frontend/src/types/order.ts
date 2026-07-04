@@ -7,9 +7,13 @@ export interface Order {
   strike: number;
   side: "BUY" | "SELL";
   type: "MARKET" | "LIMIT" | "STOP";
+  positionEffect?: "AUTO" | "OPEN" | "CLOSE" | string;
+  positionIntent?: string;
   status: "PENDING" | "PARTIAL" | "FILLED" | "CANCELLED" | "REJECTED" | "UNKNOWN";
   backendStatus: BackendOrderStatus;
   price?: number;
+  reservedAmount?: number;
+  reservedQuantity?: number;
   quantity: number;
   filledQuantity: number;
   remainingQuantity: number;

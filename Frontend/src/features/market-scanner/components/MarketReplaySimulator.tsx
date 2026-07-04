@@ -25,7 +25,7 @@ import type { BackendMarket } from "@/lib/adapters/market.adapter";
 import { getErrorMessage } from "@/lib/error-message";
 import { cn } from "@/lib/utils";
 import type { Order } from "@/types";
-import { useCancelOrder, useCreateOrder, useOpenPositions, useOrders, terminalPollInterval } from "@/features/trading/hooks";
+import { useCancelOrder, useCreateOrder, useOpenPositions, useOrderPreview, useOrders, terminalPollInterval } from "@/features/trading/hooks";
 import type { OpenPosition } from "@/features/trading/types/position";
 import type { CalculatedPrice, CalculatePricePayload } from "@/features/trading/services/trading.service";
 import { tradingService } from "@/features/trading/services/trading.service";
@@ -139,7 +139,7 @@ export function MarketReplaySimulator() {
   const marketPositions = useMemo(() => {
     const positions = positionsQuery.data ?? [];
     return positions.filter(
-      (position) => position.marketId === matchConfig.marketId && position.strike > 0 && position.lots > 0
+      (position) => position.marketId === matchConfig.marketId && position.strike > 0 && position.lots !== 0
     );
   }, [matchConfig.marketId, positionsQuery.data]);
 
@@ -164,9 +164,24 @@ export function MarketReplaySimulator() {
   };
 
   const expectedPrice = orderPriceForSide(tradeSide);
+  const orderPreviewPayload =
+    selectedRow && pricingPayload && orderMatchId && expectedPrice > 0 && (orderType !== "LIMIT" || limitPrice > 0)
+      ? {
+          matchId: orderMatchId,
+          marketId: matchConfig.marketId,
+          strike: selectedRow.strike,
+          side: tradeSide.toLowerCase() as "buy" | "sell",
+          type: orderType,
+          quantity: lots,
+          price: expectedPrice,
+          pricingSnapshot: pricingPayload,
+        }
+      : undefined;
+  const orderPreviewQuery = useOrderPreview(orderPreviewPayload);
   const availableBalance = walletQuery.data?.availableBalance;
-  const openLotsForStrike = Math.max(0, selectedPositionMark?.position.lots ?? 0);
-  const risk = buildRiskSnapshot({
+  const netLotsForStrike = selectedPositionMark?.position.lots ?? 0;
+  const openLotsForStrike = Math.abs(netLotsForStrike);
+  const baseRisk = buildRiskSnapshot({
     event: selectedEvent,
     lots,
     maxModelScore: maxModeledSettlementScore(selectedEvent, pricingPayload),
@@ -175,22 +190,33 @@ export function MarketReplaySimulator() {
     row: selectedRow,
     side: tradeSide,
   });
+  const risk = {
+    ...baseRisk,
+    marginRequired:
+      orderPreviewQuery.data && orderPreviewQuery.data.marginRequired >= 0
+        ? `Rs ${formatMoney(orderPreviewQuery.data.marginRequired)}`
+        : baseRisk.marginRequired,
+  };
 
   const getDisabledReason = (side: TradeSide, quantity = lots) =>
     getTradeDisabledReason({
       expectedPrice: orderPriceForSide(side),
       lots: quantity,
-      openLotsForStrike,
       orderMatchId,
       pricingError: pricingQuery.isError,
       pricingLoading: pricingQuery.isLoading,
       row: selectedRow,
-      side,
     });
 
-  const canSubmitBuy = getDisabledReason("BUY") === "" && !createOrderMutation.isPending;
-  const canSubmitSell = getDisabledReason("SELL") === "" && !createOrderMutation.isPending;
-  const activeDisabledReason = getDisabledReason(tradeSide);
+  const previewDisabledReason =
+    orderPreviewQuery.data && !orderPreviewQuery.data.sufficientBalance
+      ? orderPreviewQuery.data.message || "Insufficient available wallet balance."
+      : "";
+  const activeDisabledReason = previewDisabledReason || getDisabledReason(tradeSide);
+  const canSubmitBuy =
+    (tradeSide === "BUY" ? activeDisabledReason : getDisabledReason("BUY")) === "" && !createOrderMutation.isPending;
+  const canSubmitSell =
+    (tradeSide === "SELL" ? activeDisabledReason : getDisabledReason("SELL")) === "" && !createOrderMutation.isPending;
 
   const selectEvent = (event: ReplayEvent) => setSelectedEventId(event.id);
 
@@ -230,6 +256,10 @@ export function MarketReplaySimulator() {
     const reason = getDisabledReason(side, quantity);
     if (reason) {
       toast.error(reason);
+      return;
+    }
+    if (side === tradeSide && orderPreviewQuery.data && !orderPreviewQuery.data.sufficientBalance) {
+      toast.error(orderPreviewQuery.data.message || "Insufficient available wallet balance.");
       return;
     }
     if (!selectedRow || !pricingPayload || !orderMatchId || !selectedEvent) return;
@@ -275,22 +305,26 @@ export function MarketReplaySimulator() {
     }
 
     setSelectedStrike(mark.position.strike);
-    setTradeSide("SELL");
+    const exitSide: TradeSide = mark.position.lots < 0 ? "BUY" : "SELL";
+    const exitPrice = exitSide === "BUY" ? row.ask : row.bid;
+    const exitQuantity = Math.abs(mark.position.lots);
+    setTradeSide(exitSide);
     createOrderMutation.mutate(
       {
         clientOrderId: `scanner-exit-${matchConfig.key}-${selectedEvent.id}-${row.strike}-${Date.now()}`,
         matchId: orderMatchId,
         marketId: matchConfig.marketId,
         strike: row.strike,
-        side: "sell",
+        side: exitSide.toLowerCase() as "buy" | "sell",
         type: "MARKET",
-        quantity: mark.position.lots,
+        positionEffect: "CLOSE",
+        quantity: exitQuantity,
         price: 0,
         pricingSnapshot: pricingPayload,
       },
       {
         onSuccess: (order) => {
-          toast.success(`Exit submitted: ${order.filledQuantity || mark.position.lots} lots @ Rs ${formatMoney(order.averageFillPrice || row.bid)}`);
+          toast.success(`Exit submitted: ${order.filledQuantity || exitQuantity} lots @ Rs ${formatMoney(order.averageFillPrice || exitPrice)}`);
         },
         onError: (error: unknown) => toast.error(getErrorMessage(error, "Failed to exit trade")),
       }
@@ -815,6 +849,8 @@ function OptionChainPanel({
               {rows.map((row) => {
                 const selected = sameStrike(selectedStrike ?? -1, row.strike);
                 const mark = positionMarks.find((item) => sameStrike(item.position.strike, row.strike));
+                const markIsShort = (mark?.position.lots ?? 0) < 0;
+                const markEntryPrice = markIsShort ? mark?.position.sellPrice ?? 0 : mark?.position.buyPrice ?? 0;
                 return (
                   <React.Fragment key={row.strike}>
                     <tr
@@ -856,7 +892,7 @@ function OptionChainPanel({
                             <InlineTradeMetric value={`${mark.position.lots} Lots`} />
                             <InlineTradeMetric value={`P&L: Rs ${formatMoney(mark.pnl)}`} tone={mark.pnl >= 0 ? "up" : "down"} />
                             <InlineTradeMetric value={`Exit Price: Rs ${formatMoney(mark.markPrice)}`} />
-                            <InlineTradeMetric value={`Entry Price: Rs ${formatMoney(mark.position.buyPrice)}`} />
+                            <InlineTradeMetric value={`${markIsShort ? "Sell" : "Buy"} Entry: Rs ${formatMoney(markEntryPrice)}`} />
                             <InlineTradeMetric value={`Ball Number: ${currentEvent.legalBallNumber}`} />
                             <button
                               type="button"
@@ -967,6 +1003,8 @@ function OrdersPositionsPanel({
           <div className="space-y-1.5">
             {positions.slice(0, 4).map((mark) => {
               const selected = sameStrike(mark.position.strike, selectedStrike ?? -1);
+              const isShort = mark.position.lots < 0;
+              const entryPrice = isShort ? mark.position.sellPrice ?? 0 : mark.position.buyPrice;
               return (
                 <div
                   key={mark.position._id}
@@ -985,7 +1023,7 @@ function OrdersPositionsPanel({
                   </div>
                   <div className="mt-1 grid grid-cols-3 gap-1 font-data-tabular text-[10px] text-on-surface-variant">
                     <span>{mark.position.lots} lots</span>
-                    <span>Entry {formatMoney(mark.position.buyPrice)}</span>
+                    <span>{isShort ? "Sell" : "Buy"} {formatMoney(entryPrice)}</span>
                     <span className="text-right">Exit {formatMoney(mark.markPrice)}</span>
                   </div>
                 </div>
@@ -1217,18 +1255,22 @@ function buildRiskSnapshot({
   side: TradeSide;
 }): RiskSnapshot {
   const strike = row?.strike ?? 0;
-  const entryPrice = positionMark?.position.buyPrice ?? orderPrice;
-  const activeLots = positionMark?.position.lots ?? lots;
+  const positionLots = positionMark?.position.lots ?? 0;
+  const isShort = positionMark ? positionLots < 0 : side === "SELL";
+  const entryPrice = positionMark
+    ? isShort
+      ? positionMark.position.sellPrice ?? orderPrice
+      : positionMark.position.buyPrice
+    : orderPrice;
+  const activeLots = positionMark ? Math.abs(positionLots) : lots;
   const margin = Math.max(0, entryPrice * activeLots);
   const pnl = positionMark?.pnl ?? 0;
   const longMaxProfit = modeledLongMaxProfit({ activeLots, entryPrice, maxModelScore, strike });
+  const shortMaxProfit = `Rs ${formatMoney(Math.max(0, entryPrice * activeLots))}`;
 
   return {
     pnl,
-    maxProfit:
-      positionMark || side === "BUY"
-        ? longMaxProfit
-        : `Rs ${formatMoney(Math.max(0, orderPrice * lots))}`,
+    maxProfit: isShort ? shortMaxProfit : longMaxProfit,
     maxLoss: `Rs ${formatMoney(margin)}`,
     marginRequired: `Rs ${formatMoney(margin)}`,
     breakEven: strike > 0 && entryPrice > 0 ? formatMoney(strike + entryPrice) : "--",
@@ -1264,21 +1306,17 @@ function modeledLongMaxProfit({
 function getTradeDisabledReason({
   expectedPrice,
   lots,
-  openLotsForStrike,
   orderMatchId,
   pricingError,
   pricingLoading,
   row,
-  side,
 }: {
   expectedPrice: number;
   lots: number;
-  openLotsForStrike: number;
   orderMatchId?: string;
   pricingError: boolean;
   pricingLoading: boolean;
   row?: ChainRow;
-  side: TradeSide;
 }) {
   if (!orderMatchId) return "Market context is unavailable.";
   if (!row) return "Select a strike from the option chain.";
@@ -1286,8 +1324,6 @@ function getTradeDisabledReason({
   if (pricingError) return "Backend pricing is unavailable for this event.";
   if (expectedPrice <= 0) return "No executable quote is available for this strike.";
   if (lots <= 0) return "Enter a valid lot quantity.";
-  if (side === "SELL" && openLotsForStrike <= 0) return "Buy this strike before selling it.";
-  if (side === "SELL" && lots > openLotsForStrike) return `Only ${openLotsForStrike} lots are open for this strike.`;
   return "";
 }
 

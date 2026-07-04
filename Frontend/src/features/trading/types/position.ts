@@ -4,6 +4,7 @@ export interface OpenPosition {
   matchId: string;
   marketId: string;
   strike: number;
+  side?: "BUY" | "SELL";
   lots: number;
   buyPrice: number;
   sellPrice?: number;

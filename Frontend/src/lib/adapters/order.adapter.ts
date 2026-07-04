@@ -10,6 +10,10 @@ export interface BackendOrder {
   strike_price?: number;
   side: string;
   type?: string;
+  positionEffect?: string;
+  positionIntent?: string;
+  reservedAmount?: number;
+  reservedQuantity?: number;
   quantity: number;
   price: number;
   filledQuantity?: number;
@@ -56,9 +60,13 @@ export function adaptOrder(backend: BackendOrder): FrontendOrder {
     strike,
     side,
     type: backend.type?.toUpperCase() === "MARKET" ? "MARKET" : "LIMIT",
+    positionEffect: backend.positionEffect,
+    positionIntent: backend.positionIntent,
     status,
     backendStatus,
     price: backend.price,
+    reservedAmount: numberOrZero(backend.reservedAmount),
+    reservedQuantity: numberOrZero(backend.reservedQuantity),
     quantity,
     filledQuantity,
     remainingQuantity,

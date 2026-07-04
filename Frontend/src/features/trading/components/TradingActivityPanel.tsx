@@ -243,10 +243,12 @@ function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading
             ) : (
               filteredOpen.map((position) => {
                 const positive = position.livePnl >= 0;
+                const positionSide = position.lots < 0 || position.side === "SELL" ? "SELL" : "BUY";
                 return (
                   <div key={position._id} className="rounded-lg border border-white/8 bg-[#040a17]/50 px-2.5 py-2 hover:bg-[#040a17] transition-colors">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex min-w-0 items-center gap-2">
+                        <SidePill side={positionSide} />
                         <span className="font-data-tabular text-[11px] font-black text-on-surface">
                           Strike {position.strike}
                         </span>
@@ -333,16 +335,20 @@ function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading
             ) : (
               filteredClosed.map((trade) => {
                 const positive = trade.realizedPnL >= 0;
+                const isShort = trade.side === "SELL";
                 return (
                   <div key={trade.orderId} className="rounded-lg border border-white/8 bg-[#040a17]/30 px-2.5 py-2">
                     <div className="flex items-center justify-between gap-2">
-                      <div className="flex flex-col">
-                        <span className="font-data-tabular text-[11px] font-black text-on-surface">
-                          {trade.symbol}
-                        </span>
-                        <span className="text-[9px] text-on-surface-variant mt-0.5">
-                          {new Date(trade.openedAt).toLocaleDateString("en-IN", { day: 'numeric', month: 'short' })}
-                        </span>
+                      <div className="flex min-w-0 items-center gap-2">
+                        <SidePill side={trade.side} />
+                        <div className="flex min-w-0 flex-col">
+                          <span className="truncate font-data-tabular text-[11px] font-black text-on-surface">
+                            {trade.symbol}
+                          </span>
+                          <span className="mt-0.5 text-[9px] text-on-surface-variant">
+                            {new Date(trade.openedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                          </span>
+                        </div>
                       </div>
                       <span className={`font-data-tabular text-[12px] font-black ${positive ? "text-bull-green" : "text-bear-red"}`}>
                         {positive ? "+" : "-"}Rs {Math.abs(trade.realizedPnL).toFixed(2)}
@@ -354,15 +360,15 @@ function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading
                         <span className="text-on-surface font-bold">{Math.abs(trade.quantity)}</span>
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-[8px] text-on-surface-variant uppercase font-black">LTP</span>
+                        <span className="text-[8px] text-on-surface-variant uppercase font-black">Exit</span>
                         <span className="text-on-surface font-bold">{trade.exitPrice.toFixed(2)}</span>
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-[8px] text-on-surface-variant uppercase font-black">Buy price</span>
+                        <span className="text-[8px] text-on-surface-variant uppercase font-black">{isShort ? "Sell price" : "Buy price"}</span>
                         <span className="text-on-surface font-bold">Rs {trade.entryPrice.toFixed(2)}</span>
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-[8px] text-on-surface-variant uppercase font-black">Sell price</span>
+                        <span className="text-[8px] text-on-surface-variant uppercase font-black">{isShort ? "Buy price" : "Sell price"}</span>
                         <span className="text-on-surface font-bold">Rs {trade.exitPrice.toFixed(2)}</span>
                       </div>
                     </div>
@@ -404,6 +410,7 @@ function InlinePositionCloseForm({
         strike: position.strike,
         side,
         type,
+        positionEffect: "CLOSE",
         quantity: qty,
         price: type === "MARKET" ? 0 : price,
       },

@@ -58,21 +58,35 @@ export function refreshAfterExitAll(queryClient: QueryClient) {
 }
 
 export function patchOpenPositionsCache(queryClient: QueryClient, event: PositionUpdateEvent) {
+  const hasSignedLots = typeof event.lots === "number" || typeof event.quantity === "number";
+  const eventLots = numberOrFallback(event.lots, event.quantity, 0);
   queryClient.setQueryData<OpenPosition[]>(tradingQueryKeys.openPositions, (current = []) =>
     current
       .map((position) => {
-        if (position.marketId !== event.marketId) return position;
+        const samePosition =
+          position.marketId === event.marketId &&
+          (typeof event.strike !== "number" || Math.abs(position.strike - event.strike) < 0.01);
+        if (!samePosition) return position;
 
         return {
           ...position,
-          lots: Math.abs(event.quantity),
-          buyPrice: event.averageEntryPrice,
-          ltp: event.averageEntryPrice,
-          pnl: event.unrealizedPnL,
+          side: hasSignedLots ? (eventLots < 0 ? "SELL" : "BUY") : position.side,
+          lots: hasSignedLots ? eventLots : position.lots,
+          buyPrice: numberOrFallback(event.buyPrice, eventLots > 0 ? event.averageEntryPrice : undefined, position.buyPrice),
+          sellPrice: numberOrFallback(event.sellPrice, eventLots < 0 ? event.averageEntryPrice : undefined, position.sellPrice),
+          ltp: numberOrFallback(event.ltp, event.averageEntryPrice, position.ltp),
+          pnl: numberOrFallback(event.pnl, event.unrealizedPnL, position.pnl),
+          realizedPnl: numberOrFallback(event.realizedPnl, position.realizedPnl),
+          status: event.status ?? position.status,
           updatedAt: event.timestamp,
         };
       })
-      .filter((position) => position.marketId !== event.marketId || event.quantity !== 0)
+      .filter((position) => {
+        const samePosition =
+          position.marketId === event.marketId &&
+          (typeof event.strike !== "number" || Math.abs(position.strike - event.strike) < 0.01);
+        return !samePosition || !hasSignedLots || eventLots !== 0;
+      })
   );
 }
 
@@ -110,6 +124,13 @@ function hasPositionFilters(filters?: PositionQueryFilters) {
   return Boolean(filters?.matchId || filters?.marketId);
 }
 
+function numberOrFallback(...values: Array<number | undefined>): number {
+  for (const value of values) {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+  }
+  return 0;
+}
+
 function normalizeOrderPreviewPayload(payload?: CreateOrderPayload) {
   if (!payload) return null;
   return {
@@ -118,6 +139,7 @@ function normalizeOrderPreviewPayload(payload?: CreateOrderPayload) {
     strike: payload.strike,
     side: payload.side,
     type: payload.type,
+    positionEffect: payload.positionEffect ?? "AUTO",
     quantity: payload.quantity,
     price: payload.price,
     pricingSnapshot: payload.pricingSnapshot ?? null,

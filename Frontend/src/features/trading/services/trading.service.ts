@@ -12,6 +12,7 @@ export interface CreateOrderPayload {
   strike: number;
   side: "buy" | "sell";
   type: "LIMIT" | "MARKET";
+  positionEffect?: "AUTO" | "OPEN" | "CLOSE";
   quantity: number;
   price: number;
   pricingSnapshot?: CalculatePricePayload;
@@ -95,6 +96,8 @@ export interface OrderPreview {
   strike: number;
   side: "buy" | "sell";
   type: "LIMIT" | "MARKET";
+  positionEffect: "AUTO" | "OPEN" | "CLOSE";
+  positionIntent: string;
   quantity: number;
   requestedPrice: number;
   orderPrice: number;
@@ -103,6 +106,8 @@ export interface OrderPreview {
   ask: number;
   notional: number;
   marginRequired: number;
+  netLotsBefore: number;
+  projectedLots: number;
   availableBalance: number;
   sufficientBalance: boolean;
   willExecuteNow: boolean;
@@ -289,6 +294,8 @@ function normalizeOrderPreview(preview: OrderPreview): OrderPreview {
     strike: numberOrZero(preview?.strike),
     side: preview?.side === "sell" ? "sell" : "buy",
     type: preview?.type === "MARKET" ? "MARKET" : "LIMIT",
+    positionEffect: normalizePositionEffect(preview?.positionEffect),
+    positionIntent: typeof preview?.positionIntent === "string" ? preview.positionIntent : "",
     quantity: numberOrZero(preview?.quantity),
     requestedPrice: numberOrZero(preview?.requestedPrice),
     orderPrice: numberOrZero(preview?.orderPrice),
@@ -297,6 +304,8 @@ function normalizeOrderPreview(preview: OrderPreview): OrderPreview {
     ask: numberOrZero(preview?.ask),
     notional: numberOrZero(preview?.notional),
     marginRequired: numberOrZero(preview?.marginRequired),
+    netLotsBefore: numberOrZero(preview?.netLotsBefore),
+    projectedLots: numberOrZero(preview?.projectedLots),
     availableBalance: numberOrZero(preview?.availableBalance),
     sufficientBalance: Boolean(preview?.sufficientBalance),
     willExecuteNow: Boolean(preview?.willExecuteNow),
@@ -315,6 +324,11 @@ function compactPositionFilters(filters?: PositionQueryFilters): PositionQueryFi
 
 function numberOrZero(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function normalizePositionEffect(value: unknown): "AUTO" | "OPEN" | "CLOSE" {
+  if (value === "OPEN" || value === "CLOSE") return value;
+  return "AUTO";
 }
 
 function symbolFromTitle(title: string): string {

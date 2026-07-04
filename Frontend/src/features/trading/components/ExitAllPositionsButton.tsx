@@ -13,7 +13,7 @@ export function ExitAllPositionsButton() {
   const exitAll = useExitAllPositions();
 
   const openTradeCount = useMemo(
-    () => positions.filter((position) => position.lots > 0).length,
+    () => positions.filter((position) => position.lots !== 0).length,
     [positions]
   );
   const disabled = isLoading || exitAll.isPending || openTradeCount === 0;
