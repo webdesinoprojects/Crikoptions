@@ -17,15 +17,12 @@ export function TradeOperationsWorkspace() {
   const { data: closedTrades = [], isLoading: closedLoading } = useClosedTrades();
   const { data: orders = [], isLoading: ordersLoading } = useOrders(undefined, true);
 
-  const positionRows = positions.length > 0 ? positions : samplePositions;
-  const closedRows = closedTrades.length > 0 ? closedTrades : sampleClosedTrades;
-  const orderRows = orders.length > 0 ? orders : sampleOrders;
-  const isSample =
-    (tab === "POSITIONS" && positions.length === 0) ||
-    (tab === "ORDERS" && orders.length === 0);
+  const positionRows = positions;
+  const closedRows = closedTrades;
+  const orderRows = orders;
 
   const totalExposure = positionRows.reduce((sum, position) => sum + position.notional, 0);
-  const backendTotalPnL = portfolio?.totalPnL;
+  const backendTotalPnL = portfolio?.totalPnL ?? 0;
   const workingOrders = orderRows.filter((order) => order.status === "PENDING" || order.status === "PARTIAL").length;
   const executedOrders = orderRows.filter((order) => order.status === "FILLED").length;
 
@@ -37,7 +34,7 @@ export function TradeOperationsWorkspace() {
       className="min-h-[420px]"
       headerActions={
         <span className="rounded border border-primary/20 bg-primary/10 px-2 py-0.5 text-[9px] font-black uppercase text-primary">
-          {isSample ? "Sample" : "Live"}
+          Live
         </span>
       }
       bodyClass="gap-3"
@@ -62,13 +59,12 @@ export function TradeOperationsWorkspace() {
           <PositionsScreen 
             rows={positionRows} 
             closedRows={closedRows}
-            totalPnL={backendTotalPnL ?? sampleTotalPnL}
+            totalPnL={backendTotalPnL}
             loading={(positionsLoading && positions.length === 0) || (closedLoading && closedTrades.length === 0)} 
-            sample={positions.length === 0} 
           />
         )}
         {tab === "ORDERS" && (
-          <OrdersScreen rows={orderRows} loading={ordersLoading && orders.length === 0} sample={orders.length === 0} />
+          <OrdersScreen rows={orderRows} loading={ordersLoading && orders.length === 0} />
         )}
       </div>
     </TerminalPanel>
@@ -113,13 +109,11 @@ function PositionsScreen({
   loading,
   rows,
   closedRows,
-  sample,
   totalPnL,
 }: {
   loading: boolean;
   rows: PortfolioPosition[];
   closedRows: ClosedTrade[];
-  sample: boolean;
   totalPnL: number;
 }) {
   const [search, setSearch] = useState("");
@@ -186,7 +180,7 @@ function PositionsScreen({
               <div className="text-center py-6 text-xs text-on-surface-variant bg-surface-container/50 rounded-xl border border-dashed border-outline/10">No open positions</div>
             ) : (
               filteredOpen.map(pos => (
-                <PositionCard key={pos.id} position={pos} type="open" sample={sample} />
+                <PositionCard key={pos.id} position={pos} type="open" />
               ))
             )}
           </div>
@@ -208,7 +202,7 @@ function PositionsScreen({
               <div className="text-center py-6 text-xs text-on-surface-variant bg-surface-container/50 rounded-xl border border-dashed border-outline/10">No closed positions</div>
             ) : (
               filteredClosed.map(pos => (
-                <PositionCard key={pos.orderId} position={pos} type="closed" sample={sample} />
+                <PositionCard key={pos.orderId} position={pos} type="closed" />
               ))
             )}
           </div>
@@ -220,7 +214,7 @@ function PositionsScreen({
 
 type PositionCardRow = PortfolioPosition | ClosedTrade;
 
-function PositionCard({ position, type, sample }: { position: PositionCardRow, type: "open" | "closed", sample: boolean }) {
+function PositionCard({ position, type }: { position: PositionCardRow, type: "open" | "closed" }) {
   const openPosition = type === "open" ? position as PortfolioPosition : null;
   const closedPosition = type === "closed" ? position as ClosedTrade : null;
   const pnl = openPosition ? openPosition.unrealizedPnL : closedPosition?.realizedPnL ?? 0;
@@ -237,7 +231,6 @@ function PositionCard({ position, type, sample }: { position: PositionCardRow, t
           <div className="flex items-center gap-2">
             <span className="font-black text-[13px] text-on-surface">{position.matchName}</span>
             <span className="text-[11px] font-bold text-on-surface-variant px-1.5 py-0.5 bg-background/50 rounded border border-outline/5">{position.symbol}</span>
-            {sample && <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[8px] rounded uppercase font-black">SAMPLE</span>}
           </div>
           <span className="text-[10px] font-semibold text-on-surface-variant mt-1 flex items-center gap-1.5">
             <Clock className="w-2.5 h-2.5" />
@@ -271,7 +264,13 @@ function PositionCard({ position, type, sample }: { position: PositionCardRow, t
   );
 }
 
-function OrdersScreen({ loading, rows, sample }: { loading: boolean; rows: Order[]; sample: boolean }) {
+function OrdersScreen({
+  loading,
+  rows,
+}: {
+  loading: boolean;
+  rows: Order[];
+}) {
   return (
     <div className="h-full overflow-auto bg-surface-dim/20">
       <table className="w-full min-w-[800px] border-collapse font-data-tabular text-[12px]">
@@ -303,7 +302,6 @@ function OrdersScreen({ loading, rows, sample }: { loading: boolean; rows: Order
                 </td>
                 <td className="px-4 py-3 text-on-surface-variant">
                   <div className="font-semibold">{shortId(order.marketId)}</div>
-                  {sample && <span className="inline-block mt-1 px-1.5 py-0.5 bg-primary/10 text-primary text-[8px] rounded uppercase font-black tracking-widest border border-primary/20">SAMPLE</span>}
                 </td>
                 <td className="px-4 py-3 text-center">
                   <SideBadge side={order.side} />
@@ -410,125 +408,4 @@ function formatMoney(value: number) {
   return value.toLocaleString("en-IN", { maximumFractionDigits: 0 });
 }
 
-const now = new Date().toISOString();
 
-const samplePositions: PortfolioPosition[] = [
-  {
-    id: "sample-position-csk-130-buy",
-    marketId: "sample-csk-130",
-    symbol: "CSK130",
-    matchName: "CSK vs MI",
-    side: "BUY",
-    quantity: 40,
-    averageEntryPrice: 18.4,
-    currentPrice: 19.87,
-    unrealizedPnL: 58.8,
-    unrealizedPnLPct: 7.99,
-    notional: 794.8,
-    allocation: 42,
-    openedAt: now,
-  },
-  {
-    id: "sample-position-csk-150-sell",
-    marketId: "sample-csk-150",
-    symbol: "CSK150",
-    matchName: "CSK vs MI",
-    side: "SELL",
-    quantity: 25,
-    averageEntryPrice: 9.2,
-    currentPrice: 8.7,
-    unrealizedPnL: 12.5,
-    unrealizedPnLPct: 5.43,
-    notional: 217.5,
-    allocation: 18,
-    openedAt: now,
-  },
-  {
-    id: "sample-position-dc-170-buy",
-    marketId: "sample-dc-170",
-    symbol: "DC170",
-    matchName: "DC vs SRH",
-    side: "BUY",
-    quantity: 20,
-    averageEntryPrice: 13.1,
-    currentPrice: 12.2,
-    unrealizedPnL: -18,
-    unrealizedPnLPct: -6.87,
-    notional: 244,
-    allocation: 13,
-    openedAt: now,
-  },
-];
-
-const sampleOrders: Order[] = [
-  {
-    id: "ord-sample-001",
-    matchId: "match-csk-mi",
-    marketId: "CSK130",
-    strike: 130,
-    side: "BUY",
-    type: "LIMIT",
-    status: "PENDING",
-    backendStatus: "open",
-    price: 19.6,
-    quantity: 20,
-    filledQuantity: 0,
-    remainingQuantity: 20,
-    averageFillPrice: 0,
-    createdAt: now,
-  },
-  {
-    id: "ord-sample-002",
-    matchId: "match-csk-mi",
-    marketId: "CSK150",
-    strike: 150,
-    side: "SELL",
-    type: "LIMIT",
-    status: "PARTIAL",
-    backendStatus: "partially_filled",
-    price: 8.9,
-    quantity: 30,
-    filledQuantity: 12,
-    remainingQuantity: 18,
-    averageFillPrice: 8.9,
-    createdAt: now,
-  },
-  {
-    id: "ord-sample-003",
-    matchId: "match-dc-srh",
-    marketId: "DC170",
-    strike: 170,
-    side: "BUY",
-    type: "LIMIT",
-    status: "CANCELLED",
-    backendStatus: "cancelled",
-    price: 12.1,
-    quantity: 15,
-    filledQuantity: 0,
-    remainingQuantity: 0,
-    averageFillPrice: 0,
-    createdAt: now,
-  },
-];
-
-const sampleClosedTrades: ClosedTrade[] = [
-  {
-    orderId: "closed-001",
-    marketId: "MI200",
-    symbol: "MI200",
-    matchName: "MI vs RCB",
-    side: "BUY",
-    quantity: 50,
-    entryPrice: 15.5,
-    exitPrice: 18.2,
-    realizedPnL: 135.0,
-    realizedPnLPct: 17.4,
-    openedAt: new Date(Date.now() - 86400000).toISOString(),
-    closedAt: now,
-    holdingPeriodMs: 86400000,
-  },
-];
-
-const sampleTotalPnL =
-  samplePositions.reduce((total, position) => total + position.unrealizedPnL, 0) +
-  sampleClosedTrades.reduce((total, trade) => total + trade.realizedPnL, 0);
