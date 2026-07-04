@@ -59,7 +59,7 @@ export function refreshAfterExitAll(queryClient: QueryClient) {
 
 export function patchOpenPositionsCache(queryClient: QueryClient, event: PositionUpdateEvent) {
   const hasSignedLots = typeof event.lots === "number" || typeof event.quantity === "number";
-  const eventLots = event.lots ?? event.quantity ?? 0;
+  const eventLots = numberOrFallback(event.lots, event.quantity, 0);
   queryClient.setQueryData<OpenPosition[]>(tradingQueryKeys.openPositions, (current = []) =>
     current
       .map((position) => {
@@ -72,11 +72,11 @@ export function patchOpenPositionsCache(queryClient: QueryClient, event: Positio
           ...position,
           side: hasSignedLots ? (eventLots < 0 ? "SELL" : "BUY") : position.side,
           lots: hasSignedLots ? eventLots : position.lots,
-          buyPrice: event.buyPrice ?? (eventLots > 0 ? event.averageEntryPrice : undefined) ?? position.buyPrice,
-          sellPrice: event.sellPrice ?? (eventLots < 0 ? event.averageEntryPrice : undefined) ?? position.sellPrice,
-          ltp: event.ltp ?? event.averageEntryPrice ?? 0,
-          pnl: event.pnl ?? event.unrealizedPnL ?? 0,
-          realizedPnl: event.realizedPnl ?? 0,
+          buyPrice: numberOrFallback(event.buyPrice, eventLots > 0 ? event.averageEntryPrice : undefined, position.buyPrice),
+          sellPrice: numberOrFallback(event.sellPrice, eventLots < 0 ? event.averageEntryPrice : undefined, position.sellPrice),
+          ltp: numberOrFallback(event.ltp, event.averageEntryPrice, position.ltp),
+          pnl: numberOrFallback(event.pnl, event.unrealizedPnL, position.pnl),
+          realizedPnl: numberOrFallback(event.realizedPnl, position.realizedPnl),
           status: event.status ?? position.status,
           updatedAt: event.timestamp,
         };
@@ -124,7 +124,12 @@ function hasPositionFilters(filters?: PositionQueryFilters) {
   return Boolean(filters?.matchId || filters?.marketId);
 }
 
-
+function numberOrFallback(...values: Array<number | undefined>): number {
+  for (const value of values) {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+  }
+  return 0;
+}
 
 function normalizeOrderPreviewPayload(payload?: CreateOrderPayload) {
   if (!payload) return null;

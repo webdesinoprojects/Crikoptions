@@ -42,6 +42,7 @@ const REPLAY_MATCHES: Array<{
   csvPath?: string;
   marketId: string;
   badge: string;
+  matchIdFallback?: string;
   disabled?: boolean;
 }> = [
   {
@@ -49,12 +50,14 @@ const REPLAY_MATCHES: Array<{
     label: "CSK vs MI",
     csvPath: "/simulator/CSK_MI_ballbyball_data.csv",
     marketId: "0000000000000000000000d1",
+    matchIdFallback: "1",
     badge: "CSV LIVE",
   },
   {
     key: "rcb-kkr",
     label: "RCB vs KKR",
     marketId: "0000000000000000000000d4",
+    matchIdFallback: "4",
     badge: "CSV PENDING",
     disabled: true,
   },
@@ -90,7 +93,7 @@ export function MarketReplaySimulator() {
     enabled: Boolean(matchConfig.marketId),
   });
 
-  const orderMatchId = marketQuery.data?.matchId;
+  const orderMatchId = marketQuery.data?.matchId || matchConfig.matchIdFallback;
   const ordersQuery = useOrders(orderMatchId);
   const positionsQuery = useOpenPositions();
   const walletQuery = useWallet(true, terminalPollInterval);

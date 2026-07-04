@@ -81,11 +81,74 @@ export function findAtmRow(rows: ChainRow[]) {
 }
 
 export function buildLastSixBalls(score: number, wickets: number, ballsLeft: number): BallEvent[] {
-  return [];
+  const sequence: BallEvent[] = [
+    { label: "0", kind: "dot" },
+    { label: "1", kind: "run" },
+    { label: "2", kind: "run" },
+    { label: "4", kind: "four" },
+    { label: "6", kind: "six" },
+    { label: "1", kind: "run" },
+    { label: "0", kind: "dot" },
+    { label: "2", kind: "run" },
+  ];
+
+  const seed = Math.abs(score * 3 + wickets * 11 + ballsLeft * 5);
+  const balls = Array.from({ length: 6 }, (_, index) => sequence[(seed + index) % sequence.length]);
+
+  if (wickets > 0) {
+    balls[seed % balls.length] = { label: "W", kind: "wicket" };
+  }
+
+  return balls;
 }
 
 export function buildThisOverBalls(score: number, wickets: number, ballsLeft: number, totalBalls = 120): BallEvent[] {
-  return [];
+  const sequence: BallEvent[] = [
+    { label: "0", kind: "dot" },
+    { label: "1", kind: "run" },
+    { label: "2", kind: "run" },
+    { label: "4", kind: "four" },
+    { label: "6", kind: "six" },
+    { label: "1", kind: "run" },
+    { label: "0", kind: "dot" },
+    { label: "2", kind: "run" },
+  ];
+  const clampedBallsLeft = Math.max(0, Math.min(totalBalls, ballsLeft));
+  const ballsBowled = totalBalls - clampedBallsLeft;
+  const ballsInOver = ballsBowled % 6;
+  const dealtSlots = ballsBowled > 0 && ballsInOver === 0 ? 6 : ballsInOver;
+  const seed = Math.abs(score * 3 + wickets * 11 + ballsLeft * 5);
+  const firstOverBalls = ballsBowled <= 6 ? buildFirstOverBalls(score, wickets, dealtSlots) : undefined;
+
+  return Array.from({ length: 6 }, (_, index) => {
+    if (index >= dealtSlots) {
+      return { label: "", kind: "empty" };
+    }
+    if (firstOverBalls?.[index]) {
+      return firstOverBalls[index];
+    }
+    if (wickets > 0 && index === seed % Math.max(dealtSlots, 1)) {
+      return { label: "W", kind: "wicket" };
+    }
+    return sequence[(seed + index) % sequence.length];
+  });
+}
+
+function buildFirstOverBalls(score: number, wickets: number, dealtSlots: number): BallEvent[] {
+  if (dealtSlots <= 0) return [];
+  const wicketSlot = wickets > 0 ? dealtSlots - 1 : -1;
+  let remainingRuns = Math.max(0, score);
+  const balls: BallEvent[] = [];
+  for (let index = 0; index < dealtSlots; index++) {
+    if (index === wicketSlot) {
+      balls.push({ label: "W", kind: "wicket" });
+      continue;
+    }
+    const runs = Math.min(6, remainingRuns);
+    remainingRuns -= runs;
+    balls.push(ballFromRuns(runs));
+  }
+  return balls;
 }
 
 export function ballFromRuns(runs: number): BallEvent {
