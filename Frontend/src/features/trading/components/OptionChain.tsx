@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import NumberFlow from "@number-flow/react";
 import { CandlestickChart, ChevronLeft, MoreHorizontal } from "lucide-react";
 import { DataSourceBadge } from "@/components/shared/DataSourceBadge";
 import {
@@ -168,10 +167,10 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
                         </div>
                       </td>
                       <td className="px-3 py-3 text-right text-base font-black text-cyan-300 transition-colors group-hover:text-cyan-200">
-                        <NumberFlow value={row.bid} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} />
+                        {formatQuote(row.bid)}
                       </td>
                       <td className="px-3 py-3 text-right text-base font-black text-red-300 transition-colors group-hover:text-red-200">
-                        <NumberFlow value={row.ask} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} />
+                        {formatQuote(row.ask)}
                       </td>
                       <td className="px-3 py-3 text-right text-on-surface-variant relative">
                         <span className="relative z-10">{compactSize(size)}</span>
@@ -240,4 +239,9 @@ function ZeroChainRow() {
 function compactSize(value: number) {
   if (value >= 1000) return `${(value / 1000).toFixed(value >= 10_000 ? 0 : 1)}k`;
   return value.toLocaleString("en-IN");
+}
+
+function formatQuote(value: number) {
+  if (!Number.isFinite(value)) return "0.00";
+  return value.toFixed(2);
 }
