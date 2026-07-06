@@ -58,7 +58,15 @@ export function useThisOverBalls(match?: Match, streamMatchId?: string): BallEve
     }
     const current = matchRef.current;
     const bowled = current ? ballsBowledFromSnap(snapFromMatch(current)) : undefined;
-    setBalls(currentOverFromList(loadBallLog(matchId), bowled));
+    
+    const log = loadBallLog(matchId);
+    const legalInLog = log.filter(isLegalBallEvent).length;
+    
+    // If the websocket has pushed the log ahead of the stable match scoreboard, 
+    // we should trust the log length to avoid truncating the visible balls.
+    const effectiveBowled = (bowled !== undefined && legalInLog > bowled) ? legalInLog : bowled;
+    
+    setBalls(currentOverFromList(log, effectiveBowled));
   };
 
   const syncLogToScoreboard = (id: string, snap: ScoreboardSnap) => {
