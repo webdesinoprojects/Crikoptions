@@ -4,6 +4,10 @@ export interface Market {
   title: string;
   type: "PLAYER_RUNS" | "MATCH_WINNER" | "PLAYER_WICKETS" | "TEAM_TOTAL" | "match_depth" | "future" | "technical" | string;
   status: "ACTIVE" | "SUSPENDED" | "SETTLED" | "active" | "closed" | string;
+  ltp?: number;
+  open?: number;
+  high?: number;
+  low?: number;
 }
 
 export interface MarketDepth {

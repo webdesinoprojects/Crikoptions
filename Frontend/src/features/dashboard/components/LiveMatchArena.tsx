@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 import { useLiveMatches, useLiveTicker } from "@/features/dashboard/hooks";
 import { useMarkets } from "@/features/trading/hooks";
 import Link from "next/link";
-import { useThisOverBalls } from "@/features/trading/hooks/useThisOverBalls";
 import { ballClassName, scoreParts } from "@/features/trading/utils/terminal-context";
+import { useStableMatchSnapshot } from "@/features/trading/hooks/useStableMatchSnapshot";
 
 export function LiveMatchArena() {
   const { data: liveMatches, isLoading } = useLiveMatches();
@@ -17,21 +17,27 @@ export function LiveMatchArena() {
   const liveMarketId = matchMarkets?.[0]?.id;
   const tradingHref = liveMarketId ? `/trading/${liveMarketId}` : (tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/dashboard");
   
-  const balls = useThisOverBalls(match || undefined);
+  const { stableMatch, balls } = useStableMatchSnapshot(match || undefined, liveMarketId);
   
-  const title = match?.title || "No Live Match";
-  const scoreParsed = scoreParts(match?.homeScore);
-  const currentScore = match?.currentScore ?? (Number.isFinite(Number.parseInt(scoreParsed.runs, 10)) ? Number.parseInt(scoreParsed.runs, 10) : 0);
-  const wickets = match?.wicketsLost ?? (Number.isFinite(Number.parseInt(scoreParsed.wickets, 10)) ? Number.parseInt(scoreParsed.wickets, 10) : 0);
+  const title = stableMatch?.title || "No Live Match";
+  const scoreParsed = scoreParts(stableMatch?.homeScore);
+  const currentScore = stableMatch?.currentScore ?? (Number.isFinite(Number.parseInt(scoreParsed.runs, 10)) ? Number.parseInt(scoreParsed.runs, 10) : 0);
+  const wickets = stableMatch?.wicketsLost ?? (Number.isFinite(Number.parseInt(scoreParsed.wickets, 10)) ? Number.parseInt(scoreParsed.wickets, 10) : 0);
   
-  const currentOver = match?.currentOver || "0.0";
-  const target = match?.targetScore || 0;
-  const need = match?.targetScore && match?.currentScore ? match.targetScore - match.currentScore : 0;
+  const currentOver = stableMatch?.currentOver || "0.0";
+  const target = stableMatch?.targetScore || 0;
+  const need = stableMatch?.targetScore && stableMatch?.currentScore ? stableMatch.targetScore - stableMatch.currentScore : 0;
   
-  const format = (match?.format || "T20").toUpperCase();
+  const format = (stableMatch?.format || "T20").toUpperCase();
   const totalBalls = format.includes("ODI") || format.includes("ONE") ? 300 : 120;
-  const ballsLeft = match?.ballsLeft ?? totalBalls;
-  const ballsBowled = totalBalls - ballsLeft;
+  
+  const currentOverParts = currentOver.split('.');
+  const overs = parseInt(currentOverParts[0] || '0', 10);
+  const ballsInOver = parseInt(currentOverParts[1] || '0', 10);
+  const actualBallsBowled = (overs * 6) + ballsInOver;
+  
+  const ballsBowled = actualBallsBowled > 0 ? actualBallsBowled : (totalBalls - (stableMatch?.ballsLeft ?? totalBalls));
+  const ballsLeft = stableMatch?.ballsLeft ?? Math.max(0, totalBalls - ballsBowled);
   
   const crr = ballsBowled > 0 ? (currentScore / (ballsBowled / 6)).toFixed(2) : "0.00";
   const rrr = need > 0 && ballsLeft > 0 ? ((need / ballsLeft) * 6).toFixed(2) : "0.00";
@@ -52,13 +58,12 @@ export function LiveMatchArena() {
     }
   }
 
-  // Filter out empty balls for timeline display, but keep at most 6 if none bowled yet
   const displayBalls = balls.filter(b => b.kind !== "empty");
-  const timelineBalls = displayBalls.length > 0 ? displayBalls : balls.slice(0, 6);
+  const timelineBalls = balls;
 
-  const homeCode = match?.homeTeam?.shortName || match?.homeTeam?.name?.substring(0,3)?.toUpperCase() || "TBA";
-  const awayCode = match?.awayTeam?.shortName || match?.awayTeam?.name?.substring(0,3)?.toUpperCase() || "TBA";
-  const battingCode = match?.innings === 2 ? awayCode : homeCode;
+  const homeCode = stableMatch?.homeTeam?.shortName || stableMatch?.homeTeam?.name?.substring(0,3)?.toUpperCase() || "TBA";
+  const awayCode = stableMatch?.awayTeam?.shortName || stableMatch?.awayTeam?.name?.substring(0,3)?.toUpperCase() || "TBA";
+  const battingCode = stableMatch?.innings === 2 ? awayCode : homeCode;
 
   return (
     <div className="group relative min-h-[560px] w-full overflow-hidden rounded-xl shadow-[0_24px_80px_rgba(0,0,0,0.5)] sm:rounded-2xl md:h-[480px] md:min-h-0">
@@ -83,7 +88,7 @@ export function LiveMatchArena() {
           </div>
           <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white sm:text-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]" />
-            {match?.innings ? `${ordinal(match.innings)} INNINGS` : "1ST INNINGS"}
+            {stableMatch?.innings ? `${ordinal(stableMatch.innings)} INNINGS` : "1ST INNINGS"}
           </div>
         </div>
 
@@ -115,19 +120,33 @@ export function LiveMatchArena() {
             <div className="text-right text-white/60">RRR <span className="text-white font-bold">{target > 0 ? rrr : "--"}</span></div>
           </div>
 
-          {/* Batsmen */}
-          {match?.liveContext ? (
-            <div className="relative z-10 mb-4 grid grid-cols-1 gap-2 sm:mb-5 sm:grid-cols-2 sm:gap-4">
-              <div className="flex justify-between items-center bg-white/[0.02] rounded px-2 py-1.5">
-                <span className="text-xs font-bold text-cyan-400 truncate pr-1">{match.liveContext.striker.name}*</span>
-                <div className="text-xs font-data-tabular shrink-0">
-                  <span className="text-white font-bold">{match.liveContext.striker.runs}</span> <span className="text-white/50">({match.liveContext.striker.balls})</span>
+          {/* Live Context (Batsmen & Bowler) */}
+          {stableMatch?.liveContext ? (
+            <div className="relative z-10 mb-4 flex flex-col gap-2 sm:mb-5">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4">
+                <div className="flex justify-between items-center bg-white/[0.02] rounded px-2 py-1.5 border border-white/5">
+                  <span className="text-[11px] font-bold text-cyan-400 truncate pr-1">{stableMatch.liveContext.striker.name}*</span>
+                  <div className="text-[11px] font-data-tabular shrink-0">
+                    <span className="text-white font-bold">{stableMatch.liveContext.striker.runs}</span> <span className="text-white/50">({stableMatch.liveContext.striker.balls})</span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center bg-white/[0.02] rounded px-2 py-1.5 border border-white/5">
+                  <span className="text-[11px] font-bold text-cyan-400/80 truncate pr-1">{stableMatch.liveContext.nonStriker.name}</span>
+                  <div className="text-[11px] font-data-tabular shrink-0">
+                    <span className="text-white font-bold">{stableMatch.liveContext.nonStriker.runs}</span> <span className="text-white/50">({stableMatch.liveContext.nonStriker.balls})</span>
+                  </div>
                 </div>
               </div>
-              <div className="flex justify-between items-center bg-white/[0.02] rounded px-2 py-1.5">
-                <span className="text-xs font-bold text-cyan-400 truncate pr-1">{match.liveContext.nonStriker.name}</span>
-                <div className="text-xs font-data-tabular shrink-0">
-                  <span className="text-white font-bold">{match.liveContext.nonStriker.runs}</span> <span className="text-white/50">({match.liveContext.nonStriker.balls})</span>
+              <div className="flex justify-between items-center bg-white/[0.02] rounded px-2 py-1.5 border border-amber-500/10">
+                <div className="flex items-center gap-1.5 truncate pr-1">
+                  <span className="text-[9px] uppercase tracking-wider text-amber-500/70 shrink-0">Bowling</span>
+                  <span className="text-[11px] font-bold text-amber-400 truncate">{stableMatch.liveContext.bowler.name}</span>
+                </div>
+                <div className="text-[11px] font-data-tabular shrink-0">
+                  <span className="text-white font-bold">{stableMatch.liveContext.bowler.wickets}</span>
+                  <span className="text-white/50 mx-0.5">-</span>
+                  <span className="text-white font-bold">{stableMatch.liveContext.bowler.runs}</span> 
+                  <span className="text-white/50 ml-1">({Math.floor(stableMatch.liveContext.bowler.balls / 6)}.{stableMatch.liveContext.bowler.balls % 6})</span>
                 </div>
               </div>
             </div>
@@ -141,7 +160,7 @@ export function LiveMatchArena() {
           <div className="relative z-10 mb-4 flex flex-wrap gap-2">
             {timelineBalls.map((ball, i) => (
               <div
-                key={i}
+                key={`${stableMatch?.id}-${stableMatch?.innings}-${currentOver}-${i}`}
                 className={cn(
                   "flex h-7 min-w-7 px-1.5 items-center justify-center rounded-lg text-[12px] font-black transition-all sm:h-8 sm:min-w-8 sm:px-2 sm:text-[13px] border",
                   ballClassName(ball.kind),
@@ -167,9 +186,36 @@ export function LiveMatchArena() {
 
         {/* Bottom Market Cards */}
         <div className="grid grid-cols-1 gap-2 pt-1 sm:grid-cols-2 sm:gap-3 md:mt-auto md:grid-cols-4 md:gap-4 md:pt-6">
-          <MarketMiniCard title={`${battingCode} WIN`} value="--" trend="--" isUp />
-          <MarketMiniCard title="MATCH WINNER" value="--" trend="--" isUp />
-          <MarketMiniCard title="NEXT WICKET" value="--" trend="--" isUp={false} />
+          {[0, 1, 2].map((i) => {
+            const m = matchMarkets?.[i];
+            if (m) {
+              const openPrice = m.open ?? 0;
+              const ltp = m.ltp ?? 0;
+              const trendVal = openPrice > 0 ? (((ltp - openPrice) / openPrice) * 100) : 0;
+              const trend = Math.abs(trendVal).toFixed(1) + "%";
+              const isUp = ltp >= openPrice;
+              return (
+                <MarketMiniCard
+                  key={m.id}
+                  title={m.title}
+                  value={ltp > 0 ? `₹${ltp.toFixed(2)}` : "--"}
+                  trend={trend}
+                  isUp={isUp}
+                />
+              );
+            } else {
+              const defaultTitles = [`${battingCode} WIN`, "MATCH WINNER", "NEXT WICKET"];
+              return (
+                <MarketMiniCard
+                  key={`empty-${i}`}
+                  title={defaultTitles[i]}
+                  value="--"
+                  trend="--"
+                  isUp={i !== 2}
+                />
+              );
+            }
+          })}
           
           <Link href={tradingHref} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/50 bg-cyan-500 text-xs font-black uppercase tracking-widest text-[#000d1a] shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-colors hover:bg-cyan-400 md:h-full">
             Watch & Trade

@@ -40,6 +40,10 @@ export function adaptMarket(backend: BackendMarket): FrontendMarket {
     title: backend.title,
     type: backend.type,
     status,
+    ltp: backend.ltp,
+    open: backend.open,
+    high: backend.high,
+    low: backend.low,
   };
 }
 

@@ -27,6 +27,10 @@ export const metadata: Metadata = {
   title: "CricOptions | Cricket Options Trading Terminal",
   description:
     "A professional cricket options trading workspace for live market data, execution, portfolio risk, and match intelligence.",
+  icons: {
+    icon: "/cricoptions_logo.jpg",
+    apple: "/cricoptions_logo.jpg",
+  },
 };
 
 export default function RootLayout({

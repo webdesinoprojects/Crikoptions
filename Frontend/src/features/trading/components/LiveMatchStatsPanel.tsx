@@ -1,12 +1,11 @@
 "use client";
 
 import React from "react";
-import NumberFlow from "@number-flow/react";
 import { Activity, Gauge, Info, Radio, Swords } from "lucide-react";
 import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { cn } from "@/lib/utils";
 import { BatterStats, Match } from "@/types";
-import { useThisOverBalls } from "../hooks/useThisOverBalls";
+import { useStableMatchSnapshot } from "../hooks/useStableMatchSnapshot";
 import {
   BallEvent,
   ballClassName,
@@ -23,31 +22,33 @@ interface LiveMatchStatsPanelProps {
 }
 
 export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStatsPanelProps) {
-  const score = currentInningsScoreParts(match);
+  const { stableMatch, balls } = useStableMatchSnapshot(match, market?.matchId);
+  
+  const score = currentInningsScoreParts(stableMatch);
   const parsedRuns = Number.parseInt(score.runs, 10);
   const parsedWickets = Number.parseInt(score.wickets, 10);
   const currentScore = Number.isFinite(parsedRuns) ? parsedRuns : 0;
   const wickets = Number.isFinite(parsedWickets) ? parsedWickets : 0;
-  const totalBalls = totalBallsForFormat(match?.format);
-  const ballsLeft = Math.max(0, Math.min(totalBalls, match?.ballsLeft ?? totalBalls));
+  const totalBalls = totalBallsForFormat(stableMatch?.format);
+  const ballsLeft = Math.max(0, Math.min(totalBalls, stableMatch?.ballsLeft ?? totalBalls));
   const ballsBowled = totalBalls - ballsLeft;
-  const overs = match?.currentOver ?? oversTextFromBalls(ballsBowled);
+  const overs = stableMatch?.currentOver ?? oversTextFromBalls(ballsBowled);
   const crr = ballsBowled > 0 ? currentScore / (ballsBowled / 6) : 0;
   const projected = projectedFinal(currentScore, ballsLeft, crr, market);
   const projectionReady = ballsBowled >= 6;
-  const innings = match?.innings ?? 1;
-  const liveContext = match?.liveContext;
-  const targetScore = match?.targetScore ?? 0;
+  const innings = stableMatch?.innings ?? 1;
+  const liveContext = stableMatch?.liveContext;
+  const targetScore = stableMatch?.targetScore ?? 0;
   const isChase = innings === 2 && targetScore > 0;
   const runsNeeded = isChase ? Math.max(0, targetScore - currentScore) : 0;
   const rrr = isChase && ballsLeft > 0 && runsNeeded > 0 ? (runsNeeded / ballsLeft) * 6 : 0;
   const bowlerEconomy = liveContext && liveContext.bowler.balls > 0
     ? liveContext.bowler.runs / (liveContext.bowler.balls / 6)
     : 0;
-  const balls = useThisOverBalls(match, market?.matchId);
+  
   const compactThisOver = balls.length > 6;
-  const battingTeam = battingTeamForMatch(match);
-  const bowlingTeam = bowlingTeamForMatch(match);
+  const battingTeam = battingTeamForMatch(stableMatch);
+  const bowlingTeam = bowlingTeamForMatch(stableMatch);
   const battingCode = teamCode(battingTeam?.shortName || battingTeam?.name);
   const bowlingCode = teamCode(bowlingTeam?.shortName || bowlingTeam?.name);
   const lastWicket = [...balls].reverse().find((ball) => isWicket(ball));
@@ -78,7 +79,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
               {match?.status ?? "LIVE"}
             </span>
             <span className="truncate text-right text-[13px] font-bold tracking-tight text-slate-100">
-              {match?.title ?? `${battingCode} vs ${bowlingCode}`}
+              {stableMatch?.title ?? `${battingCode} vs ${bowlingCode}`}
             </span>
           </div>
 
@@ -86,18 +87,18 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
             <TeamMark code={teamCode(match?.homeTeam.shortName || match?.homeTeam.name)} active={innings === 1} />
             <div className="min-w-0 text-center">
               <div className="font-data-tabular text-[25px] font-black leading-none tracking-[-0.04em] text-cyan-300">
-                {battingCode} <NumberFlow value={currentScore} />/<NumberFlow value={wickets} />
+                {battingCode} {currentScore}/{wickets}
                 <span className="ml-1.5 text-[12px] font-semibold tracking-normal text-slate-400">({overs} ov)</span>
               </div>
               <div className="mt-2 truncate text-[10px] text-slate-400">
-                {bowlingCode} bowling <span className="mx-1 text-slate-600">•</span> {match?.format ?? "T20"}
+                {bowlingCode} bowling <span className="mx-1 text-slate-600">•</span> {stableMatch?.format ?? "T20"}
                 <span className="mx-1 text-slate-600">•</span> {ordinal(innings)} innings
               </div>
               {isChase && (
                 <div className="mt-1.5 font-data-tabular text-[11px] font-bold text-amber-200">
-                  Target <NumberFlow value={targetScore} />
+                  Target {targetScore}
                   <span className="mx-1.5 font-normal text-slate-500">·</span>
-                  Need <NumberFlow value={runsNeeded} /> off <NumberFlow value={ballsLeft} />
+                  Need {runsNeeded} off {ballsLeft}
                 </div>
               )}
             </div>
@@ -107,20 +108,20 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
           <div className={cn("mt-3 grid gap-2", isChase ? "grid-cols-3" : "grid-cols-2")}>
             <StatBox
               label="CRR · runs/over"
-              value={<NumberFlow value={crr} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} />}
+              value={crr.toFixed(2)}
               hint={ballsBowled > 0 ? `${currentScore} ÷ ${ballsBowled} balls × 6` : "Starts after first ball"}
             />
             {isChase ? (
               <>
                 <StatBox
                   label="Target"
-                  value={<NumberFlow value={targetScore} />}
+                  value={targetScore}
                   hint={`${battingCode} need ${targetScore} to win`}
                   tone="cyan"
                 />
                 <StatBox
                   label="RRR · required"
-                  value={rrr > 0 ? <NumberFlow value={rrr} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} /> : "—"}
+                  value={rrr > 0 ? rrr.toFixed(2) : "—"}
                   hint={runsNeeded > 0 ? `${runsNeeded} runs in ${ballsLeft} balls` : "Chase complete"}
                   tone="cyan"
                 />
@@ -128,7 +129,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
             ) : (
               <StatBox
                 label="Projected"
-                value={projectionReady ? <NumberFlow value={projected} /> : "—"}
+                value={projectionReady ? projected : "—"}
                 hint={projectionReady ? "At current run rate" : "Available after 1 over"}
                 tone="cyan"
               />
@@ -141,7 +142,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
             Recent balls
             <Info className="size-3 text-slate-500" aria-hidden />
           </div>
-          <BallStrip balls={balls} compact={compactThisOver} />
+          <BallStrip balls={balls} compact={compactThisOver} matchId={stableMatch?.id ?? ""} innings={innings} over={overs} />
         </section>
 
         <section className="border-b border-cyan-100/10 p-3">
@@ -188,10 +189,10 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
               )}
               <div className="flex items-center justify-between gap-3 py-1.5">
                 <span className="text-[10px] text-slate-400">This over</span>
-                <div className="flex items-center gap-1">
-                  {balls.slice(0, 6).map((ball, index) => (
+                <div className="flex items-center gap-1 flex-wrap justify-end">
+                  {balls.map((ball, index) => (
                     <span
-                      key={`${ball.kind}-${ball.label}-${index}-mini`}
+                      key={`${stableMatch?.id}-${innings}-${overs}-${index}-mini`}
                       className={cn(
                         "flex size-4 items-center justify-center rounded-full border font-data-tabular text-[7px] font-black",
                         ballClassName(ball.kind)
@@ -240,12 +241,12 @@ function TeamMark({ active, code }: { active: boolean; code: string }) {
   );
 }
 
-function BallStrip({ balls, compact }: { balls: BallEvent[]; compact: boolean }) {
+function BallStrip({ balls, compact, matchId, innings, over }: { balls: BallEvent[]; compact: boolean; matchId: string; innings: number; over: string }) {
   return (
-    <div className={cn("w-full", compact ? "grid grid-cols-6 gap-1.5" : "flex items-center justify-between gap-2")}>
+    <div className={cn("w-full flex items-center gap-2", compact ? "flex-wrap justify-center" : "justify-between")}>
       {balls.map((ball, index) => (
         <span
-          key={`${ball.kind}-${ball.label}-${index}`}
+          key={`${matchId}-${innings}-${over}-${index}`}
           aria-label={ball.kind === "empty" ? `Ball ${index + 1}: not yet bowled` : `Ball ${index + 1}: ${ball.detail ?? ball.label}`}
           title={ball.detail ?? ball.label}
           className={cn(

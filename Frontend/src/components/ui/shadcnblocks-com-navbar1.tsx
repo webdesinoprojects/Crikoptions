@@ -59,10 +59,10 @@ interface Navbar1Props {
 
 const Navbar1 = ({
   logo = {
-    url: "https://www.shadcnblocks.com",
-    src: "https://www.shadcnblocks.com/images/block/block-1.svg",
-    alt: "logo",
-    title: "Shadcnblocks.com",
+    url: "/",
+    src: "/cricoptions_logo.jpg",
+    alt: "CricOptions",
+    title: "CricOptions",
   },
   menu = [
     { title: "Home", url: "#" },
