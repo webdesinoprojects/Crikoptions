@@ -26,7 +26,6 @@ export function useStableMatchSnapshot(match?: Match, marketMatchId?: string) {
       return;
     }
 
-    // Acceptance logic for same match/innings
     const ballsBowledNew = ballsBowledFromSnap(snap);
     const ballsBowledOld = ballsBowledFromSnap(lastSnap);
 
@@ -34,15 +33,23 @@ export function useStableMatchSnapshot(match?: Match, marketMatchId?: string) {
     const scoreIncreased = snap.currentScore > lastSnap.currentScore;
     const wicketsIncreased = snap.wicketsLost > lastSnap.wicketsLost;
 
-    // We rely on useThisOverBalls internally managing the current ball list.
-    // The main protection here is against score/over rollbacks.
-    if (oversAdvanced || scoreIncreased || wicketsIncreased) {
+    // Detect a match loop restart: score dropped dramatically (e.g. back to 0/0 or 62/1 on reset)
+    const isMatchReset =
+      snap.currentScore < lastSnap.currentScore - 10 ||
+      (snap.currentScore === 0 && snap.wicketsLost === 0 && lastSnap.currentScore > 0);
+
+    // Accept the new snapshot if it's forward progress or a clear reset.
+    if (oversAdvanced || scoreIncreased || wicketsIncreased || isMatchReset) {
       setStableMatch(match);
       lastAcceptedSnapRef.current = snap;
     }
   }, [match]);
 
-  const balls = useThisOverBalls(stableMatch, marketMatchId);
+  // IMPORTANT: Always pass the RAW match to useThisOverBalls, NOT stableMatch.
+  // stableMatch is only for display. Ball tracking must respond to every tick
+  // (including dot balls that don't change score/wickets) and match resets.
+  const balls = useThisOverBalls(match, marketMatchId);
 
   return { stableMatch, balls };
 }
+
