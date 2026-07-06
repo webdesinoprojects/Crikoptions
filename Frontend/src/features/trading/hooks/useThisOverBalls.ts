@@ -124,7 +124,8 @@ export function useThisOverBalls(match?: Match, streamMatchId?: string): BallEve
         return;
       }
       try {
-        const events = await tradingService.fetchMatchEvents(ids[index], 6);
+        // Fetch 24 balls so that even extremely long overs (with many extras) are fully loaded
+        const events = await tradingService.fetchMatchEvents(ids[index], 24);
         if (cancelled || requestId !== historyRequestRef.current) return;
         const ordered = events.map(ballEventFromHistory);
         if (ordered.length > 0 || bowled <= 0) {
