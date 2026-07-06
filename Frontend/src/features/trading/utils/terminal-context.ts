@@ -187,6 +187,8 @@ export function ballsBowledFromSnap(snap: ScoreboardSnap) {
 export function padThisOverBalls(balls: BallEvent[]): BallEvent[] {
   const filled = balls.filter((ball) => ball.kind !== "empty");
   const legalCount = filled.filter(isLegalBallEvent).length;
+  // Only pad up to 6 legal slots, but never add blanks when the over already
+  // has 6+ legal balls (extras made it longer than a standard over).
   const blanksNeeded = Math.max(0, 6 - legalCount);
   return [...filled, ...Array.from({ length: blanksNeeded }, () => ({ label: "", kind: "empty" as const }))];
 }
@@ -227,12 +229,23 @@ export function currentOverFromList(list: BallEvent[], ballsBowled?: number): Ba
   const filled = list.filter((ball) => ball.kind !== "empty");
   if (filled.length === 0) return padThisOverBalls([]);
 
-  const targetLegal = typeof ballsBowled === "number" && ballsBowled > 0 ? ballsBowled : filled.filter(isLegalBallEvent).length;
-  if (targetLegal <= 0 && filled.filter(isLegalBallEvent).length === 0) {
-    // If there are no legal balls yet, everything belongs to the first over.
-    return padThisOverBalls(filled);
+  const legalInLog = filled.filter(isLegalBallEvent).length;
+  
+  // If ballsBowled is 0 or undefined, we're at the start — nothing to show.
+  if (!ballsBowled || ballsBowled <= 0) {
+    if (legalInLog === 0) return padThisOverBalls([]);
   }
 
+  // Use the higher of the two counts so WS events ahead of the REST scoreboard
+  // are never discarded.
+  const targetLegal = Math.max(
+    legalInLog,
+    typeof ballsBowled === "number" && ballsBowled > 0 ? ballsBowled : 0
+  );
+
+  if (targetLegal === 0) return padThisOverBalls([]);
+
+  // Assign an absolute over index (0-based) to every ball in the log.
   let currentAbsolute = targetLegal;
   const overIndices: number[] = [];
 
@@ -240,8 +253,8 @@ export function currentOverFromList(list: BallEvent[], ballsBowled?: number): Ba
     const ball = filled[i];
     
     // A legal ball belongs to `currentAbsolute`.
-    // An illegal ball belongs to the NEXT legal ball, which is `currentAbsolute + 1`.
-    const belongsToAbsolute = isLegalBallEvent(ball) ? currentAbsolute : currentAbsolute + 1;
+    // An illegal ball (wide/no-ball) belongs to the same over as the NEXT legal ball.
+    const belongsToAbsolute = isLegalBallEvent(ball) ? currentAbsolute : currentAbsolute;
     
     const overIdx = Math.floor((Math.max(1, belongsToAbsolute) - 1) / 6);
     overIndices[i] = Math.max(0, overIdx);
@@ -251,7 +264,7 @@ export function currentOverFromList(list: BallEvent[], ballsBowled?: number): Ba
     }
   }
 
-  const lastOverIdx = overIndices[overIndices.length - 1];
+  const lastOverIdx = overIndices[overIndices.length - 1] ?? 0;
   const currentOverBalls = filled.filter((_, i) => overIndices[i] === lastOverIdx);
 
   return padThisOverBalls(currentOverBalls);
