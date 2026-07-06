@@ -224,37 +224,37 @@ export function ballEventFromHistory(event: MatchBallHistoryEvent): BallEvent {
  *  When `ballsBowled` is provided (from the live scoreboard), use it to decide
  *  how many legal deliveries belong to the *current* over — not the log length. */
 export function currentOverFromList(list: BallEvent[], ballsBowled?: number): BallEvent[] {
-  if (typeof ballsBowled === "number" && ballsBowled <= 0) {
-    return padThisOverBalls([]);
-  }
-
   const filled = list.filter((ball) => ball.kind !== "empty");
   if (filled.length === 0) return padThisOverBalls([]);
 
-  const legalInLog = filled.filter(isLegalBallEvent).length;
-  const legalInOver =
-    typeof ballsBowled === "number" && ballsBowled > 0
-      ? ballsBowled % 6 === 0
-        ? 6
-        : ballsBowled % 6
-      : legalInLog % 6 === 0
-        ? 6
-        : legalInLog % 6;
+  const targetLegal = typeof ballsBowled === "number" && ballsBowled > 0 ? ballsBowled : filled.filter(isLegalBallEvent).length;
+  if (targetLegal <= 0 && filled.filter(isLegalBallEvent).length === 0) {
+    // If there are no legal balls yet, everything belongs to the first over.
+    return padThisOverBalls(filled);
+  }
 
-  if (legalInOver === 0) return padThisOverBalls([]);
+  let currentAbsolute = targetLegal;
+  const overIndices: number[] = [];
 
-  let legalSeen = 0;
-  let start = filled.length;
-
-  for (let index = filled.length - 1; index >= 0; index -= 1) {
-    start = index;
-    if (isLegalBallEvent(filled[index])) {
-      legalSeen += 1;
-      if (legalSeen === legalInOver) break;
+  for (let i = filled.length - 1; i >= 0; i--) {
+    const ball = filled[i];
+    
+    // A legal ball belongs to `currentAbsolute`.
+    // An illegal ball belongs to the NEXT legal ball, which is `currentAbsolute + 1`.
+    const belongsToAbsolute = isLegalBallEvent(ball) ? currentAbsolute : currentAbsolute + 1;
+    
+    const overIdx = Math.floor((Math.max(1, belongsToAbsolute) - 1) / 6);
+    overIndices[i] = Math.max(0, overIdx);
+    
+    if (isLegalBallEvent(ball)) {
+      currentAbsolute--;
     }
   }
 
-  return padThisOverBalls(filled.slice(start));
+  const lastOverIdx = overIndices[overIndices.length - 1];
+  const currentOverBalls = filled.filter((_, i) => overIndices[i] === lastOverIdx);
+
+  return padThisOverBalls(currentOverBalls);
 }
 
 /** Drop the oldest legal deliveries when the log has more than the scoreboard says were bowled. */
