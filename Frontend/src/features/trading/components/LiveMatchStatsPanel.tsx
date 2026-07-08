@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import NumberFlow from "@number-flow/react";
 import { Activity, Gauge, Info, Radio, Swords } from "lucide-react";
 import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { cn } from "@/lib/utils";
@@ -87,7 +88,10 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
             <TeamMark code={teamCode(match?.homeTeam.shortName || match?.homeTeam.name)} active={innings === 1} />
             <div className="min-w-0 text-center">
               <div className="font-data-tabular text-[25px] font-black leading-none tracking-[-0.04em] text-cyan-300">
-                {battingCode} {currentScore}/{wickets}
+                {battingCode}{" "}
+                <NumberFlow value={currentScore} />
+                <span className="text-cyan-200">/</span>
+                <NumberFlow value={wickets} />
                 <span className="ml-1.5 text-[12px] font-semibold tracking-normal text-slate-400">({overs} ov)</span>
               </div>
               <div className="mt-2 truncate text-[10px] text-slate-400">

@@ -50,14 +50,36 @@ export function buildPricePayload(match?: Match, market?: BackendMarket): Calcul
   };
 }
 
-export function buildOptionRows(calculated?: CalculatedPrice, market?: BackendMarket): ChainRow[] {
+export function roundScoreToNearestStrike(score: number): number {
+  if (!Number.isFinite(score) || score <= 0) return 0;
+
+  const remainder = score % 10;
+  if (remainder <= 5) {
+    return Math.floor(score / 10) * 10;
+  }
+  return Math.ceil(score / 10) * 10;
+}
+
+export function currentMatchRuns(match?: Match): number {
+  return numberFromDisplay(currentInningsScoreParts(match).runs);
+}
+
+export function buildOptionRows(
+  calculated?: CalculatedPrice,
+  market?: BackendMarket,
+  options?: { match?: Match; currentScore?: number }
+): ChainRow[] {
   const chain = (calculated?.optionChain ?? [])
     .filter((item) => item.strike >= 10)
     .sort((left, right) => left.strike - right.strike);
   if (!chain.length) return [];
 
+  const currentScore =
+    options?.currentScore ?? (options?.match ? currentMatchRuns(options.match) : 0);
   const projected = calculated?.projectedS0 ?? chain[Math.floor(chain.length / 2)]?.strike ?? 0;
-  const atmStrike = nearestStrike(chain, projected);
+  const referenceStrike = currentScore > 0 ? roundScoreToNearestStrike(currentScore) : projected;
+  const atmStrike = nearestStrike(chain, referenceStrike);
+  const itmReference = currentScore > 0 ? currentScore : projected;
   const ladder = market?.quantityLadder ?? [];
 
   return chain.map((item, index) => {
@@ -71,7 +93,7 @@ export function buildOptionRows(calculated?: CalculatedPrice, market?: BackendMa
       ask,
       bidQty: ladderEntry?.buyerQty ?? 0,
       askQty: ladderEntry?.sellerQty ?? 0,
-      moneyness: item.strike === atmStrike ? "ATM" : item.strike < projected ? "ITM" : "OTM",
+      moneyness: item.strike === atmStrike ? "ATM" : item.strike < itmReference ? "ITM" : "OTM",
     };
   });
 }

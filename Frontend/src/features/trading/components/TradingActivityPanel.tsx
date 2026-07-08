@@ -34,7 +34,7 @@ export function TradingActivityPanel({ className, matchId, marketId, market, mat
   // Live option chain for executable close quotes.
   const payload = useMemo(() => buildPricePayload(match, market), [match, market]);
   const { data: calculated } = useOptionChain(marketId, payload);
-  const chainRows = useMemo(() => buildOptionRows(calculated, market), [calculated, market]);
+  const chainRows = useMemo(() => buildOptionRows(calculated, market, { match }), [calculated, market, match]);
 
   const marketOrders = useMemo(
     () => orders.filter((order) => order.marketId === marketId && order.strike > 0 && order.quantity > 0),

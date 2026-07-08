@@ -119,8 +119,8 @@ export function MarketReplaySimulator() {
   });
 
   const optionRows = useMemo(
-    () => buildOptionRows(pricingQuery.data, marketQuery.data),
-    [marketQuery.data, pricingQuery.data]
+    () => buildOptionRows(pricingQuery.data, marketQuery.data, { currentScore: selectedEvent?.currentScore }),
+    [marketQuery.data, pricingQuery.data, selectedEvent?.currentScore]
   );
 
   const defaultStrike = findAtmRow(optionRows)?.strike ?? optionRows[0]?.strike ?? null;

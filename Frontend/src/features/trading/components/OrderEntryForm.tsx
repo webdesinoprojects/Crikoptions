@@ -42,7 +42,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const { data: wallet } = useWallet(true, terminalPollInterval);
   const payload = useMemo(() => buildPricePayload(match, market), [match, market]);
   const { data: calculated } = useOptionChain(marketId, payload);
-  const rows = useMemo(() => buildOptionRows(calculated, market), [calculated, market]);
+  const rows = useMemo(() => buildOptionRows(calculated, market, { match }), [calculated, market, match]);
   const rowMap = useMemo(() => new Map(rows.map(r => [r.strike, r])), [rows]);
   const atmRow = useMemo(() => findAtmRow(rows), [rows]);
   const selectedRow = useMemo(

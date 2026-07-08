@@ -33,7 +33,7 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
   const payload = useMemo(() => buildPricePayload(match, market), [match, market]);
   const { data: calculated, isLoading, isError } = useOptionChain(marketId, payload);
 
-  const rows = useMemo(() => buildOptionRows(calculated, market), [calculated, market]);
+  const rows = useMemo(() => buildOptionRows(calculated, market, { match }), [calculated, market, match]);
   const hasApiChain = Boolean(calculated?.optionChain?.length);
   const atmRow = findAtmRow(rows);
   const activeRow = selectedStrike == null ? atmRow : rows.find((row) => row.strike === selectedStrike);
