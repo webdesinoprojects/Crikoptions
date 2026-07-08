@@ -67,9 +67,9 @@ export default function TopNavBar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between border-b border-border/10 bg-background/95 px-3 shadow-[0_12px_48px_rgba(0,0,0,0.25)] backdrop-blur-xl select-none sm:px-4 lg:h-16 lg:px-6">
       <div className="flex min-w-0 items-center gap-3 lg:gap-8">
-        <Link href="/dashboard" className="font-headline-md flex min-w-0 items-center gap-2 text-sm font-black uppercase tracking-wide text-white transition-opacity hover:opacity-95 sm:text-base lg:gap-3 lg:text-lg">
+        <Link href="/dashboard" className="font-headline-md flex min-w-0 items-center gap-0 lg:gap-1 text-sm font-black uppercase tracking-wide text-white transition-opacity hover:opacity-95 sm:text-base lg:text-lg">
           <img src="/cricoptions_logo.jpg" alt="CricOptions Logo" className="h-8 w-8 shrink-0 rounded-lg object-cover lg:h-9 lg:w-9 shadow-[0_0_28px_rgba(14,165,233,0.28)]" />
-          <span className="truncate">CricOptions</span>
+          <img src="/cricoptions.png" alt="CricOptions" className="h-9 sm:h-10 lg:h-11 w-auto object-contain" />
         </Link>
         <nav className="hidden lg:flex items-center gap-1">
           {navItems.map((item) => (
@@ -164,9 +164,9 @@ export default function TopNavBar() {
             <SheetContent className="w-[min(21rem,calc(100vw-2rem))] overflow-y-auto border-l border-border/10 bg-background pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-foreground">
               <SheetHeader className="text-left">
                 <SheetTitle>
-                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="font-bold text-base text-white tracking-wider flex items-center gap-2 transition-opacity hover:opacity-95">
+                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="font-bold text-base text-white tracking-wider flex items-center gap-0 transition-opacity hover:opacity-95">
                     <img src="/cricoptions_logo.jpg" alt="CricOptions Logo" className="h-6 w-6 rounded object-cover" />
-                    CricOptions
+                    <img src="/cricoptions.png" alt="CricOptions" className="h-8 sm:h-9 w-auto object-contain" />
                   </Link>
                 </SheetTitle>
               </SheetHeader>

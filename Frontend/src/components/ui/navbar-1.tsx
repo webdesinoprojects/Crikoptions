@@ -37,15 +37,11 @@ export function Navbar1() {
       <div className="mx-auto flex h-14 max-w-[1500px] items-center justify-between px-3 sm:px-5 lg:h-16 lg:px-10 xl:px-12">
         <Link
           href="/"
-          className="group flex min-w-0 items-center gap-2 rounded-full pr-2 sm:gap-3"
+          className="group flex min-w-0 items-center gap-0 lg:gap-1 rounded-full pr-2"
           aria-label="CricOptions home"
         >
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-sky-300/30 bg-sky-400 text-xs font-black text-slate-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_14px_34px_rgba(14,165,233,0.22)] sm:size-10 lg:size-12 lg:text-sm">
-            CO
-          </span>
-          <span className="block max-w-[150px] truncate text-sm font-black text-slate-50 sm:max-w-none sm:text-base lg:text-lg">
-            CricOptions
-          </span>
+          <img src="/cricoptions_logo.jpg" alt="CricOptions Logo" className="h-8 w-8 shrink-0 rounded-lg object-cover lg:h-9 lg:w-9 shadow-[0_0_28px_rgba(14,165,233,0.28)]" />
+          <img src="/cricoptions.png" alt="CricOptions" className="h-9 sm:h-10 lg:h-11 w-auto object-contain" />
         </Link>
 
         <nav className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] p-1 lg:flex xl:gap-3">
@@ -108,11 +104,9 @@ export function Navbar1() {
             exit={{ opacity: 0 }}
           >
             <div className="flex items-center justify-between">
-              <Link href="/" className="flex items-center gap-3" onClick={() => setIsOpen(false)}>
-                <span className="flex size-10 items-center justify-center rounded-full bg-sky-400 text-sm font-black text-slate-950">
-                  CO
-                </span>
-                <span className="text-sm font-black text-slate-50">CricOptions</span>
+              <Link href="/" className="flex items-center gap-0" onClick={() => setIsOpen(false)}>
+                <img src="/cricoptions_logo.jpg" alt="CricOptions Logo" className="h-6 w-6 rounded object-cover" />
+                <img src="/cricoptions.png" alt="CricOptions" className="h-8 sm:h-9 w-auto object-contain" />
               </Link>
               <button
                 className="flex size-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-50"

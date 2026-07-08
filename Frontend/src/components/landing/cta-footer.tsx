@@ -63,7 +63,10 @@ export const CtaFooter = () => {
         <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12 font-mono text-sm tracking-wider">
           
           <div className="flex flex-col gap-4">
-            <span className="text-white font-bold text-lg mb-2">CRICOPTIONS</span>
+            <Link href="/" className="inline-flex items-center gap-1 mb-2">
+              <img src="/cricoptions_logo.jpg" alt="CricOptions Logo" className="h-6 w-6 rounded-md object-cover shadow-[0_0_20px_rgba(14,165,233,0.2)]" />
+              <img src="/cricoptions.png" alt="CricOptions" className="h-7 w-auto object-contain" />
+            </Link>
             <span className="text-slate-500">© 2026 CricOptions Inc.</span>
             <span className="text-slate-500">All Systems Nominal.</span>
           </div>

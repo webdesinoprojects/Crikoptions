@@ -32,13 +32,9 @@ export function Footer() {
     <footer className="border-t border-slate-800 bg-slate-950">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.35fr_2fr] lg:px-8">
         <div>
-          <Link href="/" className="inline-flex items-center gap-3">
-            <span className="flex size-9 items-center justify-center rounded-lg bg-sky-400 text-sm font-black text-slate-950">
-              CO
-            </span>
-            <span className="text-lg font-black text-slate-50">
-              CricOptions
-            </span>
+          <Link href="/" className="inline-flex items-center gap-1">
+            <img src="/cricoptions_logo.jpg" alt="CricOptions Logo" className="h-8 w-8 rounded-lg object-cover shadow-[0_0_28px_rgba(14,165,233,0.28)]" />
+            <img src="/cricoptions.png" alt="CricOptions" className="h-9 w-auto object-contain" />
           </Link>
           <p className="mt-4 max-w-sm text-sm leading-6 text-slate-400">
             A professional cricket markets workspace for live pricing, execution,
