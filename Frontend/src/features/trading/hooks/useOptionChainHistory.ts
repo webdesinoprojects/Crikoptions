@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { OptionChainHistoryPointResponse, tradingService } from "../services/trading.service";
 import { ChainRow } from "../utils/terminal-context";
 
 const MAX_POINTS_PER_STRIKE = 240;
-const TEST_HISTORY_POINTS_PER_STRIKE = 120;
-const TEST_HISTORY_STEP_MS = 5_000;
-const ENABLE_CANDLE_TEST_HISTORY = process.env.NODE_ENV !== "production";
 
 export interface ChainHistoryPoint {
   marketId: string;
@@ -21,6 +19,35 @@ export interface ChainHistoryPoint {
 export function useOptionChainHistory(marketId: string, rows: ChainRow[]) {
   const [history, setHistory] = useState<ChainHistoryPoint[]>([]);
   const currentMarketRef = useRef(marketId);
+
+  useEffect(() => {
+    if (!marketId) {
+      setHistory([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    tradingService
+      .fetchOptionChainHistory(marketId)
+      .then((response) => {
+        if (cancelled) return;
+        const seeded = (response.points ?? []).map(normalizeHistoryPoint).filter(Boolean) as ChainHistoryPoint[];
+        setHistory((current) =>
+          trimHistory([
+            ...seeded,
+            ...current.filter((point) => point.marketId === marketId),
+          ])
+        );
+      })
+      .catch(() => {
+        // Live snapshots still form candles if the history endpoint is unavailable.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [marketId]);
 
   useEffect(() => {
     const marketChanged = currentMarketRef.current !== marketId;
@@ -48,12 +75,7 @@ export function useOptionChainHistory(marketId: string, rows: ChainRow[]) {
 
     setHistory((current) => {
       const scopedCurrent = marketChanged ? [] : current.filter((point) => point.marketId === marketId);
-      const seededHistory =
-        ENABLE_CANDLE_TEST_HISTORY && scopedCurrent.length === 0
-          ? buildTestHistory(marketId, rows, timestamp)
-          : [];
-
-      return trimHistory([...seededHistory, ...scopedCurrent, ...snapshot]);
+      return trimHistory([...scopedCurrent, ...snapshot]);
     });
   }, [marketId, rows]);
 
@@ -92,53 +114,56 @@ export function useOptionChainHistory(marketId: string, rows: ChainRow[]) {
   };
 }
 
-function buildTestHistory(marketId: string, rows: ChainRow[], timestamp: number): ChainHistoryPoint[] {
-  return rows.flatMap((row, rowIndex) => {
-    const spread = Math.max(0.1, row.ask - row.bid);
-    const amplitude = Math.max(0.35, spread * 1.8, row.premium * 0.014);
-    const startTimestamp = timestamp - TEST_HISTORY_STEP_MS * TEST_HISTORY_POINTS_PER_STRIKE;
-
-    return Array.from({ length: TEST_HISTORY_POINTS_PER_STRIKE }, (_, index) => {
-      const progress = (index + 1) / TEST_HISTORY_POINTS_PER_STRIKE;
-      const trend = (progress - 1) * amplitude * 1.35;
-      const wave = Math.sin((index + rowIndex * 0.67) * 1.18) * amplitude * 0.62;
-      const pullback = index % 5 === 2 ? -amplitude * 0.48 : 0;
-      const premium = round2(Math.max(0.1, row.premium + trend + wave + pullback));
-      const bid = round2(Math.max(0, premium - spread / 2));
-      const ask = round2(premium + spread / 2);
-
-      return {
-        marketId,
-        timestamp: startTimestamp + index * TEST_HISTORY_STEP_MS,
-        strike: row.strike,
-        premium,
-        bid,
-        ask,
-        bidQty: Math.max(1, Math.round(row.bidQty * (0.78 + ((index + rowIndex) % 6) * 0.055))),
-        askQty: Math.max(1, Math.round(row.askQty * (0.8 + ((index + rowIndex + 2) % 6) * 0.05))),
-        moneyness: row.moneyness,
-      };
-    });
-  });
-}
-
 function trimHistory(points: ChainHistoryPoint[]) {
-  const grouped = new Map<number, ChainHistoryPoint[]>();
+  const grouped = new Map<string, ChainHistoryPoint[]>();
 
   points.forEach((point) => {
-    const strikePoints = grouped.get(point.strike) ?? [];
+    const key = `${point.marketId}:${point.strike}`;
+    const strikePoints = grouped.get(key) ?? [];
     strikePoints.push(point);
-    grouped.set(point.strike, strikePoints);
+    grouped.set(key, strikePoints);
   });
 
   return Array.from(grouped.values()).flatMap((strikePoints) =>
-    strikePoints
+    Array.from(new Map(strikePoints.map((point) => [historyPointKey(point), point])).values())
       .sort((left, right) => left.timestamp - right.timestamp)
       .slice(-MAX_POINTS_PER_STRIKE)
   );
 }
 
-function round2(value: number) {
-  if (!Number.isFinite(value)) return 0;
-  return Math.round(value * 100) / 100;
+function historyPointKey(point: ChainHistoryPoint) {
+  return [
+    point.timestamp,
+    point.premium,
+    point.bid,
+    point.ask,
+    point.bidQty,
+    point.askQty,
+  ].join(":");
+}
+
+function normalizeHistoryPoint(point: OptionChainHistoryPointResponse): ChainHistoryPoint | null {
+  if (!Number.isFinite(point.timestamp) || !Number.isFinite(point.strike) || !Number.isFinite(point.premium)) {
+    return null;
+  }
+
+  return {
+    marketId: point.marketId,
+    timestamp: point.timestamp,
+    strike: point.strike,
+    premium: point.premium,
+    bid: numberOrZero(point.bid),
+    ask: numberOrZero(point.ask),
+    bidQty: numberOrZero(point.bidQty),
+    askQty: numberOrZero(point.askQty),
+    moneyness: normalizeMoneyness(point.moneyness),
+  };
+}
+
+function normalizeMoneyness(value: unknown): ChainRow["moneyness"] {
+  return value === "ITM" || value === "ATM" || value === "OTM" ? value : "OTM";
+}
+
+function numberOrZero(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }

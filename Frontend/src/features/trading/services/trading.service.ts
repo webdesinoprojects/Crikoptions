@@ -45,6 +45,26 @@ export interface MatchBallHistoryEvent {
   commentary?: string;
 }
 
+export interface OptionChainHistoryPointResponse {
+  marketId: string;
+  timestamp: number;
+  strike: number;
+  premium: number;
+  bid: number;
+  ask: number;
+  bidQty: number;
+  askQty: number;
+  moneyness: "ITM" | "ATM" | "OTM";
+}
+
+export interface OptionChainHistoryResponse {
+  marketId: string;
+  matchId: string;
+  innings: number;
+  startedAt: number;
+  points: OptionChainHistoryPointResponse[];
+}
+
 export interface CalculatedPrice {
   buyerPrice: number;
   sellerPrice: number;
@@ -161,6 +181,13 @@ class TradingService {
       { params: { limit } }
     );
     return response.data.data ?? [];
+  }
+
+  async fetchOptionChainHistory(marketId: string): Promise<OptionChainHistoryResponse> {
+    const response = await apiClient.get<{ success: boolean; data: OptionChainHistoryResponse }>(
+      `/v1/markets/${marketId}/option-chain-history`
+    );
+    return response.data.data;
   }
 
   async fetchOpenPositions(filters?: PositionQueryFilters): Promise<OpenPosition[]> {

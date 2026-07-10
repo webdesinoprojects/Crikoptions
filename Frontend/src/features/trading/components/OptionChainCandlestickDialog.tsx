@@ -339,7 +339,7 @@ function buildCandleOption(candles: StrikeCandle[], bucketMs: number): echarts.E
         type: "inside",
         xAxisIndex: [0, 1],
         filterMode: "none",
-        start: zoomStart(candles.length),
+        start: 0,
         end: 100,
         zoomOnMouseWheel: true,
         moveOnMouseMove: true,
@@ -494,11 +494,6 @@ function FooterStat({
       <div className="truncate font-data-tabular text-[11px] font-black text-on-surface">{value}</div>
     </div>
   );
-}
-
-function zoomStart(count: number) {
-  if (count <= 24) return 0;
-  return Math.max(0, 100 - (24 / count) * 100);
 }
 
 function formatStrike(value: number) {
