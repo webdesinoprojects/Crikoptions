@@ -20,16 +20,18 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DataSourceBadge } from "@/components/shared/DataSourceBadge";
 import { TerminalPanel } from "@/components/shared/TerminalComponents";
-import { useWallet } from "@/features/wallet/hooks";
 import type { BackendMarket } from "@/lib/adapters/market.adapter";
-import { getErrorMessage } from "@/lib/error-message";
 import { cn } from "@/lib/utils";
-import type { Order } from "@/types";
-import { useCancelOrder, useCreateOrder, useOpenPositions, useOrderPreview, useOrders, terminalPollInterval } from "@/features/trading/hooks";
-import type { OpenPosition } from "@/features/trading/types/position";
 import type { CalculatedPrice, CalculatePricePayload } from "@/features/trading/services/trading.service";
 import { tradingService } from "@/features/trading/services/trading.service";
 import { buildOptionRows, findAtmRow, type ChainRow } from "@/features/trading/utils/terminal-context";
+import {
+  simulatorPositionMarkPrice,
+  simulatorPositionPnL,
+  useSimulatorSession,
+  type SimulatorOrder,
+  type SimulatorPosition,
+} from "../hooks/useSimulatorSession";
 import type { ReplayDataset, ReplayEvent, ReplayMatchKey } from "../types";
 import { parseReplayCsv } from "../utils/replay-csv";
 
@@ -42,7 +44,6 @@ const REPLAY_MATCHES: Array<{
   csvPath?: string;
   marketId: string;
   badge: string;
-  matchIdFallback?: string;
   disabled?: boolean;
 }> = [
   {
@@ -50,21 +51,19 @@ const REPLAY_MATCHES: Array<{
     label: "CSK vs MI",
     csvPath: "/simulator/CSK_MI_ballbyball_data.csv",
     marketId: "0000000000000000000000d1",
-    matchIdFallback: "1",
     badge: "CSV LIVE",
   },
   {
     key: "rcb-kkr",
     label: "RCB vs KKR",
     marketId: "0000000000000000000000d4",
-    matchIdFallback: "4",
     badge: "CSV PENDING",
     disabled: true,
   },
 ];
 const FIRST_INNINGS_MODEL_SCORE_CAP = 260;
 
-export function MarketReplaySimulator() {
+export function SimulatorReplay() {
   const [matchKey, setMatchKey] = useState<ReplayMatchKey>("csk-mi");
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedStrike, setSelectedStrike] = useState<number | null>(null);
@@ -76,7 +75,7 @@ export function MarketReplaySimulator() {
   const matchConfig = REPLAY_MATCHES.find((match) => match.key === matchKey) ?? REPLAY_MATCHES[0];
 
   const replayQuery = useQuery<ReplayDataset, Error>({
-    queryKey: ["market-scanner", "replay-csv", matchConfig.key, matchConfig.csvPath],
+    queryKey: ["simulator", "replay-csv", matchConfig.key, matchConfig.csvPath],
     queryFn: async () => {
       if (!matchConfig.csvPath) throw new Error("CSV data unavailable for this match");
       const response = await fetch(matchConfig.csvPath, { cache: "no-store" });
@@ -88,17 +87,10 @@ export function MarketReplaySimulator() {
   });
 
   const marketQuery = useQuery<BackendMarket, Error>({
-    queryKey: ["market-scanner", "market", matchConfig.marketId],
+    queryKey: ["simulator", "market", matchConfig.marketId],
     queryFn: () => tradingService.fetchMarketDetail(matchConfig.marketId),
     enabled: Boolean(matchConfig.marketId),
   });
-
-  const orderMatchId = marketQuery.data?.matchId || matchConfig.matchIdFallback;
-  const ordersQuery = useOrders(orderMatchId);
-  const positionsQuery = useOpenPositions();
-  const walletQuery = useWallet(true, terminalPollInterval);
-  const createOrderMutation = useCreateOrder();
-  const cancelOrderMutation = useCancelOrder(orderMatchId);
 
   const replay = replayQuery.data;
   const selectedEvent = useMemo(() => {
@@ -112,7 +104,7 @@ export function MarketReplaySimulator() {
   }, [replay, selectedEvent]);
 
   const pricingQuery = useQuery<CalculatedPrice, Error>({
-    queryKey: ["market-scanner", "pricing", matchConfig.marketId, pricingPayload],
+    queryKey: ["simulator", "pricing", matchConfig.marketId, pricingPayload],
     queryFn: () => tradingService.calculateMarketPrice(matchConfig.marketId, pricingPayload as CalculatePricePayload),
     enabled: Boolean(pricingPayload && matchConfig.marketId),
     refetchOnWindowFocus: false,
@@ -129,21 +121,18 @@ export function MarketReplaySimulator() {
   const selectedRow = optionRows.find((row) => sameStrike(row.strike, effectiveSelectedStrike ?? -1)) ?? findAtmRow(optionRows);
   const lots = Math.max(1, Number.parseInt(lotsInput, 10) || 1);
 
-  const marketOrders = useMemo(() => {
-    const orders = ordersQuery.data ?? [];
-    return orders
-      .filter((order) => order.marketId === matchConfig.marketId && order.strike > 0)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [matchConfig.marketId, ordersQuery.data]);
+  const simulatorSession = useSimulatorSession({
+    event: selectedEvent,
+    marketId: matchConfig.marketId,
+    matchKey: matchConfig.key,
+    rows: optionRows,
+  });
 
-  const marketPositions = useMemo(() => {
-    const positions = positionsQuery.data ?? [];
-    return positions.filter(
-      (position) => position.marketId === matchConfig.marketId && position.strike > 0 && position.lots !== 0
-    );
-  }, [matchConfig.marketId, positionsQuery.data]);
-
-  const positionMarks = useMemo(() => buildReplayPositionMarks(marketPositions, optionRows), [marketPositions, optionRows]);
+  const marketOrders = simulatorSession.orders;
+  const positionMarks = useMemo(
+    () => buildReplayPositionMarks(simulatorSession.openPositions, optionRows),
+    [optionRows, simulatorSession.openPositions]
+  );
   const selectedPositionMark = selectedRow
     ? positionMarks.find((mark) => sameStrike(mark.position.strike, selectedRow.strike))
     : undefined;
@@ -157,28 +146,29 @@ export function MarketReplaySimulator() {
   const priceKey = `${tradeSide}:${selectedRow?.strike ?? "none"}:${routedPrice.toFixed(2)}`;
   const displayLimitPrice = priceOverride?.key === priceKey ? priceOverride.value : routedPrice > 0 ? routedPrice.toFixed(2) : "";
   const limitPrice = Number.parseFloat(displayLimitPrice) || 0;
+  const limitPriceForSide = (side: TradeSide) => (side === tradeSide ? limitPrice : quoteForSide(side));
   const orderPriceForSide = (side: TradeSide) => {
     if (orderType === "MARKET") return quoteForSide(side);
-    if (side === tradeSide) return limitPrice;
-    return quoteForSide(side);
+    return limitPriceForSide(side);
   };
 
   const expectedPrice = orderPriceForSide(tradeSide);
-  const orderPreviewPayload =
-    selectedRow && pricingPayload && orderMatchId && expectedPrice > 0 && (orderType !== "LIMIT" || limitPrice > 0)
-      ? {
-          matchId: orderMatchId,
-          marketId: matchConfig.marketId,
-          strike: selectedRow.strike,
-          side: tradeSide.toLowerCase() as "buy" | "sell",
-          type: orderType,
-          quantity: lots,
-          price: expectedPrice,
-          pricingSnapshot: pricingPayload,
-        }
-      : undefined;
-  const orderPreviewQuery = useOrderPreview(orderPreviewPayload);
-  const availableBalance = walletQuery.data?.availableBalance;
+  const buyPreview = simulatorSession.previewTrade({
+    limitPrice: limitPriceForSide("BUY"),
+    quantity: lots,
+    row: selectedRow,
+    side: "BUY",
+    type: orderType,
+  });
+  const sellPreview = simulatorSession.previewTrade({
+    limitPrice: limitPriceForSide("SELL"),
+    quantity: lots,
+    row: selectedRow,
+    side: "SELL",
+    type: orderType,
+  });
+  const tradePreview = tradeSide === "BUY" ? buyPreview : sellPreview;
+  const availableBalance = simulatorSession.account.availableBalance;
   const netLotsForStrike = selectedPositionMark?.position.lots ?? 0;
   const openLotsForStrike = Math.abs(netLotsForStrike);
   const baseRisk = buildRiskSnapshot({
@@ -192,31 +182,22 @@ export function MarketReplaySimulator() {
   });
   const risk = {
     ...baseRisk,
-    marginRequired:
-      orderPreviewQuery.data && orderPreviewQuery.data.marginRequired >= 0
-        ? `Rs ${formatMoney(orderPreviewQuery.data.marginRequired)}`
-        : baseRisk.marginRequired,
+    marginRequired: `Rs ${formatMoney(tradePreview.marginRequired)}`,
   };
 
   const getDisabledReason = (side: TradeSide, quantity = lots) =>
     getTradeDisabledReason({
       expectedPrice: orderPriceForSide(side),
       lots: quantity,
-      orderMatchId,
       pricingError: pricingQuery.isError,
       pricingLoading: pricingQuery.isLoading,
       row: selectedRow,
     });
 
-  const previewDisabledReason =
-    orderPreviewQuery.data && !orderPreviewQuery.data.sufficientBalance
-      ? orderPreviewQuery.data.message || "Insufficient available wallet balance."
-      : "";
+  const previewDisabledReason = !tradePreview.sufficientBalance ? tradePreview.message : "";
   const activeDisabledReason = previewDisabledReason || getDisabledReason(tradeSide);
-  const canSubmitBuy =
-    (tradeSide === "BUY" ? activeDisabledReason : getDisabledReason("BUY")) === "" && !createOrderMutation.isPending;
-  const canSubmitSell =
-    (tradeSide === "SELL" ? activeDisabledReason : getDisabledReason("SELL")) === "" && !createOrderMutation.isPending;
+  const canSubmitBuy = getDisabledReason("BUY") === "" && buyPreview.sufficientBalance;
+  const canSubmitSell = getDisabledReason("SELL") === "" && sellPreview.sufficientBalance;
 
   const selectEvent = (event: ReplayEvent) => setSelectedEventId(event.id);
 
@@ -253,53 +234,51 @@ export function MarketReplaySimulator() {
   const submitOrder = (side: TradeSide, quantity = lots) => {
     setTradeSide(side);
     const price = orderPriceForSide(side);
+    const submittedLimitPrice = limitPriceForSide(side);
     const reason = getDisabledReason(side, quantity);
     if (reason) {
       toast.error(reason);
       return;
     }
-    if (side === tradeSide && orderPreviewQuery.data && !orderPreviewQuery.data.sufficientBalance) {
-      toast.error(orderPreviewQuery.data.message || "Insufficient available wallet balance.");
+    const preview = simulatorSession.previewTrade({
+      limitPrice: submittedLimitPrice,
+      quantity,
+      row: selectedRow,
+      side,
+      type: orderType,
+    });
+    if (!preview.sufficientBalance) {
+      toast.error(preview.message);
       return;
     }
-    if (!selectedRow || !pricingPayload || !orderMatchId || !selectedEvent) return;
+    if (!selectedRow || !pricingPayload || !selectedEvent) return;
 
     const orderStrike = selectedRow.strike;
     setSelectedStrike(orderStrike);
 
-    createOrderMutation.mutate(
-      {
-        clientOrderId: `scanner-${matchConfig.key}-${selectedEvent.id}-${orderStrike}-${side}-${Date.now()}`,
-        matchId: orderMatchId,
-        marketId: matchConfig.marketId,
-        strike: orderStrike,
-        side: side.toLowerCase() as "buy" | "sell",
-        type: orderType,
-        quantity,
-        price: orderType === "MARKET" ? 0 : price,
-        pricingSnapshot: pricingPayload,
-      },
-      {
-        onSuccess: (order) => {
-          setSelectedStrike(order.strike || orderStrike);
-          if (order.status === "FILLED") {
-            toast.success(
-              `Executed ${side} ${order.filledQuantity} lots @ Rs ${formatMoney(order.averageFillPrice || order.price || price)}`
-            );
-          } else if (order.status === "PARTIAL") {
-            toast.success(`Partially filled ${order.filledQuantity}/${order.quantity} lots`);
-          } else {
-            toast.success(`${side} order placed`);
-          }
-        },
-        onError: (error: unknown) => toast.error(getErrorMessage(error, "Failed to place order")),
-      }
-    );
+    const result = simulatorSession.submitOrder({
+      eventId: selectedEvent.id,
+      limitPrice: submittedLimitPrice,
+      quantity,
+      row: selectedRow,
+      side,
+      type: orderType,
+    });
+    if (!result.ok || !result.order) {
+      toast.error(result.message);
+      return;
+    }
+    const submittedOrder = result.order;
+    if (submittedOrder.status === "FILLED") {
+      toast.success(`Executed ${side} ${submittedOrder.filledQuantity} lots @ Rs ${formatMoney(submittedOrder.averageFillPrice || price)}`);
+    } else {
+      toast.success(`${side} limit order is working in this simulator session`);
+    }
   };
 
   const exitPosition = (mark: PositionMark) => {
     const row = optionRows.find((item) => sameStrike(item.strike, mark.position.strike));
-    if (!row || !pricingPayload || !orderMatchId || !selectedEvent) {
+    if (!row || !pricingPayload || !selectedEvent) {
       toast.error("No executable quote is available for this strike");
       return;
     }
@@ -309,33 +288,25 @@ export function MarketReplaySimulator() {
     const exitPrice = exitSide === "BUY" ? row.ask : row.bid;
     const exitQuantity = Math.abs(mark.position.lots);
     setTradeSide(exitSide);
-    createOrderMutation.mutate(
-      {
-        clientOrderId: `scanner-exit-${matchConfig.key}-${selectedEvent.id}-${row.strike}-${Date.now()}`,
-        matchId: orderMatchId,
-        marketId: matchConfig.marketId,
-        strike: row.strike,
-        side: exitSide.toLowerCase() as "buy" | "sell",
-        type: "MARKET",
-        positionEffect: "CLOSE",
-        quantity: exitQuantity,
-        price: 0,
-        pricingSnapshot: pricingPayload,
-      },
-      {
-        onSuccess: (order) => {
-          toast.success(`Exit submitted: ${order.filledQuantity || exitQuantity} lots @ Rs ${formatMoney(order.averageFillPrice || exitPrice)}`);
-        },
-        onError: (error: unknown) => toast.error(getErrorMessage(error, "Failed to exit trade")),
-      }
-    );
+    const result = simulatorSession.exitPosition({
+      eventId: selectedEvent.id,
+      position: mark.position,
+      row,
+    });
+    if (!result.ok || !result.order) {
+      toast.error(result.message);
+      return;
+    }
+    const exitOrder = result.order;
+    toast.success(`Exit filled: ${exitOrder.filledQuantity || exitQuantity} lots @ Rs ${formatMoney(exitOrder.averageFillPrice || exitPrice)}`);
   };
 
   const cancelOrder = (orderId: string) => {
-    cancelOrderMutation.mutate(orderId, {
-      onSuccess: () => toast.success("Order cancelled"),
-      onError: (error: unknown) => toast.error(getErrorMessage(error, "Unable to cancel order")),
-    });
+    if (simulatorSession.cancelOrder(orderId)) {
+      toast.success("Simulator order cancelled");
+    } else {
+      toast.error("Only working simulator orders can be cancelled");
+    }
   };
 
   const unavailableError =
@@ -344,14 +315,14 @@ export function MarketReplaySimulator() {
     (!matchConfig.csvPath ? "CSV data unavailable for this match" : "");
 
   if (replayQuery.isLoading || marketQuery.isLoading) {
-    return <SimulatorShell title="Market Scanner Replay" status="Loading real match data..." />;
+    return <SimulatorShell title="Simulator Replay" status="Loading replay market data..." />;
   }
 
   if (unavailableError || !replay || !selectedEvent || !marketQuery.data) {
     return (
-      <SimulatorShell title="Market Scanner Replay" status="CSV data unavailable/invalid">
+      <SimulatorShell title="Simulator Replay" status="CSV data unavailable/invalid">
         <div className="rounded-md border border-red-300/20 bg-red-500/10 p-4 text-sm text-red-100">
-          {unavailableError || "Required real match data is not available."}
+          {unavailableError || "Required replay market data is not available."}
         </div>
       </SimulatorShell>
     );
@@ -366,10 +337,10 @@ export function MarketReplaySimulator() {
               <h1 className="text-lg font-black tracking-tight text-white">{matchConfig.label}</h1>
               <DataSourceBadge source="api" />
               <span className="rounded border border-cyan-300/20 bg-cyan-300/10 px-2 py-1 text-[10px] font-black text-cyan-100">
-                REPLAY TRADING
+                SIMULATOR SESSION
               </span>
             </div>
-            <p className="mt-1 text-xs text-cyan-100/62">Market scanner with real CSV events and backend option pricing.</p>
+            <p className="mt-1 text-xs text-cyan-100/62">Simulator with CSV events and read-only option pricing.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {REPLAY_MATCHES.map((match) => (
@@ -410,7 +381,7 @@ export function MarketReplaySimulator() {
             displayLimitPrice={displayLimitPrice}
             event={selectedEvent}
             expectedPrice={expectedPrice}
-            isPending={createOrderMutation.isPending}
+            isPending={false}
             lotsInput={lotsInput}
             onInningsChange={selectInnings}
             onJumpBall={jumpToBall}
@@ -436,7 +407,7 @@ export function MarketReplaySimulator() {
 
           <OptionChainPanel
             currentEvent={selectedEvent}
-            exiting={createOrderMutation.isPending}
+            exiting={false}
             isError={pricingQuery.isError}
             isLoading={pricingQuery.isLoading}
             lots={lots}
@@ -451,14 +422,14 @@ export function MarketReplaySimulator() {
           <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_390px]">
             <EventTable events={replay.events} onSelect={selectEvent} selectedEvent={selectedEvent} />
             <OrdersPositionsPanel
-              cancelling={cancelOrderMutation.isPending}
-              loadingOrders={ordersQuery.isLoading}
-              loadingPositions={positionsQuery.isLoading}
+              cancelling={false}
+              loadingOrders={false}
+              loadingPositions={false}
               onCancelOrder={cancelOrder}
               orders={marketOrders}
               positions={positionMarks}
               selectedStrike={effectiveSelectedStrike}
-              syncing={ordersQuery.isFetching || positionsQuery.isFetching || cancelOrderMutation.isPending}
+              syncing={pricingQuery.isFetching}
             />
           </div>
         </div>
@@ -972,7 +943,7 @@ function OrdersPositionsPanel({
   loadingOrders: boolean;
   loadingPositions: boolean;
   onCancelOrder: (orderId: string) => void;
-  orders: Order[];
+  orders: SimulatorOrder[];
   positions: PositionMark[];
   selectedStrike: number | null;
   syncing: boolean;
@@ -980,7 +951,7 @@ function OrdersPositionsPanel({
   return (
     <TerminalPanel
       title="Orders & Positions"
-      subtitle="Paper trading account"
+      subtitle="Simulator session only"
       headerActions={
         <span
           className={cn(
@@ -988,7 +959,7 @@ function OrdersPositionsPanel({
             syncing ? "border-[#FFB300]/25 bg-[#FFB300]/10 text-[#FFB300]" : "border-primary/20 bg-primary/10 text-primary"
           )}
         >
-          {syncing ? "SYNCING" : "LIVE"}
+          {syncing ? "PRICING" : "SESSION"}
         </span>
       }
       bodyClass="gap-3"
@@ -1007,7 +978,7 @@ function OrdersPositionsPanel({
               const entryPrice = isShort ? mark.position.sellPrice ?? 0 : mark.position.buyPrice;
               return (
                 <div
-                  key={mark.position._id}
+                  key={mark.position.id}
                   className={cn(
                     "rounded-md border border-white/8 bg-[#071327] p-2",
                     selected && "border-cyan-300/30 bg-cyan-300/10"
@@ -1139,7 +1110,7 @@ function EventTable({
   );
 }
 
-function SideBadge({ side }: { side: Order["side"] }) {
+function SideBadge({ side }: { side: TradeSide }) {
   return (
     <span
       className={cn(
@@ -1182,7 +1153,7 @@ function buildReplayPricingPayload(event: ReplayEvent, dataset: ReplayDataset): 
 interface PositionMark {
   markPrice: number;
   pnl: number;
-  position: OpenPosition;
+  position: SimulatorPosition;
 }
 
 interface RiskSnapshot {
@@ -1195,46 +1166,16 @@ interface RiskSnapshot {
   score: string;
 }
 
-function buildReplayPositionMarks(positions: OpenPosition[], rows: ChainRow[]): PositionMark[] {
+function buildReplayPositionMarks(positions: SimulatorPosition[], rows: ChainRow[]): PositionMark[] {
   return positions.map((position) => {
     const row = rows.find((item) => sameStrike(item.strike, position.strike));
-    const markPrice = replayMarkPrice(position, row);
+    const markPrice = simulatorPositionMarkPrice(position, row);
     return {
       markPrice,
-      pnl: replayPositionPnL(position, markPrice),
+      pnl: simulatorPositionPnL(position, markPrice),
       position,
     };
   });
-}
-
-function replayMarkPrice(position: OpenPosition, row?: ChainRow) {
-  if (!row) return position.ltp;
-  if (position.lots < 0) return positiveOrFallback(row.ask, row.premium, position.ltp);
-  return positiveOrFallback(row.bid, row.premium, position.ltp);
-}
-
-function replayPositionPnL(position: OpenPosition, markPrice: number) {
-  const lots = Math.abs(position.lots);
-  if (lots === 0 || !Number.isFinite(markPrice)) return roundMoney(position.pnl);
-
-  if (position.lots > 0 && position.buyPrice > 0) {
-    return roundMoney((markPrice - position.buyPrice) * lots);
-  }
-
-  if (position.lots < 0 && (position.sellPrice ?? 0) > 0) {
-    return roundMoney(((position.sellPrice ?? 0) - markPrice) * lots);
-  }
-
-  return roundMoney(position.pnl);
-}
-
-function positiveOrFallback(...values: number[]) {
-  return values.find((value) => Number.isFinite(value) && value > 0) ?? 0;
-}
-
-function roundMoney(value: number) {
-  if (!Number.isFinite(value)) return 0;
-  return Math.round(value * 100) / 100;
 }
 
 function buildRiskSnapshot({
@@ -1306,19 +1247,16 @@ function modeledLongMaxProfit({
 function getTradeDisabledReason({
   expectedPrice,
   lots,
-  orderMatchId,
   pricingError,
   pricingLoading,
   row,
 }: {
   expectedPrice: number;
   lots: number;
-  orderMatchId?: string;
   pricingError: boolean;
   pricingLoading: boolean;
   row?: ChainRow;
 }) {
-  if (!orderMatchId) return "Market context is unavailable.";
   if (!row) return "Select a strike from the option chain.";
   if (pricingLoading) return "Pricing the selected replay event.";
   if (pricingError) return "Backend pricing is unavailable for this event.";
@@ -1327,32 +1265,27 @@ function getTradeDisabledReason({
   return "";
 }
 
-function isWorkingOrder(order: Order) {
-  return order.status === "PENDING" || order.status === "PARTIAL";
+function isWorkingOrder(order: SimulatorOrder) {
+  return order.status === "WORKING";
 }
 
-function statusColor(status: Order["status"]) {
+function statusColor(status: SimulatorOrder["status"]) {
   switch (status) {
     case "FILLED":
       return "text-bull-green";
-    case "PENDING":
-    case "PARTIAL":
+    case "WORKING":
       return "text-[#FFB300]";
     case "CANCELLED":
       return "text-on-surface-variant";
-    case "REJECTED":
-      return "text-bear-red";
     default:
       return "text-on-surface";
   }
 }
 
-function displayStatus(status: Order["status"]) {
+function displayStatus(status: SimulatorOrder["status"]) {
   if (status === "FILLED") return "Filled";
-  if (status === "PARTIAL") return "Partial";
-  if (status === "PENDING") return "Working";
+  if (status === "WORKING") return "Working";
   if (status === "CANCELLED") return "Cancelled";
-  if (status === "REJECTED") return "Rejected";
   return "Unknown";
 }
 

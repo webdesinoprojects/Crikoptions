@@ -6,8 +6,10 @@ import { useHomeMatches, useLiveTicker } from "@/features/dashboard/hooks";
 
 export default function SideNavBar() {
   const pathname = usePathname();
-  const { data: tickers } = useLiveTicker();
-  const { data: matches } = useHomeMatches();
+  const isSimulatorRoute = pathname === "/simulator" || pathname.startsWith("/simulator/");
+  const shouldLoadAccountShellData = !isSimulatorRoute;
+  const { data: tickers } = useLiveTicker(shouldLoadAccountShellData);
+  const { data: matches } = useHomeMatches(shouldLoadAccountShellData);
   const primaryMarketHref = tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/dashboard";
   const primaryInsightHref = matches?.[0]?.id ? `/insights/${matches[0].id}` : "/dashboard";
 
@@ -15,7 +17,7 @@ export default function SideNavBar() {
     { label: "Dashboard", icon: "dashboard", href: "/dashboard" },
     { label: "Trading Terminal", icon: "candlestick_chart", href: primaryMarketHref },
     { label: "Portfolio Hub", icon: "account_balance_wallet", href: "/portfolio" },
-    { label: "Market Scanner", icon: "query_stats", href: "/market-scanner" },
+    { label: "Simulator", icon: "query_stats", href: "/simulator" },
     { label: "Match Analysis", icon: "analytics", href: primaryInsightHref },
   ];
 

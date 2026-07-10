@@ -4,6 +4,12 @@ import { useEffect, useSyncExternalStore } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/features/auth/hooks/useAuth";
 
+const protectedRoutePrefixes = ["/dashboard", "/insights", "/portfolio", "/trading", "/profile", "/simulator"];
+
+function isProtectedRoute(pathname: string | null) {
+  return protectedRoutePrefixes.some((prefix) => pathname?.startsWith(prefix));
+}
+
 export const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, token, isLoading } = useAuthStore();
   const router = useRouter();
@@ -17,7 +23,7 @@ export const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (mounted && !isLoading && !token && !isAuthenticated) {
       // If we are on a dashboard route and definitely not logged in, redirect to login
-      if (pathname?.startsWith("/dashboard") || pathname?.startsWith("/insights") || pathname?.startsWith("/portfolio") || pathname?.startsWith("/trading") || pathname?.startsWith("/profile") || pathname?.startsWith("/market-scanner")) {
+      if (isProtectedRoute(pathname)) {
         router.replace("/login");
       }
     }
@@ -35,7 +41,7 @@ export const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   }
 
   // If not logged in and on a protected route, we return null to prevent flash of content before redirect
-  if (!isAuthenticated && !token && (pathname?.startsWith("/dashboard") || pathname?.startsWith("/insights") || pathname?.startsWith("/portfolio") || pathname?.startsWith("/trading") || pathname?.startsWith("/profile") || pathname?.startsWith("/market-scanner"))) {
+  if (!isAuthenticated && !token && isProtectedRoute(pathname)) {
     return null; 
   }
 

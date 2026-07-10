@@ -1,28 +1,31 @@
 import { useQuery } from "@tanstack/react-query";
 import { dashboardService } from "../services/dashboard.service";
 
-export const useDashboardOverview = () => {
+export const useDashboardOverview = (enabled = true) => {
   return useQuery({
     queryKey: ["dashboard", "overview"],
     queryFn: dashboardService.getFinancialOverview,
-    refetchInterval: 10000,
-    refetchOnWindowFocus: true,
+    enabled,
+    refetchInterval: enabled ? 10000 : false,
+    refetchOnWindowFocus: enabled,
   });
 };
 
-export const useLiveTicker = () => {
+export const useLiveTicker = (enabled = true) => {
   return useQuery({
     queryKey: ["dashboard", "ticker"],
     queryFn: dashboardService.getLiveTicker,
-    refetchInterval: 5000,
+    enabled,
+    refetchInterval: enabled ? 5000 : false,
   });
 };
 
-export const useHomeMatches = () => {
+export const useHomeMatches = (enabled = true) => {
   return useQuery({
     queryKey: ["homeMatches"],
     queryFn: dashboardService.fetchHomeMatches,
-    refetchInterval: 5000,
+    enabled,
+    refetchInterval: enabled ? 5000 : false,
   });
 };
 

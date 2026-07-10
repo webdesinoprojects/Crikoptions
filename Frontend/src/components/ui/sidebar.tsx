@@ -69,8 +69,10 @@ export function SessionNavBar() {
   const [isHovered, setIsHovered] = useState(false);
   const isCollapsed = !isHovered;
   const pathname = usePathname();
-  const { data: tickers } = useLiveTicker();
-  const { data: matches } = useHomeMatches();
+  const isSimulatorRoute = pathname === "/simulator" || pathname.startsWith("/simulator/");
+  const shouldLoadAccountShellData = !isSimulatorRoute;
+  const { data: tickers } = useLiveTicker(shouldLoadAccountShellData);
+  const { data: matches } = useHomeMatches(shouldLoadAccountShellData);
   const primaryMarketHref = tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/dashboard";
   const primaryInsightHref = matches?.[0]?.id ? `/insights/${matches[0].id}` : "/dashboard";
 
@@ -147,16 +149,16 @@ export function SessionNavBar() {
                     </Link>
                     
                     <Link
-                      href="/market-scanner"
+                      href="/simulator"
                       className={cn(
                         "flex h-11 w-full flex-row items-center rounded-md px-3 py-2 transition hover:bg-surface-bright hover:text-on-surface text-on-surface-variant",
                         isCollapsed && "justify-center px-0",
-                        pathname?.startsWith("/market-scanner") && "bg-primary/15 text-primary font-bold hover:bg-primary/20 hover:text-primary",
+                        pathname?.startsWith("/simulator") && "bg-primary/15 text-primary font-bold hover:bg-primary/20 hover:text-primary",
                       )}
                     >
                       <Activity className="h-5 w-5 shrink-0" />
                       <motion.li variants={variants}>
-                        {!isCollapsed && <p className="ml-3 text-sm whitespace-nowrap">Market Scanner</p>}
+                        {!isCollapsed && <p className="ml-3 text-sm whitespace-nowrap">Simulator</p>}
                       </motion.li>
                     </Link>
 
@@ -202,7 +204,8 @@ export function SessionNavBar() {
 
 export function MobileSessionNavBar() {
   const pathname = usePathname();
-  const { data: tickers } = useLiveTicker();
+  const isSimulatorRoute = pathname === "/simulator" || pathname.startsWith("/simulator/");
+  const { data: tickers } = useLiveTicker(!isSimulatorRoute);
   const primaryMarketHref = tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/dashboard";
 
   const items = [

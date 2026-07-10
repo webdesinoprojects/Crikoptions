@@ -8,7 +8,7 @@ interface WalletBalancePillProps {
 }
 
 export function WalletBalancePill({ enabled = true }: WalletBalancePillProps) {
-  const { data: overview, isError, isLoading } = useDashboardOverview();
+  const { data: overview, isError, isLoading } = useDashboardOverview(enabled);
 
   if (!enabled) return null;
 

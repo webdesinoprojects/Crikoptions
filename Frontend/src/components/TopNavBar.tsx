@@ -37,8 +37,10 @@ export default function TopNavBar() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
-  const { data: tickers } = useLiveTicker();
-  const { data: matches } = useHomeMatches();
+  const isSimulatorRoute = pathname === "/simulator" || pathname.startsWith("/simulator/");
+  const shouldLoadAccountShellData = !isSimulatorRoute;
+  const { data: tickers } = useLiveTicker(shouldLoadAccountShellData);
+  const { data: matches } = useHomeMatches(shouldLoadAccountShellData);
 
   const primaryMarketHref = tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/dashboard";
   const primaryInsightHref = matches?.[0]?.id ? `/insights/${matches[0].id}` : "/dashboard";
@@ -52,7 +54,7 @@ export default function TopNavBar() {
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
     { name: "Trading Terminal", href: primaryMarketHref, icon: <TrendingUp className="w-4 h-4" /> },
-    { name: "Market Scanner", href: "/market-scanner", icon: <Activity className="w-4 h-4" /> },
+    { name: "Simulator", href: "/simulator", icon: <Activity className="w-4 h-4" /> },
     { name: "Portfolio Hub", href: "/portfolio", icon: <Wallet className="w-4 h-4" /> },
 
     ...(user?.role === "admin"
@@ -90,7 +92,7 @@ export default function TopNavBar() {
 
       <div className="flex min-w-0 items-center gap-2 sm:gap-3 lg:gap-4">
         <div className="hidden md:block">
-          <WalletBalancePill enabled={isAuthenticated} />
+          <WalletBalancePill enabled={isAuthenticated && shouldLoadAccountShellData} />
         </div>
 
         <div className="hidden sm:flex items-center gap-3 border-r border-border/15 pr-4">
@@ -190,7 +192,7 @@ export default function TopNavBar() {
                   ))}
                 </nav>
                 <div className="rounded-lg border border-white/10 bg-white/5 p-3 md:hidden">
-                  <WalletBalancePill enabled={isAuthenticated} />
+                  <WalletBalancePill enabled={isAuthenticated && shouldLoadAccountShellData} />
                 </div>
               </div>
             </SheetContent>
