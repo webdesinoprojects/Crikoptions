@@ -809,6 +809,7 @@ function OptionChainPanel({
           <table className="w-full min-w-[780px] border-collapse font-data-tabular text-xs">
             <thead className="sticky top-0 z-10 bg-[#08152b] text-[10px] uppercase tracking-wide text-cyan-100/58">
               <tr className="border-b border-white/8">
+                <th className="px-4 py-2.5 text-left">Ball Number</th>
                 <th className="px-4 py-2.5 text-left">Lots</th>
                 <th className="px-3 py-2.5 text-center">B</th>
                 <th className="px-3 py-2.5 text-center">S</th>
@@ -832,6 +833,7 @@ function OptionChainPanel({
                         selected && "bg-cyan-400/14 shadow-[inset_4px_0_0_#67e8f9]"
                       )}
                     >
+                      <td className="px-4 py-3 font-black text-cyan-100">{currentEvent.legalBallNumber}</td>
                       <td className="px-4 py-3 text-on-surface-variant">{mark?.position.lots ?? lots}</td>
                       <td className="px-3 py-3 text-center">
                         <ChainSideButton
@@ -858,7 +860,7 @@ function OptionChainPanel({
                     </tr>
                     {mark && (
                       <tr className="border-b border-cyan-300/10 bg-cyan-300/[0.06]">
-                        <td colSpan={5} className="px-4 py-2">
+                        <td colSpan={6} className="px-4 py-2">
                           <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-on-surface-variant">
                             <InlineTradeMetric value={`${mark.position.lots} Lots`} />
                             <InlineTradeMetric value={`P&L: Rs ${formatMoney(mark.pnl)}`} tone={mark.pnl >= 0 ? "up" : "down"} />

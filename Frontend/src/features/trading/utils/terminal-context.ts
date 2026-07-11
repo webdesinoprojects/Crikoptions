@@ -215,10 +215,10 @@ export function padThisOverBalls(balls: BallEvent[]): BallEvent[] {
   return [...filled, ...Array.from({ length: blanksNeeded }, () => ({ label: "", kind: "empty" as const }))];
 }
 
-export function ballEventFromCommentary(event: { runs: number; isWicket: boolean; wicketType?: unknown; extra?: string | null }): BallEvent {
+export function ballEventFromCommentary(event: { runs: number; isWicket: boolean; extra?: string | null }): BallEvent {
   const isWicket = event.isWicket === true;
   const runs = Number.isFinite(Number(event.runs)) ? Number(event.runs) : 0;
-  if (isWicket) return wicketBallFromType("wicketType" in event ? event.wicketType : undefined);
+  if (isWicket) return wicketBallFromType();
   if (event.extra === "wide") return { label: "Wd", kind: "run", detail: "Wide" };
   if (event.extra === "noball") return { label: "Nb", kind: "run", detail: "No ball" };
   return ballFromRuns(runs);
@@ -490,22 +490,7 @@ export function ballClassName(kind: BallKind) {
   }
 }
 
-export function wicketBallFromType(value?: unknown): BallEvent {
-  const normalized = String(value ?? "").toLowerCase().replace(/[\s_-]+/g, "");
-
-  if (normalized.includes("bowled")) {
-    return { label: "B", kind: "bowled", detail: "Bowled" };
-  }
-  if (normalized.includes("lbw") || normalized.includes("legbefore")) {
-    return { label: "LBW", kind: "lbw", detail: "LBW" };
-  }
-  if (normalized.includes("caught") || normalized.includes("catch")) {
-    return { label: "C", kind: "caught", detail: "Caught" };
-  }
-  if (normalized.includes("runout")) {
-    return { label: "RO", kind: "runOut", detail: "Run out" };
-  }
-
+export function wicketBallFromType(): BallEvent {
   return { label: "W", kind: "wicket", detail: "Wicket" };
 }
 
