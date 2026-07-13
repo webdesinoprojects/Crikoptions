@@ -19,9 +19,9 @@ function validateForm(name: string, email: string, phone: string, password: stri
   if (!name.trim() || name.trim().length < 2) errors.name = "Name must be at least 2 characters.";
   if (name.trim().length > 80) errors.name = "Name must be under 80 characters.";
   if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = "Please enter a valid email address.";
-  if (phone && phone.replace(/[\s\-\+\(\)]/g, "").replace(/\D/g, "").length < 10) {
-    errors.phone = "Phone must be at least 10 digits.";
-  }
+  const phoneDigits = phone.replace(/[\s\-\+\(\)]/g, "").replace(/\D/g, "");
+  if (!phone.trim()) errors.phone = "Phone number is required.";
+  else if (phoneDigits.length < 10) errors.phone = "Phone must be at least 10 digits.";
   if (!password) errors.password = "Password is required.";
   else if (password.length < 8) errors.password = "Password must be at least 8 characters.";
   else if (password.length > 128) errors.password = "Password must not exceed 128 characters.";
@@ -54,7 +54,7 @@ export default function RegisterForm() {
     if (Object.keys(errs).length > 0) return;
 
     try {
-      await register({ name: name.trim(), email: email.trim(), phone: phone || undefined, password });
+      await register({ name: name.trim(), email: email.trim(), phone: phone.trim(), password });
       router.push("/dashboard");
     } catch (error: unknown) {
       setFormError(getErrorMessage(error, "Failed to create account. Please try again."));
@@ -138,14 +138,16 @@ export default function RegisterForm() {
                 )}
               </div>
 
-              {/* Phone (optional) */}
+              {/* Phone */}
               <div className="flex flex-col gap-1">
                 <div className={`flex items-center w-full bg-[#0a1428] border transition-all h-12 rounded-xl pl-5 pr-3 gap-2 ${touched.phone && fieldErrors.phone ? "border-red-500/60 bg-red-500/5" : "border-white/10 hover:border-[#d4af37]/30 focus-within:border-[#d4af37]/50"}`}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" className="shrink-0">
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                   </svg>
                   <input
-                    type="tel" placeholder="Phone number (optional, e.g. +91 98765 43210)"
+                    type="tel"
+                    placeholder="Phone number"
+                    required
                     className="bg-transparent text-white placeholder-white/30 outline-none text-xs w-full h-full font-medium"
                     value={phone}
                     onChange={(e) => { setPhone(e.target.value); if (touched.phone) setFieldErrors(validateForm(name, email, e.target.value, password)); }}

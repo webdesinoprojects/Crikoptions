@@ -21,6 +21,7 @@ import { useAuthStore } from "@/features/auth/hooks/useAuth";
 import { useHomeMatches, useLiveTicker } from "@/features/dashboard/hooks";
 import { WalletBalancePill } from "@/features/wallet/components";
 import { GlobalChat } from "@/features/chat/GlobalChat";
+import { GlobalLeaderboard } from "@/features/leaderboard/GlobalLeaderboard";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -96,6 +97,7 @@ export default function TopNavBar() {
           <WalletBalancePill enabled={isAuthenticated && shouldLoadAccountShellData} />
         </div>
 
+        <GlobalLeaderboard />
         <GlobalChat />
 
         <div className="hidden sm:flex items-center gap-3 border-r border-border/15 pr-4">
