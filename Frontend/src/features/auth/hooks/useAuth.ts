@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { User, LoginCredentials, RegisterCredentials } from "../types/auth";
 import { authService } from "../services/auth.service";
 import { getErrorMessage } from "@/lib/error-message";
+import { socketManager } from "@/lib/websocket/socket-manager";
 
 interface AuthState {
   user: User | null;
@@ -72,6 +73,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (typeof window !== "undefined") {
       localStorage.removeItem("crik_token");
     }
+    socketManager.disconnect();
     set({ token: null, user: null, isAuthenticated: false, error: null });
   },
 

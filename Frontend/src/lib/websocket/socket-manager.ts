@@ -1,4 +1,11 @@
 export type WebSocketCallback<T = unknown> = (data: T) => void;
+export type WebSocketConnectionState =
+  | "disabled"
+  | "connecting"
+  | "authenticating"
+  | "connected"
+  | "reconnecting"
+  | "unauthorized";
 
 const RECONNECT_BASE_MS = 1000;
 const RECONNECT_MAX_MS = 30000;
@@ -37,11 +44,15 @@ class SocketManager {
   private reconnectAttempts = 0;
   private disabled = false;
   private warnedUnavailable = false;
+  private connectionState: WebSocketConnectionState = "disabled";
+  private stateListeners = new Set<(state: WebSocketConnectionState) => void>();
 
   constructor() {
     this.url = resolveWebSocketUrl();
     if (!isWebSocketEnabled()) {
       this.disabled = true;
+    } else if (this.url) {
+      this.connectionState = "connecting";
     }
   }
 
@@ -50,7 +61,17 @@ class SocketManager {
   }
 
   public isConnected() {
-    return this.socket?.readyState === WebSocket.OPEN;
+    return this.socket?.readyState === WebSocket.OPEN && this.connectionState === "connected";
+  }
+
+  public getConnectionState() {
+    return this.connectionState;
+  }
+
+  public subscribeConnectionState(listener: (state: WebSocketConnectionState) => void): () => void {
+    this.stateListeners.add(listener);
+    listener(this.connectionState);
+    return () => this.stateListeners.delete(listener);
   }
 
   public connect(): WebSocket | null {
@@ -65,23 +86,31 @@ class SocketManager {
     }
 
     this.isConnecting = true;
+    this.setConnectionState(this.reconnectAttempts > 0 ? "reconnecting" : "connecting");
 
     try {
       this.socket = new WebSocket(this.url);
     } catch {
       this.isConnecting = false;
-      this.handleConnectionFailure("invalid websocket url");
+      this.handleConnectionFailure();
       return null;
     }
 
     this.socket.onopen = () => {
       this.isConnecting = false;
-      this.reconnectAttempts = 0;
       if (this.reconnectTimer) {
         clearTimeout(this.reconnectTimer);
         this.reconnectTimer = null;
       }
-      this.resubscribeAll();
+      const token = this.getToken();
+      if (token) {
+        this.setConnectionState("authenticating");
+        this.socket?.send(JSON.stringify({ action: "auth", token }));
+      } else {
+        this.reconnectAttempts = 0;
+        this.setConnectionState("connected");
+        this.resubscribeAll();
+      }
     };
 
     this.socket.onmessage = (event) => {
@@ -93,6 +122,17 @@ class SocketManager {
         };
         const { topic, data } = payload;
 
+        if (payload.event === "auth.ok") {
+          this.reconnectAttempts = 0;
+          this.setConnectionState("connected");
+          this.resubscribeAll();
+          return;
+        }
+        if (payload.event === "auth.error") {
+          this.setConnectionState("unauthorized");
+          return;
+        }
+
         if (topic && this.listeners.has(topic)) {
           this.listeners.get(topic)?.forEach((callback) => callback(data));
         } else if (payload.event && this.listeners.has(payload.event)) {
@@ -103,31 +143,47 @@ class SocketManager {
       }
     };
 
-    this.socket.onclose = () => {
+    this.socket.onclose = (event) => {
       this.isConnecting = false;
       this.socket = null;
+      if (event.code === 4401) {
+        this.setConnectionState("unauthorized");
+        return;
+      }
       this.reconnectAttempts += 1;
-
+      this.setConnectionState("reconnecting");
       this.scheduleReconnect();
     };
 
     this.socket.onerror = () => {
       this.isConnecting = false;
-      this.handleConnectionFailure("connection failed");
+      this.handleConnectionFailure();
     };
 
     return this.socket;
   }
 
-  private handleConnectionFailure(reason: string) {
+  private handleConnectionFailure() {
     this.reconnectAttempts += 1;
+    this.setConnectionState("reconnecting");
     this.scheduleReconnect();
+  }
+
+  private getToken() {
+    return typeof window === "undefined" ? null : window.localStorage.getItem("crik_token");
+  }
+
+  private setConnectionState(state: WebSocketConnectionState) {
+    if (this.connectionState === state) return;
+    this.connectionState = state;
+    this.stateListeners.forEach((listener) => listener(state));
   }
 
   private disableWithWarning(reason: string) {
     if (this.warnedUnavailable) return;
     this.warnedUnavailable = true;
     this.disabled = true;
+    this.setConnectionState("disabled");
 
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
@@ -160,7 +216,7 @@ class SocketManager {
   }
 
   private resubscribeAll() {
-    if (this.socket?.readyState !== WebSocket.OPEN) return;
+    if (this.socket?.readyState !== WebSocket.OPEN || this.connectionState !== "connected") return;
     for (const topic of this.listeners.keys()) {
       this.socket.send(JSON.stringify({ action: "subscribe", topic }));
     }
@@ -175,6 +231,8 @@ class SocketManager {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
+    this.reconnectAttempts = 0;
+    this.setConnectionState(this.disabled || !this.url ? "disabled" : "connecting");
   }
 
   public subscribe<T>(topic: string, callback: WebSocketCallback<T>): () => void {
@@ -185,7 +243,7 @@ class SocketManager {
 
     if (this.isEnabled()) {
       this.connect();
-      if (this.socket?.readyState === WebSocket.OPEN) {
+      if (this.socket?.readyState === WebSocket.OPEN && this.connectionState === "connected") {
         this.socket.send(JSON.stringify({ action: "subscribe", topic }));
       }
     }
@@ -197,7 +255,7 @@ class SocketManager {
       callbacks.delete(callback as WebSocketCallback<unknown>);
       if (callbacks.size === 0) {
         this.listeners.delete(topic);
-        if (this.socket?.readyState === WebSocket.OPEN) {
+        if (this.socket?.readyState === WebSocket.OPEN && this.connectionState === "connected") {
           this.socket.send(JSON.stringify({ action: "unsubscribe", topic }));
         }
       }

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { apiClient } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Wallet, Activity, ChevronRight } from "lucide-react";
+import { Wallet, MessageSquareWarning, ChevronRight } from "lucide-react";
 
 type AdminMatch = {
   _id: string;
@@ -58,18 +58,20 @@ export default function AdminConsolePage() {
           </div>
         </Link>
 
-        {/* Global Match Settings Card (Placeholder for future) */}
-        <div className="opacity-50 pointer-events-none border border-gray-800 rounded-xl p-6 bg-gray-950 h-full flex flex-col justify-between">
-          <div>
-            <div className="w-12 h-12 bg-gray-800 text-gray-500 rounded-lg flex items-center justify-center mb-4">
-              <Activity className="w-6 h-6" />
+        <Link href="/admin/chat">
+          <div className="group flex h-full cursor-pointer flex-col justify-between rounded-xl border border-gray-800 bg-gray-950 p-6 transition-colors hover:bg-gray-900">
+            <div>
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-amber-400/10 text-amber-300">
+                <MessageSquareWarning className="h-6 w-6" />
+              </div>
+              <h2 className="mb-2 text-xl font-bold">Chat Moderation</h2>
+              <p className="text-sm text-gray-400">Review reported messages, dismiss false positives, and remove abusive content.</p>
             </div>
-            <h2 className="text-xl font-bold mb-2 text-gray-400">System Activity</h2>
-            <p className="text-gray-500 text-sm">
-              Global order rejection rates, matching engine logs, and real-time active WebSocket connection counts. (Coming Soon)
-            </p>
+            <div className="mt-6 flex items-center font-medium text-amber-300 transition-transform group-hover:translate-x-1">
+              Review Reports <ChevronRight className="ml-1 h-4 w-4" />
+            </div>
           </div>
-        </div>
+        </Link>
       </div>
 
       <h2 className="text-2xl font-bold tracking-tight mb-4">Live Match Controls</h2>
