@@ -61,18 +61,6 @@ export function GlobalLeaderboard() {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <button
-          type="button"
-          aria-label="Open leaderboard"
-          title="Leaderboard"
-          className="flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.035] px-2 text-muted-foreground transition hover:border-amber-300/35 hover:bg-amber-300/10 hover:text-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/50 sm:px-2.5"
-        >
-          <Trophy className="h-4 w-4 shrink-0" aria-hidden />
-          <span className="hidden text-[10px] font-black uppercase tracking-[0.14em] sm:inline">Leader</span>
-        </button>
-      </SheetTrigger>
-
       <SheetContent
         side="right"
         className="flex h-[100dvh] w-full max-w-none flex-col gap-0 overflow-hidden border-l border-white/10 bg-[#010711] p-0 text-foreground shadow-[-28px_0_80px_rgba(0,0,0,0.55)] sm:w-[440px] sm:max-w-[440px]"
