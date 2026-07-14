@@ -38,6 +38,12 @@ export function GlobalLeaderboard() {
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
+  React.useEffect(() => {
+    const handleOpen = () => setOpen(true);
+    window.addEventListener("open-leaderboard", handleOpen);
+    return () => window.removeEventListener("open-leaderboard", handleOpen);
+  }, []);
+
   const leaderboardQuery = useQuery({
     queryKey: leaderboardKeys.all,
     queryFn: leaderboardApi.getLeaderboard,
