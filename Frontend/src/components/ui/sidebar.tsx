@@ -73,7 +73,7 @@ export function SessionNavBar() {
   const shouldLoadAccountShellData = !isSimulatorRoute;
   const { data: tickers } = useLiveTicker(shouldLoadAccountShellData);
   const { data: matches } = useHomeMatches(shouldLoadAccountShellData);
-  const primaryMarketHref = tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/dashboard";
+  const primaryMarketHref = tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/trading";
   const primaryInsightHref = matches?.[0]?.id ? `/insights/${matches[0].id}` : "/dashboard";
 
   return (
@@ -206,7 +206,7 @@ export function MobileSessionNavBar() {
   const pathname = usePathname();
   const isSimulatorRoute = pathname === "/simulator" || pathname.startsWith("/simulator/");
   const { data: tickers } = useLiveTicker(!isSimulatorRoute);
-  const primaryMarketHref = tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/dashboard";
+  const primaryMarketHref = tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/trading";
 
   const items = [
     { label: "Home", href: "/dashboard", icon: LayoutDashboard, active: pathname === "/dashboard" },

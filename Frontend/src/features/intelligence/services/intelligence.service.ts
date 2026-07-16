@@ -94,7 +94,7 @@ function buildMomentum(match: BackendMatch): MomentumScore {
   const score = Math.max(0, Math.min(100, Math.round(runRate * 10 - pressureIndex / 2)));
 
   return {
-    matchId: match._id,
+    matchId: match._id ?? "",
     score,
     winProbability: 0,
     pressureIndex,
@@ -106,7 +106,7 @@ function buildMomentum(match: BackendMatch): MomentumScore {
 }
 
 function oversFromMatch(match: BackendMatch): number {
-  const parsed = Number.parseFloat(match.oversText);
+  const parsed = Number.parseFloat(match.oversText ?? "");
   if (Number.isFinite(parsed)) return parsed;
   const ballsBowled = Math.max(0, 120 - numberOrZero(match.ballsLeft));
   return round2(Math.floor(ballsBowled / 6) + (ballsBowled % 6) / 10);

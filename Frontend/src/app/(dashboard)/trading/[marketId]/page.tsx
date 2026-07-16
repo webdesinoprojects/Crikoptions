@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { Activity, BarChart3, ListOrdered, TicketCheck } from "lucide-react";
@@ -37,7 +38,7 @@ export default function TradingTerminalPage({ params }: PageProps) {
   const [mobilePanel, setMobilePanel] = React.useState<MobileTradingPanel>("chain");
   const { marketId } = React.use(params);
   const setActiveMarket = useTerminalStore((state) => state.setActiveMarket);
-  const { data: market } = useMarketDetail(marketId);
+  const { data: market, isError: marketError, isLoading: marketLoading } = useMarketDetail(marketId);
   const matchId = market?.matchId ?? "";
   const { data: match } = useMatchDetails(matchId);
   // Backend WS topics use hex _id; cache key stays on market short matchId.
@@ -75,6 +76,22 @@ export default function TradingTerminalPage({ params }: PageProps) {
     },
     { scope: terminalRef, dependencies: [marketId] }
   );
+
+  if (marketLoading) {
+    return <TerminalShell ref={terminalRef}><TerminalNotice title="Loading market" body="Opening the live trading terminal..." /></TerminalShell>;
+  }
+
+  if (marketError || !market || !market._id || !market.matchId) {
+    return (
+      <TerminalShell ref={terminalRef}>
+        <TerminalNotice
+          title="Market unavailable"
+          body="This market is no longer available. Sample markets were removed, so choose the current live match from the dashboard."
+          action={<Link className="rounded-lg border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-sm font-black text-cyan-100 hover:bg-cyan-300/15" href="/">Go to dashboard</Link>}
+        />
+      </TerminalShell>
+    );
+  }
 
   return (
     <div
@@ -127,6 +144,39 @@ export default function TradingTerminalPage({ params }: PageProps) {
         </div>
       </main>
     </div>
+  );
+}
+
+const TerminalShell = React.forwardRef<HTMLDivElement, { children: React.ReactNode }>(function TerminalShell({ children }, ref) {
+  return (
+    <div
+      ref={ref}
+      className="noise-overlay relative flex min-h-[calc(100dvh-3.5rem)] flex-grow flex-col overflow-hidden bg-[#01040a] text-on-surface"
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(8,145,178,0.15),transparent_40%),radial-gradient(ellipse_at_bottom_right,rgba(20,184,166,0.1),transparent_40%)]"
+      />
+      <div className="relative z-10 flex min-h-0 flex-1 items-center justify-center p-6">{children}</div>
+    </div>
+  );
+});
+
+function TerminalNotice({
+  action,
+  body,
+  title,
+}: {
+  action?: React.ReactNode;
+  body: string;
+  title: string;
+}) {
+  return (
+    <section className="max-w-md rounded-2xl border border-white/10 bg-[#071327]/95 p-6 text-center shadow-[0_24px_90px_rgba(0,0,0,0.45)]">
+      <h1 className="font-display text-2xl font-black text-white">{title}</h1>
+      <p className="mt-2 text-sm font-semibold leading-6 text-on-surface-variant">{body}</p>
+      {action && <div className="mt-5 flex justify-center">{action}</div>}
+    </section>
   );
 }
 

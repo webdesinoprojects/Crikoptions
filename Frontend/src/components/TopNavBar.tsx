@@ -44,7 +44,7 @@ export default function TopNavBar() {
   const { data: tickers } = useLiveTicker(shouldLoadAccountShellData);
   const { data: matches } = useHomeMatches(shouldLoadAccountShellData);
 
-  const primaryMarketHref = tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/dashboard";
+  const primaryMarketHref = tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/trading";
   const primaryInsightHref = matches?.[0]?.id ? `/insights/${matches[0].id}` : "/dashboard";
 
   const handleLogout = () => {

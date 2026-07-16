@@ -444,8 +444,14 @@ export default function AdminMatchControlPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <h2 className="text-lg font-semibold mb-2">Option Chain (Market: {market.title})</h2>
-          <OptionChain marketId={market._id} market={market} match={toMatchType(match)} />
+          <h2 className="text-lg font-semibold mb-2">Option Chain (Market: {market.title ?? "Market"})</h2>
+          {market._id ? (
+            <OptionChain marketId={market._id} market={market} match={toMatchType(match)} />
+          ) : (
+            <p className="rounded-md border border-amber-400/20 bg-amber-400/10 p-3 text-sm text-amber-100">
+              Market is unavailable.
+            </p>
+          )}
         </div>
         <div>
           <h2 className="text-lg font-semibold mb-2">Instructions</h2>

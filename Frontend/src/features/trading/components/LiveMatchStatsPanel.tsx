@@ -23,7 +23,7 @@ interface LiveMatchStatsPanelProps {
 }
 
 export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStatsPanelProps) {
-  const { stableMatch, balls } = useStableMatchSnapshot(match, market?.matchId);
+  const { stableMatch, balls } = useStableMatchSnapshot(match, market?.matchId ?? undefined);
   
   const score = currentInningsScoreParts(stableMatch);
   const parsedRuns = Number.parseInt(score.runs, 10);
@@ -55,6 +55,14 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
   const lastWicket = [...balls].reverse().find((ball) => isWicket(ball));
   const momentum = momentumLabel(balls, crr, battingCode, bowlingCode);
   const volatility = volatilityLabel(market);
+  const providerMatch = stableMatch?.dataSource === "sportmonks";
+  const inningsSummary = stableMatch?.inningsSummaries?.find((summary) => summary.innings === innings);
+  const finalization = stableMatch?.feedState === "finalizing"
+    ? inningsSummary?.settlementReady
+      ? "Final confirmed"
+      : `Final check ${Math.min(inningsSummary?.finalCandidate?.identicalPolls ?? 0, 3)}/3`
+    : undefined;
+  const blockerText = stableMatch?.tradingBlockers?.map((blocker) => blocker.replaceAll("_", " ")).join(", ");
 
   return (
     <aside
@@ -71,18 +79,37 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
             <span
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-[4px] border px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em]",
-                match?.status === "LIVE"
+                match?.status === "LIVE" || match?.status === "INNINGS_BREAK"
                   ? "border-amber-300/25 bg-amber-400/12 text-amber-200"
                   : "border-cyan-300/20 bg-cyan-400/10 text-cyan-200"
               )}
             >
-              {match?.status === "LIVE" && <span className="size-1.5 rounded-full bg-amber-200 shadow-[0_0_10px_rgba(253,230,138,0.9)]" />}
-              {match?.status ?? "LIVE"}
+              {(match?.status === "LIVE" || match?.status === "INNINGS_BREAK") && <span className="size-1.5 rounded-full bg-amber-200 shadow-[0_0_10px_rgba(253,230,138,0.9)]" />}
+              {match?.status === "INNINGS_BREAK" ? "INNINGS BREAK" : match?.status ?? "LIVE"}
             </span>
+            {match?.dataSource === "sportmonks" && (
+              <span className={cn(
+                "rounded border px-2 py-1 text-[9px] font-black uppercase tracking-wider",
+                match.feedState === "healthy"
+                  ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-200"
+                  : "border-amber-400/25 bg-amber-400/10 text-amber-200"
+              )}>
+                Feed {match.feedState ?? "warming"}
+              </span>
+            )}
             <span className="truncate text-right text-[13px] font-bold tracking-tight text-slate-100">
               {stableMatch?.title ?? `${battingCode} vs ${bowlingCode}`}
             </span>
           </div>
+
+          {providerMatch && (
+            <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] font-semibold uppercase tracking-wide text-slate-400">
+              <span>Provider {stableMatch.providerPhase || "unknown"}</span>
+              {finalization && <span className="text-amber-200">{finalization}</span>}
+              {inningsSummary?.finalDisposition && <span>Outcome {inningsSummary.finalDisposition}</span>}
+              {blockerText && <span className="text-rose-200">Blocked: {blockerText}</span>}
+            </div>
+          )}
 
           <div className="grid grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-3">
             <TeamMark code={teamCode(match?.homeTeam.shortName || match?.homeTeam.name)} active={innings === 1} />

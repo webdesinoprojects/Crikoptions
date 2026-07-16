@@ -5,6 +5,9 @@ import { CalculatedPrice, CalculatePricePayload, MatchBallHistoryEvent, OptionCh
 export type BallKind = "empty" | "dot" | "run" | "four" | "six" | "wicket" | "bowled" | "lbw" | "caught" | "runOut";
 
 export interface BallEvent {
+  eventId?: string;
+  sequence?: number;
+  revision?: number;
   label: string;
   kind: BallKind;
   detail?: string;
@@ -70,6 +73,10 @@ export function buildOptionRows(
   options?: { match?: Match; currentScore?: number }
 ): ChainRow[] {
   const chain = (calculated?.optionChain ?? [])
+    .map((item) => ({
+      strike: numberOrZero(item?.strike),
+      premium: numberOrZero(item?.premium),
+    }))
     .filter((item) => item.strike >= 10)
     .sort((left, right) => left.strike - right.strike);
   if (!chain.length) return [];
@@ -215,13 +222,14 @@ export function padThisOverBalls(balls: BallEvent[]): BallEvent[] {
   return [...filled, ...Array.from({ length: blanksNeeded }, () => ({ label: "", kind: "empty" as const }))];
 }
 
-export function ballEventFromCommentary(event: { runs: number; isWicket: boolean; extra?: string | null }): BallEvent {
+export function ballEventFromCommentary(event: { eventId?: string; sequence?: number; revision?: number; runs: number; isWicket: boolean; extra?: string | null }): BallEvent {
+  const identity = { eventId: event.eventId, sequence: event.sequence, revision: event.revision };
   const isWicket = event.isWicket === true;
   const runs = Number.isFinite(Number(event.runs)) ? Number(event.runs) : 0;
-  if (isWicket) return wicketBallFromType();
-  if (event.extra === "wide") return { label: "Wd", kind: "run", detail: "Wide" };
-  if (event.extra === "noball") return { label: "Nb", kind: "run", detail: "No ball" };
-  return ballFromRuns(runs);
+  if (isWicket) return { ...wicketBallFromType(), ...identity };
+  if (event.extra === "wide") return { ...identity, label: "Wd", kind: "run", detail: "Wide" };
+  if (event.extra === "noball") return { ...identity, label: "Nb", kind: "run", detail: "No ball" };
+  return { ...ballFromRuns(runs), ...identity };
 }
 
 export function ballEventFromAdmin(event: {
@@ -237,11 +245,12 @@ export function ballEventFromAdmin(event: {
 }
 
 export function ballEventFromHistory(event: MatchBallHistoryEvent): BallEvent {
+  const identity = { eventId: event.eventId, sequence: event.sequence, revision: event.revision };
   const extra = String(event.extra ?? "").toLowerCase().replace(/[\s_-]+/g, "");
-  if (extra === "wide" || extra === "wd") return { label: "Wd", kind: "run" };
-  if (extra === "noball" || extra === "nb") return { label: "Nb", kind: "run" };
-  if (event.isWicket === true) return { label: "W", kind: "wicket" };
-  return ballFromRuns(Number(event.runs) || 0);
+  if (extra === "wide" || extra === "wd") return { ...identity, label: "Wd", kind: "run" };
+  if (extra === "noball" || extra === "nb") return { ...identity, label: "Nb", kind: "run" };
+  if (event.isWicket === true) return { ...identity, label: "W", kind: "wicket" };
+  return { ...ballFromRuns(Number(event.runs) || 0), ...identity };
 }
 
 /** Render the 6 "this over" slots from an append-only delivery log.
@@ -549,6 +558,10 @@ function totalBallsForFormat(format?: string) {
 function numberFromDisplay(value?: string) {
   const parsed = Number.parseInt(value ?? "0", 10);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function numberOrZero(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
 function round2(value: number) {

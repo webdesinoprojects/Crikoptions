@@ -15,6 +15,7 @@ export const MatchCard = React.memo(function MatchCard({ match, selected }: { ma
   const battingTeam = battingTeamForMatch(match);
   const battingCode = teamCode(battingTeam?.shortName || battingTeam?.name);
   const isChase = (match.innings ?? 1) === 2 && (match.targetScore ?? 0) > 0;
+  const isBreak = match.status === "INNINGS_BREAK";
   const { data: markets = [] } = useMarkets(match.id);
 
   const handleClick = React.useCallback(() => {
@@ -41,13 +42,18 @@ export const MatchCard = React.memo(function MatchCard({ match, selected }: { ma
     >
       <span className="inline-flex h-8 items-center justify-center gap-1 rounded-md bg-amber-400/15 px-2 text-[9px] font-black uppercase tracking-wide text-amber-200 ring-1 ring-amber-300/20 sm:h-9 sm:gap-1.5 sm:px-2.5 sm:text-[10px]">
         <span className="size-1.5 rounded-full bg-amber-200 shadow-[0_0_10px_rgba(253,230,138,0.9)]" />
-        Live
+        {isBreak ? "Break" : "Live"}
       </span>
       <div className="min-w-0">
         <div className="truncate text-[12px] font-black leading-tight text-on-surface sm:text-sm">{match.title}</div>
         <div className="font-data-tabular text-[12px] font-black text-teal-300 sm:text-sm">
           {battingCode} {score.runs}/{score.wickets} - {match.currentOver ?? "0.0"} ov
         </div>
+        {isBreak && (
+          <div className="truncate font-data-tabular text-[10px] font-semibold text-cyan-100/85 sm:text-[11px]">
+            Innings break
+          </div>
+        )}
         {isChase && (
           <div className="truncate font-data-tabular text-[10px] font-semibold text-amber-200/90 sm:text-[11px]">
             Target {match.targetScore}

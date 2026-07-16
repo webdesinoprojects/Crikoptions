@@ -15,6 +15,9 @@ export interface CreateOrderPayload {
   positionEffect?: "AUTO" | "OPEN" | "CLOSE";
   quantity: number;
   price: number;
+  expectedMatchStateVersion?: number;
+  expectedTradingVersion?: number;
+  quoteExpiresAt?: string;
   pricingSnapshot?: CalculatePricePayload;
 }
 
@@ -34,6 +37,9 @@ export interface OptionChainStrike {
 
 /** One persisted ball from GET /v1/matches/{id}/events */
 export interface MatchBallHistoryEvent {
+  eventId?: string;
+  sequence?: number;
+  revision?: number;
   innings?: number;
   over?: number;
   ball?: number;
@@ -43,6 +49,17 @@ export interface MatchBallHistoryEvent {
   strikerName?: string;
   bowlerName?: string;
   commentary?: string;
+  legalBall?: boolean;
+  providerModifiedAt?: string;
+  receivedAt?: string;
+  superseded?: boolean;
+  tombstoned?: boolean;
+}
+
+interface MatchBallHistoryPage {
+  success: boolean;
+  data: MatchBallHistoryEvent[];
+  nextSequence?: number | null;
 }
 
 export interface OptionChainHistoryPointResponse {
@@ -132,6 +149,9 @@ export interface OrderPreview {
   sufficientBalance: boolean;
   willExecuteNow: boolean;
   message: string;
+  matchStateVersion: number;
+  tradingVersion: number;
+  expiresAt?: string;
 }
 
 class TradingService {
@@ -181,6 +201,25 @@ class TradingService {
       { params: { limit } }
     );
     return response.data.data ?? [];
+  }
+
+  async fetchInningsEvents(matchId: string, innings: number): Promise<MatchBallHistoryEvent[]> {
+    const events: MatchBallHistoryEvent[] = [];
+    let afterSequence = 0;
+
+    for (;;) {
+      const response = await apiClient.get<MatchBallHistoryPage>(`/v1/matches/${matchId}/events`, {
+        params: { innings, afterSequence, limit: 500 },
+      });
+      const page = response.data.data ?? [];
+      events.push(...page);
+
+      const nextSequence = response.data.nextSequence;
+      if (!Number.isSafeInteger(nextSequence) || Number(nextSequence) <= afterSequence) break;
+      afterSequence = Number(nextSequence);
+    }
+
+    return events;
   }
 
   async fetchOptionChainHistory(marketId: string): Promise<OptionChainHistoryResponse> {
@@ -254,7 +293,7 @@ class TradingService {
 
     return [
       {
-        marketId: market._id,
+        marketId: market._id ?? "",
         symbol: symbolFromTitle(market.title),
         timestamp,
         open: market.open ?? 0,
@@ -337,6 +376,9 @@ function normalizeOrderPreview(preview: OrderPreview): OrderPreview {
     sufficientBalance: Boolean(preview?.sufficientBalance),
     willExecuteNow: Boolean(preview?.willExecuteNow),
     message: preview?.message ?? "",
+    matchStateVersion: numberOrZero(preview?.matchStateVersion),
+    tradingVersion: numberOrZero(preview?.tradingVersion),
+    expiresAt: typeof preview?.expiresAt === "string" ? preview.expiresAt : undefined,
   };
 }
 
@@ -358,8 +400,8 @@ function normalizePositionEffect(value: unknown): "AUTO" | "OPEN" | "CLOSE" {
   return "AUTO";
 }
 
-function symbolFromTitle(title: string): string {
-  const words = title
+function symbolFromTitle(title?: string | null): string {
+  const words = (title || "0")
     .split(/[\s/_-]+/)
     .map((part) => part.trim())
     .filter(Boolean);

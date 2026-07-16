@@ -4,23 +4,9 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { MatchScoreUpdateEvent, matchStream } from "@/lib/websocket/match.stream";
 import { Match } from "@/types";
-
-function patchMatch(current: Match, event: MatchScoreUpdateEvent): Match {
-  const status = event.status.toLowerCase() === "live" ? "LIVE" : event.status.toLowerCase() === "completed" ? "COMPLETED" : current.status;
-
-  return {
-    ...current,
-    status,
-    innings: event.innings ?? current.innings,
-    currentScore: event.currentScore,
-    wicketsLost: event.wicketsLost,
-    ballsLeft: event.ballsLeft,
-    targetScore: event.targetScore ?? current.targetScore,
-    currentOver: event.oversText,
-    homeScore: `${event.currentScore}/${event.wicketsLost}`,
-    liveContext: event.liveContext ?? current.liveContext,
-  };
-}
+import { dashboardService } from "@/features/dashboard/services/dashboard.service";
+import { socketManager } from "@/lib/websocket/socket-manager";
+import { classifyMatchScoreEvent, patchMatchScore } from "../utils/match-score-reducer";
 
 /**
  * Live score over WebSocket.
@@ -35,18 +21,67 @@ export function useMatchScoreStream(matchId: string, streamMatchId?: string) {
 
     const ids = Array.from(new Set([matchId, streamMatchId].filter(Boolean))) as string[];
 
+    const resync = async (id: string) => {
+      try {
+        const authoritative = await dashboardService.fetchLiveState(id);
+        queryClient.setQueryData<Match>(["matchDetails", matchId], (current) =>
+          isNewerProviderState(current, authoritative) ? current : authoritative
+        );
+        queryClient.setQueryData<Match[]>(["homeMatches"], (current = []) =>
+          current.map((item) =>
+            item.id === authoritative.id || item.id === matchId
+              ? isNewerProviderState(item, authoritative) ? item : authoritative
+              : item
+          )
+        );
+      } catch {
+        await queryClient.invalidateQueries({ queryKey: ["matchDetails", matchId] });
+      }
+    };
+
     const apply = (event: MatchScoreUpdateEvent) => {
+      const current = queryClient.getQueryData<Match>(["matchDetails", matchId]);
+      const action = classifyMatchScoreEvent(current, event);
+
+      if (action === "ignore") return;
+      if (action === "resync") {
+        void resync(event.matchId || streamMatchId || matchId);
+        return;
+      }
+
       queryClient.setQueryData<Match>(["matchDetails", matchId], (current) =>
-        current ? patchMatch(current, event) : current
+        current ? patchMatchScore(current, event) : current
       );
 
       const homeKeys = new Set([event.matchId, streamMatchId, matchId].filter(Boolean));
       queryClient.setQueryData<Match[]>(["homeMatches"], (current = []) =>
-        current.map((match) => (homeKeys.has(match.id) ? patchMatch(match, event) : match))
+        current.map((match) =>
+          homeKeys.has(match.id) && classifyMatchScoreEvent(match, event) === "patch"
+            ? patchMatchScore(match, event)
+            : match
+        )
       );
     };
 
     const unsubscribers = ids.map((id) => matchStream.subscribeMatchScore(id, apply));
-    return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
+    let connectionWasDown = socketManager.getConnectionState() !== "connected";
+    const unsubscribeConnection = socketManager.subscribeConnectionState((state) => {
+      if (state === "connected" && connectionWasDown) {
+        connectionWasDown = false;
+        void resync(streamMatchId || matchId);
+      } else if (state !== "connected") {
+        connectionWasDown = true;
+      }
+    });
+
+    return () => {
+      unsubscribers.forEach((unsubscribe) => unsubscribe());
+      unsubscribeConnection();
+    };
   }, [matchId, streamMatchId, queryClient]);
+}
+
+function isNewerProviderState(current: Match | undefined, incoming: Match): current is Match {
+  if (current?.dataSource !== "sportmonks" || incoming.dataSource !== "sportmonks") return false;
+  return (current.stateVersion ?? 0) > (incoming.stateVersion ?? 0);
 }

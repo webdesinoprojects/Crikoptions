@@ -22,6 +22,11 @@ export const dashboardService = {
     return adaptMatch(response.data.data);
   },
 
+  fetchLiveState: async (matchId: string): Promise<Match> => {
+    const response = await apiClient.get<{ success: boolean; data: BackendMatch }>(`/v1/matches/${matchId}/live-state`);
+    return adaptMatch(response.data.data);
+  },
+
   getFinancialOverview: async (): Promise<PortfolioSummary> => {
     const portfolio = await portfolioService.getPortfolioSummary();
     return {
@@ -45,7 +50,7 @@ export const dashboardService = {
       const percentageChange = open > 0 ? round2((priceChange / open) * 100) : 0;
 
       return {
-        id: market._id,
+        id: market._id ?? "",
         symbol: symbolFromTitle(market.title),
         lastTradedPrice: ltp,
         priceChange,
@@ -69,7 +74,7 @@ export const dashboardService = {
         const changePercent = open > 0 ? round2(((ltp - open) / open) * 100) : 0;
 
         return {
-          id: market._id,
+          id: market._id ?? "",
           symbol: symbolFromTitle(market.title),
           name: market.title || "0",
           price: ltp,
@@ -119,7 +124,7 @@ async function fetchAllMarkets(): Promise<BackendMarket[]> {
     .map((entry) => entry.market);
 }
 
-function symbolFromTitle(title: string): string {
+function symbolFromTitle(title?: string | null): string {
   const words = (title || "0")
     .split(/[\s/_-]+/)
     .map((part) => part.trim())
@@ -137,9 +142,10 @@ function round2(value: number): number {
   return Math.round(numberOrZero(value) * 100) / 100;
 }
 
-function matchPriority(status?: string) {
+function matchPriority(status?: string | null) {
   const normalized = (status ?? "").toLowerCase();
   if (normalized === "live") return 0;
-  if (normalized === "upcoming") return 1;
-  return 2;
+  if (normalized === "innings_break") return 1;
+  if (normalized === "upcoming") return 2;
+  return 3;
 }

@@ -18,7 +18,7 @@ export function LiveMatchCards() {
               <span className="font-label-sm text-label-sm font-bold text-primary uppercase">
                 {match.title}
               </span>
-              {match.status === "LIVE" && <LiveIndicator />}
+              {(match.status === "LIVE" || match.status === "INNINGS_BREAK") && <LiveIndicator />}
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -26,7 +26,11 @@ export function LiveMatchCards() {
                 {match.homeScore && <span className="font-data-tabular">{match.homeScore}</span>}
               </div>
               <div className="text-xs text-on-surface-variant font-data-tabular">
-                {match.status === "LIVE" ? `${match.currentOver} OVR` : new Date(match.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {match.status === "LIVE"
+                  ? `${match.currentOver} OVR`
+                  : match.status === "INNINGS_BREAK"
+                    ? "Innings break"
+                    : new Date(match.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </div>
               <div className="flex items-center gap-2">
                 {match.awayScore && <span className="font-data-tabular">{match.awayScore}</span>}

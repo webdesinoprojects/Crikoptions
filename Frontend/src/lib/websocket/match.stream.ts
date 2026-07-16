@@ -2,6 +2,7 @@ import { socketManager } from "./socket-manager";
 import type { LiveMatchContext } from "@/types";
 
 export interface MatchScoreUpdateEvent {
+  eventId?: string;
   matchId: string;
   innings: number;
   currentScore: number;
@@ -12,9 +13,21 @@ export interface MatchScoreUpdateEvent {
   status: string;
   liveContext?: LiveMatchContext;
   timestamp?: string;
+  stateVersion?: number;
+  tradingVersion?: number;
+  feedState?: string;
+  tradingState?: string;
+  tradingBlockers?: string[];
+  providerPhase?: string;
+  lastSuccessfulPollAt?: string;
+  feedValidUntil?: string;
+  isCorrection?: boolean;
 }
 
 export interface MatchCommentaryEvent {
+  eventId?: string;
+  sequence?: number;
+  revision?: number;
   matchId?: string;
   innings?: number;
   over?: number;
@@ -23,7 +36,7 @@ export interface MatchCommentaryEvent {
   ballNumber?: string | number;
   runs: number;
   isWicket: boolean;
-  extra?: "wide" | "noball" | null;
+  extra?: "wide" | "noball" | "bye" | "legbye" | "penalty" | null;
   wicketType?: string;
   description?: string;
   currentScore?: number;
@@ -32,6 +45,8 @@ export interface MatchCommentaryEvent {
   targetScore?: number;
   oversText?: string;
   timestamp?: string;
+  isCorrection?: boolean;
+  tombstoned?: boolean;
 }
 
 /**

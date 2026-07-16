@@ -8,6 +8,10 @@ export interface Market {
   open?: number;
   high?: number;
   low?: number;
+  lifecycle?: "pending" | "open" | "settling" | "settled" | "void" | string;
+  blockers?: string[];
+  innings?: number;
+  formulaVersion?: string;
 }
 
 export interface MarketDepth {

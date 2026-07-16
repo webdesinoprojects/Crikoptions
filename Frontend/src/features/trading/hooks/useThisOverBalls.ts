@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Match } from "@/types";
 import { MatchCommentaryEvent, matchStream } from "@/lib/websocket/match.stream";
+import { socketManager } from "@/lib/websocket/socket-manager";
 import {
   BallEvent,
   ballEventFromCommentary,
@@ -15,7 +16,14 @@ import {
   snapFromMatch,
 } from "../utils/terminal-context";
 import { tradingService } from "../services/trading.service";
-import { appendBall, clearBallLog, loadBallLog, setBallLog, subscribeBallLog } from "../utils/ball-log";
+import {
+  appendBall,
+  clearBallLog,
+  loadBallLog,
+  normalizeBallLog,
+  setBallLog,
+  subscribeBallLog,
+} from "../utils/ball-log";
 
 const wsEnabled = process.env.NEXT_PUBLIC_WS_ENABLED === "true";
 
@@ -41,15 +49,14 @@ export function useThisOverBalls(match?: Match, streamMatchId?: string): BallEve
   const wicketsLost = match?.wicketsLost ?? null;
   const ballsLeft = match?.ballsLeft ?? null;
   const innings = match?.innings ?? null;
+  const authoritativeProvider = match?.dataSource === "sportmonks";
+  const matchAvailable = Boolean(match);
 
   const prevSnapRef = useRef<ScoreboardSnap | null>(null);
   const matchRef = useRef<Match | undefined>(match);
 
   const wsCommentarySeenRef = useRef(false);
-  // Track the highest legal-ball count we've seen in the WS log for this over.
-  const wsLegalHighwaterRef = useRef(0);
   const historyRequestRef = useRef(0);
-  const inningsRef = useRef(innings);
 
   const [balls, setBalls] = useState<BallEvent[]>(() => padThisOverBalls([]));
 
@@ -82,23 +89,50 @@ export function useThisOverBalls(match?: Match, streamMatchId?: string): BallEve
   // Reset all state when match or innings changes.
   useEffect(() => {
     wsCommentarySeenRef.current = false;
-    wsLegalHighwaterRef.current = 0;
     prevSnapRef.current = null;
-    inningsRef.current = innings;
+    historyRequestRef.current += 1;
   }, [matchId, innings]);
 
-  // --- REST API snapshot (on mount + innings change ONLY) ---
-  // We intentionally do NOT re-fetch on every score tick to prevent the API
-  // from clobbering fresh WS events (race condition). We only re-fetch when:
-  //   a) the match / innings changes (hard reset)
-  //   b) the WS has never fired (wsCommentarySeenRef is false) and a new over starts
+  const hydrateProviderHistory = useCallback(async () => {
+    if (!matchId || !authoritativeProvider) return;
+
+    const requestId = ++historyRequestRef.current;
+    const activeInnings = Math.max(1, Number(innings ?? matchRef.current?.innings ?? 1));
+    const ids = Array.from(new Set([altMatchId, matchId].filter(Boolean)));
+
+    for (const id of ids) {
+      try {
+        const events = await tradingService.fetchInningsEvents(id, activeInnings);
+        if (requestId !== historyRequestRef.current) return;
+        const ordered = normalizeBallLog(
+          events
+            .filter((item) => !item.superseded && !item.tombstoned && (!item.innings || item.innings === activeInnings))
+            .map(ballEventFromHistory)
+        );
+        setBallLog(matchId, ordered);
+        return;
+      } catch {
+        // The display ID and provider-backed Mongo ID are both supported aliases.
+      }
+    }
+  }, [altMatchId, authoritativeProvider, innings, matchId]);
+
+  // Initial REST hydration. Provider repairs after this are event-driven.
   useEffect(() => {
-    if (!matchId || !match) return;
+    const current = matchRef.current;
+    if (!matchId || !current) return;
+
+    if (authoritativeProvider) {
+      void hydrateProviderHistory();
+      return () => {
+        historyRequestRef.current += 1;
+      };
+    }
 
     let cancelled = false;
     const requestId = ++historyRequestRef.current;
     const ids = Array.from(new Set([matchId, altMatchId].filter(Boolean)));
-    const snap = snapFromMatch(match);
+    const snap = snapFromMatch(current);
     const bowled = ballsBowledFromSnap(snap);
 
     const trySync = async (index: number): Promise<void> => {
@@ -123,7 +157,7 @@ export function useThisOverBalls(match?: Match, streamMatchId?: string): BallEve
         const currentLog = loadBallLog(matchId);
         const currentLegal = currentLog.filter(isLegalBallEvent).length;
 
-        if (apiLegal >= currentLegal) {
+        if (authoritativeProvider || apiLegal >= currentLegal) {
           // API has fresher or equal data — use it.
           setBallLog(matchId, ordered);
         }
@@ -138,8 +172,20 @@ export function useThisOverBalls(match?: Match, streamMatchId?: string): BallEve
       cancelled = true;
     };
   // Re-fetch ONLY on match/innings change — not on every score tick.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [matchId, altMatchId, innings]);
+  }, [altMatchId, authoritativeProvider, hydrateProviderHistory, innings, matchAvailable, matchId]);
+
+  useEffect(() => {
+    if (!matchId || !authoritativeProvider) return;
+    let connectionWasDown = socketManager.getConnectionState() !== "connected";
+    return socketManager.subscribeConnectionState((state) => {
+      if (state === "connected" && connectionWasDown) {
+        connectionWasDown = false;
+        void hydrateProviderHistory();
+      } else if (state !== "connected") {
+        connectionWasDown = true;
+      }
+    });
+  }, [authoritativeProvider, hydrateProviderHistory, matchId]);
 
   // --- Re-render when scoreboard OR ball log changes ---
   useEffect(() => {
@@ -159,6 +205,7 @@ export function useThisOverBalls(match?: Match, streamMatchId?: string): BallEve
   // the scoreboard snapshot to the previous one.
   useEffect(() => {
     if (!matchId || !match) return;
+    if (authoritativeProvider) return;
     if (wsCommentarySeenRef.current) {
       // WS is live — don't infer, trust the WS events only.
       const snap = snapFromMatch(match);
@@ -220,7 +267,7 @@ export function useThisOverBalls(match?: Match, streamMatchId?: string): BallEve
       appendBall(matchId, { label: "0", kind: "dot" });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [matchId, currentScore, wicketsLost, ballsLeft, innings]);
+  }, [matchId, currentScore, wicketsLost, ballsLeft, innings, authoritativeProvider]);
 
   // --- Live ball-by-ball via WebSocket ---
   useEffect(() => {
@@ -232,15 +279,15 @@ export function useThisOverBalls(match?: Match, streamMatchId?: string): BallEve
         return;
       }
 
-      const ball = ballEventFromCommentary(event);
-      wsCommentarySeenRef.current = true;
-
-      // Track legal ball highwater for this over so inference doesn't interfere.
-      if (isLegalBallEvent(ball)) {
-        wsLegalHighwaterRef.current += 1;
+      if (event.isCorrection || event.tombstoned) {
+        void hydrateProviderHistory();
+        return;
       }
 
-      appendBall(matchId, ball);
+      const ball = ballEventFromCommentary(event);
+      wsCommentarySeenRef.current = true;
+      const result = appendBall(matchId, ball);
+      if (result.gapDetected) void hydrateProviderHistory();
     };
 
     const unsubscribers = [matchId, altMatchId]
@@ -248,7 +295,7 @@ export function useThisOverBalls(match?: Match, streamMatchId?: string): BallEve
       .map((id) => matchStream.subscribeMatchCommentary(id, onCommentary));
 
     return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
-  }, [matchId, altMatchId, innings]);
+  }, [matchId, altMatchId, hydrateProviderHistory, innings]);
 
   return matchId ? balls : padThisOverBalls([]);
 }

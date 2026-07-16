@@ -1,0 +1,85 @@
+x-sportmonks-environment: &sportmonks-environment
+  SPORTMONKS_MODE: ${SPORTMONKS_MODE:-off}
+  SPORTMONKS_API_TOKEN: ${SPORTMONKS_API_TOKEN:-}
+  SPORTMONKS_BASE_URL: ${SPORTMONKS_BASE_URL:-https://cricket.sportmonks.com/api/v2.0}
+  SPORTMONKS_HTTP_TIMEOUT: ${SPORTMONKS_HTTP_TIMEOUT:-15s}
+  SPORTMONKS_HOURLY_REQUEST_LIMIT: ${SPORTMONKS_HOURLY_REQUEST_LIMIT:-2000}
+  SPORTMONKS_QUOTA_RESERVE_PERCENT: ${SPORTMONKS_QUOTA_RESERVE_PERCENT:-20}
+  SPORTMONKS_MAX_CONCURRENCY: ${SPORTMONKS_MAX_CONCURRENCY:-4}
+  SPORTMONKS_DISCOVERY_INTERVAL: ${SPORTMONKS_DISCOVERY_INTERVAL:-30s}
+  SPORTMONKS_FIXTURE_SYNC_INTERVAL: ${SPORTMONKS_FIXTURE_SYNC_INTERVAL:-6h}
+  SPORTMONKS_METADATA_SYNC_INTERVAL: ${SPORTMONKS_METADATA_SYNC_INTERVAL:-24h}
+  SPORTMONKS_MIN_POLL_INTERVAL: ${SPORTMONKS_MIN_POLL_INTERVAL:-5s}
+  SPORTMONKS_MAX_POLL_INTERVAL: ${SPORTMONKS_MAX_POLL_INTERVAL:-15s}
+  SPORTMONKS_BREAK_INTERVAL: ${SPORTMONKS_BREAK_INTERVAL:-60s}
+  SPORTMONKS_PREMATCH_INTERVAL: ${SPORTMONKS_PREMATCH_INTERVAL:-120s}
+  SPORTMONKS_FINALIZING_INTERVAL: ${SPORTMONKS_FINALIZING_INTERVAL:-15s}
+  SPORTMONKS_LEASE_TTL: ${SPORTMONKS_LEASE_TTL:-30s}
+  SPORTMONKS_STALE_MINIMUM: ${SPORTMONKS_STALE_MINIMUM:-20s}
+  SPORTMONKS_ACTIVE_FREEZE_TIMEOUT: ${SPORTMONKS_ACTIVE_FREEZE_TIMEOUT:-90s}
+  SPORTMONKS_MATCH_FINALIZATION_HOLD: ${SPORTMONKS_MATCH_FINALIZATION_HOLD:-120s}
+  SPORTMONKS_INNINGS_FINALIZATION_HOLD: ${SPORTMONKS_INNINGS_FINALIZATION_HOLD:-60s}
+  SPORTMONKS_RAW_PAYLOAD_TTL: ${SPORTMONKS_RAW_PAYLOAD_TTL:-720h}
+  SPORTMONKS_FAST_POLLING_ENABLED: ${SPORTMONKS_FAST_POLLING_ENABLED:-false}
+  SPORTMONKS_ALLOW_LIVE_CORRECTIONS: ${SPORTMONKS_ALLOW_LIVE_CORRECTIONS:-false}
+
+services:
+  mongo:
+    image: mongo:7.0
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mongo-init:
+    image: mongo:7.0
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: "no"
+    entrypoint:
+      - mongosh
+      - --host
+      - mongo:27017
+      - --quiet
+      - --eval
+      - "try { rs.status() } catch (_) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]}) }; while (!db.hello().isWritablePrimary) { sleep(500) }"
+
+  api:
+    build: ./backend
+    image: crikoptions-backend:dev
+    command: ["/api"]
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+    environment:
+      <<: *sportmonks-environment
+      PORT: "8080"
+      MONGO_DB: mongodb://mongo:27017/?replicaSet=rs0
+      MONGO_DB_NAME: crikoptions
+      JWT_SECRET: ${JWT_SECRET:-local-development-only-change-me}
+      ALLOWED_ORIGINS: http://localhost:3000
+      SIMULATOR_ENABLED: "false"
+    ports:
+      - "8080:8080"
+
+  feedworker:
+    build: ./backend
+    image: crikoptions-backend:dev
+    command: ["/feedworker"]
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+    environment:
+      <<: *sportmonks-environment
+      MONGO_DB: mongodb://mongo:27017/?replicaSet=rs0
+      MONGO_DB_NAME: crikoptions
+
+volumes:
+  mongo-data:

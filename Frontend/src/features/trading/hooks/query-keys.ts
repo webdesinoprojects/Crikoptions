@@ -142,6 +142,8 @@ function normalizeOrderPreviewPayload(payload?: CreateOrderPayload) {
     positionEffect: payload.positionEffect ?? "AUTO",
     quantity: payload.quantity,
     price: payload.price,
-    pricingSnapshot: payload.pricingSnapshot ?? null,
+    expectedMatchStateVersion: payload.expectedMatchStateVersion ?? null,
+    expectedTradingVersion: payload.expectedTradingVersion ?? null,
+    quoteExpiresAt: payload.quoteExpiresAt ?? null,
   };
 }

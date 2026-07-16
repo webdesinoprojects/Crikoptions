@@ -11,13 +11,40 @@ export function LiveMatchArena() {
   const { data: liveMatches, isLoading } = useLiveMatches();
   const { data: tickers } = useLiveTicker();
 
-  const match = liveMatches?.find(m => m.status === "LIVE") || null;
+  const match = liveMatches?.find(m => m.status === "LIVE" || m.status === "INNINGS_BREAK") || null;
   const { data: matchMarkets } = useMarkets(match?.id || "");
   
   const liveMarketId = matchMarkets?.[0]?.id;
-  const tradingHref = liveMarketId ? `/trading/${liveMarketId}` : (tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/dashboard");
+  const tradingHref = liveMarketId ? `/trading/${liveMarketId}` : (tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/trading");
   
   const { stableMatch, balls } = useStableMatchSnapshot(match || undefined, liveMarketId);
+
+  if (!stableMatch) {
+    return (
+      <div className="relative flex min-h-[360px] w-full items-center justify-center overflow-hidden rounded-xl bg-[#01040a] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.5)] sm:rounded-2xl">
+        <img
+          src="/stadium.png"
+          alt="Cricket stadium"
+          className="absolute inset-0 h-full w-full object-cover object-center opacity-30"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#000d1a] via-[#000d1a]/88 to-[#020817]" />
+        <div className="relative z-10 max-w-md rounded-2xl border border-white/10 bg-black/25 p-5 text-center backdrop-blur-xl">
+          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl border border-cyan-300/25 bg-cyan-300/10 text-cyan-200">
+            <span className="material-symbols-outlined text-[22px]">{isLoading ? "sync" : "sports_cricket"}</span>
+          </div>
+          <h2 className="font-display text-xl font-black text-white">
+            {isLoading ? "Loading provider match" : "No live provider match"}
+          </h2>
+          <p className="mt-2 text-sm font-semibold leading-6 text-on-surface-variant">
+            Only Sportmonks live or innings-break fixtures are shown here. Sample and fallback match stats are disabled.
+          </p>
+          <Link href="/trading" className="mt-4 inline-flex h-10 items-center justify-center rounded-lg border border-cyan-300/25 bg-cyan-300/10 px-4 text-sm font-black text-cyan-100 hover:bg-cyan-300/15">
+            Trading terminal
+          </Link>
+        </div>
+      </div>
+    );
+  }
   
   const title = stableMatch?.title || "No Live Match";
   const scoreParsed = scoreParts(stableMatch?.homeScore);
@@ -64,6 +91,8 @@ export function LiveMatchArena() {
   const homeCode = stableMatch?.homeTeam?.shortName || stableMatch?.homeTeam?.name?.substring(0,3)?.toUpperCase() || "TBA";
   const awayCode = stableMatch?.awayTeam?.shortName || stableMatch?.awayTeam?.name?.substring(0,3)?.toUpperCase() || "TBA";
   const battingCode = stableMatch?.innings === 2 ? awayCode : homeCode;
+  const isBreak = stableMatch.status === "INNINGS_BREAK";
+  const visibleMarkets = (matchMarkets ?? []).slice(0, 3);
 
   return (
     <div className="group relative min-h-[560px] w-full overflow-hidden rounded-xl shadow-[0_24px_80px_rgba(0,0,0,0.5)] sm:rounded-2xl md:h-[480px] md:min-h-0">
@@ -83,8 +112,8 @@ export function LiveMatchArena() {
         
         {/* Top Header / Live Indicator */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <div className="bg-error px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider text-white animate-pulse">
-            LIVE
+          <div className={cn("rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white", isBreak ? "bg-amber-500" : "bg-error animate-pulse")}>
+            {isBreak ? "INNINGS BREAK" : "LIVE"}
           </div>
           <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white sm:text-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]" />
@@ -186,9 +215,8 @@ export function LiveMatchArena() {
 
         {/* Bottom Market Cards */}
         <div className="grid grid-cols-1 gap-2 pt-1 sm:grid-cols-2 sm:gap-3 md:mt-auto md:grid-cols-4 md:gap-4 md:pt-6">
-          {[0, 1, 2].map((i) => {
-            const m = matchMarkets?.[i];
-            if (m) {
+          {visibleMarkets.length > 0 ? (
+            visibleMarkets.map((m) => {
               const openPrice = m.open ?? 0;
               const ltp = m.ltp ?? 0;
               const trendVal = openPrice > 0 ? (((ltp - openPrice) / openPrice) * 100) : 0;
@@ -203,19 +231,12 @@ export function LiveMatchArena() {
                   isUp={isUp}
                 />
               );
-            } else {
-              const defaultTitles = [`${battingCode} WIN`, "MATCH WINNER", "NEXT WICKET"];
-              return (
-                <MarketMiniCard
-                  key={`empty-${i}`}
-                  title={defaultTitles[i]}
-                  value="--"
-                  trend="--"
-                  isUp={i !== 2}
-                />
-              );
-            }
-          })}
+            })
+          ) : (
+            <div className="rounded-xl border border-amber-300/20 bg-amber-300/10 p-3 text-xs font-bold text-amber-100 md:col-span-3">
+              No provider market is open for this match state.
+            </div>
+          )}
           
           <Link href={tradingHref} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/50 bg-cyan-500 text-xs font-black uppercase tracking-widest text-[#000d1a] shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-colors hover:bg-cyan-400 md:h-full">
             Watch & Trade

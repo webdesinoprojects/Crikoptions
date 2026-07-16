@@ -1,5 +1,48 @@
 import { Team } from "./team";
 
+export type MatchStatus =
+  | "UPCOMING"
+  | "LIVE"
+  | "INNINGS_BREAK"
+  | "DELAYED"
+  | "INTERRUPTED"
+  | "FINALIZING"
+  | "COMPLETED"
+  | "ABANDONED"
+  | "CANCELLED"
+  | "UNSUPPORTED";
+
+export type FeedState =
+  | "warming"
+  | "healthy"
+  | "reconciling"
+  | "stale"
+  | "quota_limited"
+  | "finalizing"
+  | "terminal"
+  | "unsupported";
+
+export interface InningsSummary {
+  innings: number;
+  battingTeamId?: number;
+  runs: number;
+  wickets: number;
+  legalBalls: number;
+  scheduledBalls?: number;
+  target?: number;
+  complete: boolean;
+  revision: number;
+  finalCandidate?: {
+    revision: number;
+    snapshotHash: string;
+    identicalPolls: number;
+    firstSeenAt: string;
+    lastSeenAt: string;
+  };
+  settlementReady?: boolean;
+  finalDisposition?: "settle" | "void";
+}
+
 export interface BatterStats {
   name: string;
   runs: number;
@@ -30,7 +73,7 @@ export interface LiveMatchContext {
 export interface Match {
   id: string;
   title: string;
-  status: "UPCOMING" | "LIVE" | "COMPLETED";
+  status: MatchStatus;
   homeTeam: Team;
   awayTeam: Team;
   homeScore?: string;
@@ -44,4 +87,29 @@ export interface Match {
   targetScore?: number;
   liveContext?: LiveMatchContext;
   startTime: string;
+  dataSource?: "manual" | "simulator" | "sportmonks" | string;
+  providerPhase?: string;
+  scheduledBalls?: number;
+  inningsSummaries?: InningsSummary[];
+  stateVersion?: number;
+  tradingVersion?: number;
+  feedState?: FeedState;
+  tradingState?: string;
+  tradingBlockers?: string[];
+  lastSuccessfulPollAt?: string;
+  feedValidUntil?: string;
+}
+
+export function isMatchTradable(match?: Match, now = Date.now()): boolean {
+  if (!match) return false;
+  if (match.dataSource !== "sportmonks") return match.status === "LIVE";
+  const validUntil = match.feedValidUntil ? Date.parse(match.feedValidUntil) : Number.NaN;
+  return (
+    match.status === "LIVE" &&
+    match.feedState === "healthy" &&
+    match.tradingState === "open" &&
+    (match.tradingBlockers?.length ?? 0) === 0 &&
+    Number.isFinite(validUntil) &&
+    validUntil > now
+  );
 }
