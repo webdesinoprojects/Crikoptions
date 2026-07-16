@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import * as echarts from "echarts";
 import { CandlestickChart, TrendingDown, TrendingUp, X } from "lucide-react";
-import { EChartsWrapper } from "@/components/shared/EChartsWrapper";
 import {
   Dialog,
   DialogClose,
@@ -16,11 +14,11 @@ import { cn } from "@/lib/utils";
 import type { ChainHistoryPoint } from "../hooks";
 import {
   CANDLE_BUCKETS,
-  StrikeCandle,
   buildStrikeCandles,
   getCandleStats,
 } from "../utils/option-chain-candles";
 import { ChainRow } from "../utils/terminal-context";
+import { InteractiveCandlestickChart } from "./InteractiveCandlestickChart";
 
 interface OptionChainCandlestickDialogProps {
   atmRow?: ChainRow;
@@ -56,11 +54,6 @@ export function OptionChainCandlestickDialog({
   const move = previousPoint ? currentPremium - previousPoint.premium : candleStats.move;
   const activitySize = Math.max(selectedRow?.bidQty ?? 0, selectedRow?.askQty ?? 0);
   const chartReady = Boolean(selectedRow && candles.length > 0);
-
-  const chartOption = useMemo<echarts.EChartsOption>(
-    () => buildCandleOption(candles, bucketMs),
-    [bucketMs, candles]
-  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -136,7 +129,11 @@ export function OptionChainCandlestickDialog({
                 <LegendPill color="#22c55e" label="Premium" />
                 <LegendPill color="rgba(148,163,184,0.5)" label="Volume" />
               </div>
-              <EChartsWrapper option={chartOption} />
+              <InteractiveCandlestickChart
+                key={`${selectedRow?.strike ?? "strike"}:${bucketMs}`}
+                bucketMs={bucketMs}
+                candles={candles}
+              />
             </div>
           ) : (
             <CandlestickEmptyState pointCount={selectedHistory.length} row={selectedRow} />
@@ -153,259 +150,6 @@ export function OptionChainCandlestickDialog({
       </DialogContent>
     </Dialog>
   );
-}
-
-function buildCandleOption(candles: StrikeCandle[], bucketMs: number): echarts.EChartsOption {
-  const labels = candles.map((candle) => formatTimeLabel(candle.time, bucketMs));
-  const candleData = candles.map((candle) => [candle.open, candle.close, candle.low, candle.high]);
-  const latestCandle = candles[candles.length - 1];
-  const priceValues =
-    candles.length > 0
-      ? candles.flatMap((candle) => [candle.open, candle.close, candle.low, candle.high])
-      : [0, 1];
-  const minPrice = Math.min(...priceValues);
-  const maxPrice = Math.max(...priceValues);
-  const priceRange = Math.max(1, maxPrice - minPrice);
-  const yAxisMin = Math.max(0, minPrice - priceRange * 0.18);
-  const yAxisMax = maxPrice + priceRange * 0.18;
-  const activityData = candles.map((candle) => ({
-    value: Math.max(candle.ticks, candle.bidQty + candle.askQty),
-    itemStyle: {
-      color: candle.close >= candle.open ? "rgba(34,197,94,0.22)" : "rgba(239,68,68,0.22)",
-    },
-  }));
-  const flatCandleMarkers = candles.flatMap((candle, index) =>
-    isFlatCandle(candle)
-      ? [
-          {
-            value: [index, candle.close],
-            itemStyle: {
-              color: flatCandleColor(candles, index),
-            },
-          },
-        ]
-      : []
-  );
-  const series: echarts.SeriesOption[] = [
-    {
-      name: "Premium",
-      type: "candlestick",
-      data: candleData,
-      barMinWidth: 4,
-      barMaxWidth: 18,
-      itemStyle: {
-        color: "#16a34a",
-        color0: "#ef4444",
-        borderColor: "#22c55e",
-        borderColor0: "#f87171",
-        borderWidth: 1.1,
-      },
-      emphasis: {
-        itemStyle: {
-          borderWidth: 1.4,
-          shadowBlur: 12,
-          shadowColor: "rgba(34,211,238,0.18)",
-        },
-      },
-      markLine: latestCandle
-        ? {
-            animation: false,
-            symbol: "none",
-            silent: true,
-            label: {
-              show: true,
-              position: "end",
-              formatter: `Rs ${formatMoney(latestCandle.close)}`,
-              color: "#020617",
-              backgroundColor: latestCandle.close >= latestCandle.open ? "#22c55e" : "#ef4444",
-              borderRadius: 3,
-              padding: [3, 6],
-              fontFamily: "JetBrains Mono, monospace",
-              fontSize: 10,
-              fontWeight: 900,
-            },
-            lineStyle: {
-              color: latestCandle.close >= latestCandle.open ? "rgba(34,197,94,0.72)" : "rgba(239,68,68,0.72)",
-              type: "dashed",
-              width: 1,
-            },
-            data: [{ yAxis: latestCandle.close }],
-          }
-        : undefined,
-    },
-    {
-      name: "Volume",
-      type: "bar",
-      xAxisIndex: 1,
-      yAxisIndex: 1,
-      data: activityData,
-      barMaxWidth: 22,
-      barMinWidth: 3,
-      silent: true,
-    },
-  ];
-
-  if (flatCandleMarkers.length > 0) {
-    series.push({
-      name: "Flat candles",
-      type: "scatter",
-      xAxisIndex: 0,
-      yAxisIndex: 0,
-      data: flatCandleMarkers,
-      symbol: "rect",
-      symbolSize: [14, 5],
-      silent: true,
-      tooltip: { show: false },
-      z: 4,
-    });
-  }
-
-  return {
-    animationDuration: 220,
-    backgroundColor: "transparent",
-    color: ["#22c55e", "#38bdf8", "#fb7185"],
-    grid: [
-      {
-        top: 54,
-        right: 104,
-        bottom: 92,
-        left: 16,
-        containLabel: false,
-      },
-      {
-        height: 42,
-        right: 104,
-        bottom: 34,
-        left: 16,
-        containLabel: false,
-      },
-    ],
-    xAxis: [
-      {
-        type: "category",
-        data: labels,
-        boundaryGap: true,
-        axisLine: { onZero: false, lineStyle: { color: "rgba(148,163,184,0.16)" } },
-        axisTick: { show: false },
-        axisLabel: {
-          color: "#94a3b8",
-          fontSize: 10,
-          fontFamily: "JetBrains Mono, monospace",
-          hideOverlap: true,
-          margin: 12,
-        },
-        splitLine: { show: true, lineStyle: { color: "rgba(148,163,184,0.07)" } },
-      },
-      {
-        type: "category",
-        gridIndex: 1,
-        data: labels,
-        boundaryGap: true,
-        axisLabel: { show: false },
-        axisTick: { show: false },
-        axisLine: { lineStyle: { color: "rgba(148,163,184,0.11)" } },
-        splitLine: { show: false },
-      },
-    ],
-    yAxis: [
-      {
-        type: "value",
-        scale: true,
-        position: "right",
-        min: yAxisMin,
-        max: yAxisMax,
-        splitNumber: 5,
-        axisLine: { show: false },
-        axisTick: { show: false },
-        axisLabel: {
-          formatter: (value: string | number) => formatMoney(Number(value)),
-          color: "#94a3b8",
-          fontSize: 10,
-          fontFamily: "JetBrains Mono, monospace",
-          margin: 12,
-        },
-        splitLine: { lineStyle: { color: "rgba(148,163,184,0.09)" } },
-      },
-      {
-        type: "value",
-        gridIndex: 1,
-        axisLabel: { show: false },
-        axisTick: { show: false },
-        splitLine: { show: false },
-      },
-    ],
-    dataZoom: [
-      {
-        type: "inside",
-        xAxisIndex: [0, 1],
-        filterMode: "none",
-        start: 0,
-        end: 100,
-        zoomOnMouseWheel: true,
-        moveOnMouseMove: true,
-        moveOnMouseWheel: false,
-      },
-    ],
-    tooltip: {
-      trigger: "axis",
-      backgroundColor: "rgba(3,8,23,0.96)",
-      borderColor: "rgba(148,163,184,0.22)",
-      borderWidth: 1,
-      padding: [8, 10],
-      extraCssText: "box-shadow:0 18px 44px rgba(0,0,0,0.35);border-radius:6px;",
-      axisPointer: {
-        type: "cross",
-        lineStyle: {
-          color: "rgba(203,213,225,0.28)",
-          width: 1,
-        },
-        crossStyle: {
-          color: "rgba(203,213,225,0.28)",
-        },
-        label: {
-          backgroundColor: "#071327",
-          color: "#e2e8f0",
-          fontFamily: "JetBrains Mono, monospace",
-          fontSize: 10,
-        },
-      },
-      formatter: (params: unknown) => formatCandleTooltip(params, candles),
-    },
-    axisPointer: {
-      link: [{ xAxisIndex: [0, 1] }],
-    },
-    series,
-  };
-}
-
-function formatCandleTooltip(params: unknown, candles: StrikeCandle[]) {
-  const rows = Array.isArray(params) ? params : [params];
-  const dataIndex = getTooltipDataIndex(rows[0]);
-  const candle = candles[dataIndex];
-  if (!candle) return "";
-
-  const direction = candle.close >= candle.open ? "UP" : "DOWN";
-  return [
-    `<div style="min-width:188px">`,
-    `<div style="font-weight:900;color:#e2e8f0;margin-bottom:6px">${formatClock(candle.startedAt)} - ${formatClock(candle.endedAt)} <span style="color:${direction === "UP" ? "#86efac" : "#fca5a5"}">${direction}</span></div>`,
-    tooltipLine("Open", `Rs ${formatMoney(candle.open)}`),
-    tooltipLine("High", `Rs ${formatMoney(candle.high)}`),
-    tooltipLine("Low", `Rs ${formatMoney(candle.low)}`),
-    tooltipLine("Close", `Rs ${formatMoney(candle.close)}`),
-    `</div>`,
-  ].join("");
-}
-
-function tooltipLine(label: string, value: string) {
-  return `<div style="display:flex;justify-content:space-between;gap:16px;margin:2px 0"><span style="color:#94a3b8">${label}</span><strong style="color:#f8fafc">${value}</strong></div>`;
-}
-
-function getTooltipDataIndex(value: unknown) {
-  if (typeof value === "object" && value !== null && "dataIndex" in value) {
-    const dataIndex = Number((value as { dataIndex?: unknown }).dataIndex);
-    return Number.isFinite(dataIndex) ? dataIndex : -1;
-  }
-  return -1;
 }
 
 function ControlButton({
@@ -514,26 +258,7 @@ function formatClock(timestamp: number) {
   return new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
-function formatTimeLabel(timestamp: number, bucketMs: number) {
-  const options: Intl.DateTimeFormatOptions =
-    bucketMs < 60_000
-      ? { hour: "2-digit", minute: "2-digit", second: "2-digit" }
-      : { hour: "2-digit", minute: "2-digit" };
-
-  return new Date(timestamp).toLocaleTimeString([], options);
-}
-
 function compactSize(value: number) {
   if (value >= 1000) return `${(value / 1000).toFixed(value >= 10_000 ? 0 : 1)}k`;
   return value.toLocaleString("en-IN");
-}
-
-function isFlatCandle(candle: StrikeCandle) {
-  return candle.open === candle.close && candle.high === candle.low;
-}
-
-function flatCandleColor(candles: StrikeCandle[], index: number) {
-  const candle = candles[index];
-  const previous = candles[index - 1];
-  return candle.close >= (previous?.close ?? candle.open) ? "#22c55e" : "#ef4444";
 }
