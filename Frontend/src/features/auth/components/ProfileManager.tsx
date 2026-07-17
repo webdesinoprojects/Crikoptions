@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuthStore } from "../hooks/useAuth";
-import { AlertCircle, CheckCircle, Loader2, Camera, Calendar, MapPin, TrendingUp, Trophy, Target, Shield, Info, Bell, Wallet } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader2, Camera, Calendar, MapPin, TrendingUp, Trophy, Target, Shield, Info, Bell, Wallet, Mail, Phone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getErrorMessage } from "@/lib/error-message";
 import { usePerformance } from "@/features/portfolio/hooks";
@@ -164,9 +164,9 @@ export function ProfileManager() {
               </span>
             </div>
             <div className="flex flex-col sm:flex-row flex-wrap items-center sm:items-start justify-center sm:justify-start gap-2 sm:gap-6 mt-3 text-sm text-slate-400 font-medium">
-              <span className="flex items-center gap-2"><Calendar className="w-4 h-4 opacity-70" /> Member Since {joinDate}</span>
-              <span className="flex items-center gap-2"><Trophy className="w-4 h-4 opacity-70" /> Favorite Team RCB</span>
-              <span className="flex items-center gap-2"><MapPin className="w-4 h-4 opacity-70" /> Location India</span>
+              <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 opacity-70" /> Member Since {joinDate}</span>
+              <span className="flex items-center gap-1.5"><Mail className="w-4 h-4 opacity-70" /> {user.email}</span>
+              {user.phone && <span className="flex items-center gap-1.5"><Phone className="w-4 h-4 opacity-70" /> {user.phone}</span>}
             </div>
           </div>
         </div>
@@ -201,25 +201,6 @@ export function ProfileManager() {
                <Trophy className="w-4 h-4" /> CricOptions Trader Card
              </div>
              
-             <div className="space-y-4 relative z-10">
-               <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                 <span className="text-xs text-slate-400 font-medium tracking-wide">TRADING STYLE</span>
-                 <span className="text-sm text-white font-semibold">Chase Trader</span>
-               </div>
-               <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                 <span className="text-xs text-slate-400 font-medium tracking-wide">FAVORITE MARKET</span>
-                 <span className="text-sm text-white font-semibold">Player Runs</span>
-               </div>
-               <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                 <span className="text-xs text-slate-400 font-medium tracking-wide">RISK PROFILE</span>
-                 <span className="text-sm text-[#d4af37] font-semibold">Balanced</span>
-               </div>
-               <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                 <span className="text-xs text-slate-400 font-medium tracking-wide">BEST PREDICTION</span>
-                 <span className="text-sm text-white font-semibold">Kohli 50+ Runs</span>
-               </div>
-             </div>
-
              {/* Stylized background silhouette or gradient */}
              <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-[#d4af37]/5 rounded-full blur-3xl pointer-events-none"></div>
              <div className="mt-12 text-2xl font-[Brush_Script_MT,cursive] text-[#d4af37]/80 opacity-70 transform -rotate-2 select-none">

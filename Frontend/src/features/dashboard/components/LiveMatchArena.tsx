@@ -88,8 +88,19 @@ export function LiveMatchArena() {
   const displayBalls = balls.filter(b => b.kind !== "empty");
   const timelineBalls = balls;
 
-  const homeCode = stableMatch?.homeTeam?.shortName || stableMatch?.homeTeam?.name?.substring(0,3)?.toUpperCase() || "TBA";
-  const awayCode = stableMatch?.awayTeam?.shortName || stableMatch?.awayTeam?.name?.substring(0,3)?.toUpperCase() || "TBA";
+  const getTeamCode = (team: any) => {
+    if (!team) return "TBA";
+    const name = team.shortName || team.name || "TBA";
+    if (name.length <= 4) return name.toUpperCase();
+    const words = name.trim().split(/\s+/);
+    if (words.length > 1) {
+      return (words[0][0] + words[1][0]).toUpperCase();
+    }
+    return name.substring(0, 3).toUpperCase();
+  };
+
+  const homeCode = getTeamCode(stableMatch?.homeTeam);
+  const awayCode = getTeamCode(stableMatch?.awayTeam);
   const battingCode = stableMatch?.innings === 2 ? awayCode : homeCode;
   const isBreak = stableMatch.status === "INNINGS_BREAK";
   const visibleMarkets = (matchMarkets ?? []).slice(0, 3);
@@ -128,8 +139,14 @@ export function LiveMatchArena() {
           
           {/* Team Score */}
           <div className="relative z-10 mb-4 grid grid-cols-[44px_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[48px_minmax(0,1fr)] sm:gap-4">
-            <div className="flex h-11 w-11 items-center justify-center break-words rounded-lg border border-[#d4af37]/30 bg-[#d4af37]/20 px-1 text-center font-display text-xl font-black leading-none text-[#d4af37] sm:h-12 sm:w-12 sm:text-2xl">
-              {battingCode}
+            <div className="flex h-11 w-11 items-center justify-center break-words rounded-lg border border-[#d4af37]/30 bg-[#d4af37]/20 text-center font-display text-xl font-black leading-none text-[#d4af37] sm:h-12 sm:w-12 sm:text-2xl overflow-hidden p-1">
+              {stableMatch?.innings === 2 && stableMatch?.awayTeam?.logoUrl ? (
+                <img src={stableMatch.awayTeam.logoUrl} alt={battingCode} className="h-full w-full object-contain" />
+              ) : stableMatch?.innings !== 2 && stableMatch?.homeTeam?.logoUrl ? (
+                <img src={stableMatch.homeTeam.logoUrl} alt={battingCode} className="h-full w-full object-contain" />
+              ) : (
+                battingCode
+              )}
             </div>
             <div className="min-w-0">
               <div className="flex min-w-0 flex-wrap items-end gap-x-2 gap-y-1">
@@ -180,8 +197,12 @@ export function LiveMatchArena() {
               </div>
             </div>
           ) : (
-            <div className="relative z-10 mb-4 py-2 text-[10px] leading-relaxed text-amber-200/80">
-              Player context is not set for this match yet.
+            <div className="relative z-10 mb-4 flex flex-col gap-2 sm:mb-5 opacity-40">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4">
+                <div className="h-[28px] bg-white/[0.05] rounded border border-white/5 animate-pulse" />
+                <div className="h-[28px] bg-white/[0.05] rounded border border-white/5 animate-pulse" />
+              </div>
+              <div className="h-[28px] bg-white/[0.05] rounded border border-amber-500/10 animate-pulse" />
             </div>
           )}
 

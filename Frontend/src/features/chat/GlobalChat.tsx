@@ -94,6 +94,7 @@ export function GlobalChat() {
     queryFn: chatApi.getRooms,
     enabled: chatEnabled && isAuthenticated,
     staleTime: 15_000,
+    retry: false,
   });
   const rooms = React.useMemo(() => roomsQuery.data?.items ?? [], [roomsQuery.data]);
   const selectedRoom = rooms.find((room) => room.id === selectedRoomId) ?? rooms[0];
@@ -106,6 +107,7 @@ export function GlobalChat() {
     getNextPageParam: (page) => page.nextCursor || undefined,
     enabled: chatEnabled && isAuthenticated && open && Boolean(selectedRoomId),
     staleTime: 10_000,
+    retry: false,
   });
   const messages = React.useMemo(
     () => flattenChatMessages(messagesQuery.data),

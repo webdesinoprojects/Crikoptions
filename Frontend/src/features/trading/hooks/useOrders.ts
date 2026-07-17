@@ -49,6 +49,7 @@ export const useOrderPreview = (payload?: CreateOrderPayload) => {
     enabled: Boolean(payload),
     staleTime: 1000,
     refetchInterval: payload ? terminalPollInterval : false,
+    retry: false,
   });
 };
 

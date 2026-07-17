@@ -102,17 +102,10 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
             </span>
           </div>
 
-          {providerMatch && (
-            <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] font-semibold uppercase tracking-wide text-slate-400">
-              <span>Provider {stableMatch.providerPhase || "unknown"}</span>
-              {finalization && <span className="text-amber-200">{finalization}</span>}
-              {inningsSummary?.finalDisposition && <span>Outcome {inningsSummary.finalDisposition}</span>}
-              {blockerText && <span className="text-rose-200">Blocked: {blockerText}</span>}
-            </div>
-          )}
+
 
           <div className="grid grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-3">
-            <TeamMark code={teamCode(match?.homeTeam.shortName || match?.homeTeam.name)} active={innings === 1} />
+            <TeamMark code={teamCode(match?.homeTeam.shortName || match?.homeTeam.name)} active={innings === 1} team={match?.homeTeam} />
             <div className="min-w-0 text-center">
               <div className="font-data-tabular text-[25px] font-black leading-none tracking-[-0.04em] text-cyan-300">
                 {battingCode}{" "}
@@ -133,7 +126,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
                 </div>
               )}
             </div>
-            <TeamMark code={teamCode(match?.awayTeam.shortName || match?.awayTeam.name)} active={innings === 2} />
+            <TeamMark code={teamCode(match?.awayTeam.shortName || match?.awayTeam.name)} active={innings === 2} team={match?.awayTeam} />
           </div>
 
           <div className={cn("mt-3 grid gap-2", isChase ? "grid-cols-3" : "grid-cols-2")}>
@@ -256,16 +249,20 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
   );
 }
 
-function TeamMark({ active, code }: { active: boolean; code: string }) {
+function TeamMark({ active, code, team }: { active: boolean; code: string; team?: any }) {
   return (
     <div className="text-center">
       <div
         className={cn(
-          "mx-auto flex size-10 items-center justify-center rounded-[7px] border bg-[#071326] font-data-tabular text-[11px] font-black tracking-tight",
+          "mx-auto flex size-10 items-center justify-center rounded-[7px] border bg-[#071326] font-data-tabular text-[11px] font-black tracking-tight overflow-hidden",
           active ? "border-cyan-300/40 text-cyan-200 shadow-[0_0_20px_rgba(34,211,238,0.12)]" : "border-white/10 text-slate-400"
         )}
       >
-        {code}
+        {team?.logoUrl ? (
+          <img src={team.logoUrl} alt={code} className="h-full w-full object-contain p-1" />
+        ) : (
+          code
+        )}
       </div>
       <div className={cn("mt-1 text-[9px] font-bold", active ? "text-slate-200" : "text-slate-500")}>{code}</div>
     </div>
@@ -344,8 +341,15 @@ function BatterRow({ player, striker = false }: { player: BatterStats; striker?:
 
 function MissingPlayerFeed() {
   return (
-    <div className="py-2 text-[10px] leading-relaxed text-amber-200/80">
-      Player context is not set. Add striker, non-striker, and bowler in Admin Match Control.
+    <div className="flex h-[82px] flex-col items-center justify-center gap-1.5 py-2">
+      <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+        Waiting for feed data
+      </div>
+      <div className="flex gap-2">
+        <div className="h-1 w-8 rounded-full bg-slate-700/50" />
+        <div className="h-1 w-12 rounded-full bg-slate-700/50" />
+        <div className="h-1 w-6 rounded-full bg-slate-700/50" />
+      </div>
     </div>
   );
 }

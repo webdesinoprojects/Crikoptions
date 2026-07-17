@@ -2,7 +2,7 @@ import React from 'react';
 
 export const RiskGraphWatermark: React.FC = () => (
   <div className="absolute inset-0 pointer-events-none opacity-[0.12] overflow-hidden">
-    <svg className="w-full h-full min-w-[500px]" viewBox="0 0 500 200" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMidSlice">
+    <svg className="w-full h-full min-w-[500px]" viewBox="0 0 500 200" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
       {/* Structural Crosshair Grid */}
       <path d="M0 160h500M40 0v200" stroke="#0ea5e9" strokeWidth="0.5" strokeDasharray="3 6" />
       

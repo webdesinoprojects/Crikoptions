@@ -61,11 +61,13 @@ export function InteractiveCandlestickChart({
   const [priceAuto, setPriceAuto] = useState(true);
 
   useEffect(() => {
-    const chartContainer = chartContainerRef.current;
+    try {
+      const chartContainer = chartContainerRef.current;
     if (!chartContainer) return;
 
     const chart = createChart(chartContainer, {
-      autoSize: true,
+      width: chartContainer.clientWidth || 400,
+      height: chartContainer.clientHeight || 300,
       layout: {
         background: { type: ColorType.Solid, color: "#030817" },
         textColor: "#94a3b8",
@@ -151,16 +153,12 @@ export function InteractiveCandlestickChart({
         priceFormat: { type: "volume" },
         priceLineVisible: false,
         lastValueVisible: false,
-      },
-      1
+        priceScaleId: '', // Use overlay to avoid pane layout issues
+      }
     );
 
-    const panes = chart.panes();
-    panes[0]?.setStretchFactor(4);
-    panes[1]?.setStretchFactor(1);
     volumeSeries.priceScale().applyOptions({
-      visible: false,
-      scaleMargins: { top: 0.12, bottom: 0 },
+      scaleMargins: { top: 0.8, bottom: 0 }, // Position at bottom 20%
     });
 
     chartRef.current = chart;
@@ -253,6 +251,15 @@ export function InteractiveCandlestickChart({
     window.addEventListener("pointerup", finishPointerGesture, true);
     window.addEventListener("pointercancel", finishPointerGesture, true);
 
+    const resizeObserver = new ResizeObserver((entries) => {
+      if (!entries || entries.length === 0) return;
+      const { width, height } = entries[0].contentRect;
+      if (width > 0 && height > 0) {
+        chart.applyOptions({ width, height });
+      }
+    });
+    resizeObserver.observe(chartContainer);
+
     return () => {
       chart.timeScale().unsubscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
       chart.unsubscribeCrosshairMove(handleCrosshairMove);
@@ -261,16 +268,21 @@ export function InteractiveCandlestickChart({
       window.removeEventListener("pointermove", handlePointerMove, true);
       window.removeEventListener("pointerup", finishPointerGesture, true);
       window.removeEventListener("pointercancel", finishPointerGesture, true);
+      resizeObserver.disconnect();
       if (pricePanFrame) window.cancelAnimationFrame(pricePanFrame);
       chart.remove();
       chartRef.current = null;
       candleSeriesRef.current = null;
       volumeSeriesRef.current = null;
     };
+    } catch (e: any) {
+      console.error("[DEBUG] Error in chart init:", e.message, e.stack);
+    }
   }, [bucketMs]);
 
   useEffect(() => {
-    const chart = chartRef.current;
+    try {
+      const chart = chartRef.current;
     const candleSeries = candleSeriesRef.current;
     const volumeSeries = volumeSeriesRef.current;
     const chartContainer = chartContainerRef.current;
@@ -282,7 +294,6 @@ export function InteractiveCandlestickChart({
     const visibleTimeRange = chart.timeScale().getVisibleRange();
     const previousFirstTime = firstTimeRef.current;
     const priceScale = candleSeries.priceScale();
-    const visiblePriceRange = priceScale.getVisibleRange();
     const wasPriceAuto = priceScale.options().autoScale;
 
     candles.forEach((candle) => {
@@ -321,6 +332,8 @@ export function InteractiveCandlestickChart({
     candleSeries.setData(candleData);
     volumeSeries.setData(volumeData);
 
+    const visiblePriceRange = dataInitializedRef.current ? priceScale.getVisibleRange() : null;
+
     if (!dataInitializedRef.current) {
       dataInitializedRef.current = true;
       const initialRange = getInitialLogicalRange(candleData.length, chartContainer.clientWidth);
@@ -352,6 +365,9 @@ export function InteractiveCandlestickChart({
 
     firstTimeRef.current = firstTime;
     latestTimeRef.current = latestTime;
+    } catch (e: any) {
+      console.error("[DEBUG] Error in data update:", e.message, e.stack);
+    }
   }, [candles]);
 
   const goLive = () => {
