@@ -2,61 +2,159 @@
 
 import React from "react";
 import Link from "next/link";
+import { CalendarClock, Loader2, RadioTower } from "lucide-react";
+import { useHomeMatches } from "@/features/dashboard/hooks";
+import { useMarkets } from "@/features/trading/hooks";
+import { selectPrimaryMarket } from "@/features/trading/utils/market-helpers";
+import {
+  formatMatchStartTime,
+  isLiveOrBreak,
+  isUpcomingMatch,
+  sortHomeMatches,
+  tradingOpensMessage,
+} from "@/features/trading/utils/home-matches";
+import type { Match } from "@/types";
 import { useRouter } from "next/navigation";
-import { Activity, Loader2, RadioTower, ShieldAlert } from "lucide-react";
-import { useLiveTicker } from "@/features/dashboard/hooks";
+import { cn } from "@/lib/utils";
 
 export default function TradingIndexPage() {
   const router = useRouter();
-  const { data: tickers = [], isLoading } = useLiveTicker();
-  const firstMarketId = tickers[0]?.id;
+  const { data: matches = [], isLoading } = useHomeMatches();
+  const visible = React.useMemo(() => sortHomeMatches(matches), [matches]);
+  const firstLive = visible.find(isLiveOrBreak);
+
+  const { data: liveMarkets = [] } = useMarkets(firstLive?.id ?? "");
+  const firstLiveMarketId = selectPrimaryMarket(liveMarkets)?.id;
 
   React.useEffect(() => {
-    if (firstMarketId) {
-      router.replace(`/trading/${firstMarketId}`);
+    if (firstLiveMarketId) {
+      router.replace(`/trading/${firstLiveMarketId}`);
     }
-  }, [firstMarketId, router]);
+  }, [firstLiveMarketId, router]);
 
+  if (isLoading || firstLiveMarketId) {
+    return (
+      <TradingShell>
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
+        <h1 className="mt-5 font-display text-2xl font-black text-white">
+          {firstLiveMarketId ? "Opening live terminal" : "Loading fixtures"}
+        </h1>
+        <p className="mt-3 text-sm font-semibold leading-6 text-on-surface-variant">
+          Checking Sportmonks live and upcoming matches...
+        </p>
+      </TradingShell>
+    );
+  }
+
+  if (visible.length === 0) {
+    return (
+      <TradingShell>
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
+          <RadioTower className="h-6 w-6" />
+        </div>
+        <h1 className="mt-5 font-display text-2xl font-black text-white">No Sportmonks fixtures right now</h1>
+        <p className="mt-3 text-sm font-semibold leading-6 text-on-surface-variant">
+          The home feed has no live or upcoming provider matches. Check back when the next fixture is scheduled.
+        </p>
+        <div className="mt-5">
+          <Link
+            href="/dashboard"
+            className="inline-flex h-10 items-center justify-center rounded-lg border border-cyan-300/25 bg-cyan-300/10 px-4 text-sm font-black text-cyan-100 hover:bg-cyan-300/15"
+          >
+            Dashboard
+          </Link>
+        </div>
+      </TradingShell>
+    );
+  }
+
+  return (
+    <main className="noise-overlay relative flex min-h-[calc(100dvh-3.5rem)] flex-grow flex-col overflow-hidden bg-[#01040a] p-4 text-on-surface sm:p-6">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(8,145,178,0.18),transparent_38%),radial-gradient(ellipse_at_bottom_right,rgba(20,184,166,0.12),transparent_42%)]"
+      />
+
+      <section className="relative z-10 mx-auto w-full max-w-3xl">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
+            <CalendarClock className="h-5 w-5" />
+          </div>
+          <div>
+            <h1 className="font-display text-xl font-black text-white sm:text-2xl">Upcoming fixtures</h1>
+            <p className="text-sm font-semibold text-on-surface-variant">
+              No live market open yet. Preview scheduled Sportmonks matches — trading unlocks at go-live.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-3">
+          {visible.map((match) => (
+            <UpcomingFixtureCard key={match.id} match={match} />
+          ))}
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function UpcomingFixtureCard({ match }: { match: Match }) {
+  const router = useRouter();
+  const { data: markets = [] } = useMarkets(match.id);
+  const primary = selectPrimaryMarket(markets);
+  const upcoming = isUpcomingMatch(match);
+  const live = isLiveOrBreak(match);
+
+  const open = () => {
+    if (primary?.id) {
+      router.push(`/trading/${primary.id}`);
+      return;
+    }
+    router.push(`/trading/match/${match.id}`);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={open}
+      className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-[#071327]/95 p-4 text-left shadow-[0_18px_50px_rgba(0,0,0,0.35)] transition hover:border-cyan-300/25 hover:bg-[#0a172c]"
+    >
+      <span
+        className={cn(
+          "inline-flex h-9 shrink-0 items-center justify-center rounded-md px-2.5 text-[10px] font-black uppercase tracking-wide ring-1",
+          live
+            ? "bg-amber-400/15 text-amber-200 ring-amber-300/20"
+            : "bg-cyan-400/12 text-cyan-100 ring-cyan-300/20"
+        )}
+      >
+        {live ? (match.status === "INNINGS_BREAK" ? "Break" : "Live") : "Upcoming"}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-black text-white sm:text-base">{match.title}</div>
+        <div className="mt-0.5 font-data-tabular text-xs font-semibold text-on-surface-variant">
+          {upcoming
+            ? `${formatMatchStartTime(match.startTime)}${match.format ? ` · ${match.format}` : ""}`
+            : `${match.currentOver ?? "0.0"} ov`}
+        </div>
+        {upcoming && (
+          <div className="mt-1 text-[11px] font-semibold text-amber-200/90">{tradingOpensMessage(match)}</div>
+        )}
+      </div>
+    </button>
+  );
+}
+
+function TradingShell({ children }: { children: React.ReactNode }) {
   return (
     <main className="noise-overlay relative flex min-h-[calc(100dvh-3.5rem)] flex-grow items-center justify-center overflow-hidden bg-[#01040a] p-6 text-on-surface">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(8,145,178,0.18),transparent_38%),radial-gradient(ellipse_at_bottom_right,rgba(20,184,166,0.12),transparent_42%)]"
       />
-
       <section className="relative z-10 w-full max-w-lg rounded-2xl border border-white/10 bg-[#071327]/95 p-6 text-center shadow-[0_24px_90px_rgba(0,0,0,0.45)]">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
-          {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : <RadioTower className="h-6 w-6" />}
-        </div>
-
-        <h1 className="mt-5 font-display text-2xl font-black text-white">
-          {isLoading ? "Finding live markets" : "No live trading market right now"}
-        </h1>
-
-        <p className="mt-3 text-sm font-semibold leading-6 text-on-surface-variant">
-          {isLoading
-            ? "Checking Sportmonks provider markets..."
-            : "The terminal opens automatically when an eligible Sportmonks fixture has an open market. This database is live-only, so sample markets are intentionally hidden."}
-        </p>
-
-        {!isLoading && (
-          <div className="mt-5 grid gap-2 sm:grid-cols-2">
-            <Link
-              href="/dashboard"
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-cyan-300/25 bg-cyan-300/10 px-4 text-sm font-black text-cyan-100 hover:bg-cyan-300/15"
-            >
-              <Activity className="h-4 w-4" />
-              Dashboard
-            </Link>
-            <Link
-              href="/admin"
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-amber-300/25 bg-amber-300/10 px-4 text-sm font-black text-amber-100 hover:bg-amber-300/15"
-            >
-              <ShieldAlert className="h-4 w-4" />
-              Admin status
-            </Link>
-          </div>
-        )}
+        {children}
       </section>
     </main>
   );

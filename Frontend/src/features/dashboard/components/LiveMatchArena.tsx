@@ -6,20 +6,61 @@ import { useMarkets } from "@/features/trading/hooks";
 import Link from "next/link";
 import { ballClassName, scoreParts } from "@/features/trading/utils/terminal-context";
 import { useStableMatchSnapshot } from "@/features/trading/hooks/useStableMatchSnapshot";
+import {
+  formatMatchStartTime,
+  isLiveOrBreak,
+  isUpcomingMatch,
+  sortHomeMatches,
+  tradingOpensMessage,
+} from "@/features/trading/utils/home-matches";
+import { selectPrimaryMarket } from "@/features/trading/utils/market-helpers";
 
 export function LiveMatchArena() {
   const { data: liveMatches, isLoading } = useLiveMatches();
   const { data: tickers } = useLiveTicker();
+  const homeMatches = React.useMemo(() => sortHomeMatches(liveMatches ?? []), [liveMatches]);
+  const upcomingMatches = homeMatches.filter(isUpcomingMatch);
 
-  const match = liveMatches?.find(m => m.status === "LIVE" || m.status === "INNINGS_BREAK") || null;
+  const match = homeMatches.find(isLiveOrBreak) || null;
   const { data: matchMarkets } = useMarkets(match?.id || "");
   
-  const liveMarketId = matchMarkets?.[0]?.id;
+  const liveMarketId = selectPrimaryMarket(matchMarkets ?? [])?.id;
   const tradingHref = liveMarketId ? `/trading/${liveMarketId}` : (tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/trading");
   
   const { stableMatch, balls } = useStableMatchSnapshot(match || undefined, liveMarketId);
 
   if (!stableMatch) {
+    if (upcomingMatches.length > 0) {
+      return (
+        <div className="relative flex min-h-[360px] w-full overflow-hidden rounded-xl bg-[#01040a] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.5)] sm:rounded-2xl sm:p-6">
+          <img
+            src="/stadium.png"
+            alt="Cricket stadium"
+            className="absolute inset-0 h-full w-full object-cover object-center opacity-30"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#000d1a] via-[#000d1a]/88 to-[#020817]" />
+          <div className="relative z-10 flex w-full flex-col gap-4">
+            <div>
+              <div className="inline-flex rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-cyan-100 ring-1 ring-cyan-300/25 bg-cyan-400/10">
+                Upcoming
+              </div>
+              <h2 className="mt-2 font-display text-xl font-black text-white sm:text-2xl">
+                Next Sportmonks fixtures
+              </h2>
+              <p className="mt-1 text-sm font-semibold text-on-surface-variant">
+                No live match right now. Preview scheduled fixtures — trading opens at go-live.
+              </p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {upcomingMatches.slice(0, 4).map((fixture) => (
+                <UpcomingArenaCard key={fixture.id} matchId={fixture.id} title={fixture.title} startTime={fixture.startTime} format={fixture.format} />
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="relative flex min-h-[360px] w-full items-center justify-center overflow-hidden rounded-xl bg-[#01040a] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.5)] sm:rounded-2xl">
         <img
@@ -33,10 +74,12 @@ export function LiveMatchArena() {
             <span className="material-symbols-outlined text-[22px]">{isLoading ? "sync" : "sports_cricket"}</span>
           </div>
           <h2 className="font-display text-xl font-black text-white">
-            {isLoading ? "Loading provider match" : "No live provider match"}
+            {isLoading ? "Loading provider fixtures" : "No Sportmonks fixtures"}
           </h2>
           <p className="mt-2 text-sm font-semibold leading-6 text-on-surface-variant">
-            Only Sportmonks live or innings-break fixtures are shown here. Sample and fallback match stats are disabled.
+            {isLoading
+              ? "Checking live and upcoming Sportmonks matches..."
+              : "The home feed has no live or upcoming provider matches right now."}
           </p>
           <Link href="/trading" className="mt-4 inline-flex h-10 items-center justify-center rounded-lg border border-cyan-300/25 bg-cyan-300/10 px-4 text-sm font-black text-cyan-100 hover:bg-cyan-300/15">
             Trading terminal
@@ -283,6 +326,43 @@ function MarketMiniCard({ title, value, trend, isUp }: { title: string, value: s
         </div>
       </div>
     </div>
+  );
+}
+
+function UpcomingArenaCard({
+  matchId,
+  title,
+  startTime,
+  format,
+}: {
+  matchId: string;
+  title: string;
+  startTime: string;
+  format?: string;
+}) {
+  const { data: markets = [] } = useMarkets(matchId);
+  const marketId = selectPrimaryMarket(markets)?.id;
+  const href = marketId ? `/trading/${marketId}` : `/trading/match/${matchId}`;
+
+  return (
+    <Link
+      href={href}
+      className="rounded-xl border border-white/10 bg-black/30 p-4 backdrop-blur-xl transition hover:border-cyan-300/25 hover:bg-black/40"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="rounded px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-cyan-100 bg-cyan-400/10 ring-1 ring-cyan-300/20">
+          Upcoming
+        </span>
+        <span className="font-data-tabular text-[11px] font-semibold text-white/70">
+          {formatMatchStartTime(startTime)}
+        </span>
+      </div>
+      <div className="mt-2 truncate text-sm font-black text-white">{title}</div>
+      <div className="mt-1 text-[11px] font-semibold text-amber-200/85">
+        {format ? `${format} · ` : ""}
+        {tradingOpensMessage()}
+      </div>
+    </Link>
   );
 }
 

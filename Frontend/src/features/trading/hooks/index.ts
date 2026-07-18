@@ -6,6 +6,7 @@ export * from "./useOpenPositions";
 export * from "./useOrders";
 export * from "./usePortfolioMetrics";
 export * from "./useMatchScoreStream";
+export * from "./useOnFieldMatrix";
 export * from "./useThisOverBalls";
 export * from "./useUserStream";
 export * from "./query-keys";

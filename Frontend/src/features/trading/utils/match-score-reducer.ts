@@ -1,6 +1,7 @@
 import { adaptMatchStatus } from "@/lib/adapters/match.adapter";
 import type { MatchScoreUpdateEvent } from "@/lib/websocket/match.stream";
 import type { Match } from "@/types";
+import { mergeMatchSnapshot } from "./merge-match-snapshot";
 
 export type MatchScoreAction = "ignore" | "patch" | "resync";
 
@@ -18,7 +19,7 @@ export function classifyMatchScoreEvent(current: Match | undefined, event: Match
 export function patchMatchScore(current: Match, event: MatchScoreUpdateEvent): Match {
   const feedState = (event.feedState ?? current.feedState) as Match["feedState"];
 
-  return {
+  return mergeMatchSnapshot(current, {
     ...current,
     status: adaptMatchStatus(event.status, feedState),
     innings: event.innings ?? current.innings,
@@ -29,6 +30,8 @@ export function patchMatchScore(current: Match, event: MatchScoreUpdateEvent): M
     currentOver: event.oversText,
     homeScore: `${event.currentScore}/${event.wicketsLost}`,
     liveContext: event.liveContext ?? current.liveContext,
+    matchPulse: event.matchPulse ?? current.matchPulse,
+    thisOver: event.thisOver ?? current.thisOver,
     stateVersion: event.stateVersion ?? current.stateVersion,
     tradingVersion: event.tradingVersion ?? current.tradingVersion,
     feedState,
@@ -37,5 +40,5 @@ export function patchMatchScore(current: Match, event: MatchScoreUpdateEvent): M
     providerPhase: event.providerPhase ?? current.providerPhase,
     lastSuccessfulPollAt: event.lastSuccessfulPollAt ?? current.lastSuccessfulPollAt,
     feedValidUntil: event.feedValidUntil ?? current.feedValidUntil,
-  };
+  });
 }

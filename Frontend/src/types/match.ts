@@ -70,6 +70,27 @@ export interface LiveMatchContext {
   partnership: PartnershipStats;
 }
 
+export type MomentumLevel = "attacking" | "even" | "defensive";
+export type VolatilityLevel = "high" | "moderate" | "stable";
+export type PressureLevel = "chase" | "defend" | "balanced" | "complete";
+
+export interface MatchPulse {
+  lastWicket: string;
+  momentum: string;
+  momentumLevel?: MomentumLevel;
+  marketVolatility: string;
+  volatilityLevel?: VolatilityLevel;
+  pressure: string;
+  pressureLevel?: PressureLevel;
+}
+
+export interface OverBall {
+  runs: number;
+  isWicket: boolean;
+  legalBall: boolean;
+  extra?: "wide" | "noball" | "bye" | "legbye" | "penalty" | "";
+}
+
 export interface Match {
   id: string;
   title: string;
@@ -86,6 +107,8 @@ export interface Match {
   ballsLeft?: number;
   targetScore?: number;
   liveContext?: LiveMatchContext;
+  matchPulse?: MatchPulse | null;
+  thisOver?: OverBall[];
   startTime: string;
   dataSource?: "manual" | "simulator" | "sportmonks" | string;
   providerPhase?: string;

@@ -86,8 +86,8 @@ export default function TradingTerminalPage({ params }: PageProps) {
       <TerminalShell ref={terminalRef}>
         <TerminalNotice
           title="Market unavailable"
-          body="This market is no longer available. Sample markets were removed, so choose the current live match from the dashboard."
-          action={<Link className="rounded-lg border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-sm font-black text-cyan-100 hover:bg-cyan-300/15" href="/">Go to dashboard</Link>}
+          body="This market is no longer available. Choose a live or upcoming Sportmonks fixture from the home feed."
+          action={<Link className="rounded-lg border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-sm font-black text-cyan-100 hover:bg-cyan-300/15" href="/trading">View fixtures</Link>}
         />
       </TerminalShell>
     );

@@ -53,4 +53,25 @@ describe("provider match score reducer", () => {
       stateVersion: 11,
     });
   });
+
+  it("patches matchPulse and thisOver from score events", () => {
+    const event: MatchScoreUpdateEvent = {
+      ...scoreEvent(11),
+      matchPulse: {
+        lastWicket: "No wicket this over",
+        momentum: "CSK attacking",
+        momentumLevel: "attacking",
+        marketVolatility: "High",
+        volatilityLevel: "high",
+        pressure: "On MI",
+        pressureLevel: "chase",
+      },
+      thisOver: [{ runs: 4, isWicket: false, legalBall: true }],
+    };
+
+    expect(patchMatchScore(match, event)).toMatchObject({
+      matchPulse: event.matchPulse,
+      thisOver: event.thisOver,
+    });
+  });
 });

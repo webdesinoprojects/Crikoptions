@@ -8,6 +8,12 @@ import { cn } from "@/lib/utils";
 import { battingTeamForMatch, currentInningsScoreParts, teamCode } from "../utils/terminal-context";
 import { useMarkets } from "../hooks";
 import { selectPrimaryMarket } from "../utils/market-helpers";
+import {
+  formatMatchStartTime,
+  isLiveOrBreak,
+  isUpcomingMatch,
+  tradingOpensMessage,
+} from "../utils/home-matches";
 
 export const MatchCard = React.memo(function MatchCard({ match, selected }: { match: Match; selected: boolean }) {
   const router = useRouter();
@@ -16,17 +22,22 @@ export const MatchCard = React.memo(function MatchCard({ match, selected }: { ma
   const battingCode = teamCode(battingTeam?.shortName || battingTeam?.name);
   const isChase = (match.innings ?? 1) === 2 && (match.targetScore ?? 0) > 0;
   const isBreak = match.status === "INNINGS_BREAK";
+  const upcoming = isUpcomingMatch(match);
+  const live = isLiveOrBreak(match);
   const { data: markets = [] } = useMarkets(match.id);
 
   const handleClick = React.useCallback(() => {
     if (selected) return;
 
     const primary = selectPrimaryMarket(markets);
-
     if (primary?.id) {
       router.push(`/trading/${primary.id}`);
+      return;
     }
-  }, [markets, router, selected]);
+
+    // Upcoming (or live without market yet): open match preview — no healthy feed required.
+    router.push(`/trading/match/${match.id}`);
+  }, [markets, match.id, router, selected]);
 
   return (
     <button
@@ -40,24 +51,45 @@ export const MatchCard = React.memo(function MatchCard({ match, selected }: { ma
           : "cursor-pointer border-white/10 bg-[#071123]/85 hover:border-cyan-300/25 hover:bg-[#0a172c]"
       )}
     >
-      <span className="inline-flex h-8 items-center justify-center gap-1 rounded-md bg-amber-400/15 px-2 text-[9px] font-black uppercase tracking-wide text-amber-200 ring-1 ring-amber-300/20 sm:h-9 sm:gap-1.5 sm:px-2.5 sm:text-[10px]">
-        <span className="size-1.5 rounded-full bg-amber-200 shadow-[0_0_10px_rgba(253,230,138,0.9)]" />
-        {isBreak ? "Break" : "Live"}
+      <span
+        className={cn(
+          "inline-flex h-8 items-center justify-center gap-1 rounded-md px-2 text-[9px] font-black uppercase tracking-wide ring-1 sm:h-9 sm:gap-1.5 sm:px-2.5 sm:text-[10px]",
+          live
+            ? "bg-amber-400/15 text-amber-200 ring-amber-300/20"
+            : "bg-cyan-400/12 text-cyan-100 ring-cyan-300/20"
+        )}
+      >
+        {live && <span className="size-1.5 rounded-full bg-amber-200 shadow-[0_0_10px_rgba(253,230,138,0.9)]" />}
+        {isBreak ? "Break" : live ? "Live" : "Upcoming"}
       </span>
       <div className="min-w-0">
         <div className="truncate text-[12px] font-black leading-tight text-on-surface sm:text-sm">{match.title}</div>
-        <div className="font-data-tabular text-[12px] font-black text-teal-300 sm:text-sm">
-          {battingCode} {score.runs}/{score.wickets} - {match.currentOver ?? "0.0"} ov
-        </div>
-        {isBreak && (
-          <div className="truncate font-data-tabular text-[10px] font-semibold text-cyan-100/85 sm:text-[11px]">
-            Innings break
-          </div>
-        )}
-        {isChase && (
-          <div className="truncate font-data-tabular text-[10px] font-semibold text-amber-200/90 sm:text-[11px]">
-            Target {match.targetScore}
-          </div>
+        {upcoming ? (
+          <>
+            <div className="font-data-tabular text-[12px] font-black text-cyan-200 sm:text-sm">
+              {formatMatchStartTime(match.startTime)}
+              {match.format ? ` · ${match.format}` : ""}
+            </div>
+            <div className="truncate text-[10px] font-semibold text-amber-200/85 sm:text-[11px]">
+              {tradingOpensMessage(match)}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="font-data-tabular text-[12px] font-black text-teal-300 sm:text-sm">
+              {battingCode} {score.runs}/{score.wickets} - {match.currentOver ?? "0.0"} ov
+            </div>
+            {isBreak && (
+              <div className="truncate font-data-tabular text-[10px] font-semibold text-cyan-100/85 sm:text-[11px]">
+                Innings break
+              </div>
+            )}
+            {isChase && (
+              <div className="truncate font-data-tabular text-[10px] font-semibold text-amber-200/90 sm:text-[11px]">
+                Target {match.targetScore}
+              </div>
+            )}
+          </>
         )}
       </div>
       {selected ? (

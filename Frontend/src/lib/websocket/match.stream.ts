@@ -1,5 +1,5 @@
 import { socketManager } from "./socket-manager";
-import type { LiveMatchContext } from "@/types";
+import type { LiveMatchContext, MatchPulse, OverBall } from "@/types";
 
 export interface MatchScoreUpdateEvent {
   eventId?: string;
@@ -12,6 +12,8 @@ export interface MatchScoreUpdateEvent {
   oversText: string;
   status: string;
   liveContext?: LiveMatchContext;
+  matchPulse?: MatchPulse | null;
+  thisOver?: OverBall[];
   timestamp?: string;
   stateVersion?: number;
   tradingVersion?: number;

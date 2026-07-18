@@ -7,6 +7,7 @@ import { Match } from "@/types";
 import { dashboardService } from "@/features/dashboard/services/dashboard.service";
 import { socketManager } from "@/lib/websocket/socket-manager";
 import { classifyMatchScoreEvent, patchMatchScore } from "../utils/match-score-reducer";
+import { mergeMatchSnapshot } from "../utils/merge-match-snapshot";
 
 /**
  * Live score over WebSocket.
@@ -24,13 +25,16 @@ export function useMatchScoreStream(matchId: string, streamMatchId?: string) {
     const resync = async (id: string) => {
       try {
         const authoritative = await dashboardService.fetchLiveState(id);
-        queryClient.setQueryData<Match>(["matchDetails", matchId], (current) =>
-          isNewerProviderState(current, authoritative) ? current : authoritative
-        );
+        queryClient.setQueryData<Match>(["matchDetails", matchId], (current) => {
+          if (isNewerProviderState(current, authoritative)) return current;
+          return mergeMatchSnapshot(current, authoritative);
+        });
         queryClient.setQueryData<Match[]>(["homeMatches"], (current = []) =>
           current.map((item) =>
             item.id === authoritative.id || item.id === matchId
-              ? isNewerProviderState(item, authoritative) ? item : authoritative
+              ? isNewerProviderState(item, authoritative)
+                ? item
+                : mergeMatchSnapshot(item, authoritative)
               : item
           )
         );

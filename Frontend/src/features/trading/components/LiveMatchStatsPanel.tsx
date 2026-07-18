@@ -6,7 +6,14 @@ import { Activity, Gauge, Info, Radio, Swords } from "lucide-react";
 import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { cn } from "@/lib/utils";
 import { BatterStats, Match } from "@/types";
+import { useOnFieldMatrix } from "../hooks/useOnFieldMatrix";
 import { useStableMatchSnapshot } from "../hooks/useStableMatchSnapshot";
+import {
+  overBallChipClassName,
+  overBallLabel,
+  overBallVariant,
+  type PulseTone,
+} from "../utils/on-field-matrix";
 import {
   BallEvent,
   ballClassName,
@@ -24,6 +31,8 @@ interface LiveMatchStatsPanelProps {
 
 export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStatsPanelProps) {
   const { stableMatch, balls } = useStableMatchSnapshot(match, market?.matchId ?? undefined);
+  const matrix = useOnFieldMatrix(stableMatch, market?.matchId, stableMatch?.id);
+  const isSportmonks = stableMatch?.dataSource === "sportmonks";
   
   const score = currentInningsScoreParts(stableMatch);
   const parsedRuns = Number.parseInt(score.runs, 10);
@@ -38,31 +47,16 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
   const projected = projectedFinal(currentScore, ballsLeft, crr, market);
   const projectionReady = ballsBowled >= 6;
   const innings = stableMatch?.innings ?? 1;
-  const liveContext = stableMatch?.liveContext;
   const targetScore = stableMatch?.targetScore ?? 0;
   const isChase = innings === 2 && targetScore > 0;
   const runsNeeded = isChase ? Math.max(0, targetScore - currentScore) : 0;
   const rrr = isChase && ballsLeft > 0 && runsNeeded > 0 ? (runsNeeded / ballsLeft) * 6 : 0;
-  const bowlerEconomy = liveContext && liveContext.bowler.balls > 0
-    ? liveContext.bowler.runs / (liveContext.bowler.balls / 6)
-    : 0;
   
   const compactThisOver = balls.length > 6;
   const battingTeam = battingTeamForMatch(stableMatch);
   const bowlingTeam = bowlingTeamForMatch(stableMatch);
   const battingCode = teamCode(battingTeam?.shortName || battingTeam?.name);
   const bowlingCode = teamCode(bowlingTeam?.shortName || bowlingTeam?.name);
-  const lastWicket = [...balls].reverse().find((ball) => isWicket(ball));
-  const momentum = momentumLabel(balls, crr, battingCode, bowlingCode);
-  const volatility = volatilityLabel(market);
-  const providerMatch = stableMatch?.dataSource === "sportmonks";
-  const inningsSummary = stableMatch?.inningsSummaries?.find((summary) => summary.innings === innings);
-  const finalization = stableMatch?.feedState === "finalizing"
-    ? inningsSummary?.settlementReady
-      ? "Final confirmed"
-      : `Final check ${Math.min(inningsSummary?.finalCandidate?.identicalPolls ?? 0, 3)}/3`
-    : undefined;
-  const blockerText = stableMatch?.tradingBlockers?.map((blocker) => blocker.replaceAll("_", " ")).join(", ");
 
   return (
     <aside
@@ -85,9 +79,13 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
               )}
             >
               {(match?.status === "LIVE" || match?.status === "INNINGS_BREAK") && <span className="size-1.5 rounded-full bg-amber-200 shadow-[0_0_10px_rgba(253,230,138,0.9)]" />}
-              {match?.status === "INNINGS_BREAK" ? "INNINGS BREAK" : match?.status ?? "LIVE"}
+              {match?.status === "INNINGS_BREAK"
+                ? "INNINGS BREAK"
+                : match?.status === "UPCOMING"
+                  ? "UPCOMING"
+                  : match?.status ?? "LIVE"}
             </span>
-            {match?.dataSource === "sportmonks" && (
+            {match?.dataSource === "sportmonks" && match.status !== "UPCOMING" && (
               <span className={cn(
                 "rounded border px-2 py-1 text-[9px] font-black uppercase tracking-wider",
                 match.feedState === "healthy"
@@ -95,6 +93,17 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
                   : "border-amber-400/25 bg-amber-400/10 text-amber-200"
               )}>
                 Feed {match.feedState ?? "warming"}
+              </span>
+            )}
+            {match?.status === "UPCOMING" && match.startTime && (
+              <span className="rounded border border-cyan-300/20 bg-cyan-400/8 px-2 py-1 font-data-tabular text-[9px] font-black uppercase tracking-wider text-cyan-100">
+                {new Date(match.startTime).toLocaleString([], {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </span>
             )}
             <span className="truncate text-right text-[13px] font-bold tracking-tight text-slate-100">
@@ -175,59 +184,83 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
               <Radio className="size-3.5 text-cyan-400" aria-hidden />
               On-field matrix
             </div>
-            <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-emerald-400">
-              <span className="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-              Live
+            <span className={cn(
+              "inline-flex items-center gap-1 rounded border px-2 py-1 text-[9px] font-black uppercase tracking-wider",
+              matrix.showLiveBadge
+                ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-200"
+                : "border-slate-400/20 bg-slate-400/8 text-slate-400"
+            )}>
+              {matrix.showLiveBadge && (
+                <span className="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+              )}
+              {matrix.showLiveBadge ? "Live" : "Feed"}
             </span>
           </div>
 
           <div className="grid gap-2">
             <FieldBlock icon={<Swords className="size-4" />} title="Batting now" tone="cyan">
-              {liveContext ? (
+              {matrix.showWaiting ? (
+                <MissingPlayerFeed hint={matrix.waitingHint} />
+              ) : (
                 <>
-                  <BatterRow player={liveContext.striker} striker />
-                  <BatterRow player={liveContext.nonStriker} />
+                  <BatterRow
+                    player={matrix.liveContext!.striker}
+                    striker
+                    strikeRate={matrix.strikerStrikeRate}
+                  />
+                  <BatterRow
+                    player={matrix.liveContext!.nonStriker}
+                    strikeRate={matrix.nonStrikerStrikeRate}
+                  />
                   <MetricRow
                     label="Partnership"
-                    value={`${liveContext.partnership.runs} off ${liveContext.partnership.balls}`}
+                    value={`${matrix.liveContext!.partnership.runs} (${matrix.liveContext!.partnership.balls})`}
                     mono
                   />
                 </>
-              ) : (
-                <MissingPlayerFeed />
               )}
             </FieldBlock>
 
             <FieldBlock icon={<Activity className="size-4" />} title="Bowling now">
-              {liveContext ? (
-                <>
-                  <MetricRow label="Bowler" value={liveContext.bowler.name} strong />
-                  <MetricRow
-                    label="Figures"
-                    value={`${oversFromBalls(liveContext.bowler.balls)}-${liveContext.bowler.maidens}-${liveContext.bowler.runs}-${liveContext.bowler.wickets}`}
-                    mono
-                  />
-                </>
+              {matrix.showWaiting ? (
+                <MissingPlayerFeed hint={matrix.waitingHint} />
               ) : (
-                <MissingPlayerFeed />
-              )}
-              <div className="flex items-center justify-between gap-3 py-1.5">
-                <span className="text-[10px] text-slate-400">This over</span>
-                <div className="flex items-center gap-1 flex-wrap justify-end">
-                  {balls.map((ball, index) => (
-                    <span
-                      key={`${stableMatch?.id}-${innings}-${overs}-${index}-mini`}
-                      className={cn(
-                        "flex size-4 items-center justify-center rounded-full border font-data-tabular text-[7px] font-black",
-                        ballClassName(ball.kind)
+                <>
+                  <MetricRow label="Bowler" value={matrix.liveContext!.bowler.name} strong />
+                  <MetricRow label="Figures" value={matrix.bowlerFigures} mono />
+                  <div className="flex items-center justify-between gap-3 py-1.5">
+                    <span className="text-[10px] text-slate-400">This over</span>
+                    <div className="flex flex-wrap items-center justify-end gap-1">
+                      {isSportmonks ? (
+                        matrix.thisOver.map((ball, index) => (
+                          <span
+                            key={`${stableMatch?.id}-${innings}-${overs}-over-${index}`}
+                            className={cn(
+                              "flex size-4 items-center justify-center rounded-full border font-data-tabular text-[7px] font-black",
+                              overBallChipClassName(overBallVariant(ball))
+                            )}
+                          >
+                            {overBallLabel(ball)}
+                          </span>
+                        ))
+                      ) : (
+                        balls.map((ball, index) => (
+                          <span
+                            key={`${stableMatch?.id}-${innings}-${overs}-${index}-mini`}
+                            className={cn(
+                              "flex size-4 items-center justify-center rounded-full border font-data-tabular text-[7px] font-black",
+                              ballClassName(ball.kind)
+                            )}
+                          >
+                            {ball.label}
+                          </span>
+                        ))
                       )}
-                    >
-                      {ball.label}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <MetricRow label="Economy" value={liveContext ? bowlerEconomy.toFixed(2) : "—"} mono />
+                    </div>
+                  </div>
+                  <MetricRow label="Economy" value={matrix.bowlerEconomy} mono />
+                </>
+              )}
             </FieldBlock>
           </div>
         </section>
@@ -238,10 +271,10 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
             Match pulse
           </div>
           <div className="overflow-hidden rounded-[6px] border border-cyan-100/10 bg-[#050d1d]">
-            <PulseRow label="Last wicket" value={lastWicket?.detail ?? "No wicket this over"} />
-            <PulseRow label="Momentum" value={momentum.value} tone={momentum.tone} />
-            <PulseRow label="Market volatility" value={volatility.value} tone={volatility.tone} />
-            <PulseRow label="Pressure" value={crr >= 8 ? `On ${bowlingCode}` : "Balanced phase"} tone={crr >= 8 ? "amber" : "muted"} />
+            <PulseRow label="Last wicket" value={matrix.matchPulse.lastWicket} />
+            <PulseRow label="Momentum" value={matrix.matchPulse.momentum} tone={matrix.matchPulse.momentumTone} />
+            <PulseRow label="Market volatility" value={matrix.matchPulse.marketVolatility} tone={matrix.matchPulse.volatilityTone} />
+            <PulseRow label="Pressure" value={matrix.matchPulse.pressure} tone={matrix.matchPulse.pressureTone} />
           </div>
         </section>
       </div>
@@ -326,25 +359,38 @@ function MetricRow({ label, mono, strong, value }: { label: string; mono?: boole
   );
 }
 
-function BatterRow({ player, striker = false }: { player: BatterStats; striker?: boolean }) {
-  const strikeRate = player.balls > 0 ? (player.runs / player.balls) * 100 : 0;
+function BatterRow({
+  player,
+  striker = false,
+  strikeRate,
+}: {
+  player: BatterStats;
+  striker?: boolean;
+  strikeRate: string;
+}) {
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 py-1.5 text-[10px]">
       <span className="truncate font-semibold text-slate-200">
-        {player.name}{striker ? " *" : ""}
+        {player.name}
+        {striker ? (
+          <span className="ml-1 text-[9px] font-bold uppercase tracking-wide text-cyan-300/80">(Striker)</span>
+        ) : null}
       </span>
-      <span className="font-data-tabular font-bold text-slate-100">{player.runs} ({player.balls})</span>
-      <span className="w-12 text-right font-data-tabular text-[9px] text-slate-500">SR {strikeRate.toFixed(1)}</span>
+      <span className="font-data-tabular font-bold text-slate-100">
+        {player.runs} ({player.balls})
+      </span>
+      <span className="w-12 text-right font-data-tabular text-[9px] text-slate-500">SR {strikeRate}</span>
     </div>
   );
 }
 
-function MissingPlayerFeed() {
+function MissingPlayerFeed({ hint }: { hint?: string }) {
   return (
     <div className="flex h-[82px] flex-col items-center justify-center gap-1.5 py-2">
       <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
         Waiting for feed data
       </div>
+      {hint ? <div className="text-[9px] font-medium text-amber-300/80">{hint}</div> : null}
       <div className="flex gap-2">
         <div className="h-1 w-8 rounded-full bg-slate-700/50" />
         <div className="h-1 w-12 rounded-full bg-slate-700/50" />
@@ -354,7 +400,7 @@ function MissingPlayerFeed() {
   );
 }
 
-function PulseRow({ label, tone = "muted", value }: { label: string; tone?: "cyan" | "emerald" | "amber" | "red" | "muted"; value: string }) {
+function PulseRow({ label, tone = "muted", value }: { label: string; tone?: PulseTone; value: string }) {
   const tones = {
     cyan: "text-cyan-300",
     emerald: "text-emerald-400",
@@ -381,29 +427,6 @@ function StatBox({ hint, label, tone, value }: { hint: string; label: string; to
   );
 }
 
-function momentumLabel(balls: BallEvent[], crr: number, battingCode: string, bowlingCode: string) {
-  const completed = balls.filter((ball) => ball.kind !== "empty");
-  const recent = completed.slice(-2);
-  if (recent.some(isWicket)) return { value: `${bowlingCode} pressing`, tone: "red" as const };
-  if (recent.some((ball) => ball.kind === "four" || ball.kind === "six") || crr >= 8) {
-    return { value: `${battingCode} attacking`, tone: "emerald" as const };
-  }
-  return { value: "Even phase", tone: "cyan" as const };
-}
-
-function volatilityLabel(market?: BackendMarket) {
-  const baseline = Math.max(1, market?.ltp ?? 0);
-  const spread = Math.max(0, (market?.high ?? 0) - (market?.low ?? 0));
-  const ratio = spread / baseline;
-  if (ratio >= 0.12) return { value: "High", tone: "red" as const };
-  if (ratio >= 0.04) return { value: "Active", tone: "amber" as const };
-  return { value: "Stable", tone: "emerald" as const };
-}
-
-function isWicket(ball: BallEvent) {
-  return ["wicket", "bowled", "lbw", "caught", "runOut"].includes(ball.kind);
-}
-
 function projectedFinal(currentScore: number, ballsLeft: number, crr: number, market?: BackendMarket) {
   if (currentScore === 0 && market?.ltp) return Math.round(market.ltp);
   if (crr <= 0) return currentScore;
@@ -417,11 +440,6 @@ function totalBallsForFormat(format?: string) {
 
 function oversTextFromBalls(balls: number) {
   return `${Math.floor(balls / 6)}.${balls % 6}`;
-}
-
-function oversFromBalls(balls: number) {
-  const legalBalls = Math.max(0, balls);
-  return `${Math.floor(legalBalls / 6)}.${legalBalls % 6}`;
 }
 
 function ordinal(value: number) {

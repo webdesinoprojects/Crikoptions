@@ -96,7 +96,9 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const marketOpen = !providerMatch || (market?.lifecycle === "open" && (market.blockers?.length ?? 0) === 0);
   const tradingOpen = (!providerMatch || isMatchTradable(match, tradingClock)) && marketOpen;
   const blockerMessage = providerMatch && !tradingOpen
-    ? [...(match?.tradingBlockers ?? []), ...(market?.blockers ?? [])].join(", ") || match?.feedState || market?.lifecycle || "Trading is suspended"
+    ? match?.status === "UPCOMING" || match?.tradingState === "blocked"
+      ? "Trading opens when match goes live"
+      : [...(match?.tradingBlockers ?? []), ...(market?.blockers ?? [])].join(", ") || match?.feedState || market?.lifecycle || "Trading is suspended"
     : "";
   const submitDisabled =
     isCreatingOrder ||

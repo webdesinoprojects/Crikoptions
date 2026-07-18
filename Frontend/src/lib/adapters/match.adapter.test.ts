@@ -50,4 +50,20 @@ describe("Sportmonks match adapter", () => {
     expect(adaptMatchStatus("Aban.")).toBe("ABANDONED");
     expect(adaptMatchStatus("3rd Innings", "unsupported")).toBe("UNSUPPORTED");
   });
+
+  it("keeps upcoming fixtures as UPCOMING even when feedState is unsupported", () => {
+    expect(adaptMatchStatus("upcoming", "unsupported")).toBe("UPCOMING");
+    expect(adaptMatchStatus("upcoming", "warming")).toBe("UPCOMING");
+    expect(
+      adaptMatch({
+        ...baseMatch,
+        status: "upcoming",
+        dataSource: "sportmonks",
+        feedState: "unsupported",
+        currentScore: 0,
+        wicketsLost: 0,
+        oversText: "0.0",
+      }).status
+    ).toBe("UPCOMING");
+  });
 });
