@@ -31,7 +31,7 @@ interface LiveMatchStatsPanelProps {
 
 export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStatsPanelProps) {
   const { stableMatch, balls } = useStableMatchSnapshot(match, market?.matchId ?? undefined);
-  const matrix = useOnFieldMatrix(stableMatch, market?.matchId, stableMatch?.id);
+  const matrix = useOnFieldMatrix(stableMatch, market?.matchId ?? undefined, stableMatch?.id);
   const isSportmonks = stableMatch?.dataSource === "sportmonks";
   
   const score = currentInningsScoreParts(stableMatch);

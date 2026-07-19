@@ -242,16 +242,18 @@ function normalizeMatchPulse(value: unknown): MatchPulse | null | undefined {
 
 function normalizeThisOver(value: unknown): OverBall[] | undefined {
   if (!Array.isArray(value)) return undefined;
-  return value
-    .map((ball) => {
-      if (!ball || typeof ball !== "object") return null;
-      const raw = ball as Record<string, unknown>;
-      return {
-        runs: numberOrZero(raw.runs as number | null | undefined),
-        isWicket: Boolean(raw.isWicket ?? raw.is_wicket),
-        legalBall: raw.legalBall !== false && raw.legal_ball !== false,
-        extra: (raw.extra as OverBall["extra"]) ?? "",
-      } satisfies OverBall;
-    })
-    .filter((ball): ball is OverBall => Boolean(ball));
+  const balls: OverBall[] = [];
+
+  for (const ball of value) {
+    if (!ball || typeof ball !== "object") continue;
+    const raw = ball as Record<string, unknown>;
+    balls.push({
+      runs: numberOrZero(raw.runs as number | null | undefined),
+      isWicket: Boolean(raw.isWicket ?? raw.is_wicket),
+      legalBall: raw.legalBall !== false && raw.legal_ball !== false,
+      extra: (raw.extra as OverBall["extra"]) ?? "",
+    });
+  }
+
+  return balls;
 }
