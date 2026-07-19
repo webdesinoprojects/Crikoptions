@@ -12,9 +12,11 @@ import {
   OrderEntryForm,
   TradingActivityPanel,
 } from "@/features/trading/components";
-import { useMarketDetail, useMatchScoreStream, useUserStream } from "@/features/trading/hooks";
+import { useMarketDetail, useMarkets, useMatchScoreStream, useUserStream } from "@/features/trading/hooks";
 import { useMatchDetails } from "@/features/dashboard/hooks";
+import { isMarketRetired, selectPrimaryMarket } from "@/features/trading/utils/market-helpers";
 import { useTerminalStore } from "@/stores/terminal.store";
+import { useRouter } from "next/navigation";
 
 interface PageProps {
   params: Promise<{ marketId: string }>;
@@ -35,6 +37,7 @@ const mobilePanels: Array<{
 
 export default function TradingTerminalPage({ params }: PageProps) {
   const terminalRef = React.useRef<HTMLDivElement>(null);
+  const router = useRouter();
   const [mobilePanel, setMobilePanel] = React.useState<MobileTradingPanel>("chain");
   const { marketId } = React.use(params);
   const setActiveMarket = useTerminalStore((state) => state.setActiveMarket);
@@ -44,6 +47,22 @@ export default function TradingTerminalPage({ params }: PageProps) {
   // Backend WS topics use hex _id; cache key stays on market short matchId.
   useMatchScoreStream(matchId, match?.id);
   useUserStream(matchId);
+
+  // The market id lives in the URL, so an innings settling mid-session would
+  // otherwise strand the trader on a dead contract where every order is
+  // rejected. Roll forward to the match's open market as soon as one exists.
+  const { data: siblingMarkets = [] } = useMarkets(matchId);
+  const marketRetired = isMarketRetired(market);
+  const rolloverMarketId = React.useMemo(() => {
+    if (!marketRetired) return null;
+    const next = selectPrimaryMarket(siblingMarkets);
+    if (!next?.id || next.id === marketId || isMarketRetired(next)) return null;
+    return next.id;
+  }, [marketRetired, siblingMarkets, marketId]);
+
+  React.useEffect(() => {
+    if (rolloverMarketId) router.replace(`/trading/${rolloverMarketId}`);
+  }, [rolloverMarketId, router]);
 
   React.useEffect(() => {
     if (marketId) setActiveMarket(marketId);
@@ -87,6 +106,26 @@ export default function TradingTerminalPage({ params }: PageProps) {
           title="Market unavailable"
           body="This market is no longer available. Choose a live or upcoming Sportmonks fixture from the home feed."
           action={<Link className="rounded-lg border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-sm font-black text-cyan-100 hover:bg-cyan-300/15" href="/trading">View fixtures</Link>}
+        />
+      </TerminalShell>
+    );
+  }
+
+  if (marketRetired) {
+    return (
+      <TerminalShell ref={terminalRef}>
+        <TerminalNotice
+          title={rolloverMarketId ? "Opening the next innings" : "This innings has settled"}
+          body={
+            rolloverMarketId
+              ? "This innings settled. Taking you to the open market for this match..."
+              : "This innings settled and its market is closed. The next innings market opens shortly — positions here are settled automatically."
+          }
+          action={
+            rolloverMarketId ? undefined : (
+              <Link className="rounded-lg border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-sm font-black text-cyan-100 hover:bg-cyan-300/15" href="/trading">View fixtures</Link>
+            )
+          }
         />
       </TerminalShell>
     );
