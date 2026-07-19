@@ -6,6 +6,7 @@ import {
   terminalPollInterval,
   tradingQueryKeys,
 } from "./query-keys";
+import { isTradingStateConflict, submitOrderWithFreshQuote } from "../utils/submit-order";
 
 export const useOrders = (matchId?: string, fetchAll: boolean = false) => {
   return useQuery({
@@ -20,7 +21,7 @@ export const useOrders = (matchId?: string, fetchAll: boolean = false) => {
 export const useCreateOrder = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: CreateOrderPayload) => tradingService.createOrder(payload),
+    mutationFn: (payload: CreateOrderPayload) => submitOrderWithFreshQuote(payload),
     onSuccess: (data, variables) => {
       refreshAfterOrderSubmit(queryClient, data, variables.matchId);
       queryClient.invalidateQueries({ queryKey: ["marketDepth", data.marketId] });
@@ -36,11 +37,7 @@ export const useCreateOrder = () => {
   });
 };
 
-export function isTradingStateConflict(error: unknown): boolean {
-  if (typeof error !== "object" || error === null || !("response" in error)) return false;
-  const response = (error as { response?: { status?: number; data?: { code?: string } } }).response;
-  return response?.status === 409 || response?.data?.code === "TRADING_STATE_CHANGED";
-}
+export { isTradingStateConflict } from "../utils/submit-order";
 
 export const useOrderPreview = (payload?: CreateOrderPayload) => {
   return useQuery({

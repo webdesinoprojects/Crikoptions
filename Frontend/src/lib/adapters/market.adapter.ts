@@ -1,4 +1,5 @@
 import { Market as FrontendMarket, MarketDepth as FrontendMarketDepth } from "@/types";
+import { HARD_TRADE_BLOCKERS, SOFT_TRADE_BLOCKERS } from "@/types/match-trading";
 
 export interface BackendLadderEntry {
   buyerQty: number | null;
@@ -32,9 +33,19 @@ export function adaptMarket(backend: BackendMarket): FrontendMarket {
   // Map backend status "active" -> "ACTIVE", "closed" -> "SETTLED"
   let status: FrontendMarket["status"] = "ACTIVE";
   const statusLower = (backend.status ?? "").toLowerCase();
+  const hardBlockers = (backend.blockers ?? []).filter((blocker) => {
+    const key = blocker.trim().toLowerCase().replace(/[\s.-]+/g, "_");
+    if (SOFT_TRADE_BLOCKERS.has(key)) return false;
+    return HARD_TRADE_BLOCKERS.has(key);
+  });
+
   if (statusLower === "closed" || statusLower === "settled" || backend.lifecycle === "settled" || backend.lifecycle === "void") {
     status = "SETTLED";
-  } else if (statusLower === "suspended" || (backend.lifecycle !== undefined && backend.lifecycle !== "open") || (backend.blockers?.length ?? 0) > 0) {
+  } else if (
+    statusLower === "suspended" ||
+    (backend.lifecycle !== undefined && backend.lifecycle !== "open") ||
+    hardBlockers.length > 0
+  ) {
     status = "SUSPENDED";
   }
 

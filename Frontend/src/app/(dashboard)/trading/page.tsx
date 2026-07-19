@@ -3,14 +3,13 @@
 import React from "react";
 import Link from "next/link";
 import { CalendarClock, Loader2, RadioTower } from "lucide-react";
-import { useHomeMatches } from "@/features/dashboard/hooks";
+import { useHomeStripMatches } from "@/features/dashboard/hooks";
 import { useMarkets } from "@/features/trading/hooks";
 import { selectPrimaryMarket } from "@/features/trading/utils/market-helpers";
 import {
   formatMatchStartTime,
   isLiveOrBreak,
   isUpcomingMatch,
-  sortHomeMatches,
   tradingOpensMessage,
 } from "@/features/trading/utils/home-matches";
 import type { Match } from "@/types";
@@ -19,8 +18,7 @@ import { cn } from "@/lib/utils";
 
 export default function TradingIndexPage() {
   const router = useRouter();
-  const { data: matches = [], isLoading } = useHomeMatches();
-  const visible = React.useMemo(() => sortHomeMatches(matches), [matches]);
+  const { data: visible = [], isLoading } = useHomeStripMatches();
   const firstLive = visible.find(isLiveOrBreak);
 
   const { data: liveMarkets = [] } = useMarkets(firstLive?.id ?? "");

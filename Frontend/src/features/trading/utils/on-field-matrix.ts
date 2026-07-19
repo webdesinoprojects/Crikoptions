@@ -93,42 +93,36 @@ export function overBallChipClassName(variant: OverBallVariant): string {
 
 export function hasLiveContext(match?: Match | null): boolean {
   return Boolean(
-    match?.liveContext?.striker?.name &&
-      match?.liveContext?.nonStriker?.name &&
-      match?.liveContext?.bowler?.name
+    match?.liveContext?.striker?.name?.trim() ||
+      match?.liveContext?.nonStriker?.name?.trim() ||
+      match?.liveContext?.bowler?.name?.trim()
   );
 }
 
 export function shouldShowWaitingForFeed(match?: Match | null): boolean {
-  const isSportmonks = match?.dataSource === "sportmonks";
-  const feedReady = !isSportmonks || match?.feedState === "healthy";
-  return !hasLiveContext(match) || !feedReady;
+  // Production UX: never blank the matrix just because feedState is warming/reconciling/stale.
+  // Show player rows whenever we have names; only wait when liveContext is genuinely missing.
+  if (match?.status === "UPCOMING") return true;
+  return !hasLiveContext(match);
 }
 
 export function waitingHintForFeed(match?: Match | null): string | undefined {
-  const isSportmonks = match?.dataSource === "sportmonks";
-  if (!isSportmonks) return undefined;
-
-  const parts: string[] = [];
-  if (match?.feedState !== "healthy") {
-    parts.push(`Feed ${(match?.feedState ?? "warming").replaceAll("_", " ")}`);
-  }
-  if (match?.tradingBlockers?.length) {
-    parts.push(match.tradingBlockers.map((b) => b.replaceAll("_", " ")).join(", "));
-  }
-  const validUntil = match?.feedValidUntil ? Date.parse(match.feedValidUntil) : Number.NaN;
-  if (Number.isFinite(validUntil) && validUntil < Date.now()) {
-    parts.push("poll stale");
-  }
-  if (!hasLiveContext(match) && match?.feedState === "healthy") {
-    parts.push("player feed pending");
-  }
-
-  return parts.length > 0 ? parts.join(" · ") : undefined;
+  if (match?.status === "UPCOMING") return "Match has not started";
+  if (!hasLiveContext(match)) return "Syncing player line-up…";
+  return undefined;
 }
 
 export function isHealthyLiveFeed(match?: Match | null): boolean {
-  return match?.status === "LIVE" && (!match?.dataSource || match.dataSource !== "sportmonks" || match.feedState === "healthy");
+  // LIVE badge follows match status. Feed health is secondary (shown subtly elsewhere).
+  return match?.status === "LIVE" || match?.status === "INNINGS_BREAK";
+}
+
+export function feedStatusLabel(match?: Match | null): string | undefined {
+  if (match?.dataSource !== "sportmonks") return undefined;
+  if (match.status === "UPCOMING") return undefined;
+  // Soft sync only — visual badge, never a trade gate.
+  if (match.feedState === "reconciling" || match.feedState === "warming") return "SYNCING";
+  return undefined;
 }
 
 function momentumTone(level?: MomentumLevel): PulseTone {
@@ -185,21 +179,32 @@ export function deriveMatchPulseDisplay(matchPulse?: MatchPulse | null): MatchPu
 export function buildOnFieldMatrixState(match?: Match | null): OnFieldMatrixState {
   const liveContext = match?.liveContext;
   const showWaiting = shouldShowWaitingForFeed(match);
+  const emptyBatter = { name: "—", runs: 0, balls: 0 };
+  const emptyBowler = { name: "—", balls: 0, maidens: 0, runs: 0, wickets: 0 };
+  const emptyPartnership = { runs: 0, balls: 0 };
+  const displayContext = liveContext
+    ? {
+        striker: liveContext.striker?.name?.trim() ? liveContext.striker : emptyBatter,
+        nonStriker: liveContext.nonStriker?.name?.trim() ? liveContext.nonStriker : emptyBatter,
+        bowler: liveContext.bowler?.name?.trim() ? liveContext.bowler : emptyBowler,
+        partnership: liveContext.partnership ?? emptyPartnership,
+      }
+    : undefined;
 
   return {
     showWaiting,
     waitingHint: showWaiting ? waitingHintForFeed(match) : undefined,
     showLiveBadge: isHealthyLiveFeed(match),
-    liveContext,
+    liveContext: displayContext,
     matchPulse: deriveMatchPulseDisplay(match?.matchPulse),
     thisOver: match?.thisOver ?? [],
-    strikerStrikeRate: liveContext
-      ? formatStrikeRate(liveContext.striker.runs, liveContext.striker.balls)
+    strikerStrikeRate: displayContext
+      ? formatStrikeRate(displayContext.striker.runs, displayContext.striker.balls)
       : "-",
-    nonStrikerStrikeRate: liveContext
-      ? formatStrikeRate(liveContext.nonStriker.runs, liveContext.nonStriker.balls)
+    nonStrikerStrikeRate: displayContext
+      ? formatStrikeRate(displayContext.nonStriker.runs, displayContext.nonStriker.balls)
       : "-",
-    bowlerFigures: liveContext ? formatBowlerFigures(liveContext.bowler) : "—",
-    bowlerEconomy: liveContext ? formatBowlerEconomy(liveContext.bowler) : "—",
+    bowlerFigures: displayContext ? formatBowlerFigures(displayContext.bowler) : "—",
+    bowlerEconomy: displayContext ? formatBowlerEconomy(displayContext.bowler) : "—",
   };
 }

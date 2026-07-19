@@ -1,7 +1,7 @@
 import React from "react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useLiveMatches, useLiveTicker } from "@/features/dashboard/hooks";
+import { useHomeStripMatches, useLiveTicker } from "@/features/dashboard/hooks";
 import { useMarkets } from "@/features/trading/hooks";
 import Link from "next/link";
 import { ballClassName, scoreParts } from "@/features/trading/utils/terminal-context";
@@ -10,15 +10,13 @@ import {
   formatMatchStartTime,
   isLiveOrBreak,
   isUpcomingMatch,
-  sortHomeMatches,
   tradingOpensMessage,
 } from "@/features/trading/utils/home-matches";
 import { selectPrimaryMarket } from "@/features/trading/utils/market-helpers";
 
 export function LiveMatchArena() {
-  const { data: liveMatches, isLoading } = useLiveMatches();
+  const { data: homeMatches = [], isLoading } = useHomeStripMatches();
   const { data: tickers } = useLiveTicker();
-  const homeMatches = React.useMemo(() => sortHomeMatches(liveMatches ?? []), [liveMatches]);
   const upcomingMatches = homeMatches.filter(isUpcomingMatch);
 
   const match = homeMatches.find(isLiveOrBreak) || null;

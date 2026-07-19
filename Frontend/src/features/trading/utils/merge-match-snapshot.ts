@@ -26,6 +26,7 @@ export function mergeMatchSnapshot(current: Match | undefined, incoming: Match):
     liveContext,
     matchPulse,
     thisOver,
+    tradable: incoming.tradable ?? current.tradable,
     stateVersion: Math.max(currentVersion, incomingVersion) || incoming.stateVersion || current.stateVersion,
     tradingVersion: Math.max(current.tradingVersion ?? 0, incoming.tradingVersion ?? 0) || incoming.tradingVersion || current.tradingVersion,
   };

@@ -98,6 +98,7 @@ function refreshTerminalQueries(queryClient: QueryClient, matchId: string) {
   invalidateAndRefetch(queryClient, tradingQueryKeys.dailyPnL);
   invalidateAndRefetch(queryClient, ["portfolio"]);
   invalidateAndRefetch(queryClient, ["dashboard", "overview"]);
+  queryClient.removeQueries({ queryKey: ["orderPreview"] });
 }
 
 function invalidateAndRefetch(queryClient: QueryClient, queryKey: readonly unknown[]) {

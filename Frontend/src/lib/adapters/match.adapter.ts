@@ -1,4 +1,5 @@
 import { FeedState, InningsSummary, LiveMatchContext, Match as FrontendMatch, MatchPulse, MatchStatus, OverBall, Team as FrontendTeam } from "@/types";
+import { canTradeMatch } from "@/types/match-trading";
 
 export interface BackendMatch {
   _id: string | null;
@@ -32,6 +33,7 @@ export interface BackendMatch {
   feedState?: FeedState;
   tradingState?: string;
   tradingBlockers?: string[];
+  tradable?: boolean;
   lastSuccessfulPollAt?: string;
   feedValidUntil?: string;
 }
@@ -42,6 +44,12 @@ export function adaptMatch(backend: BackendMatch): FrontendMatch {
   const matchPulse = normalizeMatchPulse(raw.matchPulse ?? raw.match_pulse);
   const thisOver = normalizeThisOver(raw.thisOver ?? raw.this_over);
   const feedState = (raw.feedState ?? raw.feed_state) as FeedState | undefined;
+  const tradable =
+    typeof raw.tradable === "boolean"
+      ? raw.tradable
+      : typeof raw.isTradable === "boolean"
+        ? raw.isTradable
+        : undefined;
   const teamAName = stringOrFallback(backend.teamAName, "Team A");
   const teamBName = stringOrFallback(backend.teamBName, "Team B");
   const homeTeam: FrontendTeam = {
@@ -61,6 +69,17 @@ export function adaptMatch(backend: BackendMatch): FrontendMatch {
   const status = adaptMatchStatus(backend.status, feedState);
   const currentScore = numberOrZero(backend.currentScore);
   const wicketsLost = numberOrZero(backend.wicketsLost);
+  const tradingState = backend.tradingState;
+  const tradingBlockers = backend.tradingBlockers ?? [];
+  const resolvedTradable =
+    typeof tradable === "boolean"
+      ? tradable
+      : canTradeMatch({
+          status,
+          feedState,
+          tradingState,
+          tradingBlockers,
+        });
 
   let homeScore = "";
   if (status === "LIVE" || status === "COMPLETED") {
@@ -93,8 +112,9 @@ export function adaptMatch(backend: BackendMatch): FrontendMatch {
     stateVersion: backend.stateVersion,
     tradingVersion: backend.tradingVersion,
     feedState,
-    tradingState: backend.tradingState,
-    tradingBlockers: backend.tradingBlockers ?? [],
+    tradingState,
+    tradingBlockers,
+    tradable: resolvedTradable,
     lastSuccessfulPollAt: backend.lastSuccessfulPollAt,
     feedValidUntil: backend.feedValidUntil,
   };

@@ -119,20 +119,11 @@ export interface Match {
   feedState?: FeedState;
   tradingState?: string;
   tradingBlockers?: string[];
+  /** Backend trade gate — prefer this over inferring from feedState. */
+  tradable?: boolean;
   lastSuccessfulPollAt?: string;
   feedValidUntil?: string;
 }
 
-export function isMatchTradable(match?: Match, now = Date.now()): boolean {
-  if (!match) return false;
-  if (match.dataSource !== "sportmonks") return match.status === "LIVE";
-  const validUntil = match.feedValidUntil ? Date.parse(match.feedValidUntil) : Number.NaN;
-  return (
-    match.status === "LIVE" &&
-    match.feedState === "healthy" &&
-    match.tradingState === "open" &&
-    (match.tradingBlockers?.length ?? 0) === 0 &&
-    Number.isFinite(validUntil) &&
-    validUntil > now
-  );
-}
+export { canTradeMatch, isMatchTradable, isSoftSyncFeed, tradeBlockerMessage } from "./match-trading";
+export type { TradeGateMatch } from "./match-trading";

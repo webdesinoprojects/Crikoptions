@@ -3,11 +3,11 @@ import { CheckCircle2, Clock3, Loader2, RotateCcw, ShieldCheck, Zap } from "luci
 import { toast } from "sonner";
 import { useWallet } from "@/features/wallet/hooks";
 import { useTerminalStore } from "@/stores/terminal.store";
-import { isMatchTradable, type Match, type Order } from "@/types";
+import type { Match, Order } from "@/types";
+import { canTradeMatch, hasHardTradeBlockers, tradeBlockerMessage } from "@/types/match-trading";
 import { terminalPollInterval } from "../hooks/query-keys";
 import { useCreateOrder, useMarketDetail, useOptionChain, useOrderPreview } from "../hooks";
 import { buildOptionRows, buildPricePayload, findAtmRow } from "../utils/terminal-context";
-import { isOrderPreviewFresh } from "../utils/order-preview";
 import { formatMoney, formatTime } from "@/utils/format";
 import { v4 as uuidv4 } from "uuid";
 
@@ -28,7 +28,6 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const [priceOverride, setPriceOverride] = useState<{ key: string; value: string } | null>(null);
   const [lastOrder, setLastOrder] = useState<Order | null>(null);
   const [lastOrderTime, setLastOrderTime] = useState<Date | null>(null);
-  const [tradingClock, setTradingClock] = useState(() => Date.now());
 
   const orderSize = useTerminalStore((state) => state.orderSize);
   const [qtyOverride, setQtyOverride] = useState<string | null>(null);
@@ -79,10 +78,11 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
       type,
       quantity: qtyValue,
       price: priceValue,
+      pricingSnapshot: payload,
       expectedMatchStateVersion: match?.stateVersion,
       expectedTradingVersion: match?.tradingVersion,
     };
-  }, [marketId, matchId, match?.stateVersion, match?.tradingVersion, priceValue, qtyValue, selectedStrikeValue, side, type]);
+  }, [marketId, matchId, match?.stateVersion, match?.tradingVersion, payload, priceValue, qtyValue, selectedStrikeValue, side, type]);
   const { data: orderPreview } = useOrderPreview(previewPayload);
   const localNotional = roundMoney(priceValue * qtyValue);
   const notional = orderPreview?.notional ?? localNotional;
@@ -91,15 +91,16 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const showBalanceWarning = orderPreview ? !orderPreview.sufficientBalance : marginRequired > availableBalance;
   const previewMessage = orderPreview?.message ?? "";
   const willExecuteNow = isMarketOrder || (isLimitWithQuote && buyWithinSpread);
-  const providerMatch = match?.dataSource === "sportmonks";
-  const previewFresh = !providerMatch || Boolean(orderPreview && isOrderPreviewFresh(orderPreview.expiresAt, tradingClock));
-  const marketOpen = !providerMatch || (market?.lifecycle === "open" && (market.blockers?.length ?? 0) === 0);
-  const tradingOpen = (!providerMatch || isMatchTradable(match, tradingClock)) && marketOpen;
-  const blockerMessage = providerMatch && !tradingOpen
-    ? match?.status === "UPCOMING" || match?.tradingState === "blocked"
-      ? "Trading opens when match goes live"
-      : [...(match?.tradingBlockers ?? []), ...(market?.blockers ?? [])].join(", ") || match?.feedState || market?.lifecycle || "Trading is suspended"
-    : "";
+
+  // SYNCING / soft sync must NOT disable trade — gate on tradable + hard blockers only.
+  const matchTradable = canTradeMatch(match);
+  const marketHardBlocked =
+    market?.status === "SETTLED" ||
+    market?.status === "SUSPENDED" ||
+    hasHardTradeBlockers(market?.blockers);
+  const tradingOpen = matchTradable && !marketHardBlocked;
+  const blockerMessage = !tradingOpen ? tradeBlockerMessage(match) : "";
+
   const submitDisabled =
     isCreatingOrder ||
     showBalanceWarning ||
@@ -107,30 +108,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
     !marketId ||
     !selectedStrikeValue ||
     !tradingOpen ||
-    (providerMatch && (!orderPreview || !previewFresh)) ||
     (type === "MARKET" && !hasExecutableQuote);
-
-  React.useEffect(() => {
-    if (!providerMatch || !match?.feedValidUntil) return;
-    const expiry = Date.parse(match.feedValidUntil);
-    if (!Number.isFinite(expiry)) return;
-    const timeout = window.setTimeout(
-      () => setTradingClock(Date.now()),
-      Math.max(0, Math.min(expiry - Date.now() + 25, 2_147_483_647))
-    );
-    return () => window.clearTimeout(timeout);
-  }, [providerMatch, match?.feedValidUntil]);
-
-  React.useEffect(() => {
-    if (!providerMatch || !orderPreview?.expiresAt) return;
-    const expiry = Date.parse(orderPreview.expiresAt);
-    if (!Number.isFinite(expiry)) return;
-    const timeout = window.setTimeout(
-      () => setTradingClock(Date.now()),
-      Math.max(0, Math.min(expiry - Date.now() + 25, 2_147_483_647))
-    );
-    return () => window.clearTimeout(timeout);
-  }, [orderPreview?.expiresAt, providerMatch]);
 
   React.useEffect(() => {
     if (selectedStrike != null || !atmRow) return;
@@ -164,16 +142,16 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
       toast.error("Select a strike from the option chain before placing an order");
       return;
     }
-    if (providerMatch && (!orderPreview || !isOrderPreviewFresh(orderPreview.expiresAt, Date.now()))) {
-      toast.error("Quote expired. Refreshing the order preview.");
-      return;
-    }
     if (qtyValue <= 0) {
       toast.error("Please enter a valid quantity");
       return;
     }
     if (type === "MARKET" && !hasExecutableQuote) {
       toast.error("No executable quote is available for this strike");
+      return;
+    }
+    if (!tradingOpen) {
+      toast.error(blockerMessage || "Trading is currently unavailable");
       return;
     }
     if (priceValue <= 0) {
@@ -190,6 +168,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
         type,
         quantity: qtyValue,
         price: priceValue,
+        pricingSnapshot: payload,
         expectedMatchStateVersion: orderPreview?.matchStateVersion ?? match?.stateVersion,
         expectedTradingVersion: orderPreview?.tradingVersion ?? match?.tradingVersion,
         quoteExpiresAt: orderPreview?.expiresAt,
@@ -223,14 +202,16 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
     hasExecutableQuote,
     marketId,
     matchId,
-    priceValue,
     match?.stateVersion,
     match?.tradingVersion,
     orderPreview,
-    providerMatch,
+    priceValue,
+    payload,
     qtyValue,
     selectedStrikeValue,
     side,
+    tradingOpen,
+    blockerMessage,
     type,
   ]);
 
@@ -365,13 +346,13 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
         price={priceValue}
       />
 
-      {lastOrder && <OrderReceipt order={lastOrder} submittedAt={lastOrderTime} />}
+      {blockerMessage ? (
+        <div className="rounded-lg border border-amber-300/25 bg-amber-400/10 px-2.5 py-2 text-[10px] font-semibold text-amber-100">
+          {blockerMessage}
+        </div>
+      ) : null}
 
-      {blockerMessage && (
-        <p role="status" className="rounded-lg border border-amber-400/25 bg-amber-400/10 px-3 py-2 text-xs font-semibold text-amber-100">
-          Trading paused: {blockerMessage.replaceAll("_", " ")}
-        </p>
-      )}
+      {lastOrder && <OrderReceipt order={lastOrder} submittedAt={lastOrderTime} />}
 
       <div className="grid grid-cols-[1fr_40px] gap-2 pt-1">
         <button

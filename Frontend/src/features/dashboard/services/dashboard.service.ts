@@ -17,6 +17,11 @@ export const dashboardService = {
     return adaptMatches(response.data.data ?? []);
   },
 
+  fetchUpcomingMatches: async (): Promise<Match[]> => {
+    const response = await apiClient.get<{ success: boolean; data: BackendMatch[] }>("/v1/matches/upcoming");
+    return adaptMatches(response.data.data ?? []);
+  },
+
   fetchMatchDetails: async (matchId: string): Promise<Match> => {
     const response = await apiClient.get<{ success: boolean; data: BackendMatch }>(`/v1/matches/${matchId}`);
     return adaptMatch(response.data.data);

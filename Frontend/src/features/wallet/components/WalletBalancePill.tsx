@@ -1,14 +1,16 @@
 "use client";
 
 import { Wallet } from "lucide-react";
-import { useDashboardOverview } from "@/features/dashboard/hooks";
+import { useWallet } from "@/features/wallet/hooks";
 
 interface WalletBalancePillProps {
   enabled?: boolean;
 }
 
 export function WalletBalancePill({ enabled = true }: WalletBalancePillProps) {
-  const { data: overview, isError, isLoading } = useDashboardOverview(enabled);
+  // Wallet is invalidated on every order/exit/WS update — use it directly so
+  // Available Margin updates without a full page refresh.
+  const { data: wallet, isError, isLoading } = useWallet(enabled, 5_000);
 
   if (!enabled) return null;
 
@@ -28,7 +30,7 @@ export function WalletBalancePill({ enabled = true }: WalletBalancePillProps) {
           Available Margin
         </div>
         <div className="mt-1 truncate font-data-tabular text-[12px] font-black text-white xl:text-sm">
-          {isLoading ? "Loading" : isError ? "Unavailable" : `₹${formatMoney(overview?.marginAvailable ?? 0)}`}
+          {isLoading ? "Loading" : isError ? "Unavailable" : `₹${formatMoney(wallet?.availableBalance ?? 0)}`}
         </div>
       </div>
     </div>

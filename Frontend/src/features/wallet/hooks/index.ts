@@ -14,7 +14,7 @@ export function useWallet(enabled = true, refetchInterval = 30_000) {
     queryKey: walletKeys.wallet,
     queryFn: () => walletService.getWallet(),
     enabled,
-    staleTime: 15_000,
+    staleTime: 0,
     refetchInterval,
     refetchOnWindowFocus: true,
   });

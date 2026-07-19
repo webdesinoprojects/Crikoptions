@@ -20,6 +20,7 @@ export interface MatchScoreUpdateEvent {
   feedState?: string;
   tradingState?: string;
   tradingBlockers?: string[];
+  tradable?: boolean;
   providerPhase?: string;
   lastSuccessfulPollAt?: string;
   feedValidUntil?: string;

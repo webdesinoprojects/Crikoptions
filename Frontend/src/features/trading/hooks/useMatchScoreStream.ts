@@ -38,6 +38,13 @@ export function useMatchScoreStream(matchId: string, streamMatchId?: string) {
               : item
           )
         );
+        if (authoritative.status === "LIVE" || authoritative.status === "INNINGS_BREAK") {
+          queryClient.setQueryData<Match[]>(["upcomingMatches"], (current = []) =>
+            current.filter((item) => item.id !== authoritative.id && item.id !== matchId)
+          );
+          void queryClient.invalidateQueries({ queryKey: ["homeMatches"] });
+          void queryClient.invalidateQueries({ queryKey: ["upcomingMatches"] });
+        }
       } catch {
         await queryClient.invalidateQueries({ queryKey: ["matchDetails", matchId] });
       }
