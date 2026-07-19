@@ -1,7 +1,12 @@
+import { useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { dashboardService } from "../services/dashboard.service";
 import type { Match } from "@/types";
 import { mergeMatchSnapshot } from "@/features/trading/utils/merge-match-snapshot";
+import {
+  HOME_STRIP_UPCOMING_LIMIT,
+  selectHomeStripMatches,
+} from "@/features/trading/utils/home-matches";
 
 export const useDashboardOverview = (enabled = true) => {
   return useQuery({
@@ -29,6 +34,40 @@ export const useHomeMatches = (enabled = true) => {
     enabled,
     refetchInterval: enabled ? 5000 : false,
   });
+};
+
+export const useUpcomingMatches = (enabled = true) => {
+  return useQuery({
+    queryKey: ["upcomingMatches"],
+    queryFn: dashboardService.fetchUpcomingMatches,
+    enabled,
+    // Poll so fixtures flip off this list (and onto home) when status becomes LIVE.
+    refetchInterval: enabled ? 5000 : false,
+  });
+};
+
+/** Live/break from /matches/home plus the next two from /matches/upcoming. */
+export const useHomeStripMatches = (enabled = true) => {
+  const homeQuery = useHomeMatches(enabled);
+  const upcomingQuery = useUpcomingMatches(enabled);
+
+  const matches = useMemo(
+    () =>
+      selectHomeStripMatches(
+        homeQuery.data ?? [],
+        upcomingQuery.data ?? [],
+        HOME_STRIP_UPCOMING_LIMIT
+      ),
+    [homeQuery.data, upcomingQuery.data]
+  );
+
+  return {
+    data: matches,
+    isLoading: homeQuery.isLoading || upcomingQuery.isLoading,
+    isFetching: homeQuery.isFetching || upcomingQuery.isFetching,
+    isError: homeQuery.isError || upcomingQuery.isError,
+    error: homeQuery.error ?? upcomingQuery.error,
+  };
 };
 
 export const useMatchDetails = (matchId: string) => {

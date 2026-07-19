@@ -1,6 +1,7 @@
 import { adaptMatchStatus } from "@/lib/adapters/match.adapter";
 import type { MatchScoreUpdateEvent } from "@/lib/websocket/match.stream";
 import type { Match } from "@/types";
+import { canTradeMatch } from "@/types/match-trading";
 import { mergeMatchSnapshot } from "./merge-match-snapshot";
 
 export type MatchScoreAction = "ignore" | "patch" | "resync";
@@ -18,10 +19,20 @@ export function classifyMatchScoreEvent(current: Match | undefined, event: Match
 
 export function patchMatchScore(current: Match, event: MatchScoreUpdateEvent): Match {
   const feedState = (event.feedState ?? current.feedState) as Match["feedState"];
+  const tradingState = event.tradingState ?? current.tradingState;
+  const tradingBlockers = event.tradingBlockers ?? current.tradingBlockers;
+  const status = adaptMatchStatus(event.status, feedState);
+  const mergedGate = {
+    status,
+    feedState,
+    tradingState,
+    tradingBlockers,
+    tradable: event.tradable ?? current.tradable,
+  };
 
   return mergeMatchSnapshot(current, {
     ...current,
-    status: adaptMatchStatus(event.status, feedState),
+    status,
     innings: event.innings ?? current.innings,
     currentScore: event.currentScore,
     wicketsLost: event.wicketsLost,
@@ -35,8 +46,12 @@ export function patchMatchScore(current: Match, event: MatchScoreUpdateEvent): M
     stateVersion: event.stateVersion ?? current.stateVersion,
     tradingVersion: event.tradingVersion ?? current.tradingVersion,
     feedState,
-    tradingState: event.tradingState ?? current.tradingState,
-    tradingBlockers: event.tradingBlockers ?? current.tradingBlockers,
+    tradingState,
+    tradingBlockers,
+    tradable:
+      typeof event.tradable === "boolean"
+        ? event.tradable
+        : canTradeMatch(mergedGate),
     providerPhase: event.providerPhase ?? current.providerPhase,
     lastSuccessfulPollAt: event.lastSuccessfulPollAt ?? current.lastSuccessfulPollAt,
     feedValidUntil: event.feedValidUntil ?? current.feedValidUntil,

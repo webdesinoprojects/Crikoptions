@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { CalendarClock } from "lucide-react";
 import { LiveMatchStatsPanel, MatchScheduleStrip } from "@/features/trading/components";
-import { useLiveMatches, useMatchDetails } from "@/features/dashboard/hooks";
+import { useMatchDetails } from "@/features/dashboard/hooks";
 import { useMarkets } from "@/features/trading/hooks";
 import { selectPrimaryMarket } from "@/features/trading/utils/market-helpers";
 import {
@@ -22,7 +22,6 @@ export default function UpcomingMatchPreviewPage({ params }: PageProps) {
   const { matchId } = React.use(params);
   const router = useRouter();
   const { data: match, isLoading } = useMatchDetails(matchId);
-  const { data: matches = [] } = useLiveMatches();
   const { data: markets = [] } = useMarkets(matchId);
   const primaryMarketId = selectPrimaryMarket(markets)?.id;
 
@@ -40,7 +39,7 @@ export default function UpcomingMatchPreviewPage({ params }: PageProps) {
       />
 
       <div className="relative z-10">
-        <MatchScheduleStrip matches={matches} selectedMatchId={match?.id ?? matchId} />
+        <MatchScheduleStrip selectedMatchId={match?.id ?? matchId} />
       </div>
 
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto p-3 lg:overflow-hidden">

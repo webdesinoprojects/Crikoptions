@@ -12,6 +12,7 @@ import {
   overBallChipClassName,
   overBallLabel,
   overBallVariant,
+  feedStatusLabel,
   type PulseTone,
 } from "../utils/on-field-matrix";
 import {
@@ -85,14 +86,9 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
                   ? "UPCOMING"
                   : match?.status ?? "LIVE"}
             </span>
-            {match?.dataSource === "sportmonks" && match.status !== "UPCOMING" && (
-              <span className={cn(
-                "rounded border px-2 py-1 text-[9px] font-black uppercase tracking-wider",
-                match.feedState === "healthy"
-                  ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-200"
-                  : "border-amber-400/25 bg-amber-400/10 text-amber-200"
-              )}>
-                Feed {match.feedState ?? "warming"}
+            {match?.dataSource === "sportmonks" && match.status !== "UPCOMING" && feedStatusLabel(match) && (
+              <span className="rounded border border-amber-400/20 bg-amber-400/8 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-amber-200/90">
+                {feedStatusLabel(match)}
               </span>
             )}
             {match?.status === "UPCOMING" && match.startTime && (
@@ -193,7 +189,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
               {matrix.showLiveBadge && (
                 <span className="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
               )}
-              {matrix.showLiveBadge ? "Live" : "Feed"}
+              {matrix.showLiveBadge ? "Live" : match?.status === "UPCOMING" ? "Upcoming" : "Live"}
             </span>
           </div>
 
@@ -387,10 +383,10 @@ function BatterRow({
 function MissingPlayerFeed({ hint }: { hint?: string }) {
   return (
     <div className="flex h-[82px] flex-col items-center justify-center gap-1.5 py-2">
-      <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-        Waiting for feed data
+      <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+        Syncing line-up
       </div>
-      {hint ? <div className="text-[9px] font-medium text-amber-300/80">{hint}</div> : null}
+      {hint ? <div className="text-[9px] font-medium text-slate-500">{hint}</div> : null}
       <div className="flex gap-2">
         <div className="h-1 w-8 rounded-full bg-slate-700/50" />
         <div className="h-1 w-12 rounded-full bg-slate-700/50" />

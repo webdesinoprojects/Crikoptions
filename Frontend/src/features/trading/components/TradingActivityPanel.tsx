@@ -13,6 +13,7 @@ import type { ClosedTrade } from "@/features/portfolio/types/portfolio";
 import { buildPricePayload, buildOptionRows } from "../utils/terminal-context";
 import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { Match } from "@/types";
+import { canTradeMatch, tradeBlockerMessage } from "@/types/match-trading";
 import { useTerminalStore } from "@/stores/terminal.store";
 
 interface TradingActivityPanelProps {
@@ -98,7 +99,14 @@ export function TradingActivityPanel({ className, matchId, marketId, market, mat
           />
         )}
         {tab === "POSITIONS" && (
-          <PositionsTab loading={positionsLoading} positions={marketPositions} closedTrades={marketClosedTrades} chainRows={chainRows} />
+          <PositionsTab
+            loading={positionsLoading}
+            positions={marketPositions}
+            closedTrades={marketClosedTrades}
+            chainRows={chainRows}
+            pricingSnapshot={payload}
+            match={match}
+          />
         )}
       </div>
     </section>
@@ -205,12 +213,27 @@ function OrdersTab({
 
 // (removed Dropdown imports)
 
-function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading: boolean; positions: OpenPosition[]; closedTrades: ClosedTrade[]; chainRows: ReturnType<typeof buildOptionRows> }) {
+function PositionsTab({
+  loading,
+  positions,
+  closedTrades,
+  chainRows,
+  pricingSnapshot,
+  match,
+}: {
+  loading: boolean;
+  positions: OpenPosition[];
+  closedTrades: ClosedTrade[];
+  chainRows: ReturnType<typeof buildOptionRows>;
+  pricingSnapshot?: ReturnType<typeof buildPricePayload>;
+  match?: Match;
+}) {
   const setOrderIntent = useTerminalStore((state) => state.setOrderIntent);
   const setOrderSize = useTerminalStore((state) => state.setOrderSize);
   const [closingPositionId, setClosingPositionId] = useState<string | null>(null);
   const [openExpanded, setOpenExpanded] = useState(true);
   const [closedExpanded, setClosedExpanded] = useState(true);
+  const tradingOpen = canTradeMatch(match);
 
   if (loading) return <PanelState label="Loading positions..." />;
 
@@ -308,6 +331,9 @@ function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading
                       <InlinePositionCloseForm
                         position={position}
                         liveLtp={position.liveLtp}
+                        pricingSnapshot={pricingSnapshot}
+                        match={match}
+                        tradingOpen={tradingOpen}
                         onCancel={() => setClosingPositionId(null)}
                       />
                     )}
@@ -386,10 +412,16 @@ function PositionsTab({ loading, positions, closedTrades, chainRows }: { loading
 function InlinePositionCloseForm({
   position,
   liveLtp,
+  pricingSnapshot,
+  match,
+  tradingOpen,
   onCancel,
 }: {
   position: OpenPosition;
   liveLtp: number;
+  pricingSnapshot?: ReturnType<typeof buildPricePayload>;
+  match?: Match;
+  tradingOpen: boolean;
   onCancel: () => void;
 }) {
   const [type, setType] = useState<"MARKET" | "LIMIT">("MARKET");
@@ -402,7 +434,28 @@ function InlinePositionCloseForm({
   const actionText = side === "sell" ? "Sell to Exit" : "Buy to Exit";
   const { mutate: createOrder, isPending } = useCreateOrder();
 
+  React.useEffect(() => {
+    setPrice(liveLtp);
+  }, [liveLtp]);
+
   const handleSubmit = () => {
+    if (!tradingOpen) {
+      toast.error(tradeBlockerMessage(match) || "Trading is currently unavailable");
+      return;
+    }
+    if (qty <= 0) {
+      toast.error("Enter a valid quantity");
+      return;
+    }
+    if (type === "MARKET" && liveLtp <= 0) {
+      toast.error(side === "sell" ? "No bid available for this strike" : "No ask available for this strike");
+      return;
+    }
+    if (type === "LIMIT" && price <= 0) {
+      toast.error("Enter a valid limit price");
+      return;
+    }
+
     createOrder(
       {
         matchId: position.matchId,
@@ -412,7 +465,10 @@ function InlinePositionCloseForm({
         type,
         positionEffect: "CLOSE",
         quantity: qty,
-        price: type === "MARKET" ? 0 : price,
+        price: type === "MARKET" ? liveLtp : price,
+        expectedMatchStateVersion: match?.stateVersion,
+        expectedTradingVersion: match?.tradingVersion,
+        pricingSnapshot,
       },
       {
         onSuccess: () => {
@@ -421,13 +477,18 @@ function InlinePositionCloseForm({
         },
         onError: (error) => {
           toast.error(getErrorMessage(error, "Failed to place order"));
-        }
+        },
       }
     );
   };
 
   return (
     <div className="mt-3 rounded-lg border border-white/10 bg-[#040a17] p-3 shadow-inner space-y-3">
+      {!tradingOpen ? (
+        <div className="rounded border border-amber-300/25 bg-amber-400/10 px-2 py-1.5 text-[10px] font-semibold text-amber-100">
+          {tradeBlockerMessage(match)}
+        </div>
+      ) : null}
       <div className="flex rounded border border-white/10 bg-[#071327] p-0.5">
         <button
           onClick={() => setType("MARKET")}
@@ -472,7 +533,7 @@ function InlinePositionCloseForm({
       <div className="flex gap-2 pt-1">
         <button
           onClick={handleSubmit}
-          disabled={isPending || qty <= 0}
+          disabled={isPending || qty <= 0 || !tradingOpen}
           className={`flex-[2] rounded py-2 text-[11px] font-black text-white transition-colors disabled:opacity-50 ${side === "sell" ? "bg-bear-red hover:bg-bear-red/80" : "bg-bull-green hover:bg-bull-green/80"}`}
         >
           {isPending ? "Executing..." : actionText}

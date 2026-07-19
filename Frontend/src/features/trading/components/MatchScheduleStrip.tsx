@@ -1,20 +1,18 @@
 "use client";
 
 import React from "react";
-import type { Match } from "@/types";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { useHomeStripMatches } from "@/features/dashboard/hooks";
 import { ExitAllPositionsButton } from "./ExitAllPositionsButton";
 import { MatchCard } from "./MatchCard";
 import { TodayPnLDisplay } from "./TodayPnLDisplay";
-import { sortHomeMatches } from "../utils/home-matches";
 
 interface MatchScheduleStripProps {
-  matches: Match[];
   selectedMatchId?: string;
 }
 
-export function MatchScheduleStrip({ matches, selectedMatchId }: MatchScheduleStripProps) {
-  const visible = React.useMemo(() => sortHomeMatches(matches), [matches]);
+export function MatchScheduleStrip({ selectedMatchId }: MatchScheduleStripProps) {
+  const { data: visible = [] } = useHomeStripMatches();
 
   return (
     <section className="flex shrink-0 flex-col border-b border-white/10 bg-[#030817]/82 backdrop-blur-xl lg:flex-row lg:items-center lg:justify-between">

@@ -1,5 +1,5 @@
 import { Bell } from "lucide-react";
-import { useHomeMatches } from "@/features/dashboard/hooks";
+import { useUpcomingMatches } from "@/features/dashboard/hooks";
 import { useMarkets } from "@/features/trading/hooks";
 import Link from "next/link";
 import {
@@ -11,7 +11,7 @@ import {
 import { selectPrimaryMarket } from "@/features/trading/utils/market-helpers";
 
 export function ComingUp() {
-  const { data: matches = [] } = useHomeMatches();
+  const { data: matches = [] } = useUpcomingMatches();
   const upcomingMatches = sortHomeMatches(matches).filter(isUpcomingMatch);
   const upcomingMatch = upcomingMatches[0];
   const { data: upcomingMarkets = [] } = useMarkets(upcomingMatch?.id || "");

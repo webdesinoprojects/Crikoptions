@@ -1,5 +1,8 @@
 import type { Match } from "@/types";
 
+/** How many soonest upcoming fixtures to pin beside live cards in the terminal strip. */
+export const HOME_STRIP_UPCOMING_LIMIT = 2;
+
 export function isLiveOrBreak(match: Match): boolean {
   return match.status === "LIVE" || match.status === "INNINGS_BREAK";
 }
@@ -16,6 +19,26 @@ export function sortHomeMatches(matches: Match[]): Match[] {
     if (aLive !== bLive) return aLive - bLive;
     return new Date(a.startTime ?? 0).getTime() - new Date(b.startTime ?? 0).getTime();
   });
+}
+
+/**
+ * Trading terminal strip: all live/break fixtures from home, plus the N soonest
+ * upcoming fixtures from GET /matches/upcoming. Dedupes by id so a match that
+ * just went live is not shown twice while caches catch up.
+ */
+export function selectHomeStripMatches(
+  homeMatches: Match[],
+  upcomingMatches: Match[],
+  upcomingLimit = HOME_STRIP_UPCOMING_LIMIT
+): Match[] {
+  const live = sortHomeMatches(homeMatches.filter(isLiveOrBreak));
+  const liveIds = new Set(live.map((match) => match.id));
+
+  const upcoming = sortHomeMatches(
+    upcomingMatches.filter((match) => isUpcomingMatch(match) && !liveIds.has(match.id))
+  ).slice(0, Math.max(0, upcomingLimit));
+
+  return [...live, ...upcoming];
 }
 
 export function formatMatchStartTime(startTime?: string): string {
