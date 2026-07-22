@@ -15,9 +15,14 @@ export function isTradingStateConflict(error: unknown): boolean {
  */
 export async function submitOrderWithFreshQuote(
   payload: CreateOrderPayload,
-  options?: { retries?: number }
+  options?: { retries?: number; retryDelayMs?: number }
 ): Promise<FrontendOrder> {
-  const maxRetries = options?.retries ?? 1;
+  const maxRetries = options?.retries ?? 2;
+  // A retry that fires immediately re-reads the same in-flight feed tick and
+  // fails identically. The backend spaces its own gate retries by 75ms for the
+  // same reason; the feed commits within a few hundred ms, so a short spaced
+  // retry rides out a sync window instead of surfacing it to the user.
+  const retryDelayMs = options?.retryDelayMs ?? 220;
   let attempt = 0;
   let current = { ...payload };
 
@@ -30,6 +35,7 @@ export async function submitOrderWithFreshQuote(
         throw error;
       }
       attempt += 1;
+      await sleep(retryDelayMs * attempt);
       // Drop stale versions and re-preview against the latest match/trading state.
       current = {
         ...current,
@@ -39,6 +45,10 @@ export async function submitOrderWithFreshQuote(
       };
     }
   }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function hydrateOrderQuote(payload: CreateOrderPayload): Promise<CreateOrderPayload> {

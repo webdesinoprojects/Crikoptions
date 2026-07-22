@@ -1,20 +1,26 @@
 import { ChevronRight, TrendingUp, TrendingDown, Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { usePositions, usePerformance } from "@/features/portfolio/hooks";
+import { usePositions } from "@/features/portfolio/hooks";
 import Link from "next/link";
 
 export function YourMatchday() {
-  const { data: positions = [] } = usePositions();
-  const { data: performance } = usePerformance();
+  const { data: positions = [], portfolio } = usePositions();
 
   const openPositionsCount = positions.length;
-  const combinedPnL = performance?.totalPnL ?? 0;
-  
-  // Calculate total exposure dynamically if positions have entryPrice/size, else fallback
-  const calculatedExposure = positions.reduce((acc, pos) => acc + ((pos.averageEntryPrice || 0) * (pos.quantity || 0)), 0);
-  const totalExposure = calculatedExposure > 0 ? calculatedExposure : 0;
-  const maxExposure = 30000; // arbitrary max for progress bar
-  const exposurePct = Math.min((totalExposure / maxExposure) * 100, 100);
+  // The card is a live view, so it must show live (unrealized) P&L on the open
+  // positions listed below it — not lifetime totalPnL, which folds in every
+  // closed trade ever and made the card read "LIVE" with nothing live.
+  const combinedPnL = positions.reduce((acc, pos) => acc + (pos.unrealizedPnL || 0), 0);
+  const hasLivePositions = openPositionsCount > 0;
+
+  const totalExposure = positions.reduce(
+    (acc, pos) => acc + (pos.averageEntryPrice || 0) * (pos.quantity || 0),
+    0
+  );
+  // Scale the bar against the account's real deployable capital (used + free
+  // margin) instead of a hardcoded ceiling, so the fill means something.
+  const capitalBase = (portfolio?.usedMargin ?? 0) + (portfolio?.availableMargin ?? 0);
+  const exposurePct = capitalBase > 0 ? Math.min((totalExposure / capitalBase) * 100, 100) : 0;
 
   const displayPositions = positions.map(p => ({ 
     name: p.matchName || `Contract ${p.id}`, 
@@ -31,18 +37,24 @@ export function YourMatchday() {
             Your Matchday
           </div>
           <div className="text-sm font-medium text-white/80">
-            <span className="text-white font-bold">{openPositionsCount}</span> open positions
+            <span className="text-white font-bold">{openPositionsCount}</span>{" "}
+            {openPositionsCount === 1 ? "open position" : "open positions"}
           </div>
         </div>
         <div className="min-w-0 text-left sm:text-right">
-          <div className="text-[10px] bg-error px-1.5 py-0.5 inline-block rounded font-bold uppercase tracking-widest mb-1 text-white">
-            LIVE
+          <div
+            className={cn(
+              "text-[10px] px-1.5 py-0.5 inline-block rounded font-bold uppercase tracking-widest mb-1",
+              hasLivePositions ? "bg-error text-white" : "bg-white/10 text-on-surface-variant"
+            )}
+          >
+            {hasLivePositions ? "LIVE" : "FLAT"}
           </div>
           <div className={cn("max-w-full break-words font-data-tabular text-lg font-black leading-tight sm:text-xl", combinedPnL >= 0 ? "text-bull-green" : "text-bear-red")}>
             {combinedPnL >= 0 ? "+" : "-"}Rs {Math.abs(combinedPnL).toLocaleString("en-IN")}
           </div>
           <div className="text-[10px] text-on-surface-variant tracking-wider uppercase">
-            Combined Live P&L
+            Open Position P&L
           </div>
         </div>
       </div>

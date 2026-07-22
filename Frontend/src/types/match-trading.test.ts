@@ -1,5 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { canTradeMatch, isSoftSyncFeed, tradeBlockerMessage } from "@/types/match-trading";
+import {
+  canTradeMatch,
+  isSoftSyncFeed,
+  marketBlockerMessage,
+  tradeBlockerMessage,
+} from "@/types/match-trading";
+
+describe("marketBlockerMessage", () => {
+  it("explains a suspended contract so the button is never silently disabled", () => {
+    expect(marketBlockerMessage({ status: "SUSPENDED" })).toBe("Contract suspended");
+    expect(marketBlockerMessage({ status: "SETTLED" })).toBe("Contract settled");
+  });
+
+  it("names the hard blocker when the contract carries one", () => {
+    expect(marketBlockerMessage({ status: "ACTIVE", blockers: ["innings_break"] })).toBe(
+      "Contract paused — innings break"
+    );
+  });
+
+  it("stays silent for a soft sync marker", () => {
+    expect(marketBlockerMessage({ status: "ACTIVE", blockers: ["reconciling"] })).toBe("");
+  });
+});
 
 describe("canTradeMatch", () => {
   it("allows trading during soft sync even when tradingState is blocked", () => {

@@ -4,7 +4,12 @@ import { toast } from "sonner";
 import { useWallet } from "@/features/wallet/hooks";
 import { useTerminalStore } from "@/stores/terminal.store";
 import type { Match, Order } from "@/types";
-import { canTradeMatch, hasHardTradeBlockers, tradeBlockerMessage } from "@/types/match-trading";
+import {
+  canTradeMatch,
+  hasHardTradeBlockers,
+  marketBlockerMessage,
+  tradeBlockerMessage,
+} from "@/types/match-trading";
 import { terminalPollInterval } from "../hooks/query-keys";
 import { useCreateOrder, useMarketDetail, useOptionChain, useOrderPreview } from "../hooks";
 import { buildOptionRows, buildPricePayload, findAtmRow } from "../utils/terminal-context";
@@ -99,7 +104,12 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
     market?.status === "SUSPENDED" ||
     hasHardTradeBlockers(market?.blockers);
   const tradingOpen = matchTradable && !marketHardBlocked;
-  const blockerMessage = !tradingOpen ? tradeBlockerMessage(match) : "";
+  // The match can look perfectly tradable while the contract itself is blocked.
+  // Deriving the message from `match` alone left the button greyed out with no
+  // explanation whenever the market was the thing that was closed.
+  const blockerMessage = tradingOpen
+    ? ""
+    : tradeBlockerMessage(match) || marketBlockerMessage(market);
 
   const submitDisabled =
     isCreatingOrder ||

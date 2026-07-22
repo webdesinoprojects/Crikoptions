@@ -105,6 +105,29 @@ export function tradeBlockerMessage(match?: TradeGateMatch | null): string {
   return "Trading unavailable";
 }
 
+export type TradeGateMarket = {
+  status?: string | null;
+  blockers?: string[] | null;
+};
+
+/**
+ * Why the contract itself is untradable, when the match looks fine.
+ * Returns "" when the market is not the blocking side.
+ */
+export function marketBlockerMessage(market?: TradeGateMarket | null): string {
+  if (!market) return "Contract unavailable";
+
+  const hard = (market.blockers ?? []).map(normalizeToken).filter((b) => HARD_TRADE_BLOCKERS.has(b));
+  if (hard.length > 0) {
+    return `Contract paused — ${hard.map((b) => b.replaceAll("_", " ")).join(", ")}`;
+  }
+
+  const status = normalizeToken(market.status);
+  if (status === "settled") return "Contract settled";
+  if (status === "suspended") return "Contract suspended";
+  return "";
+}
+
 /** @deprecated Prefer canTradeMatch — kept for existing imports. */
 export function isMatchTradable(match?: Match, _now = Date.now()): boolean {
   return canTradeMatch(match);
