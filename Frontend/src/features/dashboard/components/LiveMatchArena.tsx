@@ -21,10 +21,10 @@ export function LiveMatchArena() {
 
   const match = homeMatches.find(isLiveOrBreak) || null;
   const { data: matchMarkets } = useMarkets(match?.id || "");
-  
+
   const liveMarketId = selectPrimaryMarket(matchMarkets ?? [])?.id;
   const tradingHref = liveMarketId ? `/trading/${liveMarketId}` : (tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/trading");
-  
+
   const { stableMatch, balls } = useStableMatchSnapshot(match || undefined, liveMarketId);
 
   if (!stableMatch) {
@@ -86,30 +86,30 @@ export function LiveMatchArena() {
       </div>
     );
   }
-  
+
   const title = stableMatch?.title || "No Live Match";
   const scoreParsed = scoreParts(stableMatch?.homeScore);
   const currentScore = stableMatch?.currentScore ?? (Number.isFinite(Number.parseInt(scoreParsed.runs, 10)) ? Number.parseInt(scoreParsed.runs, 10) : 0);
   const wickets = stableMatch?.wicketsLost ?? (Number.isFinite(Number.parseInt(scoreParsed.wickets, 10)) ? Number.parseInt(scoreParsed.wickets, 10) : 0);
-  
+
   const currentOver = stableMatch?.currentOver || "0.0";
   const target = stableMatch?.targetScore || 0;
   const need = stableMatch?.targetScore && stableMatch?.currentScore ? stableMatch.targetScore - stableMatch.currentScore : 0;
-  
+
   const format = (stableMatch?.format || "T20").toUpperCase();
   const totalBalls = format.includes("ODI") || format.includes("ONE") ? 300 : 120;
-  
+
   const currentOverParts = currentOver.split('.');
   const overs = parseInt(currentOverParts[0] || '0', 10);
   const ballsInOver = parseInt(currentOverParts[1] || '0', 10);
   const actualBallsBowled = (overs * 6) + ballsInOver;
-  
+
   const ballsBowled = actualBallsBowled > 0 ? actualBallsBowled : (totalBalls - (stableMatch?.ballsLeft ?? totalBalls));
   const ballsLeft = stableMatch?.ballsLeft ?? Math.max(0, totalBalls - ballsBowled);
-  
+
   const crr = ballsBowled > 0 ? (currentScore / (ballsBowled / 6)).toFixed(2) : "0.00";
   const rrr = need > 0 && ballsLeft > 0 ? ((need / ballsLeft) * 6).toFixed(2) : "0.00";
-  
+
   const lastBall = balls.length > 0 ? balls.filter(b => b.kind !== "empty").pop() : null;
   let commentarySummary = "Match is about to begin";
   if (lastBall) {
@@ -154,14 +154,14 @@ export function LiveMatchArena() {
         alt="Live Match Stadium"
         className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-1000 group-hover:scale-105"
       />
-      
+
       {/* Heavy Gradient Overlay for text readability */}
       <div className="absolute inset-0 bg-gradient-to-r from-[#000d1a] via-[#000d1a]/80 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-[#000d1a] via-transparent to-transparent" />
 
       {/* Content Container */}
       <div className="relative z-10 flex min-h-[560px] w-full flex-col gap-4 p-4 sm:p-5 md:h-full md:min-h-0 md:justify-between md:gap-0 md:p-6">
-        
+
         {/* Top Header / Live Indicator */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <div className={cn("rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white", isBreak ? "bg-amber-500" : "bg-error animate-pulse")}>
@@ -177,7 +177,7 @@ export function LiveMatchArena() {
         <div className="relative w-full overflow-hidden rounded-xl border border-white/5 bg-black/20 p-4 shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-xl sm:max-w-sm sm:rounded-2xl sm:p-5 md:mt-4">
           {/* Subtle gradient shine inside the glass pane */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
-          
+
           {/* Team Score */}
           <div className="relative z-10 mb-4 grid grid-cols-[44px_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[48px_minmax(0,1fr)] sm:gap-4">
             <div className="flex h-11 w-11 items-center justify-center break-words rounded-lg border border-[#d4af37]/30 bg-[#d4af37]/20 text-center font-display text-xl font-black leading-none text-[#d4af37] sm:h-12 sm:w-12 sm:text-2xl overflow-hidden p-1">
@@ -232,7 +232,7 @@ export function LiveMatchArena() {
                 <div className="text-[11px] font-data-tabular shrink-0">
                   <span className="text-white font-bold">{stableMatch.liveContext.bowler.wickets}</span>
                   <span className="text-white/50 mx-0.5">-</span>
-                  <span className="text-white font-bold">{stableMatch.liveContext.bowler.runs}</span> 
+                  <span className="text-white font-bold">{stableMatch.liveContext.bowler.runs}</span>
                   <span className="text-white/50 ml-1">({Math.floor(stableMatch.liveContext.bowler.balls / 6)}.{stableMatch.liveContext.bowler.balls % 6})</span>
                 </div>
               </div>
@@ -299,7 +299,7 @@ export function LiveMatchArena() {
               No provider market is open for this match state.
             </div>
           )}
-          
+
           <Link href={tradingHref} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/50 bg-cyan-500 text-xs font-black uppercase tracking-widest text-[#000d1a] shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-colors hover:bg-cyan-400 md:h-full">
             Watch & Trade
             <ChevronRight className="w-4 h-4" />

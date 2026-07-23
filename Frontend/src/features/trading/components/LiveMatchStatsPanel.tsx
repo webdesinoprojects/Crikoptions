@@ -34,7 +34,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
   const { stableMatch, balls } = useStableMatchSnapshot(match, market?.matchId ?? undefined);
   const matrix = useOnFieldMatrix(stableMatch, market?.matchId ?? undefined, stableMatch?.id);
   const isSportmonks = stableMatch?.dataSource === "sportmonks";
-  
+
   const score = currentInningsScoreParts(stableMatch);
   const parsedRuns = Number.parseInt(score.runs, 10);
   const parsedWickets = Number.parseInt(score.wickets, 10);
@@ -52,7 +52,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
   const isChase = innings === 2 && targetScore > 0;
   const runsNeeded = isChase ? Math.max(0, targetScore - currentScore) : 0;
   const rrr = isChase && ballsLeft > 0 && runsNeeded > 0 ? (runsNeeded / ballsLeft) * 6 : 0;
-  
+
   const compactThisOver = balls.length > 6;
   const battingTeam = battingTeamForMatch(stableMatch);
   const bowlingTeam = bowlingTeamForMatch(stableMatch);
@@ -103,7 +103,16 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
               </span>
             )}
             <span className="truncate text-right text-[13px] font-bold tracking-tight text-slate-100">
-              {stableMatch?.title ?? `${battingCode} vs ${bowlingCode}`}
+              {(() => {
+                const titleStr = stableMatch?.title ?? `${battingCode} vs ${bowlingCode}`;
+                const parts = titleStr.split(' vs ');
+                return parts.map((part, i) => (
+                  <React.Fragment key={i}>
+                    {part}
+                    {i < parts.length - 1 && <span className="mx-1 text-cyan-400 font-black italic">vs</span>}
+                  </React.Fragment>
+                ));
+              })()}
             </span>
           </div>
 
@@ -283,12 +292,12 @@ function TeamMark({ active, code, team }: { active: boolean; code: string; team?
     <div className="text-center">
       <div
         className={cn(
-          "mx-auto flex size-10 items-center justify-center rounded-[7px] border bg-[#071326] font-data-tabular text-[11px] font-black tracking-tight overflow-hidden",
+          "mx-auto flex w-12 h-8 items-center justify-center rounded-[6px] border bg-[#071326] font-data-tabular text-[11px] font-black tracking-tight overflow-hidden",
           active ? "border-cyan-300/40 text-cyan-200 shadow-[0_0_20px_rgba(34,211,238,0.12)]" : "border-white/10 text-slate-400"
         )}
       >
         {team?.logoUrl ? (
-          <img src={team.logoUrl} alt={code} className="h-full w-full object-contain p-1" />
+          <img src={team.logoUrl} alt={code} className="h-full w-full object-cover" />
         ) : (
           code
         )}

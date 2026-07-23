@@ -15,6 +15,22 @@ import {
   tradingOpensMessage,
 } from "../utils/home-matches";
 
+function formatMatchTitle(title?: string) {
+  if (!title) return null;
+  const parts = title.split(' vs ');
+  if (parts.length === 1) return <>{title}</>;
+  return (
+    <>
+      {parts.map((part, i) => (
+        <React.Fragment key={i}>
+          {part}
+          {i < parts.length - 1 && <span className="mx-1 text-cyan-400 font-black italic">vs</span>}
+        </React.Fragment>
+      ))}
+    </>
+  );
+}
+
 export const MatchCard = React.memo(function MatchCard({ match, selected }: { match: Match; selected: boolean }) {
   const router = useRouter();
   const score = currentInningsScoreParts(match);
@@ -45,7 +61,7 @@ export const MatchCard = React.memo(function MatchCard({ match, selected }: { ma
       onClick={handleClick}
       aria-current={selected ? "page" : undefined}
       className={cn(
-        "group grid h-[52px] min-w-[220px] shrink-0 grid-cols-[48px_minmax(0,1fr)_20px] items-center gap-2 overflow-hidden rounded-lg border px-2.5 text-left transition-all duration-300 sm:h-14 sm:min-w-72 sm:grid-cols-[56px_minmax(0,1fr)_24px] sm:gap-3 sm:px-3",
+        "group grid min-h-[56px] min-w-[220px] shrink-0 grid-cols-[52px_minmax(0,1fr)_20px] items-center gap-2.5 overflow-hidden rounded-lg border py-2.5 px-2.5 text-left transition-all duration-300 sm:min-h-[64px] sm:min-w-72 sm:grid-cols-[60px_minmax(0,1fr)_24px] sm:gap-3.5 sm:py-3 sm:px-3.5",
         selected
           ? "cursor-default border-cyan-300/35 bg-cyan-300/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_18px_38px_rgba(8,145,178,0.13)]"
           : "cursor-pointer border-white/10 bg-[#071123]/85 hover:border-cyan-300/25 hover:bg-[#0a172c]"
@@ -53,39 +69,46 @@ export const MatchCard = React.memo(function MatchCard({ match, selected }: { ma
     >
       <span
         className={cn(
-          "inline-flex h-8 items-center justify-center gap-1 rounded-md px-2 text-[9px] font-black uppercase tracking-wide ring-1 sm:h-9 sm:gap-1.5 sm:px-2.5 sm:text-[10px]",
+          "inline-flex h-8 items-center justify-center gap-1 rounded-md px-1.5 text-[9px] font-black uppercase tracking-wide ring-1 sm:h-9 sm:gap-1.5 sm:px-2 sm:text-[10px]",
           live
             ? "bg-amber-400/15 text-amber-200 ring-amber-300/20"
-            : "bg-cyan-400/12 text-cyan-100 ring-cyan-300/20"
+            : "bg-cyan-400/10 text-cyan-100 ring-cyan-300/20"
         )}
       >
         {live && <span className="size-1.5 rounded-full bg-amber-200 shadow-[0_0_10px_rgba(253,230,138,0.9)]" />}
         {isBreak ? "Break" : live ? "Live" : "Upcoming"}
       </span>
-      <div className="min-w-0">
-        <div className="truncate text-[12px] font-black leading-tight text-on-surface sm:text-sm">{match.title}</div>
+      <div className="min-w-0 flex flex-col justify-center">
+        <div className="truncate text-[12px] font-black leading-tight text-on-surface sm:text-[13px]">
+          {formatMatchTitle(match.title)}
+        </div>
         {upcoming ? (
           <>
-            <div className="font-data-tabular text-[12px] font-black text-cyan-200 sm:text-sm">
-              {formatMatchStartTime(match.startTime)}
-              {match.format ? ` · ${match.format}` : ""}
+            <div className="mt-0.5 flex items-center gap-1.5 font-data-tabular text-[11px] font-bold text-cyan-200/85 sm:text-[12px]">
+              <span>{formatMatchStartTime(match.startTime)}</span>
+              {match.format && (
+                <>
+                  <span className="text-cyan-500/40">•</span>
+                  <span>{match.format}</span>
+                </>
+              )}
             </div>
-            <div className="truncate text-[10px] font-semibold text-amber-200/85 sm:text-[11px]">
+            <div className="mt-1 truncate text-[9px] font-semibold tracking-wide text-amber-300/70 sm:text-[10px]">
               {tradingOpensMessage(match)}
             </div>
           </>
         ) : (
           <>
-            <div className="font-data-tabular text-[12px] font-black text-teal-300 sm:text-sm">
+            <div className="mt-0.5 font-data-tabular text-[12px] font-black text-teal-300 sm:text-[13px]">
               {battingCode} {score.runs}/{score.wickets} - {match.currentOver ?? "0.0"} ov
             </div>
             {isBreak && (
-              <div className="truncate font-data-tabular text-[10px] font-semibold text-cyan-100/85 sm:text-[11px]">
+              <div className="mt-0.5 truncate font-data-tabular text-[10px] font-semibold text-cyan-100/85 sm:text-[11px]">
                 Innings break
               </div>
             )}
             {isChase && (
-              <div className="truncate font-data-tabular text-[10px] font-semibold text-amber-200/90 sm:text-[11px]">
+              <div className="mt-0.5 truncate font-data-tabular text-[10px] font-semibold text-amber-200/90 sm:text-[11px]">
                 Target {match.targetScore}
               </div>
             )}

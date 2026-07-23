@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { CalendarClock, Loader2, RadioTower } from "lucide-react";
+import { FeaturesSectionWithBentoGrid } from "@/components/ui/feature-section-with-bento-grid";
 import { useHomeStripMatches } from "@/features/dashboard/hooks";
 import { useMarkets } from "@/features/trading/hooks";
 import { selectPrimaryMarket } from "@/features/trading/utils/market-helpers";
@@ -48,23 +49,13 @@ export default function TradingIndexPage() {
 
   if (visible.length === 0) {
     return (
-      <TradingShell>
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
-          <RadioTower className="h-6 w-6" />
-        </div>
-        <h1 className="mt-5 font-display text-2xl font-black text-white">No Sportmonks fixtures right now</h1>
-        <p className="mt-3 text-sm font-semibold leading-6 text-on-surface-variant">
-          The home feed has no live or upcoming provider matches. Check back when the next fixture is scheduled.
-        </p>
-        <div className="mt-5">
-          <Link
-            href="/dashboard"
-            className="inline-flex h-10 items-center justify-center rounded-lg border border-cyan-300/25 bg-cyan-300/10 px-4 text-sm font-black text-cyan-100 hover:bg-cyan-300/15"
-          >
-            Dashboard
-          </Link>
-        </div>
-      </TradingShell>
+      <main className="noise-overlay relative flex min-h-[calc(100dvh-3.5rem)] flex-grow flex-col overflow-x-hidden bg-[#01040a] p-4 text-on-surface sm:p-6">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(8,145,178,0.18),transparent_38%),radial-gradient(ellipse_at_bottom_right,rgba(20,184,166,0.12),transparent_42%)]"
+        />
+        <FeaturesSectionWithBentoGrid />
+      </main>
     );
   }
 
