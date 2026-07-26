@@ -522,13 +522,42 @@ export function currentInningsScoreParts(match?: Match) {
   };
 }
 
+/** Extract the provider's numeric team id from a team id like "sportmonks:10". */
+function numericTeamId(teamId?: string): number | undefined {
+  if (!teamId) return undefined;
+  const match = String(teamId).match(/(\d+)\s*$/);
+  return match ? Number(match[1]) : undefined;
+}
+
+/**
+ * Resolve which side is batting for the current innings.
+ *
+ * The feed tells us the batting team explicitly via
+ * `inningsSummaries[].battingTeamId` — we must NOT assume the home/team-A side
+ * always bats first (that depends on the toss). Team ids arrive as
+ * "sportmonks:<n>", so we compare against the numeric suffix. When the feed
+ * doesn't carry a batting team id (e.g. simulator/manual matches), fall back to
+ * the legacy innings-based guess.
+ */
 export function battingTeamForMatch(match?: Match) {
   if (!match) return undefined;
-  return (match.innings ?? 1) === 2 ? match.awayTeam : match.homeTeam;
+  const innings = match.innings ?? 1;
+
+  const battingTeamId = match.inningsSummaries?.find((s) => s.innings === innings)?.battingTeamId;
+  if (typeof battingTeamId === "number") {
+    if (numericTeamId(match.homeTeam?.id) === battingTeamId) return match.homeTeam;
+    if (numericTeamId(match.awayTeam?.id) === battingTeamId) return match.awayTeam;
+  }
+
+  return innings === 2 ? match.awayTeam : match.homeTeam;
 }
 
 export function bowlingTeamForMatch(match?: Match) {
   if (!match) return undefined;
+  const batting = battingTeamForMatch(match);
+  // The bowling team is simply the side that isn't batting.
+  if (batting && match.homeTeam && batting.id === match.homeTeam.id) return match.awayTeam;
+  if (batting && match.awayTeam && batting.id === match.awayTeam.id) return match.homeTeam;
   return (match.innings ?? 1) === 2 ? match.homeTeam : match.awayTeam;
 }
 

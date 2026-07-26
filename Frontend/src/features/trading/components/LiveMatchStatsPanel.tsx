@@ -119,7 +119,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
 
 
           <div className="grid grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-3">
-            <TeamMark code={teamCode(match?.homeTeam.shortName || match?.homeTeam.name)} active={innings === 1} team={match?.homeTeam} />
+            <TeamMark code={teamCode(match?.homeTeam.shortName || match?.homeTeam.name)} active={battingTeam?.id === match?.homeTeam.id} team={match?.homeTeam} />
             <div className="min-w-0 text-center">
               <div className="font-data-tabular text-[25px] font-black leading-none tracking-[-0.04em] text-cyan-300">
                 {battingCode}{" "}
@@ -140,7 +140,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
                 </div>
               )}
             </div>
-            <TeamMark code={teamCode(match?.awayTeam.shortName || match?.awayTeam.name)} active={innings === 2} team={match?.awayTeam} />
+            <TeamMark code={teamCode(match?.awayTeam.shortName || match?.awayTeam.name)} active={battingTeam?.id === match?.awayTeam.id} team={match?.awayTeam} />
           </div>
 
           <div className={cn("mt-3 grid gap-2", isChase ? "grid-cols-3" : "grid-cols-2")}>
