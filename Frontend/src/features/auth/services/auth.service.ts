@@ -12,6 +12,11 @@ export const authService = {
     return response.data.data;
   },
 
+  async loginWithGoogle(credential: string): Promise<AuthResponse> {
+    const response = await apiClient.post<{ success: boolean; data: AuthResponse }>("/v1/auth/google", { credential });
+    return response.data.data;
+  },
+
   async getProfile(): Promise<User> {
     const response = await apiClient.get<{ success: boolean; data: User }>("/v1/auth/me");
     return response.data.data;

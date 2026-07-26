@@ -255,7 +255,12 @@ function formatBucket(bucketMs: number) {
 }
 
 function formatClock(timestamp: number) {
-  return new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return new Date(timestamp).toLocaleTimeString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
 function compactSize(value: number) {

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AlertCircle, Loader2, X, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/error-message";
+import { GoogleAuthButton } from "@/features/auth/components/GoogleAuthButton";
 
 interface FieldErrors {
   name?: string;
@@ -38,7 +39,17 @@ export default function RegisterForm() {
   const [formError, setFormError] = useState<string | null>(null);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const router = useRouter();
-  const { register, isLoading } = useAuthStore();
+  const { register, loginWithGoogle, isLoading } = useAuthStore();
+
+  const handleGoogleCredential = async (credential: string) => {
+    setFormError(null);
+    try {
+      await loginWithGoogle(credential);
+      router.push("/dashboard");
+    } catch (error: unknown) {
+      setFormError(getErrorMessage(error, "Google sign-in failed. Please try again."));
+    }
+  };
 
   const handleBlur = (field: string) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
@@ -203,6 +214,18 @@ export default function RegisterForm() {
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
               {isLoading ? "Creating Account..." : "Create Account — Get ₹1,00,000 Free"}
             </button>
+
+            {/* Divider */}
+            <div className="my-5 flex w-full items-center gap-3">
+              <span className="h-px flex-1 bg-white/10" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-white/30">or</span>
+              <span className="h-px flex-1 bg-white/10" />
+            </div>
+
+            {/* Google sign-up */}
+            <div className="flex w-full justify-center">
+              <GoogleAuthButton onCredential={handleGoogleCredential} text="signup_with" disabled={isLoading} />
+            </div>
 
             <p className="mt-4 text-[11px] text-white/30 text-center">Paper money only — no real funds involved.</p>
           </form>

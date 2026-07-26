@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Crown, Medal } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatRoi, type LeaderboardEntry } from "./leaderboard";
+import { formatRoi, formatWinRate, type LeaderboardEntry } from "./leaderboard";
 
 type LeaderboardDisplaySize = "full" | "compact";
 
@@ -196,13 +196,14 @@ export function LeaderboardDisplay({
             className={cn(
               "grid items-center gap-2 border-b border-white/10 bg-white/[0.035] font-black uppercase tracking-[0.14em] text-slate-500",
               isCompact
-                ? "grid-cols-[38px_minmax(0,1fr)_52px_58px] px-2 py-2 text-[8px] sm:grid-cols-[44px_minmax(0,1fr)_62px_64px] sm:px-3"
-                : "grid-cols-[54px_minmax(0,1fr)_76px_76px] px-3 py-2.5 text-[9px]"
+                ? "grid-cols-[34px_minmax(0,1fr)_44px_42px_50px] px-2 py-2 text-[8px] sm:grid-cols-[40px_minmax(0,1fr)_54px_46px_56px] sm:px-3"
+                : "grid-cols-[54px_minmax(0,1fr)_68px_58px_68px] px-3 py-2.5 text-[9px]"
             )}
           >
             <span>Rank</span>
             <span>Name</span>
             <span className="text-right">Country</span>
+            <span className="text-right">Win</span>
             <span className="text-right">ROI</span>
           </div>
 
@@ -255,8 +256,8 @@ function LeaderboardRow({
       className={cn(
         "grid items-center gap-2 transition-colors",
         compact
-          ? "grid-cols-[38px_minmax(0,1fr)_52px_58px] px-2 py-2.5 sm:grid-cols-[44px_minmax(0,1fr)_62px_64px] sm:px-3"
-          : "grid-cols-[54px_minmax(0,1fr)_76px_76px] px-3 py-3",
+          ? "grid-cols-[34px_minmax(0,1fr)_44px_42px_50px] px-2 py-2.5 sm:grid-cols-[40px_minmax(0,1fr)_54px_46px_56px] sm:px-3"
+          : "grid-cols-[54px_minmax(0,1fr)_68px_58px_68px] px-3 py-3",
         isMe
           ? "bg-amber-300/[0.075] shadow-[inset_2px_0_0_rgba(251,191,36,0.55)]"
           : "hover:bg-white/[0.035]"
@@ -300,6 +301,15 @@ function LeaderboardRow({
         title={entry.country}
       >
         {entry.country}
+      </p>
+      <p
+        className={cn(
+          "truncate text-right font-data-tabular font-bold text-slate-200",
+          compact ? "text-[10px]" : "text-[11px]"
+        )}
+        title="Win rate — share of closed trades in profit"
+      >
+        {formatWinRate(entry.winRate)}
       </p>
       <p
         className={cn(

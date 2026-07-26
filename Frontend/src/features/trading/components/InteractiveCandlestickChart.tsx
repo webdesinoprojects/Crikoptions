@@ -126,6 +126,9 @@ export function InteractiveCandlestickChart({
         secondsVisible: bucketMs < 60_000,
         shiftVisibleRangeOnNewBar: true,
         rightBarStaysOnScroll: true,
+        // Render axis tick labels in IST (Asia/Kolkata) so they match the
+        // crosshair/tooltip time instead of the library's default UTC.
+        tickMarkFormatter: (time: Time) => formatChartTime(time, bucketMs),
       },
       localization: {
         priceFormatter: formatMoney,
@@ -508,8 +511,13 @@ function formatMoney(value: number) {
   return value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+// IST — the market/exchange timezone. Pinned explicitly so times render the
+// same for every viewer regardless of their machine's local timezone.
+const IST_TIME_ZONE = "Asia/Kolkata";
+
 function formatClock(timestamp: number) {
-  return new Date(timestamp).toLocaleTimeString([], {
+  return new Date(timestamp).toLocaleTimeString("en-IN", {
+    timeZone: IST_TIME_ZONE,
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
@@ -523,7 +531,8 @@ function formatChartTime(time: Time, bucketMs: number) {
       : typeof time === "string"
         ? new Date(`${time}T00:00:00Z`).getTime()
         : Date.UTC(time.year, time.month - 1, time.day);
-  return new Date(timestamp).toLocaleTimeString([], {
+  return new Date(timestamp).toLocaleTimeString("en-IN", {
+    timeZone: IST_TIME_ZONE,
     hour: "2-digit",
     minute: "2-digit",
     second: bucketMs < 60_000 ? "2-digit" : undefined,

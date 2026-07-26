@@ -5,6 +5,7 @@ export interface LeaderboardEntry {
   name: string;
   country: string;
   roi: number;
+  winRate: number;
   userId?: string;
 }
 
@@ -25,6 +26,7 @@ function normalizeEntry(raw: Record<string, unknown>, index: number): Leaderboar
     name: String(raw.name ?? "Trader"),
     country: String(raw.country ?? "—"),
     roi: numberOrZero(raw.roi),
+    winRate: numberOrZero(raw.winRate ?? raw.win_rate),
     userId: userId ? String(userId) : undefined,
   };
 }
@@ -66,6 +68,11 @@ export function formatRoi(value: number): string {
   if (!Number.isFinite(value)) return "—";
   const sign = value > 0 ? "+" : "";
   return `${sign}${value.toFixed(2)}%`;
+}
+
+export function formatWinRate(value: number): string {
+  if (!Number.isFinite(value) || value <= 0) return "—";
+  return `${value.toFixed(0)}%`;
 }
 
 export function findCurrentUserEntry(

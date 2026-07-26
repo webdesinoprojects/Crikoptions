@@ -11,6 +11,7 @@ interface AuthState {
   error: string | null;
   isAuthenticated: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
+  loginWithGoogle: (credential: string) => Promise<void>;
   register: (credentials: RegisterCredentials) => Promise<void>;
   logout: () => void;
   updateProfile: (profile: Partial<User>) => Promise<void>;
@@ -41,6 +42,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ token, user, isAuthenticated: true, isLoading: false });
     } catch (error: unknown) {
       const errMsg = getErrorMessage(error, "Failed to sign in");
+      set({ error: errMsg, isLoading: false });
+      throw new Error(errMsg);
+    }
+  },
+
+  loginWithGoogle: async (credential) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { token, user } = await authService.loginWithGoogle(credential);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("crik_token", token);
+      }
+      set({ token, user, isAuthenticated: true, isLoading: false });
+    } catch (error: unknown) {
+      const errMsg = getErrorMessage(error, "Google sign-in failed");
       set({ error: errMsg, isLoading: false });
       throw new Error(errMsg);
     }

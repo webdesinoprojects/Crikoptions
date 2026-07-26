@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { useAuthStore } from "@/features/auth/hooks/useAuth";
 import { getErrorMessage } from "@/lib/error-message";
 import { cn } from "@/lib/utils";
-import { formatRoi, findCurrentUserEntry, leaderboardApi, leaderboardKeys, type LeaderboardEntry } from "./leaderboard";
+import { formatRoi, formatWinRate, findCurrentUserEntry, leaderboardApi, leaderboardKeys, type LeaderboardEntry } from "./leaderboard";
 
 const podiumStyles = [
   {
@@ -154,10 +154,11 @@ export function GlobalLeaderboard() {
               )}
 
               <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#071327]/70">
-                <div className="grid grid-cols-[52px_minmax(0,1fr)_72px_72px] gap-2 border-b border-white/10 bg-white/[0.03] px-3 py-2 text-[9px] font-black uppercase tracking-[0.14em] text-muted-foreground">
+                <div className="grid grid-cols-[44px_minmax(0,1fr)_58px_52px_64px] gap-2 border-b border-white/10 bg-white/[0.03] px-3 py-2 text-[9px] font-black uppercase tracking-[0.14em] text-muted-foreground">
                   <span>Rank</span>
                   <span>Name</span>
                   <span className="text-right">Country</span>
+                  <span className="text-right">Win</span>
                   <span className="text-right">ROI</span>
                 </div>
 
@@ -183,7 +184,7 @@ function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolea
   return (
     <div
       className={cn(
-        "grid grid-cols-[52px_minmax(0,1fr)_72px_72px] items-center gap-2 px-3 py-3 transition-colors",
+        "grid grid-cols-[44px_minmax(0,1fr)_58px_52px_64px] items-center gap-2 px-3 py-3 transition-colors",
         isMe ? "bg-amber-300/8" : "hover:bg-white/[0.03]"
       )}
     >
@@ -204,6 +205,7 @@ function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolea
         {isMe && <p className="text-[9px] font-black uppercase tracking-[0.12em] text-amber-300/80">You</p>}
       </div>
       <p className="truncate text-right text-[11px] font-semibold text-white/70">{entry.country}</p>
+      <p className="text-right font-data-tabular text-[11px] font-bold text-white/85">{formatWinRate(entry.winRate)}</p>
       <p className={cn("text-right font-data-tabular text-[12px] font-black", roiTone(entry.roi))}>{formatRoi(entry.roi)}</p>
     </div>
   );

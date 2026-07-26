@@ -6,13 +6,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AlertCircle, Loader2, X } from "lucide-react";
 import { getErrorMessage } from "@/lib/error-message";
+import { GoogleAuthButton } from "@/features/auth/components/GoogleAuthButton";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const router = useRouter();
-  const { login, isLoading } = useAuthStore();
+  const { login, loginWithGoogle, isLoading } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,6 +23,16 @@ export default function LoginForm() {
       router.push("/dashboard");
     } catch (error: unknown) {
       setFormError(getErrorMessage(error, "Invalid credentials. Please try again."));
+    }
+  };
+
+  const handleGoogleCredential = async (credential: string) => {
+    setFormError(null);
+    try {
+      await loginWithGoogle(credential);
+      router.push("/dashboard");
+    } catch (error: unknown) {
+      setFormError(getErrorMessage(error, "Google sign-in failed. Please try again."));
     }
   };
 
@@ -71,16 +82,10 @@ export default function LoginForm() {
               </div>
             )}
 
-            {/* Google Authentication Button (Aesthetic representation matching screenshot) */}
-            <button 
-              type="button" 
-              className="w-full bg-white text-black font-sans font-bold text-xs h-11 rounded-xl flex items-center justify-center gap-3 hover:bg-neutral-100 transition-colors mb-6 shadow-md"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
-                <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.2-5.136 4.2A5.85 5.85 0 0 1 8 12.8a5.85 5.85 0 0 1 5.99-5.8c1.55 0 2.964.585 4.053 1.543l3.076-3.076C19.296 3.703 16.822 2.6 13.99 2.6a10.2 10.2 0 0 0-10.2 10.2 10.2 0 0 0 10.2 10.2c5.623 0 10.37-3.9 10.37-10.2 0-.6-.058-1.2-.172-1.714H12.24z"/>
-              </svg>
-              Continue with Google
-            </button>
+            {/* Google Authentication Button */}
+            <div className="mb-6 flex w-full justify-center">
+              <GoogleAuthButton onCredential={handleGoogleCredential} text="signin_with" disabled={isLoading} />
+            </div>
 
             {/* Divider */}
             <div className="flex items-center gap-4 w-full mb-6">
