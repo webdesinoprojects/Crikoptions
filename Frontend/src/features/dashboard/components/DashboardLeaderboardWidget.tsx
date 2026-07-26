@@ -6,7 +6,7 @@ import { Crown, LoaderCircle, Medal, RefreshCw, Trophy } from "lucide-react";
 import { useAuthStore } from "@/features/auth/hooks/useAuth";
 import { getErrorMessage } from "@/lib/error-message";
 import { cn } from "@/lib/utils";
-import { formatRoi, findCurrentUserEntry, leaderboardApi, leaderboardKeys, type LeaderboardEntry } from "@/features/leaderboard/leaderboard";
+import { formatRoi, formatWinRate, findCurrentUserEntry, leaderboardApi, leaderboardKeys, type LeaderboardEntry } from "@/features/leaderboard/leaderboard";
 
 const podiumStyles = [
   {
@@ -142,10 +142,11 @@ export function DashboardLeaderboardWidget() {
             )}
 
             <section className="overflow-hidden rounded-xl border border-white/10 bg-[#071327]/70">
-              <div className="grid grid-cols-[36px_minmax(0,1fr)_50px_54px] sm:grid-cols-[44px_minmax(0,1fr)_60px_60px] gap-2 border-b border-white/10 bg-white/[0.03] px-2 py-2 sm:px-3 text-[8px] sm:text-[9px] font-black uppercase tracking-[0.14em] text-muted-foreground">
+              <div className="grid grid-cols-[32px_minmax(0,1fr)_44px_40px_48px] sm:grid-cols-[40px_minmax(0,1fr)_54px_46px_56px] gap-2 border-b border-white/10 bg-white/[0.03] px-2 py-2 sm:px-3 text-[8px] sm:text-[9px] font-black uppercase tracking-[0.14em] text-muted-foreground">
                 <span>Rank</span>
                 <span>Name</span>
                 <span className="text-right">Country</span>
+                <span className="text-right">Win</span>
                 <span className="text-right">ROI</span>
               </div>
 
@@ -177,7 +178,7 @@ function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolea
   return (
     <div
       className={cn(
-        "grid grid-cols-[36px_minmax(0,1fr)_50px_54px] sm:grid-cols-[44px_minmax(0,1fr)_60px_60px] items-center gap-2 px-2 py-2 sm:px-3 sm:py-2.5 transition-colors",
+        "grid grid-cols-[32px_minmax(0,1fr)_44px_40px_48px] sm:grid-cols-[40px_minmax(0,1fr)_54px_46px_56px] items-center gap-2 px-2 py-2 sm:px-3 sm:py-2.5 transition-colors",
         isMe ? "bg-amber-300/8" : "hover:bg-white/[0.03]"
       )}
     >
@@ -198,6 +199,7 @@ function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolea
         {isMe && <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.12em] text-amber-300/80">You</p>}
       </div>
       <p className="truncate text-right text-[9px] sm:text-[10px] font-semibold text-white/70">{entry.country}</p>
+      <p className="truncate text-right font-data-tabular text-[9px] sm:text-[10px] font-bold text-slate-200" title="Win rate — share of closed trades in profit">{formatWinRate(entry.winRate)}</p>
       <p className={cn("text-right font-data-tabular text-[10px] sm:text-[11px] font-black", roiTone(entry.roi))}>{formatRoi(entry.roi)}</p>
     </div>
   );
