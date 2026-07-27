@@ -24,12 +24,67 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CricOptions | Cricket Options Trading Terminal",
+  metadataBase: new URL("https://cricoptions.com"),
+  title: {
+    default: "CricOptions | Live Cricket Options Trading & Analytics Platform",
+    template: "%s | CricOptions",
+  },
   description:
-    "A professional cricket options trading workspace for live market data, execution, portfolio risk, and match intelligence.",
+    "Trade live cricket Call options during T20 & ODI matches. Test option strategies, track real-time match depth, and rank on global leaderboards with virtual coins.",
+  keywords: [
+    "Cricket Options",
+    "Cricket Derivatives",
+    "Live Match Trading",
+    "T20 Options Chain",
+    "Virtual Options Simulator",
+    "Options Trading Game",
+    "Cricket Analytics",
+    "Option Call Trading",
+  ],
+  authors: [{ name: "CricOptions Team" }],
+  creator: "CricOptions",
+  publisher: "CricOptions",
   icons: {
     icon: "/cricoptions_logo.jpg",
     apple: "/cricoptions_logo.jpg",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://cricoptions.com",
+    siteName: "CricOptions",
+    title: "CricOptions | Social Live Cricket Options Trading",
+    description:
+      "Trade cricket Call options during live T20 and ODI matches. Test option strategies risk-free with virtual coins.",
+    images: [
+      {
+        url: "/cricoptions_logo.jpg",
+        width: 1200,
+        height: 630,
+        alt: "CricOptions Trading Terminal",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CricOptions | Live Cricket Options Trading",
+    description:
+      "Trade cricket Call options during live T20 & ODI matches with virtual coins.",
+    images: ["/cricoptions_logo.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  alternates: {
+    canonical: "https://cricoptions.com",
   },
 };
 

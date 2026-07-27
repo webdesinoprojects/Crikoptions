@@ -23,6 +23,7 @@ import {
   currentInningsScoreParts,
   teamCode,
 } from "../utils/terminal-context";
+import { isSimulatorMatch } from "../utils/home-matches";
 
 interface LiveMatchStatsPanelProps {
   match?: Match;
@@ -34,6 +35,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
   const { stableMatch, balls } = useStableMatchSnapshot(match, market?.matchId ?? undefined);
   const matrix = useOnFieldMatrix(stableMatch, market?.matchId ?? undefined, stableMatch?.id);
   const isSportmonks = stableMatch?.dataSource === "sportmonks";
+  const isSim = isSimulatorMatch(stableMatch ?? match);
 
   const score = currentInningsScoreParts(stableMatch);
   const parsedRuns = Number.parseInt(score.runs, 10);
@@ -74,23 +76,38 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
             <span
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-[4px] border px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em]",
-                match?.status === "LIVE" || match?.status === "INNINGS_BREAK"
-                  ? "border-amber-300/25 bg-amber-400/12 text-amber-200"
-                  : "border-cyan-300/20 bg-cyan-400/10 text-cyan-200"
+                isSim
+                  ? "border-purple-400/30 bg-purple-500/15 text-purple-200"
+                  : match?.status === "LIVE" || match?.status === "INNINGS_BREAK"
+                    ? "border-amber-300/25 bg-amber-400/12 text-amber-200"
+                    : "border-cyan-300/20 bg-cyan-400/10 text-cyan-200"
               )}
             >
-              {(match?.status === "LIVE" || match?.status === "INNINGS_BREAK") && <span className="size-1.5 rounded-full bg-amber-200 shadow-[0_0_10px_rgba(253,230,138,0.9)]" />}
-              {match?.status === "INNINGS_BREAK"
-                ? "INNINGS BREAK"
-                : match?.status === "UPCOMING"
-                  ? "UPCOMING"
-                  : match?.status ?? "LIVE"}
+              {(match?.status === "LIVE" || match?.status === "INNINGS_BREAK") && (
+                <span
+                  className={cn(
+                    "size-1.5 rounded-full",
+                    isSim ? "bg-purple-300 shadow-[0_0_10px_rgba(192,132,252,0.9)]" : "bg-amber-200 shadow-[0_0_10px_rgba(253,230,138,0.9)]"
+                  )}
+                />
+              )}
+              {isSim
+                ? "PRACTICE LIVE"
+                : match?.status === "INNINGS_BREAK"
+                  ? "INNINGS BREAK"
+                  : match?.status === "UPCOMING"
+                    ? "UPCOMING"
+                    : match?.status ?? "LIVE"}
             </span>
-            {match?.dataSource === "sportmonks" && match.status !== "UPCOMING" && feedStatusLabel(match) && (
+            {isSim ? (
+              <span className="rounded border border-purple-400/25 bg-purple-400/10 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-purple-200">
+                24/7 Practice Session
+              </span>
+            ) : match?.dataSource === "sportmonks" && match.status !== "UPCOMING" && feedStatusLabel(match) ? (
               <span className="rounded border border-amber-400/20 bg-amber-400/8 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-amber-200/90">
                 {feedStatusLabel(match)}
               </span>
-            )}
+            ) : null}
             {match?.status === "UPCOMING" && match.startTime && (
               <span className="rounded border border-cyan-300/20 bg-cyan-400/8 px-2 py-1 font-data-tabular text-[9px] font-black uppercase tracking-wider text-cyan-100">
                 {new Date(match.startTime).toLocaleString([], {
@@ -116,10 +133,8 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
             </span>
           </div>
 
-
-
           <div className="grid grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-3">
-            <TeamMark code={teamCode(match?.homeTeam.shortName || match?.homeTeam.name)} active={battingTeam?.id === match?.homeTeam.id} team={match?.homeTeam} />
+            <TeamMark code={teamCode(match?.homeTeam.shortName || match?.homeTeam.name)} active={battingTeam?.id === match?.homeTeam.id} team={match?.homeTeam} isSimulator={isSim} />
             <div className="min-w-0 text-center">
               <div className="font-data-tabular text-[25px] font-black leading-none tracking-[-0.04em] text-cyan-300">
                 {battingCode}{" "}
@@ -140,7 +155,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
                 </div>
               )}
             </div>
-            <TeamMark code={teamCode(match?.awayTeam.shortName || match?.awayTeam.name)} active={battingTeam?.id === match?.awayTeam.id} team={match?.awayTeam} />
+            <TeamMark code={teamCode(match?.awayTeam.shortName || match?.awayTeam.name)} active={battingTeam?.id === match?.awayTeam.id} team={match?.awayTeam} isSimulator={isSim} />
           </div>
 
           <div className={cn("mt-3 grid gap-2", isChase ? "grid-cols-3" : "grid-cols-2")}>
@@ -287,19 +302,31 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
   );
 }
 
-function TeamMark({ active, code, team }: { active: boolean; code: string; team?: any }) {
+function TeamMark({ active, code, team, isSimulator }: { active: boolean; code: string; team?: any; isSimulator?: boolean }) {
+  const [imgError, setImgError] = React.useState(false);
+  const showLogo = Boolean(team?.logoUrl) && !imgError && !isSimulator;
+
   return (
     <div className="text-center">
       <div
         className={cn(
-          "mx-auto flex w-12 h-8 items-center justify-center rounded-[6px] border bg-[#071326] font-data-tabular text-[11px] font-black tracking-tight overflow-hidden",
-          active ? "border-cyan-300/40 text-cyan-200 shadow-[0_0_20px_rgba(34,211,238,0.12)]" : "border-white/10 text-slate-400"
+          "mx-auto flex w-12 h-8 items-center justify-center rounded-[6px] border font-data-tabular text-[11px] font-black tracking-tight overflow-hidden transition-all",
+          active 
+            ? "border-cyan-300/40 text-cyan-200 bg-cyan-950/60 shadow-[0_0_20px_rgba(34,211,238,0.15)]" 
+            : "border-white/10 text-slate-300 bg-[#071326]"
         )}
       >
-        {team?.logoUrl ? (
-          <img src={team.logoUrl} alt={code} className="h-full w-full object-cover" />
+        {showLogo ? (
+          <img 
+            src={team.logoUrl} 
+            alt={code} 
+            className="h-full w-full object-cover" 
+            onError={() => setImgError(true)}
+          />
         ) : (
-          code
+          <span className="flex items-center justify-center w-full h-full bg-gradient-to-br from-cyan-900/40 via-blue-900/30 to-slate-900 text-cyan-200 font-extrabold text-[11px] tracking-wider">
+            {code}
+          </span>
         )}
       </div>
       <div className={cn("mt-1 text-[9px] font-bold", active ? "text-slate-200" : "text-slate-500")}>{code}</div>

@@ -9,6 +9,7 @@ import { useStableMatchSnapshot } from "@/features/trading/hooks/useStableMatchS
 import {
   formatMatchStartTime,
   isLiveOrBreak,
+  isSimulatorMatch,
   isUpcomingMatch,
   tradingOpensMessage,
 } from "@/features/trading/utils/home-matches";
@@ -181,9 +182,9 @@ export function LiveMatchArena() {
           {/* Team Score */}
           <div className="relative z-10 mb-4 grid grid-cols-[44px_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[48px_minmax(0,1fr)] sm:gap-4">
             <div className="flex h-11 w-11 items-center justify-center break-words rounded-lg border border-[#d4af37]/30 bg-[#d4af37]/20 text-center font-display text-xl font-black leading-none text-[#d4af37] sm:h-12 sm:w-12 sm:text-2xl overflow-hidden p-1">
-              {stableMatch?.innings === 2 && stableMatch?.awayTeam?.logoUrl ? (
+              {!isSimulatorMatch(stableMatch) && stableMatch?.innings === 2 && stableMatch?.awayTeam?.logoUrl ? (
                 <img src={stableMatch.awayTeam.logoUrl} alt={battingCode} className="h-full w-full object-contain" />
-              ) : stableMatch?.innings !== 2 && stableMatch?.homeTeam?.logoUrl ? (
+              ) : !isSimulatorMatch(stableMatch) && stableMatch?.innings !== 2 && stableMatch?.homeTeam?.logoUrl ? (
                 <img src={stableMatch.homeTeam.logoUrl} alt={battingCode} className="h-full w-full object-contain" />
               ) : (
                 battingCode

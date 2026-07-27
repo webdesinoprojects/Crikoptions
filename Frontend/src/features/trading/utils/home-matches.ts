@@ -11,6 +11,18 @@ export function isUpcomingMatch(match: Match): boolean {
   return match.status === "UPCOMING";
 }
 
+/** Check if a match is an offline/replay test or demo match (CSK vs MI, RCB vs KKR, etc.) */
+export function isSimulatorMatch(match?: Match | null): boolean {
+  if (!match) return false;
+  if (match.dataSource === "simulator" || match.dataSource === "manual") return true;
+  if (match.dataSource && match.dataSource !== "sportmonks") return true;
+  const idStr = String(match.id ?? "").toLowerCase();
+  const titleStr = String(match.title ?? "").toLowerCase();
+  if (idStr.includes("csk") || idStr.includes("rcb") || idStr.includes("demo") || idStr.includes("sim") || idStr.includes("test")) return true;
+  if (titleStr.includes("csk") || titleStr.includes("mi vs") || titleStr.includes("rcb") || titleStr.includes("kkr")) return true;
+  return false;
+}
+
 /** Home strip order: live/break first, then upcoming by start time. */
 export function sortHomeMatches(matches: Match[]): Match[] {
   return [...matches].sort((a, b) => {

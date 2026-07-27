@@ -11,6 +11,7 @@ import { selectPrimaryMarket } from "../utils/market-helpers";
 import {
   formatMatchStartTime,
   isLiveOrBreak,
+  isSimulatorMatch,
   isUpcomingMatch,
   tradingOpensMessage,
 } from "../utils/home-matches";
@@ -40,6 +41,7 @@ export const MatchCard = React.memo(function MatchCard({ match, selected }: { ma
   const isBreak = match.status === "INNINGS_BREAK";
   const upcoming = isUpcomingMatch(match);
   const live = isLiveOrBreak(match);
+  const isSim = isSimulatorMatch(match);
   const { data: markets = [] } = useMarkets(match.id);
 
   const handleClick = React.useCallback(() => {
@@ -61,7 +63,7 @@ export const MatchCard = React.memo(function MatchCard({ match, selected }: { ma
       onClick={handleClick}
       aria-current={selected ? "page" : undefined}
       className={cn(
-        "group grid min-h-[56px] min-w-[220px] shrink-0 grid-cols-[52px_minmax(0,1fr)_20px] items-center gap-2.5 overflow-hidden rounded-lg border py-2.5 px-2.5 text-left transition-all duration-300 sm:min-h-[64px] sm:min-w-72 sm:grid-cols-[60px_minmax(0,1fr)_24px] sm:gap-3.5 sm:py-3 sm:px-3.5",
+        "group grid min-h-[56px] min-w-[220px] shrink-0 grid-cols-[auto_minmax(0,1fr)_20px] items-center gap-2.5 overflow-hidden rounded-lg border py-2.5 px-2.5 text-left transition-all duration-300 sm:min-h-[64px] sm:min-w-72 sm:grid-cols-[auto_minmax(0,1fr)_24px] sm:gap-3.5 sm:py-3 sm:px-3.5",
         selected
           ? "cursor-default border-cyan-300/35 bg-cyan-300/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_18px_38px_rgba(8,145,178,0.13)]"
           : "cursor-pointer border-white/10 bg-[#071123]/85 hover:border-cyan-300/25 hover:bg-[#0a172c]"
@@ -69,14 +71,23 @@ export const MatchCard = React.memo(function MatchCard({ match, selected }: { ma
     >
       <span
         className={cn(
-          "inline-flex h-8 items-center justify-center gap-1 rounded-md px-1.5 text-[9px] font-black uppercase tracking-wide ring-1 sm:h-9 sm:gap-1.5 sm:px-2 sm:text-[10px]",
+          "inline-flex h-8 items-center justify-center gap-1 rounded-md px-2 text-[9px] font-black uppercase tracking-wide ring-1 sm:h-9 sm:gap-1.5 sm:px-2.5 sm:text-[10px]",
           live
-            ? "bg-amber-400/15 text-amber-200 ring-amber-300/20"
+            ? isSim
+              ? "bg-purple-500/15 text-purple-200 ring-purple-400/30 border border-purple-400/25"
+              : "bg-amber-400/15 text-amber-200 ring-amber-300/20"
             : "bg-cyan-400/10 text-cyan-100 ring-cyan-300/20"
         )}
       >
-        {live && <span className="size-1.5 rounded-full bg-amber-200 shadow-[0_0_10px_rgba(253,230,138,0.9)]" />}
-        {isBreak ? "Break" : live ? "Live" : "Upcoming"}
+        {live && (
+          <span
+            className={cn(
+              "size-1.5 rounded-full",
+              isSim ? "bg-purple-300 shadow-[0_0_10px_rgba(192,132,252,0.9)]" : "bg-amber-200 shadow-[0_0_10px_rgba(253,230,138,0.9)]"
+            )}
+          />
+        )}
+        {isBreak ? "Break" : live ? (isSim ? "PRACTICE LIVE" : "Live") : "Upcoming"}
       </span>
       <div className="min-w-0 flex flex-col justify-center">
         <div className="truncate text-[12px] font-black leading-tight text-on-surface sm:text-[13px]">

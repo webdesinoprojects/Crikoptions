@@ -11,6 +11,7 @@ import { DataTable, type DataTableColumn } from "@/components/data-table"
 import { Footer } from "@/components/footer"
 import { HeroSection } from "@/components/landing/hero"
 import { LandingMotionSections } from "@/components/landing/landing-motion-sections"
+import { FaqSection } from "@/components/landing/FaqSection"
 import { Navbar1 } from "@/components/ui/navbar-1"
 
 type MarketRow = {
@@ -276,6 +277,8 @@ await cricOptions.orders.place({
             </div>
           </div>
         </section>
+
+        <FaqSection />
 
         <section className="bg-slate-950 px-4 py-20 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl rounded-lg border border-slate-800 bg-[linear-gradient(135deg,#0f1f36_0%,#071120_55%,#020617_100%)] p-8 sm:p-10 lg:p-12">

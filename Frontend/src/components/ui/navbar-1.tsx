@@ -12,6 +12,7 @@ const navItems = [
   { label: "Terminal", href: "#terminal" },
   { label: "Pricing", href: "#pricing" },
   { label: "Docs", href: "#docs" },
+  { label: "FAQ", href: "#faq" },
 ]
 
 export function Navbar1() {
