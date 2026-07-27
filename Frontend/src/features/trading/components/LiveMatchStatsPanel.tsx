@@ -92,7 +92,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
                 />
               )}
               {isSim
-                ? "PRACTICE LIVE"
+                ? "WARM UP"
                 : match?.status === "INNINGS_BREAK"
                   ? "INNINGS BREAK"
                   : match?.status === "UPCOMING"
@@ -101,7 +101,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
             </span>
             {isSim ? (
               <span className="rounded border border-purple-400/25 bg-purple-400/10 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-purple-200">
-                24/7 Practice Session
+                24/7 Warm Up Session
               </span>
             ) : match?.dataSource === "sportmonks" && match.status !== "UPCOMING" && feedStatusLabel(match) ? (
               <span className="rounded border border-amber-400/20 bg-amber-400/8 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-amber-200/90">

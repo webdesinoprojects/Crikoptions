@@ -62,13 +62,19 @@ export const CtaFooter = () => {
       <div className="w-full border-t border-white/10 bg-[#020617] py-12">
         <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12 font-mono text-sm tracking-wider">
           
-          <div className="flex flex-col gap-4">
-            <Link href="/" className="inline-flex items-center gap-1 mb-2">
+          <div className="flex flex-col gap-3">
+            <Link href="/" className="inline-flex items-center gap-1 mb-1">
               <img src="/cricoptions_logo.jpg" alt="CricOptions Logo" className="h-6 w-6 rounded-md object-cover shadow-[0_0_20px_rgba(14,165,233,0.2)]" />
               <img src="/cricoptions.png" alt="CricOptions" className="h-7 w-auto object-contain" />
             </Link>
-            <span className="text-slate-500">© 2026 CricOptions Inc.</span>
-            <span className="text-slate-500">All Systems Nominal.</span>
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+              <span>Powered by</span>
+              <img src="/startup_india.jpg" alt="Startup India" className="h-5 w-auto rounded object-contain border border-white/10" />
+            </div>
+            <a href="tel:+13149864709" className="text-xs text-sky-400 hover:text-sky-300 font-mono transition-colors">
+              Ph: +1(314) 986-4709
+            </a>
+            <span className="text-slate-500 text-xs">© 2026 CricOptions Inc.</span>
           </div>
 
           <div className="flex flex-col gap-4">

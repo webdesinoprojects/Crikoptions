@@ -87,7 +87,7 @@ export const MatchCard = React.memo(function MatchCard({ match, selected }: { ma
             )}
           />
         )}
-        {isBreak ? "Break" : live ? (isSim ? "PRACTICE LIVE" : "Live") : "Upcoming"}
+        {isBreak ? "Break" : live ? (isSim ? "WARM UP" : "Live") : "Upcoming"}
       </span>
       <div className="min-w-0 flex flex-col justify-center">
         <div className="truncate text-[12px] font-black leading-tight text-on-surface sm:text-[13px]">

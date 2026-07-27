@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Phone, Sparkles } from "lucide-react";
 
 const footerNavigation = [
   {
@@ -42,7 +42,7 @@ export function Footer() {
         <div className="grid gap-10 lg:grid-cols-[1.4fr_2.6fr]">
           
           {/* Brand Info */}
-          <div className="space-y-4">
+          <div className="space-y-5">
             <Link href="/" className="inline-flex items-center gap-2">
               <img
                 src="/cricoptions_logo.jpg"
@@ -58,6 +58,31 @@ export function Footer() {
             <p className="max-w-sm text-xs leading-relaxed text-slate-400">
               A workstation for live cricket derivatives, ball-by-ball option chains, and risk-free strategy simulation.
             </p>
+
+            {/* Powered By & Contact Info Card */}
+            <div className="inline-flex flex-col gap-3 rounded-xl border border-white/10 bg-slate-950/80 p-4 shadow-lg backdrop-blur-md max-w-sm">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-300">
+                <Sparkles className="size-3.5 text-amber-400" />
+                <span>Powered by</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <img
+                  src="/startup_india.jpg"
+                  alt="Startup India"
+                  className="h-10 w-auto rounded-md border border-white/10 object-contain shadow-md"
+                />
+              </div>
+              <div className="pt-2 border-t border-white/10 flex items-center gap-2 text-xs text-slate-300">
+                <Phone className="size-3.5 text-sky-400 shrink-0" />
+                <span className="text-slate-400">Contact:</span>
+                <a
+                  href="tel:+13149864709"
+                  className="font-mono font-semibold text-sky-300 hover:text-sky-200 transition-colors"
+                >
+                  +1(314) 986-4709
+                </a>
+              </div>
+            </div>
           </div>
 
           {/* Navigation Columns */}
