@@ -77,30 +77,45 @@ export default function RegisterForm() {
   const strengthColor = ["", "bg-red-500", "bg-yellow-500", "bg-emerald-500"][passwordStrength];
 
   return (
-    <div className="relative flex min-h-[100dvh] w-full overflow-x-hidden overflow-y-auto bg-[#01040a] font-sans text-white md:overflow-hidden">
-      {/* Background */}
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-0 h-full w-full overflow-hidden md:w-[50%]">
-        <img className="h-full w-full object-cover object-[50%_20%] select-none" src="/image.png" alt="Welcome to CricOptions" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
+    <div className="flex h-[100dvh] w-full overflow-hidden bg-[#01040a] font-sans text-white">
+      {/* Left-side visual panel - Fixed and non-scrollable */}
+      <div className="hidden md:flex relative w-1/2 h-full bg-[#01040a] items-center justify-center p-6">
+        <img
+          className="w-full h-full object-contain object-center select-none"
+          src="/image.png"
+          alt="Welcome to CricOptions"
+        />
+        {/* Subtle Gradient Overlays for seamless blending */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#01040a] via-transparent to-[#01040a] pointer-events-none opacity-30" />
       </div>
 
-      <div className="relative z-10 hidden h-full shrink-0 justify-center md:flex md:w-[50%]" />
-
-      {/* Right panel */}
-      <div className="relative z-10 flex min-h-[100dvh] w-full shrink-0 flex-col justify-between overflow-y-auto border-white/10 bg-[#000d1a]/88 px-4 py-5 shadow-2xl backdrop-blur-md sm:px-6 sm:py-7 md:w-[50%] md:border-l md:px-12 md:py-8">
-        <div className="flex justify-between items-center w-full shrink-0">
-          <span className="text-lg font-black font-display uppercase tracking-widest text-[#d4af37]">CricOptions</span>
-          <Link href="/" className="text-white/50 hover:text-white transition-colors p-2">
-            <X className="w-6 h-6" />
+      {/* Right-side form panel - Internally scrollable if needed */}
+      <div className="relative flex flex-col w-full md:w-1/2 h-full bg-[#000d1a]/95 border-l border-white/5">
+        
+        {/* Fixed Header */}
+        <div className="absolute top-0 left-0 w-full flex justify-between items-center p-6 z-20 bg-gradient-to-b from-[#000d1a] to-transparent">
+          <div className="flex items-center gap-2 select-none bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl backdrop-blur-md">
+            <img src="/Logo design 02.png" alt="CricOptions" className="h-7 w-auto object-contain brightness-120" />
+          </div>
+          <Link href="/" className="text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-all p-2">
+            <X className="w-5 h-5" />
           </Link>
         </div>
 
+        {/* Scrollable Form Area */}
+        <div className="flex-1 overflow-y-auto flex flex-col items-center justify-start px-4 py-20 sm:px-12 z-10">
+
         <div className="mx-auto my-6 flex w-full max-w-sm flex-grow flex-col items-center justify-center sm:my-8">
           <form onSubmit={handleSubmit} noValidate className="w-full flex flex-col items-center">
-            <h3 className="mb-1 text-center font-sans text-xl font-bold uppercase tracking-wider text-white sm:text-2xl">Sign Up</h3>
+            <h3 className="mb-1 text-center font-sans text-xl font-bold uppercase tracking-wider text-white sm:text-2xl mt-4">Sign Up</h3>
             <p className="text-xs text-white/50 text-center mb-6 font-medium">
               Create your institutional sports trading account · Get ₹1,00,000 free
             </p>
+        
+            <div className="w-full shrink-0 text-center text-xs text-white/50 select-none mb-6">
+              Already have an account?{" "}
+              <Link className="text-[#d4af37] hover:underline font-bold ml-1" href="/login">Sign In</Link>
+            </div>
 
             {/* API error */}
             {formError && (
@@ -231,9 +246,6 @@ export default function RegisterForm() {
           </form>
         </div>
 
-        <div className="w-full shrink-0 text-center text-xs text-white/50 select-none">
-          Already have an account?{" "}
-          <Link className="text-[#d4af37] hover:underline font-bold ml-1" href="/login">Sign In</Link>
         </div>
       </div>
     </div>

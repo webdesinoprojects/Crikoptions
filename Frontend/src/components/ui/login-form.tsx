@@ -37,40 +37,38 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="relative flex min-h-[100dvh] w-full overflow-x-hidden overflow-y-auto bg-[#01040a] font-sans text-white md:overflow-hidden">
-      {/* Background Image spanning the entire page, centric to the 60% section on desktop */}
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-0 h-full w-full overflow-hidden md:w-[50%]">
+    <div className="flex h-[100dvh] w-full overflow-hidden bg-[#01040a] font-sans text-white">
+      {/* Left-side visual panel - Fixed and non-scrollable */}
+      <div className="hidden md:flex relative w-1/2 h-full bg-[#01040a] items-center justify-center p-6">
         <img
-          className="h-full w-full object-cover object-[50%_20%] select-none"
+          className="w-full h-full object-contain object-center select-none"
           src="/image.png"
           alt="Welcome to CricOptions"
         />
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
+        {/* Subtle Gradient Overlays for seamless blending */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#01040a] via-transparent to-[#01040a] pointer-events-none opacity-30" />
       </div>
 
-      {/* Left-side visual preview panel spacer (50% width) */}
-      <div className="relative z-10 hidden h-full shrink-0 justify-center md:flex md:w-[50%]">
-      </div>
-
-      {/* Right-side login card panel (50% width, semi-transparent background) */}
-      <div className="relative z-10 flex min-h-[100dvh] w-full shrink-0 flex-col justify-between overflow-y-auto border-white/10 bg-[#000d1a]/88 px-4 py-5 shadow-2xl backdrop-blur-md sm:px-6 sm:py-7 md:w-[50%] md:border-l md:px-12 md:py-8">
-        {/* Top Header Row with Logo and Close Icon */}
-        <div className="flex justify-between items-center w-full shrink-0">
-          {/* Logo */}
-          <div className="flex items-center gap-2 select-none">
-            <span className="text-lg font-black font-display uppercase tracking-widest text-[#d4af37]">CricOptions</span>
+      {/* Right-side form panel - Internally scrollable if needed */}
+      <div className="relative flex flex-col w-full md:w-1/2 h-full bg-[#000d1a]/95 border-l border-white/5">
+        
+        {/* Fixed Header */}
+        <div className="absolute top-0 left-0 w-full flex justify-between items-center p-6 z-20 bg-gradient-to-b from-[#000d1a] to-transparent">
+          <div className="flex items-center gap-2 select-none bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl backdrop-blur-md">
+            <img src="/Logo design 02.png" alt="CricOptions" className="h-7 w-auto object-contain brightness-120" />
           </div>
-          {/* Close button */}
-          <Link href="/" className="text-white/50 hover:text-white transition-colors p-2">
-            <X className="w-6 h-6" />
+          <Link href="/" className="text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-all p-2">
+            <X className="w-5 h-5" />
           </Link>
         </div>
+
+        {/* Scrollable Form Area */}
+        <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-4 py-20 sm:px-12 z-10">
 
         {/* Center Form Container */}
         <div className="mx-auto my-6 flex w-full max-w-sm flex-grow flex-col items-center justify-center sm:my-8">
           <form onSubmit={handleSubmit} className="w-full flex flex-col items-center">
-            <h3 className="mb-1 text-center font-sans text-xl font-bold uppercase tracking-wider text-white sm:text-2xl">Sign In</h3>
+            <h3 className="mb-1 text-center font-sans text-xl font-bold uppercase tracking-wider text-white sm:text-2xl mt-4">Sign In</h3>
             <p className="text-xs text-white/50 text-center mb-8 font-medium">
               Welcome back! Please sign in to continue
             </p>
@@ -145,14 +143,15 @@ export default function LoginForm() {
               {isLoading ? "Signing In..." : "Login"}
             </button>
           </form>
+
+          <div className="w-full shrink-0 text-center text-xs text-white/50 select-none mt-8 pb-4">
+            Don’t have an account?{" "}
+            <Link className="text-[#d4af37] hover:underline font-bold ml-1" href="/register">
+              Sign up
+            </Link>
+          </div>
         </div>
 
-        {/* Footer text pinned at the bottom */}
-        <div className="w-full shrink-0 text-center text-xs text-white/50 select-none">
-          Don’t have an account?{" "}
-          <Link className="text-[#d4af37] hover:underline font-bold ml-1" href="/register">
-            Sign up
-          </Link>
         </div>
       </div>
     </div>
