@@ -6,7 +6,7 @@ import { Star } from "lucide-react";
 import { toast } from "sonner";
 import { BroadcastInterfaceMask } from "./BroadcastInterfaceMask";
 import { ballClassName } from "../utils/terminal-context";
-import { useThisOverBalls } from "../hooks/useThisOverBalls";
+import { useServerThisOverBalls } from "../hooks/useServerThisOverBalls";
 
 interface MatchAnalyticsPanelProps {
   matchId: string;
@@ -19,7 +19,7 @@ export function MatchAnalyticsPanel({ matchId, marketId }: MatchAnalyticsPanelPr
   const addWatchlistMutation = useAddWatchlist();
   const removeWatchlistMutation = useRemoveWatchlist();
   const isWatchlisted = watchlist?.marketIds.includes(marketId) || false;
-  const thisOverBalls = useThisOverBalls(match, matchId);
+  const thisOverBalls = useServerThisOverBalls(match);
   const compactThisOver = thisOverBalls.length > 6;
 
   const handleWatchlistToggle = () => {

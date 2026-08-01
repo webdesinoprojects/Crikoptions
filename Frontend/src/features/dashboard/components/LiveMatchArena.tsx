@@ -26,7 +26,7 @@ export function LiveMatchArena() {
   const liveMarketId = selectPrimaryMarket(matchMarkets ?? [])?.id;
   const tradingHref = liveMarketId ? `/trading/${liveMarketId}` : (tickers?.[0]?.id ? `/trading/${tickers[0].id}` : "/trading");
 
-  const { stableMatch, balls } = useStableMatchSnapshot(match || undefined, liveMarketId);
+  const { stableMatch, balls } = useStableMatchSnapshot(match || undefined);
 
   if (!stableMatch) {
     if (upcomingMatches.length > 0) {

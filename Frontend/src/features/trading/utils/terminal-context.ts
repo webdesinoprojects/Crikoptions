@@ -1,5 +1,5 @@
 import { BackendMarket } from "@/lib/adapters/market.adapter";
-import { Match } from "@/types";
+import { Match, OverBall } from "@/types";
 import { CalculatedPrice, CalculatePricePayload, MatchBallHistoryEvent, OptionChainStrike } from "../services/trading.service";
 
 export type BallKind = "empty" | "dot" | "run" | "four" | "six" | "wicket" | "bowled" | "lbw" | "caught" | "runOut";
@@ -220,6 +220,32 @@ export function padThisOverBalls(balls: BallEvent[]): BallEvent[] {
   // has 6+ legal balls (extras made it longer than a standard over).
   const blanksNeeded = Math.max(0, 6 - legalCount);
   return [...filled, ...Array.from({ length: blanksNeeded }, () => ({ label: "", kind: "empty" as const }))];
+}
+
+/**
+ * Map one server-authoritative over ball onto the display shape.
+ *
+ * These carry no eventId by design: the backend owns the over and replaces the
+ * whole array on every update, so there is nothing to de-duplicate or revise.
+ */
+export function ballEventFromOverBall(ball: OverBall): BallEvent {
+  if (ball.isWicket) return wicketBallFromType();
+
+  const extraRuns = Math.max(0, Math.round(ball.runs) - 1);
+  const suffix = extraRuns > 0 ? ` +${extraRuns}` : "";
+
+  switch (ball.extra) {
+    case "wide":
+      return { label: "Wd", kind: "run", detail: `Wide${suffix}` };
+    case "noball":
+      return { label: "Nb", kind: "run", detail: `No ball${suffix}` };
+    case "bye":
+      return { ...ballFromRuns(ball.runs), detail: `${ball.runs} bye${ball.runs === 1 ? "" : "s"}` };
+    case "legbye":
+      return { ...ballFromRuns(ball.runs), detail: `${ball.runs} leg bye${ball.runs === 1 ? "" : "s"}` };
+    default:
+      return ballFromRuns(ball.runs);
+  }
 }
 
 export function ballEventFromCommentary(event: { eventId?: string; sequence?: number; revision?: number; runs: number; isWicket: boolean; extra?: string | null }): BallEvent {

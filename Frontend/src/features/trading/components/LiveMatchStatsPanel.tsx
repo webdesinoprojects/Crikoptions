@@ -32,7 +32,7 @@ interface LiveMatchStatsPanelProps {
 }
 
 export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStatsPanelProps) {
-  const { stableMatch, balls } = useStableMatchSnapshot(match, market?.matchId ?? undefined);
+  const { stableMatch, balls } = useStableMatchSnapshot(match);
   const matrix = useOnFieldMatrix(stableMatch, market?.matchId ?? undefined, stableMatch?.id);
   const isSportmonks = stableMatch?.dataSource === "sportmonks";
   const isSim = isSimulatorMatch(stableMatch ?? match);

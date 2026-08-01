@@ -7,6 +7,6 @@ export * from "./useOrders";
 export * from "./usePortfolioMetrics";
 export * from "./useMatchScoreStream";
 export * from "./useOnFieldMatrix";
-export * from "./useThisOverBalls";
+export * from "./useServerThisOverBalls";
 export * from "./useUserStream";
 export * from "./query-keys";
