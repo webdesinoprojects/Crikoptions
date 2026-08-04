@@ -9,9 +9,6 @@ import { ComingUp } from "./ComingUp";
 import { MatchdayDiscoveryHeader } from "./MatchdayDiscoveryHeader";
 import { WhatMovedTheMarket } from "./WhatMovedTheMarket";
 import { DashboardLeaderboardWidget } from "./DashboardLeaderboardWidget";
-import { MatchdayChallenges } from "./MatchdayChallenges";
-import { FriendsLeague } from "./FriendsLeague";
-import { LastMatchRecap } from "./LastMatchRecap";
 
 export default function DashboardView() {
   const { data: overview, isLoading } = useDashboardOverview();
@@ -46,12 +43,6 @@ export default function DashboardView() {
           <div className="h-full lg:col-span-4">
             <DashboardLeaderboardWidget />
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3 lg:gap-4">
-          <MatchdayChallenges />
-          <FriendsLeague />
-          <LastMatchRecap />
         </div>
       </div>
     </div>

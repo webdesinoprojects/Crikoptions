@@ -145,7 +145,7 @@ export function LiveMatchArena() {
   const awayCode = getTeamCode(stableMatch?.awayTeam);
   const battingCode = stableMatch?.innings === 2 ? awayCode : homeCode;
   const isBreak = stableMatch.status === "INNINGS_BREAK";
-  const visibleMarkets = (matchMarkets ?? []).slice(0, 3);
+
 
   return (
     <div className="group relative min-h-[560px] w-full overflow-hidden rounded-xl shadow-[0_24px_80px_rgba(0,0,0,0.5)] sm:rounded-2xl md:h-[480px] md:min-h-0">
@@ -156,9 +156,9 @@ export function LiveMatchArena() {
         className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-1000 group-hover:scale-105"
       />
 
-      {/* Heavy Gradient Overlay for text readability */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#000d1a] via-[#000d1a]/80 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#000d1a] via-transparent to-transparent" />
+      {/* Gradient Overlay for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#000d1a]/90 via-[#000d1a]/50 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#000d1a]/80 via-transparent to-transparent" />
 
       {/* Content Container */}
       <div className="relative z-10 flex min-h-[560px] w-full flex-col gap-4 p-4 sm:p-5 md:h-full md:min-h-0 md:justify-between md:gap-0 md:p-6">
@@ -276,32 +276,9 @@ export function LiveMatchArena() {
           </div>
         </div>
 
-        {/* Bottom Market Cards */}
-        <div className="grid grid-cols-1 gap-2 pt-1 sm:grid-cols-2 sm:gap-3 md:mt-auto md:grid-cols-4 md:gap-4 md:pt-6">
-          {visibleMarkets.length > 0 ? (
-            visibleMarkets.map((m) => {
-              const openPrice = m.open ?? 0;
-              const ltp = m.ltp ?? 0;
-              const trendVal = openPrice > 0 ? (((ltp - openPrice) / openPrice) * 100) : 0;
-              const trend = Math.abs(trendVal).toFixed(1) + "%";
-              const isUp = ltp >= openPrice;
-              return (
-                <MarketMiniCard
-                  key={m.id}
-                  title={m.title}
-                  value={ltp > 0 ? `₹${ltp.toFixed(2)}` : "--"}
-                  trend={trend}
-                  isUp={isUp}
-                />
-              );
-            })
-          ) : (
-            <div className="rounded-xl border border-amber-300/20 bg-amber-300/10 p-3 text-xs font-bold text-amber-100 md:col-span-3">
-              No provider market is open for this match state.
-            </div>
-          )}
-
-          <Link href={tradingHref} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/50 bg-cyan-500 text-xs font-black uppercase tracking-widest text-[#000d1a] shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-colors hover:bg-cyan-400 md:h-full">
+        {/* Watch & Trade CTA */}
+        <div className="pt-1 md:mt-auto md:pt-6">
+          <Link href={tradingHref} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/50 bg-cyan-500 text-xs font-black uppercase tracking-widest text-[#000d1a] shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-colors hover:bg-cyan-400">
             Watch & Trade
             <ChevronRight className="w-4 h-4" />
           </Link>
@@ -312,21 +289,7 @@ export function LiveMatchArena() {
   );
 }
 
-function MarketMiniCard({ title, value, trend, isUp }: { title: string, value: string, trend: string, isUp: boolean }) {
-  return (
-    <div className="group flex min-w-0 flex-col justify-between rounded-xl border border-white/5 bg-[#0a1428]/55 p-3 shadow-inner backdrop-blur-xl transition-colors hover:bg-[#0a1428]/70 sm:rounded-2xl sm:p-3.5">
-      <div className="text-[10px] text-on-surface-variant font-bold tracking-wider uppercase mb-2 line-clamp-1 group-hover:text-cyan-100 transition-colors">
-        {title}
-      </div>
-      <div className="flex min-w-0 items-end justify-between gap-2">
-        <div className="min-w-0 truncate font-data-tabular text-lg font-black text-white sm:text-xl">{value}</div>
-        <div className={cn("flex shrink-0 items-center font-data-tabular text-[11px] font-bold sm:text-xs", isUp ? "text-bull-green" : "text-bear-red")}>
-          {isUp ? "UP" : "DN"} {trend}
-        </div>
-      </div>
-    </div>
-  );
-}
+
 
 function UpcomingArenaCard({
   matchId,

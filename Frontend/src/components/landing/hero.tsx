@@ -202,7 +202,7 @@ function OrderTicket() {
 
 export const HeroSection = () => {
   return (
-    <section className="relative min-h-[100dvh] w-full overflow-hidden bg-[#020711] px-4 pb-20 pt-28 text-white sm:px-6 lg:px-8 lg:pb-10 lg:pt-28">
+    <section className="relative min-h-[100dvh] w-full overflow-x-hidden bg-[#020711] px-4 pb-20 pt-28 text-white sm:px-6 lg:px-8 lg:pb-10 lg:pt-28">
       <Image
         src="/Backgroun_land.png"
         alt=""
@@ -300,7 +300,7 @@ export const HeroSection = () => {
         </motion.div>
 
         <motion.div
-          className="relative z-10 min-h-[620px] w-full lg:min-h-[600px] flex items-center justify-center"
+          className="relative z-10 min-h-[620px] w-full lg:min-h-[660px] flex items-center justify-center"
           initial={{ opacity: 0, x: 34 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.85, ease: "easeOut", delay: 0.12 }}
@@ -313,7 +313,7 @@ export const HeroSection = () => {
             <OrderBookPanel />
           </div>
 
-          <div className="absolute bottom-[6%] left-[11%] hidden w-[54%] rounded-2xl border border-sky-300/12 bg-[#071020]/95 p-4 shadow-[0_30px_90px_rgba(0,0,0,0.44)] backdrop-blur-xl lg:block">
+          <div className="absolute bottom-[12%] left-[11%] hidden w-[54%] rounded-2xl border border-sky-300/12 bg-[#071020]/95 p-4 shadow-[0_30px_90px_rgba(0,0,0,0.44)] backdrop-blur-xl lg:block">
             <div className="mb-4 flex items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2">
@@ -334,11 +334,11 @@ export const HeroSection = () => {
             <MiniCandleChart />
           </div>
 
-          <div className="absolute bottom-[6%] right-[2%] hidden w-[32%] lg:block">
+          <div className="absolute bottom-[12%] right-[2%] hidden w-[32%] lg:block">
             <OrderTicket />
           </div>
 
-          <div className="absolute bottom-[-10%] left-[10%] right-[2%] hidden grid-cols-4 gap-3 lg:grid">
+          <div className="absolute bottom-[1%] left-[10%] right-[2%] hidden grid-cols-4 gap-3 lg:grid">
             {[
               ["Next ball", "55%", "Batting side"],
               ["Run rate", "9.61", "Current"],

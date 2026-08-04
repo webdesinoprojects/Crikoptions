@@ -203,9 +203,6 @@ export function ProfileManager() {
              
              {/* Stylized background silhouette or gradient */}
              <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-[#d4af37]/5 rounded-full blur-3xl pointer-events-none"></div>
-             <div className="mt-12 text-2xl font-[Brush_Script_MT,cursive] text-[#d4af37]/80 opacity-70 transform -rotate-2 select-none">
-               {name || "Trader"}
-             </div>
               <div className="absolute bottom-4 left-6 right-6 flex gap-1 opacity-20 pointer-events-none">
                 {Array.from({length: 30}).map((_, i) => (
                   <div key={i} className="h-4 w-1 bg-[#d4af37] rounded-sm" style={{ height: 8 + ((i * 7) % 16) }}></div>
