@@ -17,6 +17,7 @@ export default function SideNavBar() {
     { label: "Dashboard", icon: "dashboard", href: "/dashboard" },
     { label: "Trading Terminal", icon: "candlestick_chart", href: primaryMarketHref },
     { label: "Portfolio Hub", icon: "account_balance_wallet", href: "/portfolio" },
+    { label: "Challenges", icon: "emoji_events", href: "/challenges" },
     { label: "Simulator", icon: "query_stats", href: "/simulator" },
     { label: "Match Analysis", icon: "analytics", href: primaryInsightHref },
   ];
