@@ -42,7 +42,7 @@ export function EquityCurveChart() {
               <div style="color:#94a3b8;font-size:9px;text-transform:uppercase;letter-spacing:1px;font-weight:bold;">${eq.axisValue}</div>
               <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
                 <span style="color:#e2e8f0;">Equity</span>
-                <span style="color:#22c55e;font-weight:bold;text-shadow:0 0 8px rgba(34,197,94,0.4)">₹${Number(eq.data).toLocaleString("en-IN")}</span>
+                <span style="color:#22c55e;font-weight:bold;text-shadow:0 0 8px rgba(34,197,94,0.4)">₵${Number(eq.data).toLocaleString("en-IN")}</span>
               </div>
               ${dd ? `
               <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
@@ -77,7 +77,7 @@ export function EquityCurveChart() {
           min: Math.floor(minEquity * 0.98),
           max: Math.ceil(maxEquity * 1.02),
           axisLabel: {
-            formatter: (v: number) => `₹${(v / 1000).toFixed(0)}K`,
+            formatter: (v: number) => `₵${(v / 1000).toFixed(0)}K`,
           },
         },
         {

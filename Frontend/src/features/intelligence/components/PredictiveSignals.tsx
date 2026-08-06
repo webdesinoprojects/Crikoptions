@@ -109,7 +109,7 @@ export function PredictiveSignals({ matchId }: PredictiveSignalsProps) {
                         </span>
                       </div>
                     </td>
-                    <td className="py-2.5 text-right text-white text-[12px] font-bold">₹{sig.currentPrice.toFixed(2)}</td>
+                    <td className="py-2.5 text-right text-white text-[12px] font-bold">₵{sig.currentPrice.toFixed(2)}</td>
                     <td className="py-2.5 text-right">
                       <span
                         className="text-[9px] font-bold px-1.5 py-0.5"

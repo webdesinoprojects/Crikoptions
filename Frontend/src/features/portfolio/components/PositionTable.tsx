@@ -129,10 +129,10 @@ export function PositionTable() {
                       </span>
                     </td>
                     <td className="py-1 text-right text-white font-bold">{pos.quantity}</td>
-                    <td className="py-1 text-right text-on-surface-variant">₹{pos.averageEntryPrice.toFixed(2)}</td>
-                    <td className="py-1 text-right text-white">₹{pos.currentPrice.toFixed(2)}</td>
+                    <td className="py-1 text-right text-on-surface-variant">₵{pos.averageEntryPrice.toFixed(2)}</td>
+                    <td className="py-1 text-right text-white">₵{pos.currentPrice.toFixed(2)}</td>
                     <td className={`py-1 text-right font-bold ${pnlColor}`}>
-                      {isUp ? "+" : ""}₹{Math.abs(pos.unrealizedPnL).toFixed(2)}
+                      {isUp ? "+" : ""}₵{Math.abs(pos.unrealizedPnL).toFixed(2)}
                     </td>
                     <td className={`py-1 text-right font-bold ${pnlColor}`}>
                       {isUp ? "+" : ""}{pos.unrealizedPnLPct.toFixed(2)}%

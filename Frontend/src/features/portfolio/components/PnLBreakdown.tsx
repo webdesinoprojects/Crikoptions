@@ -78,13 +78,13 @@ export function PnLBreakdown() {
           <div className="rounded-lg border border-bull-green/20 bg-gradient-to-r from-bull-green/5 to-transparent p-3 flex flex-col justify-center">
             <span className="text-[9px] font-black uppercase tracking-widest text-bull-green/70 mb-0.5">Avg Win</span>
             <span className="text-base font-bold text-bull-green tabular-nums leading-none drop-shadow-sm">
-              {perf.avgWin > 0 ? `+₹${perf.avgWin.toFixed(0)}` : "—"}
+              {perf.avgWin > 0 ? `+₵${perf.avgWin.toFixed(0)}` : "—"}
             </span>
           </div>
           <div className="rounded-lg border border-bear-red/20 bg-gradient-to-r from-bear-red/5 to-transparent p-3 flex flex-col justify-center">
             <span className="text-[9px] font-black uppercase tracking-widest text-bear-red/70 mb-0.5">Avg Loss</span>
             <span className="text-base font-bold text-bear-red tabular-nums leading-none drop-shadow-sm">
-              {perf.avgLoss > 0 ? `-₹${perf.avgLoss.toFixed(0)}` : "—"}
+              {perf.avgLoss > 0 ? `-₵${perf.avgLoss.toFixed(0)}` : "—"}
             </span>
           </div>
         </div>

@@ -161,7 +161,7 @@ function PositionsScreen({
       <div className="flex items-center justify-between bg-surface-container border border-outline/10 rounded-full px-5 py-3">
         <span className="text-[11px] font-black uppercase tracking-wider text-on-surface-variant">P&L</span>
         <span className={`text-sm font-black ${totalPnL >= 0 ? 'text-bull-green drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'text-bear-red drop-shadow-[0_0_8px_rgba(239,68,68,0.3)]'}`}>
-          {totalPnL >= 0 ? '+' : ''}₹{totalPnL.toFixed(2)}
+          {totalPnL >= 0 ? '+' : ''}₵{totalPnL.toFixed(2)}
         </span>
       </div>
 
@@ -238,7 +238,7 @@ function PositionCard({ position, type }: { position: PositionCardRow, type: "op
           </span>
         </div>
         <span className={`text-[13px] font-black ${isUp ? 'text-bull-green drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'text-bear-red drop-shadow-[0_0_8px_rgba(239,68,68,0.3)]'}`}>
-          {isUp ? '+' : ''}₹{Math.abs(pnl).toFixed(2)}
+          {isUp ? '+' : ''}₵{Math.abs(pnl).toFixed(2)}
         </span>
       </div>
 
@@ -253,11 +253,11 @@ function PositionCard({ position, type }: { position: PositionCardRow, type: "op
         </div>
         <div className="flex flex-col gap-1 w-1/4">
           <span className="text-[9px] text-on-surface-variant uppercase font-black tracking-widest">Buy price</span>
-          <span className="text-[11px] font-bold font-data-tabular">₹{buyPrice ? buyPrice.toFixed(2) : '--'}</span>
+          <span className="text-[11px] font-bold font-data-tabular">₵{buyPrice ? buyPrice.toFixed(2) : '--'}</span>
         </div>
         <div className="flex flex-col gap-1 w-1/4">
           <span className="text-[9px] text-on-surface-variant uppercase font-black tracking-widest">Sell price</span>
-          <span className="text-[11px] font-bold font-data-tabular">₹{sellPrice ? sellPrice.toFixed(2) : '--'}</span>
+          <span className="text-[11px] font-bold font-data-tabular">₵{sellPrice ? sellPrice.toFixed(2) : '--'}</span>
         </div>
       </div>
     </div>

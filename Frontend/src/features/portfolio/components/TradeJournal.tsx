@@ -118,11 +118,11 @@ export function TradeJournal() {
                         {trade.side}
                       </span>
                     </td>
-                    <td className="py-1 text-right text-on-surface-variant">₹{trade.entryPrice.toFixed(2)}</td>
-                    <td className="py-1 text-right text-white">₹{trade.exitPrice.toFixed(2)}</td>
+                    <td className="py-1 text-right text-on-surface-variant">₵{trade.entryPrice.toFixed(2)}</td>
+                    <td className="py-1 text-right text-white">₵{trade.exitPrice.toFixed(2)}</td>
                     <td className="py-1 text-right text-on-surface-variant">{trade.quantity}</td>
                     <td className={`py-1 text-right font-bold ${pnlColor}`}>
-                      {isWin ? "+" : ""}₹{Math.abs(trade.realizedPnL).toFixed(2)}
+                      {isWin ? "+" : ""}₵{Math.abs(trade.realizedPnL).toFixed(2)}
                     </td>
                     <td className={`py-1 text-right font-bold ${pnlColor}`}>
                       {isWin ? "+" : ""}{trade.realizedPnLPct.toFixed(2)}%

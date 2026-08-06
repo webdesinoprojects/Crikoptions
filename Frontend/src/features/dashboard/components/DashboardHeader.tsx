@@ -71,7 +71,7 @@ export function DashboardHeader({ overview }: DashboardHeaderProps) {
             <MetricCard
               icon={<Wallet className="h-4 w-4" />}
               label="Paper Balance"
-              value={`₹${formatINR(paperBalance)}`}
+              value={`₵${formatINR(paperBalance)}`}
               valueClass="text-white"
               iconBg="rgba(255,255,255,0.06)"
               hero
@@ -81,7 +81,7 @@ export function DashboardHeader({ overview }: DashboardHeaderProps) {
             <MetricCard
               icon={<TrendingUp className="h-4 w-4" style={{ color: pnlPositive ? "#14b8a6" : "#f43f5e" }} />}
               label="Today's P&L"
-              value={`${pnlPositive ? "+" : ""}₹${formatINR(Math.abs(todaysPnL))}`}
+              value={`${pnlPositive ? "+" : ""}₵${formatINR(Math.abs(todaysPnL))}`}
               valueClass={pnlPositive ? "text-teal-400" : "text-rose-400"}
               iconBg={pnlPositive ? "rgba(20,184,166,0.1)" : "rgba(244,63,94,0.1)"}
             />

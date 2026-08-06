@@ -1,177 +1,170 @@
 "use client";
 
 import {
-  Trophy,
   ChevronLeft,
-  Flame,
-  Star,
   Lock,
   CheckCircle2,
-  ChevronRight,
-  Calendar,
-  Clock,
-  Target,
-  ChevronDown,
+  Gift,
+  Loader2,
+  Trophy,
+  X
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { MOCK_CHALLENGES } from "@/features/dashboard/components/MatchdayChallenges";
-import { useState } from "react";
-
-type FilterTab = "all" | "IN_PROGRESS" | "COMPLETE" | "LOCKED";
-
-const TIER_CONFIG = {
-  gold: {
-    label: "GOLD",
-    borderColor: "border-[#d4af37]/40",
-    glowColor: "rgba(212, 175, 55, 0.06)",
-    accentColor: "#d4af37",
-    badgeBg: "bg-[#d4af37]/10",
-    badgeBorder: "border-[#d4af37]/30",
-    badgeText: "text-[#d4af37]",
-    progressBar: "bg-[#d4af37]",
-  },
-  silver: {
-    label: "SILVER",
-    borderColor: "border-[#94a3b8]/30",
-    glowColor: "rgba(148, 163, 184, 0.04)",
-    accentColor: "#94a3b8",
-    badgeBg: "bg-[#94a3b8]/10",
-    badgeBorder: "border-[#94a3b8]/30",
-    badgeText: "text-[#94a3b8]",
-    progressBar: "bg-[#94a3b8]",
-  },
-  bronze: {
-    label: "BRONZE",
-    borderColor: "border-[#cd7f32]/40",
-    glowColor: "rgba(205, 127, 50, 0.06)",
-    accentColor: "#cd7f32",
-    badgeBg: "bg-[#cd7f32]/10",
-    badgeBorder: "border-[#cd7f32]/30",
-    badgeText: "text-[#cd7f32]",
-    progressBar: "bg-[#cd7f32]",
-  },
-};
-
-const FILTER_TABS: { key: FilterTab; label: string }[] = [
-  { key: "all", label: "ALL" },
-  { key: "IN_PROGRESS", label: "IN PROGRESS" },
-  { key: "COMPLETE", label: "COMPLETED" },
-  { key: "LOCKED", label: "LOCKED" },
-];
+import { useState, useEffect } from "react";
+import { useChallenges } from "@/features/challenges/hooks/useChallenges";
+import {
+  ACADEMIES,
+  TOTAL_REWARDS,
+  formatCC,
+  Academy
+} from "@/features/challenges/data/challenges-data";
+import CourseDesignCard, { CardData } from "@/components/ui/course-design-cards";
 
 export default function ChallengesPage() {
-  const [activeTab, setActiveTab] = useState<FilterTab>("all");
-  const [sortBy, setSortBy] = useState("Recommended");
+  const {
+    academyStates,
+    completedCount,
+    totalChallenges,
+    totalEarned,
+    claimingId,
+    markComplete,
+    claimReward,
+    getStatus,
+  } = useChallenges();
 
-  const filtered =
-    activeTab === "all"
-      ? MOCK_CHALLENGES
-      : MOCK_CHALLENGES.filter((c) => c.status === activeTab);
+  const [selectedAcademy, setSelectedAcademy] = useState<string | null>(null);
 
-  const totalXP = MOCK_CHALLENGES.reduce((s, c) => s + c.xp, 0);
-  const earnedXP = MOCK_CHALLENGES.filter((c) => c.status === "COMPLETE").reduce((s, c) => s + c.xp, 0);
-  const completedCount = MOCK_CHALLENGES.filter((c) => c.status === "COMPLETE").length;
-  const inProgressCount = MOCK_CHALLENGES.filter((c) => c.status === "IN_PROGRESS").length;
-  const completionPct = Math.round((completedCount / MOCK_CHALLENGES.length) * 100);
+  const completionPct = Math.round((completedCount / totalChallenges) * 100);
+
+  // Helper to map academy to CardData
+  const getCardData = (academy: Academy): CardData => {
+    const states = academyStates.find((a) => a.academyId === academy.id);
+    const completed = states?.challenges.filter((c) => c.status === "COMPLETE").length ?? 0;
+    const total = academy.challenges.length;
+    const pct = Math.round((completed / total) * 100);
+    const totalReward = academy.challenges.reduce((sum, c) => sum + c.reward, 0);
+    
+    // Select stock images based on academy type to look premium
+    const images = {
+      'long-call': ['https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150&h=150', 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&q=80&w=150&h=150'],
+      'short-call': ['https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150&h=150', 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=150&h=150'],
+      'bull-spread': ['https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&q=80&w=150&h=150', 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150&h=150'],
+      'iron-fly': ['https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?auto=format&fit=crop&q=80&w=150&h=150', 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=150&h=150'],
+      'iron-condor': ['https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150&h=150', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150&h=150'],
+    };
+
+    let colorClass = 'blue';
+    if (academy.id === 'long-call') colorClass = 'green';
+    if (academy.id === 'short-call') colorClass = 'red';
+    if (academy.id === 'bull-spread') colorClass = 'cyan';
+    if (academy.id === 'iron-fly') colorClass = 'gold';
+    if (academy.id === 'iron-condor') colorClass = 'violet';
+
+    const baseData = {
+      id: academy.id,
+      colorClass,
+      date: `${total} Challenges`,
+      title: academy.name,
+      description: `Master the art of ${academy.name.toLowerCase()} strategies and earn massive CricCoins.`,
+      progressPercent: `${pct}%`,
+      progressValue: `${completed}/${total}`,
+    };
+
+    const earnedAmount = states?.challenges
+      .filter((c) => c.claimed)
+      .reduce((sum, c) => sum + (academy.challenges.find((ch) => ch.id === c.id)?.reward || 0), 0) || 0;
+
+    const remainingReward = totalReward - earnedAmount;
+
+    let countdownText = `Earn ₵${formatCC(totalReward)}`;
+    if (completed === total && remainingReward === 0) {
+      countdownText = `Earned ₵${formatCC(totalReward)}`;
+    } else if (earnedAmount > 0) {
+      countdownText = `Earn ₵${formatCC(remainingReward)} More`;
+    }
+
+    return {
+      ...baseData,
+      countdownText,
+      isLocked: academy.locked,
+      imgSrc1: images[academy.id as keyof typeof images]?.[0],
+      imgSrc2: images[academy.id as keyof typeof images]?.[1],
+      imgAlt1: 'Top Trader 1',
+      imgAlt2: 'Top Trader 2',
+    };
+  };
+
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (selectedAcademy) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [selectedAcademy]);
+
+  const activeAcademyData = ACADEMIES.find(a => a.id === selectedAcademy);
+  const activeStates = academyStates.find(a => a.academyId === selectedAcademy);
 
   return (
-    <div className="min-h-full bg-[#030914] text-white p-4 sm:p-6 lg:p-8 overflow-y-auto">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-full bg-[#030914] text-white p-4 sm:p-6 lg:p-8 overflow-y-auto relative">
+      <div className="max-w-6xl mx-auto space-y-8 pb-10">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Link
               href="/dashboard"
-              className="w-10 h-10 rounded-lg bg-[#081225] border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors shrink-0"
+              className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors shrink-0 shadow-lg"
             >
-              <ChevronLeft className="w-5 h-5 text-white/70" />
+              <ChevronLeft className="w-6 h-6 text-white/70" />
             </Link>
             <div>
-              <div className="flex items-center gap-2.5">
-                <Trophy className="w-6 h-6 text-[#d4af37]" />
-                <h1 className="text-xl sm:text-2xl font-black tracking-wider uppercase text-white font-sans">
-                  MATCHDAY CHALLENGES
+              <div className="flex items-center gap-3">
+                <Trophy className="w-7 h-7 text-[#d4af37] drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]" />
+                <h1 className="text-2xl sm:text-3xl font-black tracking-widest uppercase text-white font-sans drop-shadow-md">
+                  CHALLENGES
                 </h1>
               </div>
-              <p className="text-xs text-white/50 mt-0.5">
-                Complete challenges to earn XP and climb the leaderboard
+              <p className="text-sm text-white/50 mt-1 font-medium tracking-wide">
+                Complete challenges to earn CricCoins ₵ and unlock advanced strategies
               </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 text-xs font-bold font-data-tabular">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#081225] border border-white/10 text-white/70">
-              <Calendar className="w-4 h-4 text-white/40" />
-              <span>SEASON 04</span>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#081225] border border-white/10 text-bull-green">
-              <Clock className="w-4 h-4 text-bull-green" />
-              <span>12 DAYS LEFT</span>
             </div>
           </div>
         </div>
 
-        {/* Stats Row - 4 Columns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Card 1 */}
-          <div className="bg-[#081225] rounded-xl border border-white/10 p-5 flex flex-col justify-between">
-            <div className="flex items-center gap-2 mb-3">
-              <Star className="w-4 h-4 text-[#d4af37]" />
-              <span className="text-[11px] font-bold text-white/50 uppercase tracking-widest">
-                TOTAL XP EARNED
+        {/* Stats Row */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            label="₵ Earned"
+            value={`₵${formatCC(totalEarned)}`}
+            accent="#d4af37"
+          />
+          <StatCard
+            label="Completed"
+            value={`${completedCount}`}
+            sub={`of ${totalChallenges}`}
+            accent="#22c55e"
+          />
+          <StatCard
+            label="Academies"
+            value={`${ACADEMIES.filter((a) => !a.locked).length}`}
+            sub={`of ${ACADEMIES.length} unlocked`}
+            accent="#06b6d4"
+          />
+          <div className="bg-[#081225] rounded-2xl border border-white/10 p-5 shadow-xl relative overflow-hidden">
+            <div className="absolute inset-0 bg-cyan-500/5" />
+            <div className="relative z-10">
+              <span className="text-xs font-black text-white/50 uppercase tracking-widest block mb-3">
+                Global Progress
               </span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black font-data-tabular text-white">{earnedXP}</span>
-              <span className="text-xs text-white/40 font-data-tabular">of {totalXP}</span>
-            </div>
-          </div>
-
-          {/* Card 2 */}
-          <div className="bg-[#081225] rounded-xl border border-white/10 p-5 flex flex-col justify-between">
-            <div className="flex items-center gap-2 mb-3">
-              <CheckCircle2 className="w-4 h-4 text-bull-green" />
-              <span className="text-[11px] font-bold text-white/50 uppercase tracking-widest">
-                COMPLETED
+              <span className="text-3xl font-black font-data-tabular text-white drop-shadow-lg">
+                {completionPct}%
               </span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black font-data-tabular text-white">{completedCount}</span>
-              <span className="text-xs text-white/40 font-data-tabular">of {MOCK_CHALLENGES.length}</span>
-            </div>
-          </div>
-
-          {/* Card 3 */}
-          <div className="bg-[#081225] rounded-xl border border-white/10 p-5 flex flex-col justify-between">
-            <div className="flex items-center gap-2 mb-3">
-              <Flame className="w-4 h-4 text-orange-400" />
-              <span className="text-[11px] font-bold text-white/50 uppercase tracking-widest">
-                IN PROGRESS
-              </span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black font-data-tabular text-white">{inProgressCount}</span>
-              <span className="text-xs text-white/40 font-data-tabular">active</span>
-            </div>
-          </div>
-
-          {/* Card 4 */}
-          <div className="bg-[#081225] rounded-xl border border-white/10 p-5 flex flex-col justify-between">
-            <div className="flex items-center gap-2 mb-2">
-              <Trophy className="w-4 h-4 text-cyan-400" />
-              <span className="text-[11px] font-bold text-white/50 uppercase tracking-widest">
-                COMPLETION
-              </span>
-            </div>
-            <div>
-              <div className="flex items-baseline gap-2 mb-2">
-                <span className="text-3xl font-black font-data-tabular text-white">{completionPct}%</span>
-                <span className="text-xs text-white/40 font-data-tabular">overall</span>
-              </div>
-              <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+              <div className="h-2 w-full bg-black/50 rounded-full overflow-hidden mt-3 shadow-inner">
                 <div
-                  className="h-full bg-cyan-400 rounded-full transition-all duration-700"
+                  className="h-full bg-cyan-400 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(34,211,238,0.6)]"
                   style={{ width: `${completionPct}%` }}
                 />
               </div>
@@ -179,168 +172,245 @@ export default function ChallengesPage() {
           </div>
         </div>
 
-        {/* Filter and Sorting Controls */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-1.5 bg-[#081225] rounded-xl p-1.5 border border-white/10">
-            {FILTER_TABS.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={cn(
-                  "px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all",
-                  activeTab === tab.key
-                    ? "bg-[#0ea5e9] text-black shadow-md shadow-cyan-500/20"
-                    : "text-white/60 hover:text-white hover:bg-white/5"
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="relative">
-            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#081225] border border-white/10 text-xs font-bold text-white/80 hover:text-white transition-colors">
-              <span>Sort: {sortBy}</span>
-              <ChevronDown className="w-4 h-4 text-white/50" />
-            </button>
-          </div>
+        {/* Premium Grid Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {ACADEMIES.map((academy) => (
+            <CourseDesignCard 
+              key={academy.id}
+              data={getCardData(academy)}
+              onClick={() => {
+                setSelectedAcademy(academy.id);
+              }}
+            />
+          ))}
         </div>
 
-        {/* Challenge Cards Grid - 2 Columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {filtered.map((challenge) => {
-            const tier = TIER_CONFIG[challenge.tier];
-            const isComplete = challenge.status === "COMPLETE";
-            const isLocked = challenge.status === "LOCKED";
-            const progressPct = Math.round((challenge.progress / challenge.target) * 100);
-            const Icon = challenge.icon;
+        {/* Total Rewards Banner */}
+        <div className="rounded-3xl border border-[#d4af37]/20 bg-gradient-to-r from-[#d4af37]/10 via-[#d4af37]/5 to-[#d4af37]/10 p-8 flex items-center justify-between shadow-[0_0_40px_rgba(212,175,55,0.05)]">
+          <div>
+            <span className="text-xs font-black text-[#d4af37]/70 uppercase tracking-widest">
+              Total Rewards Pool
+            </span>
+            <p className="text-4xl font-black text-[#d4af37] font-data-tabular mt-2 drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]">
+              ₵{formatCC(TOTAL_REWARDS)}
+            </p>
+          </div>
+          <Trophy className="w-16 h-16 text-[#d4af37]/40" />
+        </div>
+      </div>
 
-            return (
-              <div
-                key={challenge.id}
-                className={cn(
-                  "relative rounded-xl border p-4 sm:p-5 flex gap-4 items-stretch overflow-hidden bg-[#070e1c] transition-all duration-300",
-                  isComplete
-                    ? "border-bull-green/30 bg-[#071617]/40"
-                    : isLocked
-                    ? "border-white/10 opacity-70 bg-[#050b16]"
-                    : tier.borderColor
-                )}
-                style={{
-                  boxShadow: !isLocked && !isComplete ? `inset 0 0 40px ${tier.glowColor}` : undefined,
-                }}
-              >
-                {/* Left Icon Block */}
-                <div
-                  className={cn(
-                    "w-16 sm:w-20 rounded-xl border flex flex-col items-center justify-center shrink-0 p-2 text-center",
-                    isComplete
-                      ? "border-bull-green/30 bg-bull-green/10"
-                      : isLocked
-                      ? "border-white/10 bg-white/5"
-                      : `${tier.badgeBorder} ${tier.badgeBg}`
-                  )}
+      {/* Challenges Modal Overlay */}
+      {selectedAcademy && activeAcademyData && activeStates && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-[#020617]/80 backdrop-blur-md"
+            onClick={() => setSelectedAcademy(null)}
+          />
+          
+          {/* Modal Content */}
+          <div 
+            className="relative w-full max-w-xl max-h-[85vh] bg-[#050b18] rounded-2xl border border-white/10 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            style={{ 
+              boxShadow: `0 25px 50px -12px rgba(0,0,0,0.5), 0 0 80px -20px ${activeAcademyData.color}20` 
+            }}
+          >
+            {/* Modal Header */}
+            <div 
+              className="px-5 py-4 border-b flex items-center justify-between sticky top-0 z-10"
+              style={{ 
+                backgroundColor: `${activeAcademyData.color}0a`,
+                borderColor: `${activeAcademyData.color}15`,
+                backdropFilter: 'blur(8px)'
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div 
+                  className="w-10 h-10 rounded-xl flex items-center justify-center border shadow-sm"
+                  style={{ 
+                    backgroundColor: `${activeAcademyData.color}15`,
+                    borderColor: `${activeAcademyData.color}30`,
+                  }}
                 >
-                  {isComplete ? (
-                    <CheckCircle2 className="w-7 h-7 text-bull-green" />
-                  ) : isLocked ? (
-                    <Lock className="w-7 h-7 text-white/30" />
-                  ) : (
-                    <>
-                      <Icon className="w-6 h-6 mb-1" style={{ color: tier.accentColor }} />
-                      <span
-                        className="text-xs font-bold font-data-tabular"
-                        style={{ color: tier.accentColor }}
-                      >
-                        {challenge.progress} / {challenge.target}
-                      </span>
-                    </>
-                  )}
+                  <activeAcademyData.icon className="w-5 h-5" style={{ color: activeAcademyData.color }} />
                 </div>
-
-                {/* Right Details Block */}
-                <div className="flex-1 min-w-0 flex flex-col justify-between">
-                  <div>
-                    {/* Header line: Title & Tier Badge */}
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <h3 className="text-sm sm:text-base font-bold text-white uppercase tracking-wider truncate">
-                        {challenge.title}
-                      </h3>
-                      <span
-                        className={cn(
-                          "px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-widest uppercase border shrink-0",
-                          tier.badgeBg,
-                          tier.badgeBorder,
-                          tier.badgeText
-                        )}
-                      >
-                        {tier.label}
-                      </span>
-                    </div>
-
-                    {/* Description */}
-                    <p className="text-xs text-white/60 mb-3 line-clamp-2 leading-relaxed">
-                      {challenge.description}
-                    </p>
-                  </div>
-
-                  {/* Progress Bar & Footer */}
-                  <div className="space-y-2.5">
-                    <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                      <div
-                        className={cn(
-                          "h-full rounded-full transition-all duration-500",
-                          isComplete
-                            ? "bg-bull-green"
-                            : isLocked
-                            ? "bg-white/10"
-                            : tier.progressBar
-                        )}
-                        style={{ width: `${isComplete ? 100 : isLocked ? 0 : progressPct}%` }}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      {/* Left status indicator */}
-                      <div>
-                        {isComplete ? (
-                          <div className="flex items-center gap-1.5 text-bull-green">
-                            <span>✓</span>
-                            <span>COMPLETED</span>
-                          </div>
-                        ) : isLocked ? (
-                          <div className="flex items-center gap-1.5 text-white/40">
-                            <Lock className="w-3.5 h-3.5" />
-                            <span>LOCKED</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 font-data-tabular text-white/70">
-                            <span>
-                              {challenge.progress} / {challenge.target}
-                            </span>
-                            <span className="text-white/40">|</span>
-                            <span>{progressPct}% COMPLETE</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Right XP reward */}
-                      <div
-                        className={cn(
-                          "flex items-center gap-1 font-data-tabular",
-                          isComplete ? "text-bull-green" : isLocked ? "text-white/40" : "text-[#d4af37]"
-                        )}
-                      >
-                        <span>+{challenge.xp} XP</span>
-                        <ChevronRight className="w-4 h-4 opacity-70" />
-                      </div>
-                    </div>
-                  </div>
+                <div>
+                  <h2 className="text-lg font-black text-white uppercase tracking-wide">
+                    {activeAcademyData.name}
+                  </h2>
+                  <p className="text-[11px] text-white/50 mt-0.5">
+                    Complete all tasks to master this strategy
+                  </p>
                 </div>
               </div>
-            );
-          })}
+              <button 
+                onClick={() => setSelectedAcademy(null)}
+                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/5"
+              >
+                <X className="w-4 h-4 text-white/70" />
+              </button>
+            </div>
+
+            {/* Modal Body - Challenges List */}
+            <div className="overflow-y-auto p-4 sm:p-5 space-y-3 custom-scrollbar">
+              {activeAcademyData.challenges.map((challenge, idx) => {
+                const state = getStatus(challenge.id);
+                const isComplete = state?.status === "COMPLETE";
+                const isLocked = state?.status === "LOCKED";
+                const isClaimed = state?.claimed === true;
+                const isClaiming = claimingId === challenge.id;
+                const isFirstInProgress = state?.status === "IN_PROGRESS";
+
+                return (
+                  <div
+                    key={challenge.id}
+                    className={cn(
+                      "flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-3.5 p-3.5 rounded-xl border transition-all duration-300",
+                      isLocked ? "border-white/5 bg-white/[0.01] opacity-50" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.04]",
+                      isFirstInProgress && "border-white/20 bg-white/[0.05] shadow-md scale-[1.01]"
+                    )}
+                    style={{
+                      borderColor: isFirstInProgress ? `${activeAcademyData.color}30` : undefined,
+                    }}
+                  >
+                    {/* Top Row: Icon and Text */}
+                    <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                      {/* Step number / status */}
+                      <div
+                        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 border-2 text-xs font-bold"
+                        style={{
+                          background: isComplete ? `${activeAcademyData.color}15` : "rgba(0,0,0,0.2)",
+                          borderColor: isComplete ? `${activeAcademyData.color}40` : isFirstInProgress ? `${activeAcademyData.color}40` : "rgba(255,255,255,0.05)",
+                          color: isComplete ? activeAcademyData.color : isFirstInProgress ? activeAcademyData.color : "rgba(255,255,255,0.2)",
+                        }}
+                      >
+                        {isComplete ? (
+                          <CheckCircle2 className="w-4.5 h-4.5" />
+                        ) : isLocked ? (
+                          <Lock className="w-3.5 h-3.5" />
+                        ) : (
+                          idx + 1
+                        )}
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <h4
+                          className={cn(
+                            "text-sm font-bold tracking-wide truncate",
+                            isComplete ? "text-white/70" : isLocked ? "text-white/30" : "text-white"
+                          )}
+                        >
+                          {challenge.title}
+                        </h4>
+                        <p className={cn("text-[11px] mt-0.5 line-clamp-1", isLocked ? "text-white/20" : "text-white/50")}>
+                          {challenge.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Reward / Action */}
+                    <div className="shrink-0 flex items-center justify-between sm:justify-end pt-3 sm:pt-0 mt-1 sm:mt-0 border-t sm:border-t-0 sm:border-l border-white/5 sm:pl-3">
+                      {/* On mobile, show a 'Reward' label on the left to balance the layout if there's no action button, or we can just push it to the right */}
+                      <div className="sm:hidden text-[10px] font-bold text-white/30 uppercase tracking-widest">
+                        {isComplete ? (isClaimed ? 'Status' : 'Action') : 'Reward'}
+                      </div>
+                      
+                      <div className="flex items-center justify-end">
+                        {isComplete && !isClaimed ? (
+                          <button
+                            onClick={() => claimReward(challenge.id)}
+                            disabled={isClaiming}
+                            className="flex items-center gap-1.5 px-4 py-2 sm:px-3 sm:py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all active:scale-[0.97] disabled:opacity-50 hover:brightness-110"
+                            style={{
+                              background: activeAcademyData.color,
+                              color: '#000',
+                            }}
+                          >
+                            {isClaiming ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Gift className="w-3 h-3" />
+                            )}
+                            Claim ₵{formatCC(challenge.reward)}
+                          </button>
+                        ) : isComplete && isClaimed ? (
+                          <span className="flex flex-row sm:flex-col items-center sm:items-end gap-2 sm:gap-0">
+                            <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-bull-green sm:mb-0.5">
+                              <CheckCircle2 className="w-3 h-3" /> Claimed
+                            </span>
+                            <span className="text-[11px] font-bold text-white/40 font-data-tabular">₵{formatCC(challenge.reward)}</span>
+                          </span>
+                        ) : isFirstInProgress ? (
+                          <button
+                            onClick={() => markComplete(challenge.id)}
+                            className="px-4 py-2 sm:px-3 sm:py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95 border"
+                            style={{
+                              backgroundColor: `${activeAcademyData.color}15`,
+                              borderColor: `${activeAcademyData.color}40`,
+                              color: activeAcademyData.color,
+                            }}
+                          >
+                            Mark Done
+                          </button>
+                        ) : (
+                          <div className="flex flex-col items-end text-right">
+                            <span className="hidden sm:block text-[9px] font-bold uppercase tracking-widest text-white/20 mb-0.5">Reward</span>
+                            <span
+                              className="text-xs sm:text-[11px] font-bold font-data-tabular"
+                              style={{ color: isLocked ? "rgba(255,255,255,0.15)" : `${activeAcademyData.color}80` }}
+                            >
+                              +₵{formatCC(challenge.reward)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sub-components
+// ─────────────────────────────────────────────────────────────────────────────
+
+function StatCard({
+  label,
+  value,
+  sub,
+  accent,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  accent: string;
+}) {
+  return (
+    <div className="bg-[#081225] rounded-2xl border border-white/10 p-5 shadow-xl relative overflow-hidden group hover:border-white/20 transition-colors">
+      <div 
+        className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none"
+        style={{ background: `linear-gradient(135deg, ${accent}, transparent)` }}
+      />
+      <span className="text-xs font-black text-white/50 uppercase tracking-widest block mb-3 relative z-10">
+        {label}
+      </span>
+      <div className="flex items-baseline gap-2 relative z-10">
+        <span
+          className="text-3xl font-black font-data-tabular drop-shadow-md"
+          style={{ color: accent }}
+        >
+          {value}
+        </span>
+        {sub && (
+          <span className="text-xs font-bold text-white/40 font-data-tabular tracking-wide">{sub}</span>
+        )}
       </div>
     </div>
   );

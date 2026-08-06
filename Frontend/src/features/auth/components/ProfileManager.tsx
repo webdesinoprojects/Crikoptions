@@ -136,7 +136,7 @@ export function ProfileManager() {
     winRateDesc: `${winningTrades} / ${closedTrades.length} Trades`,
     totalTrades: totalTradesCount,
     closedTrades: portfolio?.closedTradesCount ?? 0,
-    bestTrade: bestTradeAmount > 0 ? `+₹${bestTradeAmount.toLocaleString("en-IN")}` : `₹0`,
+    bestTrade: bestTradeAmount > 0 ? `+₵${bestTradeAmount.toLocaleString("en-IN")}` : `₵0`,
     avgHoldingTime: avgHoldingMs > 0 ? `${avgHoldingMins}m ${avgHoldingSecs}s` : "-",
     mostActiveMatch: mostActiveMatch ? mostActiveMatch[0] : "-",
     mostActiveMatchCount: mostActiveMatch ? mostActiveMatch[1] : 0,

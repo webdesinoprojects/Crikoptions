@@ -65,7 +65,7 @@ export function AddFundsModal({ isOpen, onClose, onSuccess }: AddFundsModalProps
       return;
     }
     if (amount > 99999) {
-      setError("Maximum top-up is ₹99,999 per transaction.");
+      setError("Maximum top-up is ₵99,999 per transaction.");
       return;
     }
 
@@ -135,7 +135,7 @@ export function AddFundsModal({ isOpen, onClose, onSuccess }: AddFundsModalProps
                   <Loader2 className="h-8 w-8 animate-spin text-[#d4af37]" />
                 </div>
                 <p className="text-lg font-semibold text-white">Processing...</p>
-                <p className="text-sm text-white/40">Adding Rs {formatINR(activeAmount)} to your wallet</p>
+                <p className="text-sm text-white/40">Adding ₵{formatINR(activeAmount)} to your wallet</p>
               </div>
             )}
 
@@ -184,7 +184,7 @@ export function AddFundsModal({ isOpen, onClose, onSuccess }: AddFundsModalProps
                                   }
                             }
                           >
-                            Rs {formatINR(amount)}
+                            ₵{formatINR(amount)}
                           </button>
                         );
                       })}
@@ -197,7 +197,7 @@ export function AddFundsModal({ isOpen, onClose, onSuccess }: AddFundsModalProps
                     </p>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base font-bold text-white/30">
-                        Rs
+                        ₵
                       </span>
                       <input
                         type="text"
@@ -215,7 +215,7 @@ export function AddFundsModal({ isOpen, onClose, onSuccess }: AddFundsModalProps
                       />
                     </div>
                     <p className="mt-1.5 text-[11px] text-white/25">
-                      Min Rs 1 · Max Rs 99,999 per transaction
+                      Min ₵1 · Max ₵99,999 per transaction
                     </p>
                   </div>
 
@@ -232,7 +232,7 @@ export function AddFundsModal({ isOpen, onClose, onSuccess }: AddFundsModalProps
                     >
                       <span className="text-xs text-white/40">You will receive</span>
                       <span className="text-sm font-black tabular-nums text-[#d4af37]">
-                        Rs {formatINR(activeAmount)}
+                        ₵{formatINR(activeAmount)}
                       </span>
                     </div>
                   )}
@@ -244,7 +244,7 @@ export function AddFundsModal({ isOpen, onClose, onSuccess }: AddFundsModalProps
                     style={{ background: "linear-gradient(135deg, #d4af37 0%, #f5d060 50%, #d4af37 100%)" }}
                   >
                     <Plus className="h-4 w-4" />
-                    Add Rs {activeAmount > 0 ? formatINR(activeAmount) : "0"} to Wallet
+                    Add ₵{activeAmount > 0 ? formatINR(activeAmount) : "0"} to Wallet
                   </button>
                 </div>
               </>
@@ -371,7 +371,7 @@ export function FundsAddedModal({ amount, previousBalance, onClose }: FundsAdded
         >
           <h2 className="mb-2 text-2xl font-bold tracking-tight text-white">Funds Added!</h2>
           <p className="mx-auto max-w-[280px] text-sm text-white/50 leading-relaxed">
-            <span className="font-semibold text-emerald-400">Rs {formatINR(amount)}</span> has been credited to your paper wallet.
+            <span className="font-semibold text-emerald-400">₵{formatINR(amount)}</span> has been credited to your paper wallet.
           </p>
         </motion.div>
 
@@ -391,13 +391,13 @@ export function FundsAddedModal({ amount, previousBalance, onClose }: FundsAdded
                 New Available Balance
               </span>
               <span className="font-mono text-3xl font-bold tracking-tight text-white">
-                Rs {formatINR(newBalance)}
+                ₵{formatINR(newBalance)}
               </span>
             </div>
             <div className="flex items-center gap-1 rounded bg-emerald-500/20 px-2 py-1 border border-emerald-500/20">
               <Plus className="h-3 w-3 text-emerald-400" />
               <span className="text-xs font-bold text-emerald-400 tabular-nums">
-                Rs {formatINR(amount)}
+                ₵{formatINR(amount)}
               </span>
             </div>
           </div>

@@ -59,7 +59,7 @@ export function AdminWalletFunding() {
         onSuccess: (result) => {
           setFormError(null);
           toast.success(
-            `${mode === "credit" ? "Credited" : "Debited"} Rs ${formatMoney(parsedAmount)}. Available: Rs ${formatMoney(
+            `${mode === "credit" ? "Credited" : "Debited"} ₵${formatMoney(parsedAmount)}. Available: ₵${formatMoney(
               result.wallet.availableBalance
             )}`
           );
@@ -246,7 +246,7 @@ export function AdminWalletFunding() {
                           {formatDate(entry.createdAt)} | {entry.balanceBefore.toFixed(2)} to {entry.balanceAfter.toFixed(2)}
                         </div>
                       </div>
-                      <div className="text-right font-data-tabular font-black">Rs {formatMoney(entry.amount)}</div>
+                      <div className="text-right font-data-tabular font-black">₵{formatMoney(entry.amount)}</div>
                     </div>
                   ))}
                 </div>
@@ -265,7 +265,7 @@ function BalanceCard({ label, value, text, accent }: { label: string; value?: nu
     <div className="rounded-md border border-outline-variant bg-surface p-3">
       <div className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant">{label}</div>
       <div className={`mt-2 font-data-tabular text-lg font-black ${accent ? "text-primary" : "text-on-surface"}`}>
-        {text ?? `Rs ${formatMoney(value ?? 0)}`}
+        {text ?? `₵${formatMoney(value ?? 0)}`}
       </div>
     </div>
   );

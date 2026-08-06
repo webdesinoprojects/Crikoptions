@@ -30,7 +30,7 @@ export function WalletBalancePill({ enabled = true }: WalletBalancePillProps) {
           Available Margin
         </div>
         <div className="mt-1 truncate font-data-tabular text-[12px] font-black text-white xl:text-sm">
-          {isLoading ? "Loading" : isError ? "Unavailable" : `₹${formatMoney(wallet?.availableBalance ?? 0)}`}
+          {isLoading ? "Loading" : isError ? "Unavailable" : `₵${formatMoney(wallet?.availableBalance ?? 0)}`}
         </div>
       </div>
     </div>

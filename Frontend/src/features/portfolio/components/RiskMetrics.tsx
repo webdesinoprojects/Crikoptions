@@ -164,7 +164,7 @@ export function RiskMetrics() {
                 Stress Test Scenario
               </span>
               <p className="text-2xl font-mono font-bold text-bear-red drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]">
-                −₹{rm.stressTestLoss.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+                −₵{rm.stressTestLoss.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
               </p>
               <p className="text-[10px] font-medium text-on-surface-variant mt-1.5 leading-snug">
                 Est. max drawdown if all current open exposures instantly decline by 20%

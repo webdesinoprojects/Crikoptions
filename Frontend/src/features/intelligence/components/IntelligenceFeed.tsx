@@ -49,7 +49,7 @@ export function IntelligenceFeed({ matchId }: IntelligenceFeedProps) {
                     className="font-bold font-mono"
                     style={{ color: sig.action === "BUY" ? "#4AF626" : "#FF2A2A" }}
                   >
-                    ₹{sig.currentPrice.toFixed(1)}
+                    ₵{sig.currentPrice.toFixed(1)}
                   </div>
                   <span
                     className="text-[8px] font-bold uppercase font-mono"
