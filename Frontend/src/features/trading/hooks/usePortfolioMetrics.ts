@@ -40,6 +40,7 @@ export const usePortfolioStream = (userId?: string) => {
         marginUsed: data.usedMargin ?? current?.marginUsed ?? 0,
         marginUsagePct: data.marginUsagePct ?? current?.marginUsagePct ?? 0,
         openPositionsCount: data.openPositionsCount ?? current?.openPositionsCount ?? 0,
+        streak: data.streak ?? current?.streak ?? 0,
       }));
 
       if (data.wallet) {

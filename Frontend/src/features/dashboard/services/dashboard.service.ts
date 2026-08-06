@@ -42,6 +42,7 @@ export const dashboardService = {
       marginUsed: portfolio.usedMargin,
       marginUsagePct: portfolio.marginUsagePct,
       openPositionsCount: portfolio.openPositionsCount,
+      streak: portfolio.streak,
     };
   },
 

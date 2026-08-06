@@ -21,6 +21,7 @@ export interface PortfolioSummary {
   marginUsed: number;
   marginUsagePct: number;
   openPositionsCount: number;
+  streak: number;
 }
 
 export interface TickerItem {
