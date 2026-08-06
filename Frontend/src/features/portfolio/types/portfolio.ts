@@ -83,6 +83,7 @@ export interface PortfolioSummary {
   avgWin: number;
   avgLoss: number;
   profitFactor: number;
+  streak: number;
   /** Available cash when backend provides it */
   availableMargin: number;
   usedMargin: number;

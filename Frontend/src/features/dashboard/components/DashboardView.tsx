@@ -6,8 +6,6 @@ import { DashboardHeader } from "./DashboardHeader";
 import { LiveMatchArena } from "./LiveMatchArena";
 import { YourMatchday } from "./YourMatchday";
 import { ComingUp } from "./ComingUp";
-import { MatchdayDiscoveryHeader } from "./MatchdayDiscoveryHeader";
-import { WhatMovedTheMarket } from "./WhatMovedTheMarket";
 import { DashboardLeaderboardWidget } from "./DashboardLeaderboardWidget";
 import { MatchdayChallenges } from "./MatchdayChallenges";
 
@@ -35,22 +33,16 @@ export default function DashboardView() {
           </div>
         </div>
 
-        <MatchdayDiscoveryHeader />
-
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-10 lg:gap-4">
           <div className="h-full lg:col-span-6">
-            <WhatMovedTheMarket />
+            <MatchdayChallenges />
           </div>
           <div className="h-full lg:col-span-4">
             <DashboardLeaderboardWidget />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-10 lg:gap-4">
-          <div className="h-full lg:col-span-10">
-            <MatchdayChallenges />
-          </div>
-        </div>
+
       </div>
     </div>
   );

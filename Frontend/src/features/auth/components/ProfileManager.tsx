@@ -249,11 +249,11 @@ export function ProfileManager() {
 
         {/* RIGHT COLUMN: RISK & SETTINGS */}
         <div className="lg:col-span-3 flex flex-col gap-6">
+          {/* RISK CONTROLS */}
           <div className="bg-slate-900/40 border border-white/5 rounded-2xl p-6 backdrop-blur-md">
             <h2 className="text-sm font-bold text-white tracking-wider uppercase mb-6 flex items-center gap-2">
               <Shield className="w-4 h-4 text-slate-400" /> Risk Controls
             </h2>
-            
             <div className="space-y-6">
               <div className="space-y-3">
                 <div className="flex justify-between items-center">

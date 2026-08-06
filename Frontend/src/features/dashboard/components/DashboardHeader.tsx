@@ -32,7 +32,7 @@ export function DashboardHeader({ overview }: DashboardHeaderProps) {
   const paperBalance = overview?.totalEquity ?? 0;
   const todaysPnL = overview?.dailyPnL ?? 0;
   const activePositions = positions?.length ?? 0;
-  const predictionStreak = 4;
+  const predictionStreak = overview?.streak ?? 0;
   const pnlPositive = todaysPnL >= 0;
 
   useEffect(() => {

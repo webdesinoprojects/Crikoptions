@@ -62,9 +62,10 @@ export function MatchdayChallenges() {
       : 0;
 
   return (
-    <div className="bg-[#050b18] rounded-xl border border-white/10 p-5 grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch overflow-hidden">
-      {/* Left Column: Challenges UI (~65% width) */}
-      <div className="lg:col-span-7 flex flex-col justify-between min-w-0">
+    <div className="bg-[#0b101c] rounded-xl border border-white/5 overflow-hidden shadow-lg h-full">
+      <div className="flex flex-col h-full">
+        {/* Top/Left Section: Progress List */}
+        <div className="p-5 sm:p-6 flex flex-col flex-1">
         {/* Top Header Row */}
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xs font-bold tracking-widest text-white uppercase">
@@ -224,8 +225,8 @@ export function MatchdayChallenges() {
         </div>
       </div>
 
-      {/* Right Column: Premium Cricket Banner Card (~35% width) */}
-      <div className="lg:col-span-5 relative rounded-xl border border-cyan-500/20 bg-[#030918] overflow-hidden min-h-[280px] lg:min-h-0 flex flex-col justify-between p-5 group shadow-xl">
+      {/* Bottom Section: Premium Cricket Banner Card */}
+      <div className="relative rounded-t-none rounded-b-xl border-t border-cyan-500/20 bg-[#030918] overflow-hidden min-h-[200px] flex flex-col justify-between p-5 group shadow-xl shrink-0">
         {/* Background Graphic Image */}
         <img
           src="/cricket_victory_banner.png"
@@ -267,6 +268,7 @@ export function MatchdayChallenges() {
             <span>JOIN MATCHDAY TRADING</span>
             <ChevronRight className="w-4 h-4" />
           </Link>
+        </div>
         </div>
       </div>
     </div>
