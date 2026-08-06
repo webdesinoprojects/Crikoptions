@@ -225,9 +225,9 @@ export function MatchdayChallenges() {
         </div>
       </div>
 
-      {/* Bottom Section: Premium Cricket Banner Card */}
+      {/* Bottom Section: Premium Cricket Banner Card — temporarily commented out
       <div className="relative rounded-t-none rounded-b-xl border-t border-cyan-500/20 bg-[#030918] overflow-hidden min-h-[200px] flex flex-col justify-between p-5 group shadow-xl shrink-0">
-        {/* Background Graphic Image */}
+         Background Graphic Image 
         <img
           src="/cricket_victory_banner.png"
           alt="Cricket Victory"
@@ -236,7 +236,7 @@ export function MatchdayChallenges() {
         <div className="absolute inset-0 bg-gradient-to-t from-[#030918] via-[#030918]/60 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#030918]/80 via-transparent to-[#030918]/60" />
 
-        {/* Top Tag */}
+         Top Tag 
         <div className="relative z-10 flex items-center justify-between">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 backdrop-blur-md">
             <Sparkles className="w-3 h-3 text-cyan-300" />
@@ -244,7 +244,7 @@ export function MatchdayChallenges() {
           </span>
         </div>
 
-        {/* Center Title & Info */}
+         Center Title & Info 
         <div className="relative z-10 my-4 space-y-1">
           <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 tracking-widest uppercase">
             <Swords className="w-4 h-4 text-cyan-400" />
@@ -259,7 +259,7 @@ export function MatchdayChallenges() {
           </p>
         </div>
 
-        {/* Bottom CTA Button */}
+         Bottom CTA Button 
         <div className="relative z-10 pt-2">
           <Link
             href="/trading"
@@ -270,6 +270,7 @@ export function MatchdayChallenges() {
           </Link>
         </div>
         </div>
+      */}
       </div>
     </div>
   );
