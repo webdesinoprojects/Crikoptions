@@ -15,6 +15,7 @@ import {
   isUpcomingMatch,
   tradingOpensMessage,
 } from "../utils/home-matches";
+import { matchConditionBadge } from "../utils/match-conditions";
 
 function formatMatchTitle(title?: string) {
   if (!title) return null;
@@ -42,6 +43,7 @@ export const MatchCard = React.memo(function MatchCard({ match, selected }: { ma
   const upcoming = isUpcomingMatch(match);
   const live = isLiveOrBreak(match);
   const isSim = isSimulatorMatch(match);
+  const conditionBadge = matchConditionBadge(match);
   const { data: markets = [] } = useMarkets(match.id);
 
   const handleClick = React.useCallback(() => {
@@ -121,6 +123,11 @@ export const MatchCard = React.memo(function MatchCard({ match, selected }: { ma
             {isChase && (
               <div className="mt-0.5 truncate font-data-tabular text-[10px] font-semibold text-amber-200/90 sm:text-[11px]">
                 Target {match.targetScore}
+              </div>
+            )}
+            {conditionBadge && (
+              <div className="mt-0.5 truncate text-[9px] font-semibold tracking-wide text-sky-300/85 sm:text-[10px]">
+                {conditionBadge}
               </div>
             )}
           </>

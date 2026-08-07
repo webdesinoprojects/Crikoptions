@@ -1,4 +1,5 @@
 import type { Match } from "@/types";
+import { matchConditionNotice } from "./match-conditions";
 
 /** How many soonest upcoming fixtures to pin beside live cards in the terminal strip. */
 export const HOME_STRIP_UPCOMING_LIMIT = 2;
@@ -73,6 +74,11 @@ export function formatMatchStartTime(startTime?: string): string {
 
 export function tradingOpensMessage(match?: Match | null): string {
   if (!match) return "Trading opens when the match goes live.";
+  // A rain delay or a shortened match is the actual reason trading is shut.
+  // Saying "opens when the match goes live" there is simply wrong — it may
+  // already be live, or may never start.
+  const notice = matchConditionNotice(match);
+  if (notice) return notice.title;
   if (match.status === "UPCOMING" || match.tradingState === "blocked") {
     return "Trading opens when match goes live";
   }

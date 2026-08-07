@@ -13,3 +13,4 @@ export * from "./MatchAnalyticsPanel";
 export * from "./ExitAllPositionsButton";
 export * from "./TodayPnLDisplay";
 export * from "./MatchCard";
+export * from "./MatchConditionBanner";

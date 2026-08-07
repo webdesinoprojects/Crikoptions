@@ -27,6 +27,8 @@ export interface BackendMatch {
   dataSource?: string;
   providerPhase?: string;
   scheduledBalls?: number;
+  scheduledOvers?: number;
+  reducedOvers?: boolean;
   inningsSummaries?: InningsSummary[];
   stateVersion?: number;
   tradingVersion?: number;
@@ -108,6 +110,8 @@ export function adaptMatch(backend: BackendMatch): FrontendMatch {
     dataSource: backend.dataSource,
     providerPhase: backend.providerPhase,
     scheduledBalls: backend.scheduledBalls,
+    scheduledOvers: numberOrUndefined(raw.scheduledOvers ?? (raw.scheduled_overs as number | null | undefined)),
+    reducedOvers: Boolean(raw.reducedOvers ?? raw.reduced_overs),
     inningsSummaries: backend.inningsSummaries,
     stateVersion: backend.stateVersion,
     tradingVersion: backend.tradingVersion,

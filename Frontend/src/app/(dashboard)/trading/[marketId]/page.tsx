@@ -7,6 +7,7 @@ import { useGSAP } from "@gsap/react";
 import { Activity, BarChart3, ListOrdered, TicketCheck } from "lucide-react";
 import {
   LiveMatchStatsPanel,
+  MatchConditionBanner,
   MatchScheduleStrip,
   OptionChain,
   OrderEntryForm,
@@ -151,6 +152,8 @@ export default function TradingTerminalPage({ params }: PageProps) {
       </div>
 
       <MobileTradingTabs activePanel={mobilePanel} onChange={setMobilePanel} />
+
+      <MatchConditionBanner match={match} className="relative z-10 mx-3 mt-3" />
 
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto lg:overflow-hidden">
         <div className="grid gap-3 p-3 lg:hidden" data-terminal-panel>

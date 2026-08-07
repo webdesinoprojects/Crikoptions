@@ -113,6 +113,10 @@ export interface Match {
   dataSource?: "manual" | "simulator" | "sportmonks" | string;
   providerPhase?: string;
   scheduledBalls?: number;
+  /** Per-innings over limit actually in force (below the format standard when shortened). */
+  scheduledOvers?: number;
+  /** True when overs were cut from the format standard, e.g. after a rain delay. */
+  reducedOvers?: boolean;
   inningsSummaries?: InningsSummary[];
   stateVersion?: number;
   tradingVersion?: number;

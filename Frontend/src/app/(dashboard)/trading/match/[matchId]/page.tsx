@@ -3,7 +3,8 @@
 import React from "react";
 import Link from "next/link";
 import { CalendarClock } from "lucide-react";
-import { LiveMatchStatsPanel, MatchScheduleStrip } from "@/features/trading/components";
+import { LiveMatchStatsPanel, MatchConditionBanner, MatchScheduleStrip } from "@/features/trading/components";
+import { matchConditionNotice, scheduledOversFor } from "@/features/trading/utils/match-conditions";
 import { useMatchDetails } from "@/features/dashboard/hooks";
 import { useMarkets } from "@/features/trading/hooks";
 import { selectPrimaryMarket } from "@/features/trading/utils/market-helpers";
@@ -56,6 +57,8 @@ export default function UpcomingMatchPreviewPage({ params }: PageProps) {
           </div>
         </div>
 
+        <MatchConditionBanner match={match} className="mb-3" />
+
         {isLoading || !match ? (
           <div className="rounded-2xl border border-white/10 bg-[#071327]/90 p-8 text-center text-sm font-semibold text-on-surface-variant">
             Loading match preview...
@@ -66,7 +69,8 @@ export default function UpcomingMatchPreviewPage({ params }: PageProps) {
             <section className="rounded-2xl border border-white/10 bg-[#071327]/90 p-5">
               <h1 className="font-display text-2xl font-black text-white">{match.title}</h1>
               <p className="mt-2 text-sm font-semibold text-on-surface-variant">
-                Preview mode — markets and order entry unlock when this fixture goes live.
+                {matchConditionNotice(match)?.detail ??
+                  "Preview mode — markets and order entry unlock when this fixture goes live."}
               </p>
               <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
                 <div className="rounded-lg border border-white/8 bg-white/3 px-3 py-2">
@@ -81,11 +85,18 @@ export default function UpcomingMatchPreviewPage({ params }: PageProps) {
                 </div>
                 <div className="rounded-lg border border-white/8 bg-white/3 px-3 py-2">
                   <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Format</dt>
-                  <dd className="mt-1 font-black text-slate-100">{match.format ?? "T20"}</dd>
+                  <dd className="mt-1 font-black text-slate-100">
+                    {match.format ?? "T20"}
+                    {match.reducedOvers && scheduledOversFor(match)
+                      ? ` · ${scheduledOversFor(match)} ov`
+                      : ""}
+                  </dd>
                 </div>
                 <div className="rounded-lg border border-white/8 bg-white/3 px-3 py-2">
                   <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Trading</dt>
-                  <dd className="mt-1 font-black text-amber-200">Blocked until live</dd>
+                  <dd className="mt-1 font-black text-amber-200">
+                    {matchConditionNotice(match)?.title ?? "Blocked until live"}
+                  </dd>
                 </div>
               </dl>
               <div className="mt-5">

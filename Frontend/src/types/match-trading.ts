@@ -15,10 +15,32 @@ export const HARD_TRADE_BLOCKERS = new Set([
   "global_kill",
   "manual",
   "cancellation_pending",
+  // Playing conditions the pricing model does not cover yet. The match stays
+  // live and scoring; only buy/sell is held.
+  "reduced_overs",
+  "revised_target",
+  "super_over",
 ]);
 
 /** Feed states that are OK (or soft-syncing) for trading. */
 export const SOFT_FEED_STATES = new Set(["healthy", "reconciling", "warming", ""]);
+
+/** Plain-language reasons, so the UI never shows a raw blocker token. */
+export const BLOCKER_LABELS: Record<string, string> = {
+  feed_stale: "Feed stale — trading paused",
+  innings_break: "Innings break",
+  finalizing: "Settling the innings",
+  not_live: "Match not live yet",
+  quota_limited: "Provider limit reached",
+  unsupported: "Fixture not supported",
+  league_disabled: "League disabled",
+  global_kill: "Trading halted",
+  manual: "Paused by admin",
+  cancellation_pending: "Cancellation in progress",
+  reduced_overs: "Overs reduced — trading suspended",
+  revised_target: "DLS revised target — trading suspended",
+  super_over: "Super over — trading suspended",
+};
 
 export type TradeGateMatch = {
   status?: string;
@@ -94,7 +116,7 @@ export function tradeBlockerMessage(match?: TradeGateMatch | null): string {
     .map(normalizeToken)
     .filter((b) => HARD_TRADE_BLOCKERS.has(b));
   if (hard.length > 0) {
-    return hard.map((b) => b.replaceAll("_", " ")).join(", ");
+    return hard.map((b) => BLOCKER_LABELS[b] ?? b.replaceAll("_", " ")).join(", ");
   }
 
   const feed = normalizeToken(match.feedState);
