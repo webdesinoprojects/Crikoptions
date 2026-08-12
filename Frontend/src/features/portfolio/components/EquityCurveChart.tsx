@@ -135,7 +135,7 @@ export function EquityCurveChart() {
             },
           },
           splitLine: {
-            lineStyle: { color: "rgba(255, 255, 255, 0.06)", type: "dashed" },
+            lineStyle: { color: "rgba(255, 255, 255, 0.06)", type: "dashed" as const },
           },
         },
         {
@@ -153,7 +153,7 @@ export function EquityCurveChart() {
             formatter: (v: number) => `${Math.abs(v)}%`,
           },
           splitLine: {
-            lineStyle: { color: "rgba(255, 255, 255, 0.04)", type: "dotted" },
+            lineStyle: { color: "rgba(255, 255, 255, 0.04)", type: "dotted" as const },
           },
         },
       ],
