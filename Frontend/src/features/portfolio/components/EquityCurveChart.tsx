@@ -107,7 +107,7 @@ export function EquityCurveChart() {
           axisLabel: {
             color: "#64748b",
             fontSize: 10,
-            interval: "auto",
+            interval: "auto" as const,
             hideOverlap: true,
           },
         },
