@@ -23,24 +23,27 @@ import CourseDesignCard, { CardData } from "@/components/ui/course-design-cards"
 
 export default function ChallengesPage() {
   const {
-    academyStates,
+    challenges,
     completedCount,
     totalChallenges,
     totalEarned,
     claimingId,
-    markComplete,
     claimReward,
-    getStatus,
+    getChallenge,
+    isClaimable,
   } = useChallenges();
 
   const [selectedAcademy, setSelectedAcademy] = useState<string | null>(null);
 
-  const completionPct = Math.round((completedCount / totalChallenges) * 100);
+  const completionPct = totalChallenges
+    ? Math.round((completedCount / totalChallenges) * 100)
+    : 0;
 
   // Helper to map academy to CardData
   const getCardData = (academy: Academy): CardData => {
-    const states = academyStates.find((a) => a.academyId === academy.id);
-    const completed = states?.challenges.filter((c) => c.status === "COMPLETE").length ?? 0;
+    const completed = challenges.filter(
+      (c) => c.academyId === academy.id && c.status === "COMPLETE",
+    ).length;
     const total = academy.challenges.length;
     const pct = Math.round((completed / total) * 100);
     const totalReward = academy.challenges.reduce((sum, c) => sum + c.reward, 0);
@@ -71,9 +74,9 @@ export default function ChallengesPage() {
       progressValue: `${completed}/${total}`,
     };
 
-    const earnedAmount = states?.challenges
-      .filter((c) => c.claimed)
-      .reduce((sum, c) => sum + (academy.challenges.find((ch) => ch.id === c.id)?.reward || 0), 0) || 0;
+    const earnedAmount = challenges
+      .filter((c) => c.academyId === academy.id && c.claimed)
+      .reduce((sum, c) => sum + c.reward, 0);
 
     const remainingReward = totalReward - earnedAmount;
 
@@ -106,7 +109,6 @@ export default function ChallengesPage() {
   }, [selectedAcademy]);
 
   const activeAcademyData = ACADEMIES.find(a => a.id === selectedAcademy);
-  const activeStates = academyStates.find(a => a.academyId === selectedAcademy);
 
   return (
     <div className="min-h-full bg-[#030914] text-white p-4 sm:p-6 lg:p-8 overflow-y-auto relative">
@@ -200,7 +202,7 @@ export default function ChallengesPage() {
       </div>
 
       {/* Challenges Modal Overlay */}
-      {selectedAcademy && activeAcademyData && activeStates && (
+      {selectedAcademy && activeAcademyData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
           {/* Backdrop */}
           <div 
@@ -254,19 +256,28 @@ export default function ChallengesPage() {
             {/* Modal Body - Challenges List */}
             <div className="overflow-y-auto p-4 sm:p-5 space-y-3 custom-scrollbar">
               {activeAcademyData.challenges.map((challenge, idx) => {
-                const state = getStatus(challenge.id);
-                const isComplete = state?.status === "COMPLETE";
-                const isLocked = state?.status === "LOCKED";
-                const isClaimed = state?.claimed === true;
+                // Server state is authoritative. An academy with no tradable
+                // instrument yet returns nothing, and stays locked.
+                const verified = getChallenge(challenge.id);
+                const isComplete = verified?.status === "COMPLETE";
+                const isLocked = !verified || verified.status === "LOCKED";
+                const isClaimed = verified?.claimed === true;
                 const isClaiming = claimingId === challenge.id;
-                const isFirstInProgress = state?.status === "IN_PROGRESS";
+                const isFirstInProgress = verified?.status === "IN_PROGRESS";
+                const canClaim = isClaimable(challenge.id);
+                const reward = verified?.reward ?? challenge.reward;
+                const progress = verified?.progress ?? 0;
+                const target = verified?.target ?? 0;
+                const lockedReason = verified?.lockedReason;
 
                 return (
                   <div
                     key={challenge.id}
                     className={cn(
+                      // Every challenge stays legible whatever its state; the
+                      // status marker and action area carry the difference.
                       "flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-3.5 p-3.5 rounded-xl border transition-all duration-300",
-                      isLocked ? "border-white/5 bg-white/[0.01] opacity-50" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.04]",
+                      isLocked ? "border-white/5 bg-white/[0.01]" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.04]",
                       isFirstInProgress && "border-white/20 bg-white/[0.05] shadow-md scale-[1.01]"
                     )}
                     style={{
@@ -281,7 +292,7 @@ export default function ChallengesPage() {
                         style={{
                           background: isComplete ? `${activeAcademyData.color}15` : "rgba(0,0,0,0.2)",
                           borderColor: isComplete ? `${activeAcademyData.color}40` : isFirstInProgress ? `${activeAcademyData.color}40` : "rgba(255,255,255,0.05)",
-                          color: isComplete ? activeAcademyData.color : isFirstInProgress ? activeAcademyData.color : "rgba(255,255,255,0.2)",
+                          color: isComplete || isFirstInProgress ? activeAcademyData.color : "rgba(255,255,255,0.55)",
                         }}
                       >
                         {isComplete ? (
@@ -295,15 +306,10 @@ export default function ChallengesPage() {
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <h4
-                          className={cn(
-                            "text-sm font-bold tracking-wide truncate",
-                            isComplete ? "text-white/70" : isLocked ? "text-white/30" : "text-white"
-                          )}
-                        >
+                        <h4 className="text-sm font-bold tracking-wide truncate text-white">
                           {challenge.title}
                         </h4>
-                        <p className={cn("text-[11px] mt-0.5 line-clamp-1", isLocked ? "text-white/20" : "text-white/50")}>
+                        <p className="text-[11px] mt-0.5 line-clamp-1 text-white/60">
                           {challenge.description}
                         </p>
                       </div>
@@ -317,7 +323,7 @@ export default function ChallengesPage() {
                       </div>
                       
                       <div className="flex items-center justify-end">
-                        {isComplete && !isClaimed ? (
+                        {canClaim ? (
                           <button
                             onClick={() => claimReward(challenge.id)}
                             disabled={isClaiming}
@@ -332,35 +338,35 @@ export default function ChallengesPage() {
                             ) : (
                               <Gift className="w-3 h-3" />
                             )}
-                            Claim ₵{formatCC(challenge.reward)}
+                            Claim ₵{formatCC(reward)}
                           </button>
-                        ) : isComplete && isClaimed ? (
+                        ) : isClaimed ? (
                           <span className="flex flex-row sm:flex-col items-center sm:items-end gap-2 sm:gap-0">
                             <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-bull-green sm:mb-0.5">
                               <CheckCircle2 className="w-3 h-3" /> Claimed
                             </span>
-                            <span className="text-[11px] font-bold text-white/40 font-data-tabular">₵{formatCC(challenge.reward)}</span>
+                            <span className="text-[11px] font-bold text-white/40 font-data-tabular">₵{formatCC(reward)}</span>
                           </span>
-                        ) : isFirstInProgress ? (
-                          <button
-                            onClick={() => markComplete(challenge.id)}
-                            className="px-4 py-2 sm:px-3 sm:py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95 border"
-                            style={{
-                              backgroundColor: `${activeAcademyData.color}15`,
-                              borderColor: `${activeAcademyData.color}40`,
-                              color: activeAcademyData.color,
-                            }}
-                          >
-                            Mark Done
-                          </button>
+                        ) : lockedReason ? (
+                          <span className="text-[10px] font-semibold text-white/55 text-right max-w-[9rem]">
+                            {lockedReason}
+                          </span>
                         ) : (
                           <div className="flex flex-col items-end text-right">
-                            <span className="hidden sm:block text-[9px] font-bold uppercase tracking-widest text-white/20 mb-0.5">Reward</span>
+                            {/* Real progress toward the server's target — the only
+                                way this row ever reaches a claimable state. */}
+                            {isFirstInProgress && target > 1 ? (
+                              <span className="text-[9px] font-bold uppercase tracking-widest text-white/35 mb-0.5 font-data-tabular">
+                                {progress}/{target} done
+                              </span>
+                            ) : (
+                              <span className="hidden sm:block text-[9px] font-bold uppercase tracking-widest text-white/45 mb-0.5">Reward</span>
+                            )}
                             <span
                               className="text-xs sm:text-[11px] font-bold font-data-tabular"
-                              style={{ color: isLocked ? "rgba(255,255,255,0.15)" : `${activeAcademyData.color}80` }}
+                              style={{ color: `${activeAcademyData.color}${isLocked ? "99" : "cc"}` }}
                             >
-                              +₵{formatCC(challenge.reward)}
+                              +₵{formatCC(reward)}
                             </span>
                           </div>
                         )}

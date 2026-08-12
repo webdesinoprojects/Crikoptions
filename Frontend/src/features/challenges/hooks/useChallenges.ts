@@ -1,199 +1,79 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useCallback, useMemo } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/features/auth/hooks/useAuth";
-import { walletService } from "@/features/wallet/services/wallet.service";
-import { useQueryClient } from "@tanstack/react-query";
 import {
-  ACADEMIES,
-  REWARD_MAP,
-  ACADEMY_BY_CHALLENGE,
-  type Academy,
-  type Challenge,
-} from "../data/challenges-data";
+  challengesService,
+  type ServerChallenge,
+} from "../services/challenges.service";
+import { ACADEMIES } from "../data/challenges-data";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────────────────────────────────────
+export type { ServerChallenge };
 
-export type ChallengeStatus = "COMPLETE" | "IN_PROGRESS" | "LOCKED";
+export const CHALLENGES_QUERY_KEY = ["challenges"] as const;
 
-export interface ChallengeState {
-  id: string;
-  status: ChallengeStatus;
-  claimed: boolean; // whether reward has been claimed
-}
-
-export interface AcademyState {
-  academyId: string;
-  challenges: ChallengeState[];
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// localStorage persistence
-// ─────────────────────────────────────────────────────────────────────────────
-
-function storageKey(userId: string) {
-  return `cricoptions:challenges:${userId}`;
-}
-
-function loadState(userId: string): Map<string, ChallengeState> {
-  try {
-    const raw = localStorage.getItem(storageKey(userId));
-    if (!raw) return new Map();
-    const parsed: ChallengeState[] = JSON.parse(raw);
-    return new Map(parsed.map((s) => [s.id, s]));
-  } catch {
-    return new Map();
-  }
-}
-
-function saveState(userId: string, state: Map<string, ChallengeState>) {
-  localStorage.setItem(
-    storageKey(userId),
-    JSON.stringify(Array.from(state.values())),
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Derive statuses
-// ─────────────────────────────────────────────────────────────────────────────
-
-function deriveStatus(
-  challenge: Challenge,
-  academy: Academy,
-  challengeIndex: number,
-  persisted: Map<string, ChallengeState>,
-): ChallengeState {
-  // If the whole academy is locked → everything inside is locked
-  if (academy.locked) {
-    return { id: challenge.id, status: "LOCKED", claimed: false };
-  }
-
-  // Check if user already persisted a status for this challenge
-  const existing = persisted.get(challenge.id);
-  if (existing) return existing;
-
-  // Sequential unlock: first challenge starts IN_PROGRESS, rest LOCKED
-  if (challengeIndex === 0) {
-    return { id: challenge.id, status: "IN_PROGRESS", claimed: false };
-  }
-
-  // Unlock if previous is complete
-  const prevChallenge = academy.challenges[challengeIndex - 1];
-  const prevState = persisted.get(prevChallenge.id);
-  if (prevState?.status === "COMPLETE") {
-    return { id: challenge.id, status: "IN_PROGRESS", claimed: false };
-  }
-
-  return { id: challenge.id, status: "LOCKED", claimed: false };
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Hook
-// ─────────────────────────────────────────────────────────────────────────────
-
+/**
+ * Challenge state comes entirely from the server, which derives progress from
+ * real trading activity. There is deliberately no way to mark a challenge done
+ * from the client — completion is proven, not asserted.
+ */
 export function useChallenges() {
-  const { user } = useAuthStore();
   const queryClient = useQueryClient();
-  const userId = user?.id ?? "anonymous";
+  const { user } = useAuthStore();
 
-  const [persisted, setPersisted] = useState<Map<string, ChallengeState>>(
-    () => loadState(userId),
+  const { data: challenges = [], isLoading } = useQuery({
+    queryKey: CHALLENGES_QUERY_KEY,
+    queryFn: () => challengesService.list(),
+    enabled: Boolean(user),
+    staleTime: 15_000,
+  });
+
+  const byId = useMemo(
+    () => new Map(challenges.map((c) => [c.id, c])),
+    [challenges],
   );
-  const [claimingId, setClaimingId] = useState<string | null>(null);
 
-  // Reload from localStorage when user changes
-  useEffect(() => {
-    setPersisted(loadState(userId));
-  }, [userId]);
+  const claim = useMutation({
+    mutationFn: (challengeId: string) => challengesService.claim(challengeId),
+    onSuccess: () => {
+      // The reward lands in the wallet, so refresh anything showing a balance.
+      queryClient.invalidateQueries({ queryKey: CHALLENGES_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ["wallet"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "overview"] });
+    },
+  });
 
-  // Build full state for every academy
-  const academyStates: AcademyState[] = ACADEMIES.map((academy) => ({
-    academyId: academy.id,
-    challenges: academy.challenges.map((ch, idx) =>
-      deriveStatus(ch, academy, idx, persisted),
-    ),
-  }));
+  const getChallenge = useCallback(
+    (challengeId: string) => byId.get(challengeId),
+    [byId],
+  );
 
-  // Flatten for easy counts
-  const allStates = academyStates.flatMap((a) => a.challenges);
-  const completedCount = allStates.filter(
-    (s) => s.status === "COMPLETE",
-  ).length;
-  const totalEarned = allStates
-    .filter((s) => s.claimed)
-    .reduce((sum, s) => sum + (REWARD_MAP.get(s.id) ?? 0), 0);
-
-  // ── Mark complete ──────────────────────────────────────────────────────
-  const markComplete = useCallback(
+  /** Mirrors the server's own gate, so the UI can never offer an invalid claim. */
+  const isClaimable = useCallback(
     (challengeId: string) => {
-      setPersisted((prev) => {
-        const next = new Map(prev);
-        const existing = next.get(challengeId);
-        next.set(challengeId, {
-          id: challengeId,
-          status: "COMPLETE",
-          claimed: existing?.claimed ?? false,
-        });
-        saveState(userId, next);
-        return next;
-      });
+      const c = byId.get(challengeId);
+      return Boolean(c && c.status === "COMPLETE" && !c.claimed && !c.lockedReason);
     },
-    [userId],
+    [byId],
   );
 
-  // ── Claim reward (calls wallet topup API) ──────────────────────────────
-  const claimReward = useCallback(
-    async (challengeId: string) => {
-      const reward = REWARD_MAP.get(challengeId);
-      const academy = ACADEMY_BY_CHALLENGE.get(challengeId);
-      if (!reward || !academy || academy.locked) return;
-
-      const state = persisted.get(challengeId);
-      if (!state || state.status !== "COMPLETE" || state.claimed) return;
-
-      setClaimingId(challengeId);
-      try {
-        await walletService.topUp(reward);
-        setPersisted((prev) => {
-          const next = new Map(prev);
-          next.set(challengeId, {
-            id: challengeId,
-            status: "COMPLETE",
-            claimed: true,
-          });
-          saveState(userId, next);
-          return next;
-        });
-        // Invalidate wallet/dashboard queries so balance updates
-        queryClient.invalidateQueries({ queryKey: ["dashboard", "overview"] });
-        queryClient.invalidateQueries({ queryKey: ["wallet"] });
-      } finally {
-        setClaimingId(null);
-      }
-    },
-    [userId, persisted, queryClient],
-  );
-
-  // ── Status lookup helper ───────────────────────────────────────────────
-  const getStatus = useCallback(
-    (challengeId: string): ChallengeState | undefined => {
-      return allStates.find((s) => s.id === challengeId);
-    },
-    [allStates],
-  );
+  const completedCount = challenges.filter((c) => c.status === "COMPLETE").length;
+  const totalEarned = challenges
+    .filter((c) => c.claimed)
+    .reduce((sum, c) => sum + c.reward, 0);
 
   return {
     academies: ACADEMIES,
-    academyStates,
-    allStates,
+    challenges,
+    isLoading,
+    getChallenge,
+    isClaimable,
+    claimReward: claim.mutate,
+    claimingId: claim.isPending ? claim.variables : null,
+    claimError: claim.error,
     completedCount,
-    totalChallenges: allStates.length,
+    totalChallenges: challenges.length,
     totalEarned,
-    claimingId,
-    markComplete,
-    claimReward,
-    getStatus,
   };
 }

@@ -14,52 +14,40 @@ import { useChallenges } from "@/features/challenges/hooks/useChallenges";
 import { ACADEMIES, formatCC } from "@/features/challenges/data/challenges-data";
 
 export function MatchdayChallenges() {
-  const {
-    academyStates,
-    completedCount,
-    totalChallenges,
-    totalEarned,
-  } = useChallenges();
+  const { challenges, completedCount, totalChallenges, totalEarned } =
+    useChallenges();
 
-  // Pick the first non-locked academy with an IN_PROGRESS challenge as featured
+  const forAcademy = (academyId?: string) =>
+    challenges.filter((c) => c.academyId === academyId);
+
+  // Feature the first unlocked academy, highlighting whatever is underway.
   const activeAcademies = ACADEMIES.filter((a) => !a.locked);
   const featuredAcademy = activeAcademies[0];
-  const featuredStates = academyStates.find(
-    (a) => a.academyId === featuredAcademy?.id,
+  const featuredList = forAcademy(featuredAcademy?.id);
+  const featuredState =
+    featuredList.find((c) => c.status === "IN_PROGRESS") ?? featuredList[0];
+  const featuredChallenge = featuredAcademy?.challenges.find(
+    (c) => c.id === featuredState?.id,
   );
 
-  // Find first IN_PROGRESS challenge in the featured academy
-  const featuredIdx = featuredStates?.challenges.findIndex(
-    (c) => c.status === "IN_PROGRESS",
-  ) ?? 0;
-  const featuredChallenge = featuredAcademy?.challenges[featuredIdx >= 0 ? featuredIdx : 0];
-  const featuredState = featuredStates?.challenges[featuredIdx >= 0 ? featuredIdx : 0];
-
-  // Other active challenges from other academies
+  // One highlight per unlocked academy.
   const otherHighlights = activeAcademies.slice(0, 3).map((academy) => {
-    const states = academyStates.find((a) => a.academyId === academy.id);
-    const inProgress = states?.challenges.find(
-      (c) => c.status === "IN_PROGRESS",
-    );
-    const challenge = inProgress
-      ? academy.challenges.find((c) => c.id === inProgress.id)
-      : academy.challenges[0];
+    const list = forAcademy(academy.id);
+    const state = list.find((c) => c.status === "IN_PROGRESS") ?? list[0];
     return {
       academy,
-      challenge: challenge!,
-      state: inProgress ?? states?.challenges[0],
+      challenge: academy.challenges.find((c) => c.id === state?.id) ?? academy.challenges[0],
+      state,
     };
   });
 
-  const completionPct =
-    featuredAcademy && featuredStates
-      ? Math.round(
-          (featuredStates.challenges.filter((c) => c.status === "COMPLETE")
-            .length /
-            featuredStates.challenges.length) *
-            100,
-        )
-      : 0;
+  const completionPct = featuredList.length
+    ? Math.round(
+        (featuredList.filter((c) => c.status === "COMPLETE").length /
+          featuredList.length) *
+          100,
+      )
+    : 0;
 
   return (
     <div className="bg-[#0b101c] rounded-xl border border-white/5 overflow-hidden shadow-lg h-full">
@@ -106,7 +94,8 @@ export function MatchdayChallenges() {
                   className="text-[10px] font-bold font-data-tabular"
                   style={{ color: featuredAcademy.color }}
                 >
-                  {featuredIdx + 1}/{featuredAcademy.challenges.length}
+                  {featuredList.filter((c) => c.status === "COMPLETE").length}/
+                  {featuredAcademy.challenges.length}
                 </span>
               </div>
 
