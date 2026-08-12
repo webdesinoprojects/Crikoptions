@@ -688,7 +688,7 @@ function RiskStrip({ risk }: { risk: RiskSnapshot }) {
           <RiskCell
             label="P&L"
             value={`Rs ${formatMoney(risk.pnl)}`}
-            valueClassName={risk.pnl >= 0 ? "text-bull-green" : "text-bear-red"}
+            valueClassName={risk.pnl > 0 ? "text-bull-green" : risk.pnl < 0 ? "text-bear-red" : "text-white"}
             large
           />
         </div>
@@ -863,7 +863,7 @@ function OptionChainPanel({
                         <td colSpan={6} className="px-4 py-2">
                           <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-on-surface-variant">
                             <InlineTradeMetric value={`${mark.position.lots} Lots`} />
-                            <InlineTradeMetric value={`P&L: Rs ${formatMoney(mark.pnl)}`} tone={mark.pnl >= 0 ? "up" : "down"} />
+                            <InlineTradeMetric value={`P&L: Rs ${formatMoney(mark.pnl)}`} tone={mark.pnl > 0 ? "up" : mark.pnl < 0 ? "down" : undefined} />
                             <InlineTradeMetric value={`Exit Price: Rs ${formatMoney(mark.markPrice)}`} />
                             <InlineTradeMetric value={`${markIsShort ? "Sell" : "Buy"} Entry: Rs ${formatMoney(markEntryPrice)}`} />
                             <InlineTradeMetric value={`Ball Number: ${currentEvent.legalBallNumber}`} />
@@ -990,8 +990,8 @@ function OrdersPositionsPanel({
                     <span className="font-data-tabular text-xs font-black text-on-surface">
                       Strike {formatStrike(mark.position.strike)}
                     </span>
-                    <span className={cn("font-data-tabular text-xs font-black", mark.pnl >= 0 ? "text-bull-green" : "text-bear-red")}>
-                      {mark.pnl >= 0 ? "+" : "-"}Rs {formatMoney(Math.abs(mark.pnl))}
+                    <span className={cn("font-data-tabular text-xs font-black", mark.pnl > 0 ? "text-bull-green" : mark.pnl < 0 ? "text-bear-red" : "text-white")}>
+                      {mark.pnl > 0 ? "+" : mark.pnl < 0 ? "-" : ""}Rs {formatMoney(Math.abs(mark.pnl))}
                     </span>
                   </div>
                   <div className="mt-1 grid grid-cols-3 gap-1 font-data-tabular text-[10px] text-on-surface-variant">
