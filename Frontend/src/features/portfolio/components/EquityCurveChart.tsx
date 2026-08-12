@@ -10,83 +10,151 @@ export function EquityCurveChart() {
   const { data: perf, isLoading } = usePerformance();
 
   const option = useMemo(() => {
-    if (!perf?.equityCurve) return {};
+    if (!perf?.equityCurve || perf.equityCurve.length === 0) return {};
 
     const curve = perf.equityCurve;
-    const times = curve.map((p) =>
-      new Date(p.timestamp * 1000).toLocaleDateString("en-IN", {
+    
+    // Format full date/time for tooltips & formatted date strings for X-axis
+    const formattedPoints = curve.map((p) => {
+      const dateObj = new Date(p.timestamp * 1000);
+      const dateLabel = dateObj.toLocaleDateString("en-IN", {
         month: "short",
         day: "numeric",
-      })
-    );
-    const equities = curve.map((p) => p.equity);
-    const drawdowns = curve.map((p) => -p.drawdown); // Negate for downward representation
+      });
+      const timeLabel = dateObj.toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+      return {
+        timestampLabel: `${dateLabel} ${timeLabel}`,
+        dateLabel,
+        equity: p.equity,
+        // Cap drawdown at 100% max to prevent extreme percentages from ruining scaling
+        drawdownPct: Math.min(100, Math.max(0, p.drawdown)),
+      };
+    });
+
+    const times = formattedPoints.map((p) => p.dateLabel);
+    const fullTimes = formattedPoints.map((p) => p.timestampLabel);
+    const equities = formattedPoints.map((p) => p.equity);
+    const drawdowns = formattedPoints.map((p) => -p.drawdownPct); // Negate for downward bars
 
     const baseCapital = equities[0] ?? 0;
-    const maxEquity = Math.max(...equities, baseCapital + 1);
-    const minEquity = Math.min(...equities, baseCapital - 1);
+    const maxEq = Math.max(...equities, baseCapital);
+    const minEq = Math.min(...equities, baseCapital);
+    const eqRange = maxEq - minEq || 100;
+    
+    const yMin = Math.floor(minEq - eqRange * 0.1);
+    const yMax = Math.ceil(maxEq + eqRange * 0.1);
 
     return {
       tooltip: {
         trigger: "axis" as const,
-        backgroundColor: "rgba(6, 13, 26, 0.85)",
-        borderColor: "rgba(255, 255, 255, 0.1)",
+        backgroundColor: "rgba(7, 19, 39, 0.95)",
+        borderColor: "rgba(255, 255, 255, 0.12)",
         borderWidth: 1,
-        padding: [8, 12],
-        textStyle: { color: "#fff", fontSize: 11, fontFamily: "JetBrains Mono" },
-        extraCssText: "backdrop-filter: blur(8px); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);",
+        padding: [10, 14],
+        textStyle: { color: "#fff", fontSize: 11 },
+        extraCssText: "backdrop-filter: blur(12px); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.6);",
         formatter: (params: unknown) => {
-          const [eq, dd] = getAxisTooltipParams(params);
+          if (!Array.isArray(params) || params.length === 0) return "";
+          const dataIndex = params[0]?.dataIndex ?? 0;
+          const timeStr = fullTimes[dataIndex] || times[dataIndex] || "";
+          const eqVal = equities[dataIndex] ?? 0;
+          const ddVal = formattedPoints[dataIndex]?.drawdownPct ?? 0;
+
           return `
-            <div style="display:flex;flex-direction:column;gap:4px;">
-              <div style="color:#94a3b8;font-size:9px;text-transform:uppercase;letter-spacing:1px;font-weight:bold;">${eq.axisValue}</div>
-              <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
-                <span style="color:#e2e8f0;">Equity</span>
-                <span style="color:#22c55e;font-weight:bold;text-shadow:0 0 8px rgba(34,197,94,0.4)">₵${Number(eq.data).toLocaleString("en-IN")}</span>
+            <div style="display:flex;flex-direction:column;gap:6px;min-width:150px;">
+              <div style="color:#94a3b8;font-size:10px;text-transform:uppercase;letter-spacing:1px;font-weight:700;">${timeStr}</div>
+              <div style="display:flex;justify-content:space-between;gap:16px;align-items:center;">
+                <span style="color:#cbd5e1;font-size:11px;font-weight:500;">Equity P&L</span>
+                <span style="color:${eqVal >= 0 ? "#38bdf8" : "#f43f5e"};font-weight:800;font-size:12px;font-family:monospace;">
+                  ${eqVal >= 0 ? "+" : "-"}₵${Math.abs(eqVal).toLocaleString("en-IN")}
+                </span>
               </div>
-              ${dd ? `
-              <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
-                <span style="color:#e2e8f0;">Drawdown</span>
-                <span style="color:#ef4444;font-weight:bold;text-shadow:0 0 8px rgba(239,68,68,0.4)">${Math.abs(Number(dd.data)).toFixed(2)}%</span>
-              </div>` : ""}
+              <div style="display:flex;justify-content:space-between;gap:16px;align-items:center;">
+                <span style="color:#cbd5e1;font-size:11px;font-weight:500;">Drawdown</span>
+                <span style="color:#ef4444;font-weight:800;font-size:12px;font-family:monospace;">
+                  ${ddVal.toFixed(1)}%
+                </span>
+              </div>
             </div>
           `;
         },
       },
       grid: [
-        { top: "10%", left: "5%", right: "2%", height: "55%" },
-        { top: "75%", left: "5%", right: "2%", height: "20%" },
+        { top: "10%", left: "65px", right: "20px", height: "54%" },
+        { top: "72%", left: "65px", right: "20px", height: "18%" },
       ],
       xAxis: [
         {
           type: "category" as const,
           data: times,
           gridIndex: 0,
+          boundaryGap: false,
+          axisLine: { lineStyle: { color: "rgba(255, 255, 255, 0.1)" } },
+          axisTick: { show: false },
+          axisLabel: { show: false },
         },
         {
           type: "category" as const,
           data: times,
           gridIndex: 1,
-          axisLabel: { show: false },
+          boundaryGap: false,
+          axisLine: { lineStyle: { color: "rgba(255, 255, 255, 0.1)" } },
+          axisTick: { show: false },
+          axisLabel: {
+            color: "#64748b",
+            fontSize: 10,
+            interval: "auto",
+            hideOverlap: true,
+          },
         },
       ],
       yAxis: [
         {
           type: "value" as const,
           gridIndex: 0,
-          min: Math.floor(minEquity * 0.98),
-          max: Math.ceil(maxEquity * 1.02),
+          min: yMin,
+          max: yMax,
+          splitNumber: 4,
+          axisLine: { show: false },
+          axisTick: { show: false },
           axisLabel: {
-            formatter: (v: number) => `₵${(v / 1000).toFixed(0)}K`,
+            color: "#94a3b8",
+            fontSize: 10,
+            fontFamily: "monospace",
+            formatter: (v: number) => {
+              const abs = Math.abs(v);
+              const sign = v < 0 ? "-" : "";
+              if (abs >= 1000) {
+                return `${sign}₵${(abs / 1000).toFixed(abs % 1000 === 0 ? 0 : 1)}K`;
+              }
+              return `${sign}₵${abs}`;
+            },
+          },
+          splitLine: {
+            lineStyle: { color: "rgba(255, 255, 255, 0.06)", type: "dashed" },
           },
         },
         {
           type: "value" as const,
           gridIndex: 1,
+          min: -100,
+          max: 0,
+          interval: 50,
+          axisLine: { show: false },
+          axisTick: { show: false },
           axisLabel: {
-            formatter: (v: number) => `${Math.abs(v).toFixed(0)}%`,
+            color: "#64748b",
+            fontSize: 9,
+            fontFamily: "monospace",
+            formatter: (v: number) => `${Math.abs(v)}%`,
           },
-          splitLine: { show: false },
+          splitLine: {
+            lineStyle: { color: "rgba(255, 255, 255, 0.04)", type: "dotted" },
+          },
         },
       ],
       series: [
@@ -96,14 +164,15 @@ export function EquityCurveChart() {
           xAxisIndex: 0,
           yAxisIndex: 0,
           data: equities,
-          smooth: true,
-          symbol: "none",
-          lineStyle: { 
-            color: "#0ea5e9", 
-            width: 2,
-            shadowColor: "rgba(14,165,233,0.5)",
-            shadowBlur: 10,
-            shadowOffsetY: 5
+          smooth: 0.25,
+          symbol: "circle",
+          symbolSize: 4,
+          showSymbol: false,
+          lineStyle: {
+            color: "#38bdf8",
+            width: 2.5,
+            shadowColor: "rgba(56, 189, 248, 0.4)",
+            shadowBlur: 8,
           },
           areaStyle: {
             color: {
@@ -113,10 +182,10 @@ export function EquityCurveChart() {
               x2: 0,
               y2: 1,
               colorStops: [
-                { offset: 0, color: "rgba(14, 165, 233, 0.4)" },
-                { offset: 1, color: "rgba(14, 165, 233, 0.0)" }
-              ]
-            }
+                { offset: 0, color: "rgba(56, 189, 248, 0.35)" },
+                { offset: 1, color: "rgba(56, 189, 248, 0.0)" },
+              ],
+            },
           },
         },
         {
@@ -125,12 +194,12 @@ export function EquityCurveChart() {
           xAxisIndex: 1,
           yAxisIndex: 1,
           data: drawdowns,
-          itemStyle: { 
-            color: "#ef4444", 
-            opacity: 0.9,
-            borderRadius: [2, 2, 0, 0]
+          itemStyle: {
+            color: "#ef4444",
+            opacity: 0.85,
+            borderRadius: [0, 0, 2, 2],
           },
-          barMaxWidth: 6,
+          barMaxWidth: 8,
         },
       ],
     };
@@ -140,7 +209,7 @@ export function EquityCurveChart() {
     return (
       <TerminalPanel
         title="Equity Curve & Drawdown Analysis"
-        className="h-[300px]"
+        className="h-[380px]"
         subtitle="Performance tracking ledger"
       >
         <div className="flex-1 flex items-center justify-center animate-pulse">
@@ -155,27 +224,11 @@ export function EquityCurveChart() {
       density="dense"
       title="Equity Curve & Drawdown Analysis"
       subtitle="Comprehensive performance & downside tracking"
-      className="h-[300px]"
+      className="h-[380px]"
     >
       <div className="flex-1 min-h-0 relative">
         <EChartsWrapper option={option} />
       </div>
     </TerminalPanel>
   );
-}
-
-function getAxisTooltipParams(params: unknown): { axisValue: string; data: number }[] {
-  if (!Array.isArray(params)) {
-    return [{ axisValue: "0", data: 0 }];
-  }
-
-  return params.map((param) => {
-    if (typeof param !== "object" || param === null) {
-      return { axisValue: "0", data: 0 };
-    }
-
-    const axisValue = "axisValue" in param ? String(param.axisValue ?? "0") : "0";
-    const data = "data" in param ? Number(param.data) || 0 : 0;
-    return { axisValue, data };
-  });
 }
