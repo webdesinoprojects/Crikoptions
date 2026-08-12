@@ -4,10 +4,10 @@ import Link from "next/link";
 
 export function FriendsLeague() {
   const leaderboard = [
-    { rank: 1, initial: "A", name: "Aryan", pnl: "+Rs 14,820", isMe: false },
-    { rank: 2, initial: "M", name: "Meera", pnl: "+Rs 11,460", isMe: false },
-    { rank: 3, initial: "D", name: "Dev", pnl: "+Rs 9,180", isMe: false },
-    { rank: 4, initial: "K", name: "You", pnl: "+Rs 8,420", isMe: true },
+    { rank: 1, initial: "A", name: "Aryan", pnl: "+₵14,820", isMe: false },
+    { rank: 2, initial: "M", name: "Meera", pnl: "+₵11,460", isMe: false },
+    { rank: 3, initial: "D", name: "Dev", pnl: "+₵9,180", isMe: false },
+    { rank: 4, initial: "K", name: "You", pnl: "+₵8,420", isMe: true },
   ];
 
   return (
@@ -40,7 +40,7 @@ export function FriendsLeague() {
         ))}
         
         <div className="pt-2 px-2 pb-1">
-          <p className="text-xs text-on-surface-variant italic">Rs 760 to reach #3</p>
+          <p className="text-xs text-on-surface-variant italic">₵760 to reach #3</p>
         </div>
       </div>
 

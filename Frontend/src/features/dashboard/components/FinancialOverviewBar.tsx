@@ -21,9 +21,9 @@ export function FinancialOverviewBar() {
   if (isError || !data) return null;
 
   const metrics = [
-    { label: "Total Equity", value: `Rs ${data.totalEquity.toLocaleString("en-IN")}` },
-    { label: "Today's P&L", value: `Rs ${data.dailyPnL.toLocaleString("en-IN")}`, trend: data.dailyPnLPercentage },
-    { label: "Margin Available", value: `Rs ${data.marginAvailable.toLocaleString("en-IN")}` },
+    { label: "Total Equity", value: `₵${data.totalEquity.toLocaleString("en-IN")}` },
+    { label: "Today's P&L", value: `₵${data.dailyPnL.toLocaleString("en-IN")}`, trend: data.dailyPnLPercentage },
+    { label: "Margin Available", value: `₵${data.marginAvailable.toLocaleString("en-IN")}` },
     { label: "Open Positions", value: data.openPositionsCount },
   ];
 

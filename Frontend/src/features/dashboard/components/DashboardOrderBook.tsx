@@ -53,7 +53,7 @@ export function DashboardOrderBook() {
       headerActions={
         <div className="text-[10px] text-on-surface-variant flex items-center gap-1.5 font-bold">
           <span>
-            SPREAD: <span className="text-white">Rs {spreadInfo.spread}</span>
+            SPREAD: <span className="text-white">₵{spreadInfo.spread}</span>
           </span>
           <span className="text-primary">({spreadInfo.percent}%)</span>
         </div>
@@ -65,9 +65,9 @@ export function DashboardOrderBook() {
             const total = ask.quantity * ask.price;
             return (
               <div key={`ask-${idx}`} className="flex justify-between items-center py-0.5 hover:bg-white/5 px-1 rounded transition-colors">
-                <span className="text-bear-red font-bold">Rs {ask.price.toFixed(2)}</span>
+                <span className="text-bear-red font-bold">₵{ask.price.toFixed(2)}</span>
                 <span className="text-on-surface-variant">{ask.quantity}</span>
-                <span className="text-on-surface-variant/70">Rs {total.toLocaleString("en-IN")}</span>
+                <span className="text-on-surface-variant/70">₵{total.toLocaleString("en-IN")}</span>
               </div>
             );
           })}
@@ -75,7 +75,7 @@ export function DashboardOrderBook() {
 
         <div className="py-1 px-1 flex justify-between items-center bg-surface-dim border-y border-outline/5 text-[10px] text-on-surface-variant font-bold">
           <span>MID POINT</span>
-          <span className="text-white">Rs {(((data?.bids[0]?.price || 0) + (data?.asks[0]?.price || 0)) / 2).toFixed(2)}</span>
+          <span className="text-white">₵{(((data?.bids[0]?.price || 0) + (data?.asks[0]?.price || 0)) / 2).toFixed(2)}</span>
         </div>
 
         <div className="flex flex-col gap-0.5 flex-1 pt-1.5 justify-start">
@@ -83,9 +83,9 @@ export function DashboardOrderBook() {
             const total = bid.quantity * bid.price;
             return (
               <div key={`bid-${idx}`} className="flex justify-between items-center py-0.5 hover:bg-white/5 px-1 rounded transition-colors">
-                <span className="text-bull-green font-bold">Rs {bid.price.toFixed(2)}</span>
+                <span className="text-bull-green font-bold">₵{bid.price.toFixed(2)}</span>
                 <span className="text-on-surface-variant">{bid.quantity}</span>
-                <span className="text-on-surface-variant/70">Rs {total.toLocaleString("en-IN")}</span>
+                <span className="text-on-surface-variant/70">₵{total.toLocaleString("en-IN")}</span>
               </div>
             );
           })}

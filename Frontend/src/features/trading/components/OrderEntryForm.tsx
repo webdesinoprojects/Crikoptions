@@ -189,14 +189,14 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
           setLastOrderTime(new Date());
 
           if (data.status === "FILLED") {
-            toast.success(`Executed: ${side} ${qtyValue} @ strike ${selectedStrikeValue} - Rs ${formatMoney(data.averageFillPrice || data.price || 0)}`);
+            toast.success(`Executed: ${side} ${qtyValue} @ strike ${selectedStrikeValue} - ₵${formatMoney(data.averageFillPrice || data.price || 0)}`);
           } else if (data.status === "PARTIAL") {
             toast.success(`Partially executed: ${data.filledQuantity}/${data.quantity} lots - ${data.remainingQuantity} remaining`);
           } else {
             toast.success(
               side === "BUY"
-                ? `Working order: limit Rs ${formatMoney(data.price ?? 0)} is below market ask.`
-                : `Working order: limit Rs ${formatMoney(data.price ?? 0)} is above market bid.`
+                ? `Working order: limit ₵${formatMoney(data.price ?? 0)} is below market ask.`
+                : `Working order: limit ₵${formatMoney(data.price ?? 0)} is above market bid.`
             );
           }
           setQtyOverride(null);
@@ -324,7 +324,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
             </div>
           ) : (
             <div className="flex h-10 min-w-0 items-center justify-center rounded-lg border border-bull-green/30 bg-bull-green/15 px-3 font-data-tabular text-[14px] font-black text-bull-green shadow-inner">
-              Rs {formatMoney(priceValue)}
+              ₵{formatMoney(priceValue)}
             </div>
           )}
         </div>
@@ -379,7 +379,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
           ) : (
             <>
               {willExecuteNow ? <Zap className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
-              {side === "BUY" ? "Buy" : "Sell"} {type} @ Rs {formatMoney(priceValue)}
+              {side === "BUY" ? "Buy" : "Sell"} {type} @ ₵{formatMoney(priceValue)}
               {qtyValue > 1 ? ` - ${formatMoney(notional)}` : ""}
             </>
           )}
@@ -435,7 +435,7 @@ const QuoteBox = React.memo(function QuoteBox({
   return (
     <div className={`rounded-md border px-2.5 py-2 ${active ? activeClass : "border-white/8 bg-[#040a17] text-on-surface"}`}>
       <div className="text-[9px] font-black uppercase tracking-wider opacity-75">{label}</div>
-      <div className="font-data-tabular text-base font-black leading-tight">Rs {formatMoney(value)}</div>
+      <div className="font-data-tabular text-base font-black leading-tight">₵{formatMoney(value)}</div>
     </div>
   );
 });
@@ -456,14 +456,14 @@ const OrderImpactPanel = React.memo(function OrderImpactPanel({
   return (
     <div className="shrink-0 rounded-lg border border-white/8 bg-[#071327]/90 p-1.5">
       <div className="grid grid-cols-2 gap-1 font-data-tabular text-[10px] sm:grid-cols-4">
-        <ImpactCell label="Price" value={`Rs ${formatMoney(price)}`} />
-        <ImpactCell label="Notional" value={`Rs ${formatMoney(notional)}`} strong />
+        <ImpactCell label="Price" value={`₵${formatMoney(price)}`} />
+        <ImpactCell label="Notional" value={`₵${formatMoney(notional)}`} strong />
         <ImpactCell
           danger={danger}
           label="Margin"
-          value={`Rs ${formatMoney(marginRequired)}`}
+          value={`₵${formatMoney(marginRequired)}`}
         />
-        <ImpactCell danger={danger} label="Available" value={`Rs ${formatMoney(availableBalance)}`} align="right" />
+        <ImpactCell danger={danger} label="Available" value={`₵${formatMoney(availableBalance)}`} align="right" />
       </div>
     </div>
   );
@@ -527,7 +527,7 @@ const OrderReceipt = React.memo(function OrderReceipt({ order, submittedAt }: { 
       <div className="mt-1 grid grid-cols-3 gap-1 font-data-tabular text-[10px] text-on-surface-variant">
         <span>{order.side} {order.strike}</span>
         <span className="text-center">{order.filledQuantity}/{order.quantity} lots</span>
-        <span className="text-right">Rs {formatMoney(order.averageFillPrice || order.price || 0)}</span>
+        <span className="text-right">₵{formatMoney(order.averageFillPrice || order.price || 0)}</span>
       </div>
     </div>
   );

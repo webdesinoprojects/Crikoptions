@@ -22,7 +22,7 @@ export function LastMatchRecap() {
         <div className="flex-1 flex flex-col justify-center space-y-4 py-2">
           <div>
             <div className="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">Your Result</div>
-            <div className="text-sm font-bold font-data-tabular text-bull-green">+Rs 2,480</div>
+            <div className="text-sm font-bold font-data-tabular text-bull-green">+₵2,480</div>
           </div>
           <div className="h-px w-full bg-white/5" />
           <div>

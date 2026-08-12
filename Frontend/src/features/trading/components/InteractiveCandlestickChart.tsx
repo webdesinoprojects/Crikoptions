@@ -495,7 +495,7 @@ function updateTooltip(
 }
 
 function tooltipLine(label: string, value: number) {
-  return `<div style="display:flex;justify-content:space-between;gap:16px;margin:2px 0"><span style="color:#94a3b8">${label}</span><strong style="color:#f8fafc">Rs ${formatMoney(value)}</strong></div>`;
+  return `<div style="display:flex;justify-content:space-between;gap:16px;margin:2px 0"><span style="color:#94a3b8">${label}</span><strong style="color:#f8fafc">₵${formatMoney(value)}</strong></div>`;
 }
 
 function toTimestamp(timestampMs: number) {

@@ -39,9 +39,9 @@ export function OpportunityScanner() {
               <p className="text-[10px] text-on-surface-variant leading-tight mb-2">{opp.description}</p>
               <div className="flex items-center justify-between text-[10px] font-data-tabular">
                 <span className="text-on-surface-variant">
-                  LTP: <span className="text-white">Rs {opp.currentPrice.toFixed(2)}</span>
+                  LTP: <span className="text-white">₵{opp.currentPrice.toFixed(2)}</span>
                 </span>
-                <span className="font-bold text-bull-green">Tgt: Rs {opp.targetPrice.toFixed(2)}</span>
+                <span className="font-bold text-bull-green">Tgt: ₵{opp.targetPrice.toFixed(2)}</span>
               </div>
             </div>
           ))

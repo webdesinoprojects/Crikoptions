@@ -36,7 +36,7 @@ export function YourWatchlistWidget() {
               </div>
               <div className="flex items-center gap-6">
                 <div className="text-right">
-                  <div className="text-sm font-data-tabular font-bold text-white">Rs {item.price}</div>
+                  <div className="text-sm font-data-tabular font-bold text-white">₵{item.price}</div>
                   <div className={cn(
                     "text-[10px] font-bold font-data-tabular uppercase tracking-wider",
                     item.isPreMatch ? "text-on-surface-variant" : (item.isUp ? "text-bull-green" : "text-bear-red")

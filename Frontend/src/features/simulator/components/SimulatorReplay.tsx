@@ -182,7 +182,7 @@ export function SimulatorReplay() {
   });
   const risk = {
     ...baseRisk,
-    marginRequired: `Rs ${formatMoney(tradePreview.marginRequired)}`,
+    marginRequired: `₵${formatMoney(tradePreview.marginRequired)}`,
   };
 
   const getDisabledReason = (side: TradeSide, quantity = lots) =>
@@ -270,7 +270,7 @@ export function SimulatorReplay() {
     }
     const submittedOrder = result.order;
     if (submittedOrder.status === "FILLED") {
-      toast.success(`Executed ${side} ${submittedOrder.filledQuantity} lots @ Rs ${formatMoney(submittedOrder.averageFillPrice || price)}`);
+      toast.success(`Executed ${side} ${submittedOrder.filledQuantity} lots @ ₵ ${formatMoney(submittedOrder.averageFillPrice || price)}`);
     } else {
       toast.success(`${side} limit order is working in this simulator session`);
     }
@@ -298,7 +298,7 @@ export function SimulatorReplay() {
       return;
     }
     const exitOrder = result.order;
-    toast.success(`Exit filled: ${exitOrder.filledQuantity || exitQuantity} lots @ Rs ${formatMoney(exitOrder.averageFillPrice || exitPrice)}`);
+    toast.success(`Exit filled: ${exitOrder.filledQuantity || exitQuantity} lots @ ₵${formatMoney(exitOrder.averageFillPrice || exitPrice)}`);
   };
 
   const cancelOrder = (orderId: string) => {
@@ -586,7 +586,7 @@ function TradeConsole({
               />
             ) : (
               <div className="flex h-10 items-center rounded-md border border-white/10 bg-[#040a17] px-3 font-data-tabular text-sm font-black text-on-surface">
-                Rs {formatMoney(expectedPrice)}
+                ₵{formatMoney(expectedPrice)}
               </div>
             )}
           </ConsoleField>
@@ -635,7 +635,7 @@ function TradeConsole({
           <SideToggle activeSide={side} onChange={onSideChange} />
         </div>
         <div className="flex flex-wrap items-center gap-3 font-data-tabular text-[11px] text-on-surface-variant">
-          <span>Available: {availableBalance === undefined ? "Loading" : `Rs ${formatMoney(availableBalance)}`}</span>
+          <span>Available: {availableBalance === undefined ? "Loading" : `₵${formatMoney(availableBalance)}`}</span>
           <span>Open lots: {openLotsForStrike}</span>
           {disabledReason && <span className="font-bold text-[#FFD27A]">{disabledReason}</span>}
         </div>
@@ -687,7 +687,7 @@ function RiskStrip({ risk }: { risk: RiskSnapshot }) {
         <div className="col-span-2 sm:col-span-1 min-w-0">
           <RiskCell
             label="P&L"
-            value={`Rs ${formatMoney(risk.pnl)}`}
+            value={`₵${formatMoney(risk.pnl)}`}
             valueClassName={risk.pnl > 0 ? "text-bull-green" : risk.pnl < 0 ? "text-bear-red" : "text-white"}
             large
           />
@@ -863,9 +863,9 @@ function OptionChainPanel({
                         <td colSpan={6} className="px-4 py-2">
                           <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-on-surface-variant">
                             <InlineTradeMetric value={`${mark.position.lots} Lots`} />
-                            <InlineTradeMetric value={`P&L: Rs ${formatMoney(mark.pnl)}`} tone={mark.pnl > 0 ? "up" : mark.pnl < 0 ? "down" : undefined} />
-                            <InlineTradeMetric value={`Exit Price: Rs ${formatMoney(mark.markPrice)}`} />
-                            <InlineTradeMetric value={`${markIsShort ? "Sell" : "Buy"} Entry: Rs ${formatMoney(markEntryPrice)}`} />
+                            <InlineTradeMetric value={`P&L: ₵${formatMoney(mark.pnl)}`} tone={mark.pnl > 0 ? "up" : mark.pnl < 0 ? "down" : undefined} />
+                            <InlineTradeMetric value={`Exit Price: ₵${formatMoney(mark.markPrice)}`} />
+                            <InlineTradeMetric value={`${markIsShort ? "Sell" : "Buy"} Entry: ₵${formatMoney(markEntryPrice)}`} />
                             <InlineTradeMetric value={`Ball Number: ${currentEvent.legalBallNumber}`} />
                             <button
                               type="button"
@@ -991,7 +991,7 @@ function OrdersPositionsPanel({
                       Strike {formatStrike(mark.position.strike)}
                     </span>
                     <span className={cn("font-data-tabular text-xs font-black", mark.pnl > 0 ? "text-bull-green" : mark.pnl < 0 ? "text-bear-red" : "text-white")}>
-                      {mark.pnl > 0 ? "+" : mark.pnl < 0 ? "-" : ""}Rs {formatMoney(Math.abs(mark.pnl))}
+                      {mark.pnl > 0 ? "+" : mark.pnl < 0 ? "-" : ""}₵{formatMoney(Math.abs(mark.pnl))}
                     </span>
                   </div>
                   <div className="mt-1 grid grid-cols-3 gap-1 font-data-tabular text-[10px] text-on-surface-variant">
@@ -1209,13 +1209,13 @@ function buildRiskSnapshot({
   const margin = Math.max(0, entryPrice * activeLots);
   const pnl = positionMark?.pnl ?? 0;
   const longMaxProfit = modeledLongMaxProfit({ activeLots, entryPrice, maxModelScore, strike });
-  const shortMaxProfit = `Rs ${formatMoney(Math.max(0, entryPrice * activeLots))}`;
+  const shortMaxProfit = `₵${formatMoney(Math.max(0, entryPrice * activeLots))}`;
 
   return {
     pnl,
     maxProfit: isShort ? shortMaxProfit : longMaxProfit,
-    maxLoss: `Rs ${formatMoney(margin)}`,
-    marginRequired: `Rs ${formatMoney(margin)}`,
+    maxLoss: `₵${formatMoney(margin)}`,
+    marginRequired: `₵${formatMoney(margin)}`,
     breakEven: strike > 0 && entryPrice > 0 ? formatMoney(strike + entryPrice) : "--",
     over: event ? overBallLabel(event) : "--",
     score: event ? scoreLabel(event) : "--",
@@ -1243,7 +1243,7 @@ function modeledLongMaxProfit({
 }) {
   if (!Number.isFinite(maxModelScore) || strike <= 0 || entryPrice <= 0 || activeLots <= 0) return "--";
   const maxPayoff = Math.max(0, (maxModelScore ?? 0) - strike);
-  return `Rs ${formatMoney(Math.max(0, (maxPayoff - entryPrice) * activeLots))}`;
+  return `₵${formatMoney(Math.max(0, (maxPayoff - entryPrice) * activeLots))}`;
 }
 
 function getTradeDisabledReason({

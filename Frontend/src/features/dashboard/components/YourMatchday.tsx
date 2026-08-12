@@ -51,7 +51,7 @@ export function YourMatchday() {
             {hasLivePositions ? "LIVE" : "FLAT"}
           </div>
           <div className={cn("max-w-full break-words font-data-tabular text-lg font-black leading-tight sm:text-xl", combinedPnL > 0 ? "text-bull-green" : combinedPnL < 0 ? "text-bear-red" : "text-white")}>
-            {combinedPnL >= 0 ? "+" : "-"}Rs {Math.abs(combinedPnL).toLocaleString("en-IN")}
+            {combinedPnL >= 0 ? "+" : "-"}₵{Math.abs(combinedPnL).toLocaleString("en-IN")}
           </div>
           <div className="text-[10px] text-on-surface-variant tracking-wider uppercase">
             Open Position P&L
@@ -84,7 +84,7 @@ export function YourMatchday() {
                   "font-data-tabular text-xs font-bold sm:text-sm",
                   pos.isUp ? "text-bull-green" : "text-bear-red"
                 )}>
-                  {pos.isUp ? "+" : "-"}Rs {Math.abs(pos.pnl).toLocaleString("en-IN")}
+                  {pos.isUp ? "+" : "-"}₵{Math.abs(pos.pnl).toLocaleString("en-IN")}
                 </span>
                 <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white transition-colors" />
               </div>
@@ -102,7 +102,7 @@ export function YourMatchday() {
       <div className="mt-6 pt-5 border-t border-white/10">
         <div className="mb-2 flex items-end justify-between gap-3">
           <span className="text-xs text-on-surface-variant font-medium">Total Exposure</span>
-          <span className="text-right font-data-tabular text-xs font-bold text-white sm:text-sm">Rs {totalExposure.toLocaleString("en-IN")}</span>
+          <span className="text-right font-data-tabular text-xs font-bold text-white sm:text-sm">₵{totalExposure.toLocaleString("en-IN")}</span>
         </div>
         <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mb-5">
           <div className="h-full bg-cyan-500 rounded-full" style={{ width: `${exposurePct}%` }} />

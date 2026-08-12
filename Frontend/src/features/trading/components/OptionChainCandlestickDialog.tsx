@@ -91,10 +91,10 @@ export function OptionChainCandlestickDialog({
             </DialogHeader>
 
             <div className="grid w-full grid-cols-2 gap-1.5 sm:grid-cols-4 xl:w-auto xl:grid-cols-4">
-              <MetricCell label="Last" tone={move >= 0 ? "up" : "down"} value={`Rs ${formatMoney(currentPremium)}`} />
-              <MetricCell label="Open" value={`Rs ${formatMoney(currentOpen)}`} />
-              <MetricCell label="High" value={`Rs ${formatMoney(candleStats.high || currentPremium)}`} />
-              <MetricCell label="Low" value={`Rs ${formatMoney(candleStats.low || currentPremium)}`} />
+              <MetricCell label="Last" tone={move >= 0 ? "up" : "down"} value={`₵${formatMoney(currentPremium)}`} />
+              <MetricCell label="Open" value={`₵${formatMoney(currentOpen)}`} />
+              <MetricCell label="High" value={`₵${formatMoney(candleStats.high || currentPremium)}`} />
+              <MetricCell label="Low" value={`₵${formatMoney(candleStats.low || currentPremium)}`} />
             </div>
           </div>
         </div>
@@ -116,7 +116,7 @@ export function OptionChainCandlestickDialog({
             <span>{candles.length} candles</span>
             <span className={move >= 0 ? "text-bull-green" : "text-bear-red"}>
               {previousPoint || candleStats.previous
-                ? `${move >= 0 ? "+" : "-"}Rs ${formatMoney(Math.abs(move))}`
+                ? `${move >= 0 ? "+" : "-"}₵${formatMoney(Math.abs(move))}`
                 : "Waiting"}
             </span>
           </div>

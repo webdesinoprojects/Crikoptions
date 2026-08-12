@@ -173,10 +173,10 @@ export function OptionChainGraphDialog({
           </DialogHeader>
 
           <div className="grid shrink-0 grid-cols-2 gap-1.5 sm:grid-cols-4">
-            <MetricCell label="Premium" tone={move >= 0 ? "up" : "down"} value={`Rs ${formatMoney(currentPremium)}`} />
-            <MetricCell label="Bid" value={`Rs ${formatMoney(selectedRow?.bid ?? 0)}`} />
-            <MetricCell label="Ask" value={`Rs ${formatMoney(selectedRow?.ask ?? 0)}`} />
-            <MetricCell label="Spread" value={`Rs ${formatMoney(spread)}`} />
+            <MetricCell label="Premium" tone={move >= 0 ? "up" : "down"} value={`₵${formatMoney(currentPremium)}`} />
+            <MetricCell label="Bid" value={`₵${formatMoney(selectedRow?.bid ?? 0)}`} />
+            <MetricCell label="Ask" value={`₵${formatMoney(selectedRow?.ask ?? 0)}`} />
+            <MetricCell label="Spread" value={`₵${formatMoney(spread)}`} />
           </div>
         </div>
 
@@ -196,7 +196,7 @@ export function OptionChainGraphDialog({
           <div className="flex items-center justify-between gap-2 text-[10px] uppercase tracking-wide text-on-surface-variant md:justify-end">
             <span>{selectedHistory.length} ticks</span>
             <span className={move >= 0 ? "text-bull-green" : "text-bear-red"}>
-              {previousPoint ? `${move >= 0 ? "+" : "-"}Rs ${formatMoney(Math.abs(move))}` : "Waiting"}
+              {previousPoint ? `${move >= 0 ? "+" : "-"}₵${formatMoney(Math.abs(move))}` : "Waiting"}
             </span>
           </div>
         </div>

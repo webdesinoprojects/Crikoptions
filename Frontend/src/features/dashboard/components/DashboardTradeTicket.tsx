@@ -100,7 +100,7 @@ export function DashboardTradeTicket() {
             <div className="flex flex-col gap-0.5 justify-end">
               <div className="bg-surface-dim border border-outline/10 rounded p-1.5 flex justify-between items-center text-[9px]">
                 <span className="text-on-surface-variant">Margin:</span>
-                <span className="font-bold text-white font-data-tabular">Rs {(qty * effectivePrice).toLocaleString("en-IN")}</span>
+                <span className="font-bold text-white font-data-tabular">₵{(qty * effectivePrice).toLocaleString("en-IN")}</span>
               </div>
             </div>
           </div>

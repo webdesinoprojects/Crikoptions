@@ -173,7 +173,7 @@ function OrdersTab({
                   Strike {formatStrike(order.strike)}
                 </span>
                 <span className="font-data-tabular text-[12px] font-black text-on-surface">
-                  Rs {(order.price ?? 0).toFixed(2)}
+                  ₵{(order.price ?? 0).toFixed(2)}
                 </span>
               </div>
               <span className="font-data-tabular text-[11px] font-black text-on-surface">{order.quantity} lots</span>
@@ -279,7 +279,7 @@ function PositionsTab({
                       </div>
                       <div className="flex items-center gap-2">
                         <span className={`font-data-tabular text-[12px] font-black ${positive ? "text-bull-green" : "text-bear-red"}`}>
-                          {positive ? "+" : "-"}Rs {Math.abs(position.livePnl).toFixed(2)}
+                          {positive ? "+" : "-"}₵{Math.abs(position.livePnl).toFixed(2)}
                         </span>
                         <button
                           type="button"
@@ -306,7 +306,7 @@ function PositionsTab({
                       </div>
                     </div>
 
-                    <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2 font-data-tabular text-[10px] text-center">
+                    <div className="mt-2 grid grid-cols-4 gap-2 border-t border-white/5 pt-2 font-data-tabular text-[10px] text-center">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[8px] text-on-surface-variant uppercase font-black">Lots</span>
                         <span className="text-on-surface font-bold">{Math.abs(position.lots)}</span>
@@ -317,12 +317,12 @@ function PositionsTab({
                       </div>
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[8px] text-on-surface-variant uppercase font-black">Buy price</span>
-                        <span className="text-on-surface font-bold">{position.buyPrice > 0 ? `Rs ${position.buyPrice.toFixed(2)}` : "--"}</span>
+                        <span className="text-on-surface font-bold">{position.buyPrice > 0 ? `₵${position.buyPrice.toFixed(2)}` : "--"}</span>
                       </div>
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[8px] text-on-surface-variant uppercase font-black">Sell price</span>
                         <span className="text-on-surface font-bold">
-                          {position.lots > 0 ? `Rs ${position.liveLtp.toFixed(2)}` : position.sellPrice && position.sellPrice > 0 ? `Rs ${position.sellPrice.toFixed(2)}` : "--"}
+                          {position.lots > 0 ? `₵${position.liveLtp.toFixed(2)}` : position.sellPrice && position.sellPrice > 0 ? `₵${position.sellPrice.toFixed(2)}` : "--"}
                         </span>
                       </div>
                     </div>
@@ -377,7 +377,7 @@ function PositionsTab({
                         </div>
                       </div>
                       <span className={`font-data-tabular text-[12px] font-black ${positive ? "text-bull-green" : "text-bear-red"}`}>
-                        {positive ? "+" : "-"}Rs {Math.abs(trade.realizedPnL).toFixed(2)}
+                        {positive ? "+" : "-"}₵{Math.abs(trade.realizedPnL).toFixed(2)}
                       </span>
                     </div>
                     <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2 font-data-tabular text-[10px] text-center opacity-80">
@@ -391,11 +391,11 @@ function PositionsTab({
                       </div>
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[8px] text-on-surface-variant uppercase font-black">{isShort ? "Sell price" : "Buy price"}</span>
-                        <span className="text-on-surface font-bold">Rs {trade.entryPrice.toFixed(2)}</span>
+                        <span className="text-on-surface font-bold">₵{trade.entryPrice.toFixed(2)}</span>
                       </div>
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[8px] text-on-surface-variant uppercase font-black">{isShort ? "Buy price" : "Sell price"}</span>
-                        <span className="text-on-surface font-bold">Rs {trade.exitPrice.toFixed(2)}</span>
+                        <span className="text-on-surface font-bold">₵{trade.exitPrice.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>

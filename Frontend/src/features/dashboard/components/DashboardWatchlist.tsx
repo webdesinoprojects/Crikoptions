@@ -50,7 +50,7 @@ export function DashboardWatchlist() {
                     <span className="font-bold text-white">{item.symbol}</span>
                     <span className="text-[9px] text-on-surface-variant uppercase font-sans font-medium">{item.name}</span>
                   </td>
-                  <td className="py-2 text-right font-bold text-white">Rs {item.ltp.toFixed(2)}</td>
+                  <td className="py-2 text-right font-bold text-white">₵{item.ltp.toFixed(2)}</td>
                   <td className="py-2 text-right font-bold text-on-surface-variant">0.00%</td>
                   <td className="py-2 text-right text-on-surface-variant">0</td>
                   <td className="py-2 text-center">

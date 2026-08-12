@@ -174,7 +174,7 @@ export function ProfileManager() {
         <div className="flex flex-wrap md:flex-nowrap gap-4 w-full xl:w-auto">
           <div className="flex-1 xl:w-48 bg-slate-900/40 border border-white/5 rounded-2xl p-4 flex flex-col justify-center relative overflow-hidden backdrop-blur-md">
              <div className="text-xs text-slate-400 font-medium flex items-center gap-2 mb-1"><Wallet className="w-4 h-4 text-sky-400" /> Paper Balance</div>
-             <div className="text-xl font-bold text-white tracking-tight">Rs {perfData.balance}</div>
+             <div className="text-xl font-bold text-white tracking-tight">₵{perfData.balance}</div>
              <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-sky-500/50 rounded-t-full shadow-[0_0_10px_rgba(14,165,233,0.8)]"></div>
           </div>
           <div className="flex-1 xl:w-48 bg-slate-900/40 border border-white/5 rounded-2xl p-4 flex flex-col justify-center backdrop-blur-md">
@@ -260,7 +260,7 @@ export function ProfileManager() {
                   <label className="text-xs text-slate-300 font-medium flex items-center gap-1">
                     Daily Paper Loss Limit <Info className="w-3 h-3 text-slate-500" />
                   </label>
-                  <span className="text-sm font-bold text-white">Rs {dailyLossLimit.toLocaleString("en-IN")}</span>
+                  <span className="text-sm font-bold text-white">₵ {dailyLossLimit.toLocaleString("en-IN")}</span>
                 </div>
                 <input 
                   type="range" min="1000" max="50000" step="1000"
@@ -269,7 +269,7 @@ export function ProfileManager() {
                 />
                 <div className="flex justify-between text-[10px] text-slate-500 font-medium">
                   <span>50% of balance</span>
-                  <span>Rs 50,000</span>
+                  <span>₵ 50,000</span>
                 </div>
               </div>
 
@@ -278,7 +278,7 @@ export function ProfileManager() {
                   <label className="text-xs text-slate-300 font-medium flex items-center gap-1">
                     Max Position Size <Info className="w-3 h-3 text-slate-500" />
                   </label>
-                  <span className="text-sm font-bold text-white">Rs {maxExposure.toLocaleString("en-IN")}</span>
+                  <span className="text-sm font-bold text-white">₵ {maxExposure.toLocaleString("en-IN")}</span>
                 </div>
                 <input 
                   type="range" min="1000" max="50000" step="1000"
@@ -287,7 +287,7 @@ export function ProfileManager() {
                 />
                 <div className="flex justify-between text-[10px] text-slate-500 font-medium">
                   <span>24% of balance</span>
-                  <span>Rs 50,000</span>
+                  <span>₵ 50,000</span>
                 </div>
               </div>
 

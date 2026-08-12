@@ -12,7 +12,7 @@ export function ExposureTreemap() {
   const option = useMemo(() => {
     return {
       tooltip: {
-        formatter: "{b}: Value Rs {c}",
+        formatter: "{b}: Value ₵{c}",
       },
       series: [
         {
@@ -21,7 +21,7 @@ export function ExposureTreemap() {
           visibleMin: 300,
           label: {
             show: true,
-            formatter: "{b}\nRs {c}",
+            formatter: "{b}\n₵{c}",
             fontFamily: "JetBrains Mono, monospace",
             fontSize: 11,
             color: "#f8fafc",

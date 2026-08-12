@@ -40,7 +40,7 @@ export function TradeOperationsWorkspace() {
       bodyClass="gap-3"
     >
       <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-        <OpsMetric icon={<ShieldCheck className="h-4 w-4" />} label="Gross exposure" value={`Rs ${formatMoney(totalExposure)}`} />
+        <OpsMetric icon={<ShieldCheck className="h-4 w-4" />} label="Gross exposure" value={`₵${formatMoney(totalExposure)}`} />
         <OpsMetric icon={<Clock className="h-4 w-4" />} label="Working orders" value={String(workingOrders)} />
         <OpsMetric icon={<ListChecks className="h-4 w-4" />} label="Executed orders" value={executedOrders.toLocaleString("en-IN")} />
       </div>
@@ -310,7 +310,7 @@ function OrdersScreen({
                   <span className="px-2 py-0.5 rounded bg-surface border border-outline/10 text-[10px] text-on-surface-variant font-bold shadow-sm">{order.type}</span>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <div className="font-medium text-on-surface">Rs {(order.price ?? 0).toFixed(2)}</div>
+                  <div className="font-medium text-on-surface">₵{(order.price ?? 0).toFixed(2)}</div>
                 </td>
                 <td className="px-4 py-3 text-right text-on-surface font-semibold">{order.quantity.toLocaleString("en-IN")}</td>
                 <td className="px-4 py-3 text-right">

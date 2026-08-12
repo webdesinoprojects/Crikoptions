@@ -80,13 +80,13 @@ export function PositionSummary({ matchId, marketId }: PositionSummaryProps) {
                   return (
                     <tr key={position.marketId} className="hover:bg-surface-container transition-colors">
                       <td className="py-1 font-bold text-on-surface">{position.symbol}</td>
-                      <td className="py-1 text-center">Rs {position.averageEntryPrice.toFixed(2)}</td>
+                      <td className="py-1 text-center">₵{position.averageEntryPrice.toFixed(2)}</td>
                       <td className={`py-1 text-right font-bold ${position.side === "BUY" ? "text-bull-green" : "text-bear-red"}`}>
                         {position.side === "BUY" ? "+" : "-"}
                         {position.quantity}
                       </td>
                       <td className={`py-1 text-right font-bold ${isUp ? "text-bull-green" : "text-bear-red"}`}>
-                        {isUp ? "+" : "-"}Rs {Math.abs(position.unrealizedPnL).toFixed(2)}
+                        {isUp ? "+" : "-"}₵{Math.abs(position.unrealizedPnL).toFixed(2)}
                       </td>
                     </tr>
                   );
@@ -122,7 +122,7 @@ export function PositionSummary({ matchId, marketId }: PositionSummaryProps) {
                     return (
                       <tr key={order.id} className="hover:bg-surface-container transition-colors border-b border-outline-variant/30">
                         <td className={`py-1.5 font-bold ${isBuy ? "text-bull-green" : "text-bear-red"}`}>{order.side}</td>
-                        <td className="py-1.5 font-bold text-on-surface">Rs {order.price?.toFixed(2) ?? "0.00"}</td>
+                        <td className="py-1.5 font-bold text-on-surface">₵{order.price?.toFixed(2) ?? "0.00"}</td>
                         <td className="py-1.5 text-center">{order.quantity}</td>
                         <td className="py-1.5 text-center uppercase text-[10px] text-on-surface-variant font-bold">{order.status}</td>
                         <td className="py-1.5 text-right">

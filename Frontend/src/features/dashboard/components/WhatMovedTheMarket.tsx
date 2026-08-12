@@ -50,13 +50,13 @@ export function WhatMovedTheMarket() {
                 </td>
                 <td className="px-5 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-data-tabular text-white/60">Rs {ev.before}</span>
+                    <span className="text-sm font-data-tabular text-white/60">₵{ev.before}</span>
                     <MockSparkline isUp={ev.isUp} />
                   </div>
                 </td>
                 <td className="px-5 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-2 bg-[#00284d] px-3 py-1.5 rounded-md border border-cyan-500/30 w-fit">
-                    <span className="text-sm font-data-tabular font-bold text-cyan-400">Rs {ev.now}</span>
+                    <span className="text-sm font-data-tabular font-bold text-cyan-400">₵{ev.now}</span>
                     <MockSparkline isUp={ev.isUp} highlight />
                   </div>
                 </td>

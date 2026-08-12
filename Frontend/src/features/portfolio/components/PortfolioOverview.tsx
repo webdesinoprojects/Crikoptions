@@ -38,12 +38,12 @@ export function PortfolioOverview() {
               Total Equity
             </div>
             <div className="mt-2 font-display text-4xl font-bold tracking-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">
-              Rs {formatWhole(data.totalEquity)}
+              ₵{formatWhole(data.totalEquity)}
             </div>
           </div>
           <div className="mt-4 inline-flex items-center gap-2 rounded-md bg-white/5 px-2.5 py-1.5 backdrop-blur-sm border border-white/5 w-fit">
             <span className="text-[10px] font-medium text-on-surface-variant">Base Capital</span>
-            <span className="text-xs font-bold text-on-surface">Rs {formatWhole(data.baseCapital)}</span>
+            <span className="text-xs font-bold text-on-surface">₵{formatWhole(data.baseCapital)}</span>
           </div>
         </div>
       </div>
@@ -51,7 +51,7 @@ export function PortfolioOverview() {
       {/* Total PnL */}
       <PremiumKpiCard
         label="Total P&L"
-        value={`Rs ${formatWhole(Math.abs(data.totalPnL))}`}
+        value={`₵${formatWhole(Math.abs(data.totalPnL))}`}
         prefix={isTotalUp ? "+" : "-"}
         positive={isTotalUp}
         pct={data.totalPnLPct}
@@ -61,7 +61,7 @@ export function PortfolioOverview() {
       {/* Available Wallet (Moved up to fill Row 1) */}
       <div className="col-span-2 rounded-xl border border-primary/20 bg-[linear-gradient(180deg,rgba(14,165,233,0.05),transparent)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
         <div className="text-[9px] font-black uppercase tracking-widest text-primary mb-1">Available to Trade</div>
-        <div className="text-2xl font-bold text-white mb-0.5">Rs {formatWhole(data.availableMargin)}</div>
+        <div className="text-2xl font-bold text-white mb-0.5">₵{formatWhole(data.availableMargin)}</div>
         <div className="text-[10px] text-primary/70">Paper wallet balance</div>
       </div>
 
@@ -81,7 +81,7 @@ export function PortfolioOverview() {
           Reserved Margin
           <ShieldCheck className="w-3.5 h-3.5 text-on-surface-variant opacity-50" />
         </div>
-        <div className="text-xl font-bold text-white mb-2">Rs {formatWhole(data.usedMargin)}</div>
+        <div className="text-xl font-bold text-white mb-2">₵{formatWhole(data.usedMargin)}</div>
         <div className="h-1 bg-white/10 rounded-full overflow-hidden">
           <div className="h-full bg-primary rounded-full" style={{ width: `${Math.min(marginPct, 100)}%` }} />
         </div>
