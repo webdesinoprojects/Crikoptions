@@ -54,8 +54,8 @@ export default function LoginForm() {
         
         {/* Fixed Header */}
         <div className="absolute top-0 left-0 w-full flex justify-between items-center p-6 z-20 bg-gradient-to-b from-[#000d1a] to-transparent">
-          <div className="flex items-center gap-2 select-none bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl backdrop-blur-md">
-            <img src="/Logo design 02.png" alt="CricOptions" className="h-7 w-auto object-contain brightness-120" />
+          <div className="flex items-center gap-2 select-none">
+            <img src="/cricoptions.png" alt="CricOptions" className="h-8 sm:h-9 w-auto object-contain" />
           </div>
           <Link href="/" className="text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-all p-2">
             <X className="w-5 h-5" />

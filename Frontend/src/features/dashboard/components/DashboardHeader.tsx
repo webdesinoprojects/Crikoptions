@@ -79,11 +79,11 @@ export function DashboardHeader({ overview }: DashboardHeaderProps) {
             <Divider />
             {/* Today's P&L */}
             <MetricCard
-              icon={<TrendingUp className="h-4 w-4" style={{ color: pnlPositive ? "#14b8a6" : "#f43f5e" }} />}
+              icon={<TrendingUp className="h-4 w-4" style={{ color: todaysPnL > 0 ? "#14b8a6" : todaysPnL < 0 ? "#f43f5e" : "#ffffff" }} />}
               label="Today's P&L"
-              value={`${pnlPositive ? "+" : ""}₵${formatINR(Math.abs(todaysPnL))}`}
-              valueClass={pnlPositive ? "text-teal-400" : "text-rose-400"}
-              iconBg={pnlPositive ? "rgba(20,184,166,0.1)" : "rgba(244,63,94,0.1)"}
+              value={`${todaysPnL > 0 ? "+" : ""}₵${formatINR(Math.abs(todaysPnL))}`}
+              valueClass={todaysPnL > 0 ? "text-teal-400" : todaysPnL < 0 ? "text-rose-400" : "text-white"}
+              iconBg={todaysPnL > 0 ? "rgba(20,184,166,0.1)" : todaysPnL < 0 ? "rgba(244,63,94,0.1)" : "rgba(255,255,255,0.05)"}
             />
             <Divider />
             {/* Positions */}

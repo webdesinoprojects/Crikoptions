@@ -50,7 +50,7 @@ export function YourMatchday() {
           >
             {hasLivePositions ? "LIVE" : "FLAT"}
           </div>
-          <div className={cn("max-w-full break-words font-data-tabular text-lg font-black leading-tight sm:text-xl", combinedPnL >= 0 ? "text-bull-green" : "text-bear-red")}>
+          <div className={cn("max-w-full break-words font-data-tabular text-lg font-black leading-tight sm:text-xl", combinedPnL > 0 ? "text-bull-green" : combinedPnL < 0 ? "text-bear-red" : "text-white")}>
             {combinedPnL >= 0 ? "+" : "-"}Rs {Math.abs(combinedPnL).toLocaleString("en-IN")}
           </div>
           <div className="text-[10px] text-on-surface-variant tracking-wider uppercase">
