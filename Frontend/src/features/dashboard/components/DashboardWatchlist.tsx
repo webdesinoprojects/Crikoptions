@@ -24,7 +24,7 @@ export function DashboardWatchlist() {
           <thead>
             <tr className="border-b border-outline/10 text-[9px] text-on-surface-variant uppercase tracking-wider font-bold">
               <th className="pb-1.5 font-bold">Symbol</th>
-              <th className="pb-1.5 font-bold text-right">LTP (Rs)</th>
+              <th className="pb-1.5 font-bold text-right">LTP (₵)</th>
               <th className="pb-1.5 font-bold text-right">Change</th>
               <th className="pb-1.5 font-bold text-right">Volume</th>
               <th className="pb-1.5 text-center font-bold w-10">Act</th>

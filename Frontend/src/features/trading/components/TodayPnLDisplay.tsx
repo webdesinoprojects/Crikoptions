@@ -40,7 +40,7 @@ export function TodayPnLDisplay() {
           Today&apos;s P&L
         </span>
         <span className={`flex items-center whitespace-nowrap text-[17px] font-black tracking-tight ${isPositive ? "text-bull-green drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]" : "text-bear-red drop-shadow-[0_0_12px_rgba(239,68,68,0.4)]"}`}>
-          {value >= 0 ? "+" : ""}Rs&nbsp;
+          {value >= 0 ? "+" : ""}₵&nbsp;
           <NumberFlow
             value={value}
             format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }}

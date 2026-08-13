@@ -76,7 +76,7 @@ export function DashboardTradeTicket() {
               </select>
             </div>
             <div className="flex flex-col gap-0.5">
-              <label className="text-[8px] uppercase font-bold text-on-surface-variant tracking-wider">Limit Price (Rs)</label>
+              <label className="text-[8px] uppercase font-bold text-on-surface-variant tracking-wider">Limit Price (₵)</label>
               <input
                 type="number"
                 step="0.05"

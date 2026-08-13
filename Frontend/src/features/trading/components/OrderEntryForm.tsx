@@ -295,7 +295,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
         <div className="grid min-w-0 gap-1">
           <div className="flex items-center justify-between gap-1">
             <label className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant">
-              {type === "LIMIT" ? "Limit (Rs)" : "Expected price"}
+              {type === "LIMIT" ? "Limit (₵)" : "Expected price"}
             </label>
             {type === "LIMIT" && (
               <button

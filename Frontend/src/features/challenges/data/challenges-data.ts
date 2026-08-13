@@ -71,7 +71,7 @@ export const ACADEMIES: Academy[] = [
       {
         id: "lc-5",
         title: "Rider",
-        description: "Hold a long call trade for at least 50 overs.",
+        description: "Hold a long call trade for at least 5 overs.",
         reward: 10_000,
       },
     ],
@@ -114,7 +114,7 @@ export const ACADEMIES: Academy[] = [
       {
         id: "sc-5",
         title: "Rider",
-        description: "Hold a short call trade for at least 50 overs.",
+        description: "Hold a short call trade for at least 5 overs.",
         reward: 10_000,
       },
     ],
