@@ -68,12 +68,6 @@ export const ACADEMIES: Academy[] = [
           "Finish 5 consecutive long call trades in a single inning.",
         reward: 5_000,
       },
-      {
-        id: "lc-5",
-        title: "Rider",
-        description: "Hold a long call trade for at least 5 overs.",
-        reward: 10_000,
-      },
     ],
   },
 
@@ -110,12 +104,6 @@ export const ACADEMIES: Academy[] = [
         description:
           "Finish 5 consecutive short call trades in a single inning.",
         reward: 5_000,
-      },
-      {
-        id: "sc-5",
-        title: "Rider",
-        description: "Hold a short call trade for at least 5 overs.",
-        reward: 10_000,
       },
     ],
   },

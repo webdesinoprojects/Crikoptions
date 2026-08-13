@@ -15,8 +15,6 @@ export interface ServerChallenge {
   reward: number;
   status: "LOCKED" | "IN_PROGRESS" | "COMPLETE";
   claimed: boolean;
-  /** Set when the platform cannot verify this challenge yet. */
-  lockedReason?: string;
 }
 
 class ChallengesService {

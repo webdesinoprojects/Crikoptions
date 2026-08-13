@@ -268,7 +268,6 @@ export default function ChallengesPage() {
                 const reward = verified?.reward ?? challenge.reward;
                 const progress = verified?.progress ?? 0;
                 const target = verified?.target ?? 0;
-                const lockedReason = verified?.lockedReason;
 
                 return (
                   <div
@@ -346,10 +345,6 @@ export default function ChallengesPage() {
                               <CheckCircle2 className="w-3 h-3" /> Claimed
                             </span>
                             <span className="text-[11px] font-bold text-white/40 font-data-tabular">₵{formatCC(reward)}</span>
-                          </span>
-                        ) : lockedReason ? (
-                          <span className="text-[10px] font-semibold text-white/55 text-right max-w-[9rem]">
-                            {lockedReason}
                           </span>
                         ) : (
                           <div className="flex flex-col items-end text-right">

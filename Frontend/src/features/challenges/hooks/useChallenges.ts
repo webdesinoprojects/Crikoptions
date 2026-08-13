@@ -53,7 +53,7 @@ export function useChallenges() {
   const isClaimable = useCallback(
     (challengeId: string) => {
       const c = byId.get(challengeId);
-      return Boolean(c && c.status === "COMPLETE" && !c.claimed && !c.lockedReason);
+      return Boolean(c && c.status === "COMPLETE" && !c.claimed);
     },
     [byId],
   );
