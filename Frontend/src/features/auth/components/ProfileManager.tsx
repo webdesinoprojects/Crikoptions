@@ -7,9 +7,8 @@ import { AlertCircle, CheckCircle, Loader2, Camera, Calendar, TrendingUp, Trophy
 import { motion, AnimatePresence } from "framer-motion";
 import { getErrorMessage } from "@/lib/error-message";
 import { usePerformance } from "@/features/portfolio/hooks";
-import { useChallenges } from "@/features/challenges/hooks/useChallenges";
 import { AcademyBadge } from "@/features/challenges/components/AcademyBadge";
-import { ACADEMIES } from "@/features/challenges/data/challenges-data";
+import { useChallenges } from "@/features/challenges/hooks/useChallenges";
 
 // A reusable lightweight SVG sparkline
 function Sparkline({ data, color }: { data: number[], color: string }) {
@@ -53,7 +52,7 @@ function Sparkline({ data, color }: { data: number[], color: string }) {
 export function ProfileManager() {
   const { user, updateProfile, isLoading } = useAuthStore();
   const { portfolio } = usePerformance();
-  const { badges, unlockedBadgeCount } = useChallenges();
+  const { badges } = useChallenges();
   
   const [name, setName] = useState("");
   const [maxExposure, setMaxExposure] = useState<number>(20000);
@@ -149,6 +148,7 @@ export function ProfileManager() {
 
   const memberId = `CO-${(user.id || "000000").replace(/[^a-zA-Z0-9]/g, "").slice(-6).toUpperCase()}`;
   const featuredBadge = badges.find((badge) => badge.unlocked);
+  const unlockedAcademyCount = badges.filter((badge) => badge.unlocked).length;
 
   return (
     <div className="max-w-[1400px] mx-auto flex flex-col gap-6 font-sans select-none pb-10">
@@ -237,30 +237,27 @@ export function ProfileManager() {
             <div className="relative z-10 mt-6 flex-1">
               <div className="mb-3 flex items-center justify-between">
                 <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/40">
-                  Credentials
+                  Academy badges
                 </span>
                 <span className="font-data-tabular text-[11px] text-white/35">
-                  {unlockedBadgeCount}/{ACADEMIES.length}
+                  {unlockedAcademyCount}/{badges.length}
                 </span>
               </div>
-              <div className="space-y-1.5">
+              <div className="grid grid-cols-3 gap-2">
                 {badges.map((badge) => (
                   <div
                     key={badge.id}
-                    className="flex items-center gap-3 rounded-lg border border-white/5 bg-black/20 px-2.5 py-2"
+                    className="flex flex-col items-center rounded-lg border border-white/5 bg-black/20 px-1.5 py-2"
+                    title={badge.unlocked ? `${badge.title} · unlocked` : `${badge.title} · locked`}
                   >
-                    <AcademyBadge badge={badge} unlocked={badge.unlocked} size="xs" />
-                    <div className="min-w-0 flex-1">
-                      <p className={`truncate text-[13px] ${badge.unlocked ? "text-white" : "text-white/40"}`}>
-                        {badge.title}
-                      </p>
-                      <p className="text-[11px] text-white/35">{badge.rank}</p>
-                    </div>
-                    <span
-                      className={`text-[11px] ${badge.unlocked ? "text-emerald-400" : "text-white/30"}`}
+                    <AcademyBadge badge={badge} unlocked={badge.unlocked} size="sm" />
+                    <p
+                      className={`mt-1.5 w-full truncate text-center text-[10px] leading-tight ${
+                        badge.unlocked ? "text-white/80" : "text-white/35"
+                      }`}
                     >
-                      {badge.unlocked ? "Earned" : "Locked"}
-                    </span>
+                      {badge.title}
+                    </p>
                   </div>
                 ))}
               </div>

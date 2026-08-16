@@ -6,9 +6,8 @@ import { Wallet, TrendingUp, Briefcase, Plus } from "lucide-react";
 import { useAuthStore } from "@/features/auth/hooks/useAuth";
 import { usePositions } from "@/features/portfolio/hooks";
 import { AddFundsModal } from "@/features/wallet/components/AddFundsModal";
-import { useChallenges } from "@/features/challenges/hooks/useChallenges";
-import { AcademyBadge } from "@/features/challenges/components/AcademyBadge";
-import { ACADEMIES } from "@/features/challenges/data/challenges-data";
+import { useTodayChallenges } from "@/features/challenges/hooks/useTodayChallenges";
+import { TodayChallengeMark } from "@/features/challenges/components/TodayChallengeMark";
 import { PortfolioSummary } from "@/types";
 
 interface DashboardHeaderProps {
@@ -30,7 +29,7 @@ function formatINR(value: number) {
 export function DashboardHeader({ overview }: DashboardHeaderProps) {
   const { user } = useAuthStore();
   const { data: positions } = usePositions();
-  const { badges, unlockedBadgeCount } = useChallenges();
+  const { today, completedCount, total } = useTodayChallenges();
   const [showAddFunds, setShowAddFunds] = useState(false);
   const [greeting, setGreeting] = useState("");
 
@@ -102,30 +101,26 @@ export function DashboardHeader({ overview }: DashboardHeaderProps) {
             {/* Badges */}
             <Link
               href="/challenges"
-              title="View credentials"
+              title="Take today's challenge"
               className="flex items-center gap-3 px-4 py-3 transition hover:bg-white/[0.03]"
             >
               <div className="flex items-center -space-x-2">
-                {badges.map((badge) => (
+                {today.map((challenge) => (
                   <span
-                    key={badge.id}
+                    key={challenge.id}
                     className="relative rounded-full bg-[#0a1428] ring-2 ring-[#0a1428]"
                   >
-                    <AcademyBadge
-                      badge={badge}
-                      unlocked={badge.unlocked}
-                      size="xs"
-                    />
+                    <TodayChallengeMark challenge={challenge} size="xs" />
                   </span>
                 ))}
               </div>
               <div className="min-w-0">
                 <div className="text-[9px] font-semibold uppercase tracking-wider text-white/35">
-                  Badges
+                  Today's Challenge
                 </div>
                 <div className="mt-0.5 text-sm font-bold tabular-nums text-white">
-                  {unlockedBadgeCount}
-                  <span className="font-medium text-white/35"> / {ACADEMIES.length}</span>
+                  {completedCount}
+                  <span className="font-medium text-white/35"> / {total}</span>
                 </div>
               </div>
             </Link>

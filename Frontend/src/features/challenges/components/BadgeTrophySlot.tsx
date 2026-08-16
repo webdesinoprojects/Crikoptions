@@ -10,9 +10,10 @@ interface BadgeTrophySlotProps {
   unlocked: boolean;
   done: number;
   total: number;
+  unit?: string;
 }
 
-export function BadgeTrophySlot({ badge, unlocked, done, total }: BadgeTrophySlotProps) {
+export function BadgeTrophySlot({ badge, unlocked, done, total, unit = "tasks" }: BadgeTrophySlotProps) {
   const pct = total ? Math.round((done / total) * 100) : 0;
 
   return (
@@ -42,7 +43,7 @@ export function BadgeTrophySlot({ badge, unlocked, done, total }: BadgeTrophySlo
               />
             </div>
             <p className="mt-1.5 text-[10px] text-white/35 font-data-tabular">
-              {done}/{total} tasks
+              {done}/{total}{unit ? ` ${unit}` : ""}
             </p>
           </>
         )}

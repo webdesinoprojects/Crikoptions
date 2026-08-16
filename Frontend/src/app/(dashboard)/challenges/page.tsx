@@ -21,9 +21,11 @@ import {
   Academy
 } from "@/features/challenges/data/challenges-data";
 import { getAcademyBadge, markBadgesSeen, readSeenBadgeIds } from "@/features/challenges/data/academy-badges";
+import { findCollectibleBadge } from "@/features/challenges/data/collectible-badges";
 import { AcademyBadge } from "@/features/challenges/components/AcademyBadge";
 import { BadgeTrophySlot } from "@/features/challenges/components/BadgeTrophySlot";
 import { BadgeUnlockModal } from "@/features/challenges/components/BadgeUnlockModal";
+import { TodayChallengesPanel } from "@/features/challenges/components/TodayChallengesPanel";
 import CourseDesignCard, { CardData } from "@/components/ui/course-design-cards";
 
 export default function ChallengesPage() {
@@ -37,7 +39,10 @@ export default function ChallengesPage() {
     getChallenge,
     isClaimable,
     badges,
+    dailyBadges,
+    collectibles,
     unlockedBadgeCount,
+    totalBadges,
     isAcademyDone,
   } = useChallenges();
   const { user } = useAuthStore();
@@ -112,19 +117,21 @@ export default function ChallengesPage() {
 
   useEffect(() => {
     if (!user?.id) return;
-    const unlocked = badges.filter((b) => b.unlocked).map((b) => b.academyId);
+    const unlocked = collectibles.filter((b) => b.unlocked).map((b) => b.academyId);
     if (unlocked.length === 0) return;
     const seen = new Set(readSeenBadgeIds(user.id));
     const fresh = unlocked.find((id) => !seen.has(id));
     if (fresh) setNewBadgeId(fresh);
-  }, [badges, user?.id]);
+  }, [collectibles, user?.id]);
 
   const dismissNewBadge = () => {
     if (user?.id && newBadgeId) markBadgesSeen(user.id, [newBadgeId]);
     setNewBadgeId(null);
   };
 
-  const newBadge = newBadgeId ? getAcademyBadge(newBadgeId) : undefined;
+  const newBadge = newBadgeId
+    ? findCollectibleBadge(newBadgeId, collectibles) ?? getAcademyBadge(newBadgeId)
+    : undefined;
 
   // Prevent background scrolling when modal is open
   useEffect(() => {
@@ -158,7 +165,7 @@ export default function ChallengesPage() {
                 </h1>
               </div>
               <p className="text-sm text-white/50 mt-1 font-medium tracking-wide">
-                Complete every task in an academy to unlock its badge and earn CricCoins ₵
+                Unlock {totalBadges} badges: {badges.length} academy credentials and {dailyBadges.length} daily medals. Earn CricCoins ₵ on claim.
               </p>
             </div>
           </div>
@@ -180,7 +187,7 @@ export default function ChallengesPage() {
           <StatCard
             label="Badges"
             value={`${unlockedBadgeCount}`}
-            sub={`of ${ACADEMIES.length} earned`}
+            sub={`of ${totalBadges} earned`}
             accent="#d4af37"
           />
           <div className="bg-[#081225] rounded-2xl border border-white/10 p-5 shadow-xl relative overflow-hidden">
@@ -202,37 +209,63 @@ export default function ChallengesPage() {
           </div>
         </div>
 
+        {/* Today's challenges */}
+        <TodayChallengesPanel showFooter={false} />
+
+        {/* Today's badges */}
+        {dailyBadges.length > 0 ? (
+          <div className="rounded-2xl border border-white/8 bg-[#081225] p-5 sm:p-6">
+            <div className="mb-5 flex items-end justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-semibold text-white">Today's badges</h2>
+                <p className="mt-1 text-[12px] text-white/40">
+                  Each medal stays locked until that daily task is complete.
+                </p>
+              </div>
+              <span className="text-[12px] text-white/40 font-data-tabular">
+                {dailyBadges.filter((badge) => badge.unlocked).length}/{dailyBadges.length}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {dailyBadges.map((badge) => (
+                <BadgeTrophySlot
+                  key={badge.id}
+                  badge={badge}
+                  unlocked={badge.unlocked}
+                  done={badge.done}
+                  total={badge.total}
+                  unit=""
+                />
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         {/* Credentials */}
         <div className="rounded-2xl border border-white/8 bg-[#081225] p-5 sm:p-6">
           <div className="mb-5 flex items-end justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold text-white">
-                Credentials
+                Academy credentials
               </h2>
               <p className="mt-1 text-[12px] text-white/40">
                 Awarded when every task in an academy is complete.
               </p>
             </div>
             <span className="text-[12px] text-white/40 font-data-tabular">
-              {unlockedBadgeCount}/{ACADEMIES.length}
+              {badges.filter((badge) => badge.unlocked).length}/{badges.length}
             </span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-            {badges.map((badge) => {
-              const academy = ACADEMIES.find((item) => item.id === badge.academyId);
-              const done = challenges.filter(
-                (c) => c.academyId === badge.academyId && c.status === "COMPLETE",
-              ).length;
-              return (
+            {badges.map((badge) => (
                 <BadgeTrophySlot
                   key={badge.id}
                   badge={badge}
                   unlocked={badge.unlocked}
-                  done={done}
-                  total={academy?.challenges.length ?? 0}
+                  done={badge.done}
+                  total={badge.total}
                 />
-              );
-            })}
+              ))}
           </div>
         </div>
 

@@ -58,6 +58,7 @@ export function useCloseAllPositions() {
     mutationFn: () => portfolioService.closeAllPositions(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PORTFOLIO_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ["challenges"] });
     },
   });
 }

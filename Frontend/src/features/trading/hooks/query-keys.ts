@@ -44,6 +44,7 @@ export function refreshAfterExit(queryClient: QueryClient, matchId?: string) {
   invalidateAndRefetch(queryClient, tradingQueryKeys.dailyPnL);
   invalidateAndRefetch(queryClient, ["portfolio"]);
   invalidateAndRefetch(queryClient, ["dashboard", "overview"]);
+  invalidateAndRefetch(queryClient, ["challenges"]);
 }
 
 export function refreshAfterExitAll(queryClient: QueryClient) {
@@ -55,6 +56,7 @@ export function refreshAfterExitAll(queryClient: QueryClient) {
   invalidateAndRefetch(queryClient, walletKeys.wallet);
   invalidateAndRefetch(queryClient, ["portfolio"]);
   invalidateAndRefetch(queryClient, ["dashboard", "overview"]);
+  invalidateAndRefetch(queryClient, ["challenges"]);
 }
 
 export function patchOpenPositionsCache(queryClient: QueryClient, event: PositionUpdateEvent) {
@@ -98,6 +100,7 @@ function refreshTerminalQueries(queryClient: QueryClient, matchId: string) {
   invalidateAndRefetch(queryClient, tradingQueryKeys.dailyPnL);
   invalidateAndRefetch(queryClient, ["portfolio"]);
   invalidateAndRefetch(queryClient, ["dashboard", "overview"]);
+  invalidateAndRefetch(queryClient, ["challenges"]);
   queryClient.removeQueries({ queryKey: ["orderPreview"] });
 }
 

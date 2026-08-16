@@ -27,6 +27,7 @@ export function useUserStream(matchId?: string) {
     const unsubscribeOrders = orderStream.subscribeOrderUpdates(userId, () => {
       queryClient.invalidateQueries({ queryKey: tradingQueryKeys.orders(matchId) });
       queryClient.invalidateQueries({ queryKey: walletKeys.wallet });
+      queryClient.invalidateQueries({ queryKey: ["challenges"] });
     });
 
     const unsubscribePositions = orderStream.subscribePositionUpdates(userId, (event) => {

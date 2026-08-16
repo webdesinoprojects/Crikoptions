@@ -34,10 +34,10 @@ export function AcademyBadge({
   return (
     <div className={cn("flex flex-col items-center gap-2", className)}>
       <div
-        className={cn("relative", dim.box)}
+        className={cn("relative shrink-0 overflow-visible", dim.box)}
         title={unlocked ? `${badge.title} · ${badge.rank}` : `${badge.title} · locked`}
       >
-        <svg viewBox="0 0 96 96" className="h-full w-full" aria-hidden>
+        <svg viewBox="0 0 96 96" className="h-full w-full overflow-visible" aria-hidden>
           <defs>
             <linearGradient id={`${uid}-ring`} x1="0.15" y1="0" x2="0.85" y2="1">
               <stop offset="0%" stopColor={unlocked ? "#f4ead0" : "#6b7280"} />
@@ -76,11 +76,27 @@ export function AcademyBadge({
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
             style={{ width: dim.icon, height: dim.icon, color: "#f7f1e3" }}
           />
-        ) : size === "xs" ? null : (
-          <Lock
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white/30"
-            style={{ width: dim.icon * 0.7, height: dim.icon * 0.7 }}
-          />
+        ) : (
+          <>
+            <Icon
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-25"
+              style={{ width: dim.icon, height: dim.icon, color: badge.color }}
+            />
+            <span
+              className="absolute flex items-center justify-center rounded-full bg-[#070d16] ring-1 ring-white/20"
+              style={{
+                width: Math.max(12, dim.icon * 0.85),
+                height: Math.max(12, dim.icon * 0.85),
+                right: size === "xs" ? -1 : 0,
+                bottom: size === "xs" ? -1 : 0,
+              }}
+            >
+              <Lock
+                className="text-white/55"
+                style={{ width: dim.icon * 0.45, height: dim.icon * 0.45 }}
+              />
+            </span>
+          </>
         )}
       </div>
       {showLabel && (

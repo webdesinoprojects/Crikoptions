@@ -8,7 +8,8 @@ import {
   type ServerChallenge,
 } from "../services/challenges.service";
 import { ACADEMIES } from "../data/challenges-data";
-import { ACADEMY_BADGES, unlockedAcademyIds } from "../data/academy-badges";
+import { unlockedAcademyIds } from "../data/academy-badges";
+import { buildCollectibleBadges } from "../data/collectible-badges";
 
 export type { ServerChallenge };
 
@@ -27,7 +28,9 @@ export function useChallenges() {
     queryKey: CHALLENGES_QUERY_KEY,
     queryFn: () => challengesService.list(),
     enabled: Boolean(user),
-    staleTime: 15_000,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 
   const byId = useMemo(
@@ -37,11 +40,20 @@ export function useChallenges() {
 
   const claim = useMutation({
     mutationFn: (challengeId: string) => challengesService.claim(challengeId),
-    onSuccess: () => {
-      // The reward lands in the wallet, so refresh anything showing a balance.
-      queryClient.invalidateQueries({ queryKey: CHALLENGES_QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: ["wallet"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard", "overview"] });
+    onSuccess: (updated) => {
+      queryClient.setQueryData<ServerChallenge[]>(CHALLENGES_QUERY_KEY, (current) => {
+        if (!current) return [updated];
+        const index = current.findIndex((item) => item.id === updated.id);
+        if (index === -1) return [...current, updated];
+        const next = current.slice();
+        next[index] = updated;
+        return next;
+      });
+      void queryClient.invalidateQueries({ queryKey: ["wallet"] });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard", "overview"] });
+    },
+    onError: () => {
+      void queryClient.invalidateQueries({ queryKey: CHALLENGES_QUERY_KEY });
     },
   });
 
@@ -65,15 +77,17 @@ export function useChallenges() {
     .reduce((sum, c) => sum + c.reward, 0);
 
   const unlockedIds = useMemo(() => unlockedAcademyIds(challenges), [challenges]);
-  const badges = useMemo(
-    () =>
-      ACADEMY_BADGES.map((badge) => ({
-        ...badge,
-        unlocked: unlockedIds.has(badge.academyId),
-      })),
-    [unlockedIds],
+  const collectibles = useMemo(() => buildCollectibleBadges(challenges), [challenges]);
+  const dailyBadges = useMemo(
+    () => collectibles.filter((badge) => badge.kind === "daily"),
+    [collectibles],
   );
-  const unlockedBadgeCount = badges.filter((b) => b.unlocked).length;
+  const badges = useMemo(
+    () => collectibles.filter((badge) => badge.kind === "academy"),
+    [collectibles],
+  );
+  const unlockedBadgeCount = collectibles.filter((badge) => badge.unlocked).length;
+  const totalBadges = collectibles.length;
 
   const isAcademyDone = useCallback(
     (academyId: string) => unlockedIds.has(academyId),
@@ -93,7 +107,10 @@ export function useChallenges() {
     totalChallenges: challenges.length,
     totalEarned,
     badges,
+    dailyBadges,
+    collectibles,
     unlockedBadgeCount,
+    totalBadges,
     isAcademyDone,
   };
 }
