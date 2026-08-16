@@ -1,10 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Wallet, TrendingUp, Briefcase, Trophy, Plus } from "lucide-react";
+import Link from "next/link";
+import { Wallet, TrendingUp, Briefcase, Plus } from "lucide-react";
 import { useAuthStore } from "@/features/auth/hooks/useAuth";
 import { usePositions } from "@/features/portfolio/hooks";
-import { AddFundsModal } from "@/features/wallet/components/AddFundsModal";import { PortfolioSummary } from "@/types";
+import { AddFundsModal } from "@/features/wallet/components/AddFundsModal";
+import { useChallenges } from "@/features/challenges/hooks/useChallenges";
+import { AcademyBadge } from "@/features/challenges/components/AcademyBadge";
+import { ACADEMIES } from "@/features/challenges/data/challenges-data";
+import { PortfolioSummary } from "@/types";
 
 interface DashboardHeaderProps {
   overview: PortfolioSummary | undefined;
@@ -25,6 +30,7 @@ function formatINR(value: number) {
 export function DashboardHeader({ overview }: DashboardHeaderProps) {
   const { user } = useAuthStore();
   const { data: positions } = usePositions();
+  const { badges, unlockedBadgeCount } = useChallenges();
   const [showAddFunds, setShowAddFunds] = useState(false);
   const [greeting, setGreeting] = useState("");
 
@@ -32,8 +38,6 @@ export function DashboardHeader({ overview }: DashboardHeaderProps) {
   const paperBalance = overview?.totalEquity ?? 0;
   const todaysPnL = overview?.dailyPnL ?? 0;
   const activePositions = positions?.length ?? 0;
-  const predictionStreak = overview?.streak ?? 0;
-  const pnlPositive = todaysPnL >= 0;
 
   useEffect(() => {
     const timerId = setTimeout(() => {
@@ -95,14 +99,36 @@ export function DashboardHeader({ overview }: DashboardHeaderProps) {
               iconBg="rgba(255,255,255,0.05)"
             />
             <Divider />
-            {/* Streak */}
-            <MetricCard
-              icon={<Trophy className="h-4 w-4 text-[#d4af37]" />}
-              label="Streak"
-              value={`${predictionStreak} 🔥`}
-              valueClass="text-[#d4af37]"
-              iconBg="rgba(212,175,55,0.1)"
-            />
+            {/* Badges */}
+            <Link
+              href="/challenges"
+              title="View credentials"
+              className="flex items-center gap-3 px-4 py-3 transition hover:bg-white/[0.03]"
+            >
+              <div className="flex items-center -space-x-2">
+                {badges.map((badge) => (
+                  <span
+                    key={badge.id}
+                    className="relative rounded-full bg-[#0a1428] ring-2 ring-[#0a1428]"
+                  >
+                    <AcademyBadge
+                      badge={badge}
+                      unlocked={badge.unlocked}
+                      size="xs"
+                    />
+                  </span>
+                ))}
+              </div>
+              <div className="min-w-0">
+                <div className="text-[9px] font-semibold uppercase tracking-wider text-white/35">
+                  Badges
+                </div>
+                <div className="mt-0.5 text-sm font-bold tabular-nums text-white">
+                  {unlockedBadgeCount}
+                  <span className="font-medium text-white/35"> / {ACADEMIES.length}</span>
+                </div>
+              </div>
+            </Link>
           </div>
 
           {/* Add Funds — gold CTA */}

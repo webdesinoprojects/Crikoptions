@@ -8,12 +8,13 @@ import type { AcademyBadge as AcademyBadgeMeta } from "../data/academy-badges";
 interface AcademyBadgeProps {
   badge: AcademyBadgeMeta;
   unlocked: boolean;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   showLabel?: boolean;
   className?: string;
 }
 
 const sizes = {
+  xs: { box: "h-7 w-7", icon: 11 },
   sm: { box: "h-10 w-10", icon: 14 },
   md: { box: "h-16 w-16", icon: 22 },
   lg: { box: "h-24 w-24", icon: 32 },
@@ -75,7 +76,7 @@ export function AcademyBadge({
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
             style={{ width: dim.icon, height: dim.icon, color: "#f7f1e3" }}
           />
-        ) : (
+        ) : size === "xs" ? null : (
           <Lock
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white/30"
             style={{ width: dim.icon * 0.7, height: dim.icon * 0.7 }}
