@@ -13,12 +13,17 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { useChallenges } from "@/features/challenges/hooks/useChallenges";
+import { useAuthStore } from "@/features/auth/hooks/useAuth";
 import {
   ACADEMIES,
   TOTAL_REWARDS,
   formatCC,
   Academy
 } from "@/features/challenges/data/challenges-data";
+import { getAcademyBadge, markBadgesSeen, readSeenBadgeIds } from "@/features/challenges/data/academy-badges";
+import { AcademyBadge } from "@/features/challenges/components/AcademyBadge";
+import { BadgeTrophySlot } from "@/features/challenges/components/BadgeTrophySlot";
+import { BadgeUnlockModal } from "@/features/challenges/components/BadgeUnlockModal";
 import CourseDesignCard, { CardData } from "@/components/ui/course-design-cards";
 
 export default function ChallengesPage() {
@@ -31,9 +36,14 @@ export default function ChallengesPage() {
     claimReward,
     getChallenge,
     isClaimable,
+    badges,
+    unlockedBadgeCount,
+    isAcademyDone,
   } = useChallenges();
+  const { user } = useAuthStore();
 
   const [selectedAcademy, setSelectedAcademy] = useState<string | null>(null);
+  const [newBadgeId, setNewBadgeId] = useState<string | null>(null);
 
   const completionPct = totalChallenges
     ? Math.round((completedCount / totalChallenges) * 100)
@@ -95,8 +105,26 @@ export default function ChallengesPage() {
       imgSrc2: images[academy.id as keyof typeof images]?.[1],
       imgAlt1: 'Top Trader 1',
       imgAlt2: 'Top Trader 2',
+      badgeUnlocked: isAcademyDone(academy.id),
+      badgeAcademyId: academy.id,
     };
   };
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const unlocked = badges.filter((b) => b.unlocked).map((b) => b.academyId);
+    if (unlocked.length === 0) return;
+    const seen = new Set(readSeenBadgeIds(user.id));
+    const fresh = unlocked.find((id) => !seen.has(id));
+    if (fresh) setNewBadgeId(fresh);
+  }, [badges, user?.id]);
+
+  const dismissNewBadge = () => {
+    if (user?.id && newBadgeId) markBadgesSeen(user.id, [newBadgeId]);
+    setNewBadgeId(null);
+  };
+
+  const newBadge = newBadgeId ? getAcademyBadge(newBadgeId) : undefined;
 
   // Prevent background scrolling when modal is open
   useEffect(() => {
@@ -130,7 +158,7 @@ export default function ChallengesPage() {
                 </h1>
               </div>
               <p className="text-sm text-white/50 mt-1 font-medium tracking-wide">
-                Complete challenges to earn CricCoins ₵ and unlock advanced strategies
+                Complete every task in an academy to unlock its badge and earn CricCoins ₵
               </p>
             </div>
           </div>
@@ -150,10 +178,10 @@ export default function ChallengesPage() {
             accent="#22c55e"
           />
           <StatCard
-            label="Academies"
-            value={`${ACADEMIES.filter((a) => !a.locked).length}`}
-            sub={`of ${ACADEMIES.length} unlocked`}
-            accent="#06b6d4"
+            label="Badges"
+            value={`${unlockedBadgeCount}`}
+            sub={`of ${ACADEMIES.length} earned`}
+            accent="#d4af37"
           />
           <div className="bg-[#081225] rounded-2xl border border-white/10 p-5 shadow-xl relative overflow-hidden">
             <div className="absolute inset-0 bg-cyan-500/5" />
@@ -171,6 +199,40 @@ export default function ChallengesPage() {
                 />
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Credentials */}
+        <div className="rounded-2xl border border-white/8 bg-[#081225] p-5 sm:p-6">
+          <div className="mb-5 flex items-end justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold text-white">
+                Credentials
+              </h2>
+              <p className="mt-1 text-[12px] text-white/40">
+                Awarded when every task in an academy is complete.
+              </p>
+            </div>
+            <span className="text-[12px] text-white/40 font-data-tabular">
+              {unlockedBadgeCount}/{ACADEMIES.length}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            {badges.map((badge) => {
+              const academy = ACADEMIES.find((item) => item.id === badge.academyId);
+              const done = challenges.filter(
+                (c) => c.academyId === badge.academyId && c.status === "COMPLETE",
+              ).length;
+              return (
+                <BadgeTrophySlot
+                  key={badge.id}
+                  badge={badge}
+                  unlocked={badge.unlocked}
+                  done={done}
+                  total={academy?.challenges.length ?? 0}
+                />
+              );
+            })}
           </div>
         </div>
 
@@ -241,16 +303,27 @@ export default function ChallengesPage() {
                     {activeAcademyData.name}
                   </h2>
                   <p className="text-[11px] text-white/50 mt-0.5">
-                    Complete all tasks to master this strategy
+                    {isAcademyDone(activeAcademyData.id)
+                      ? `${getAcademyBadge(activeAcademyData.id)?.rank ?? "Badge"} credential earned`
+                      : "Complete all tasks to earn this credential"}
                   </p>
                 </div>
               </div>
-              <button 
-                onClick={() => setSelectedAcademy(null)}
-                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/5"
-              >
-                <X className="w-4 h-4 text-white/70" />
-              </button>
+              <div className="flex items-center gap-2">
+                {isAcademyDone(activeAcademyData.id) && getAcademyBadge(activeAcademyData.id) ? (
+                  <AcademyBadge
+                    badge={getAcademyBadge(activeAcademyData.id)!}
+                    unlocked
+                    size="sm"
+                  />
+                ) : null}
+                <button 
+                  onClick={() => setSelectedAcademy(null)}
+                  className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/5"
+                >
+                  <X className="w-4 h-4 text-white/70" />
+                </button>
+              </div>
             </div>
 
             {/* Modal Body - Challenges List */}
@@ -373,6 +446,9 @@ export default function ChallengesPage() {
             </div>
           </div>
         </div>
+      )}
+      {newBadge && (
+        <BadgeUnlockModal badge={newBadge} onDismiss={dismissNewBadge} />
       )}
     </div>
   );

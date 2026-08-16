@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useAuthStore } from "../hooks/useAuth";
-import { AlertCircle, CheckCircle, Loader2, Camera, Calendar, MapPin, TrendingUp, Trophy, Target, Shield, Info, Bell, Wallet, Mail, Phone } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader2, Camera, Calendar, MapPin, TrendingUp, Trophy, Target, Shield, Info, Bell, Wallet, Mail, Phone, Award } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getErrorMessage } from "@/lib/error-message";
 import { usePerformance } from "@/features/portfolio/hooks";
+import { useChallenges } from "@/features/challenges/hooks/useChallenges";
+import { AcademyBadge } from "@/features/challenges/components/AcademyBadge";
+import { ACADEMIES } from "@/features/challenges/data/challenges-data";
 
 // A reusable lightweight SVG sparkline
 function Sparkline({ data, color }: { data: number[], color: string }) {
@@ -49,6 +52,7 @@ function Sparkline({ data, color }: { data: number[], color: string }) {
 export function ProfileManager() {
   const { user, updateProfile, isLoading } = useAuthStore();
   const { portfolio } = usePerformance();
+  const { badges, unlockedBadgeCount } = useChallenges();
   
   const [name, setName] = useState("");
   const [maxExposure, setMaxExposure] = useState<number>(20000);
@@ -197,8 +201,30 @@ export function ProfileManager() {
         <div className="lg:col-span-4 flex flex-col gap-6">
           <div className="relative rounded-2xl border border-[#d4af37]/30 bg-gradient-to-br from-[#1a1500] to-[#050505] overflow-hidden p-6 shadow-[0_10px_40px_rgba(212,175,55,0.05)] h-full">
              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#d4af37]/0 via-[#d4af37] to-[#d4af37]/0 opacity-50"></div>
-             <div className="flex items-center gap-2 text-[#d4af37] text-xs font-black tracking-widest uppercase mb-8">
+             <div className="flex items-center gap-2 text-[#d4af37] text-xs font-black tracking-widest uppercase mb-6">
                <Trophy className="w-4 h-4" /> CricOptions Trader Card
+             </div>
+
+             <div className="relative z-10 mb-8">
+               <div className="mb-3 flex items-center justify-between">
+                 <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-white/50">
+                   <Award className="h-3.5 w-3.5 text-[#d4af37]" />
+                   Credentials
+                 </span>
+                 <span className="text-[10px] font-bold text-white/35 font-data-tabular">
+                   {unlockedBadgeCount}/{ACADEMIES.length}
+                 </span>
+               </div>
+               <div className="grid grid-cols-5 gap-2">
+                 {badges.map((badge) => (
+                   <AcademyBadge
+                     key={badge.id}
+                     badge={badge}
+                     unlocked={badge.unlocked}
+                     size="sm"
+                   />
+                 ))}
+               </div>
              </div>
              
              {/* Stylized background silhouette or gradient */}

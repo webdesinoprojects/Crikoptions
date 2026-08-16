@@ -1,6 +1,8 @@
 import React from 'react';
-import { MoreHorizontal, Plus, Lock } from 'lucide-react';
+import { Lock, MoreHorizontal } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import { AcademyBadge } from "@/features/challenges/components/AcademyBadge";
+import { getAcademyBadge } from "@/features/challenges/data/academy-badges";
 
 // Define the type for the card data
 export interface CardData {
@@ -17,6 +19,8 @@ export interface CardData {
   imgAlt2?: string;
   countdownText: string;
   isLocked?: boolean;
+  badgeUnlocked?: boolean;
+  badgeAcademyId?: string;
 }
 
 // Define the props for the Card component
@@ -39,7 +43,10 @@ const CourseDesignCard: React.FC<CardProps> = ({ data, onClick }) => {
     imgAlt2,
     countdownText,
     isLocked,
+    badgeUnlocked,
+    badgeAcademyId,
   } = data;
+  const academyBadge = badgeAcademyId ? getAcademyBadge(badgeAcademyId) : undefined;
 
   // Map requested color classes to actual hex values to support opacity appending (e.g. `#10b98115`)
   const colorMap: Record<string, string> = {
@@ -92,7 +99,13 @@ const CourseDesignCard: React.FC<CardProps> = ({ data, onClick }) => {
           >
             {date}
           </span>
-          <MoreHorizontal className="w-6 h-6 text-white/30 hover:text-white transition-colors" />
+          {badgeUnlocked && academyBadge ? (
+            <span className="text-[11px] font-medium text-white/50">
+              {academyBadge.rank}
+            </span>
+          ) : (
+            <MoreHorizontal className="w-6 h-6 text-white/30 hover:text-white transition-colors" />
+          )}
         </div>
 
         {/* Body */}
@@ -119,7 +132,20 @@ const CourseDesignCard: React.FC<CardProps> = ({ data, onClick }) => {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end pt-5 border-t border-white/10 mt-auto">
+        <div className="flex items-center justify-between pt-5 border-t border-white/10 mt-auto">
+          {academyBadge ? (
+            <div className="flex items-center gap-2.5 min-w-0">
+              <AcademyBadge badge={academyBadge} unlocked={Boolean(badgeUnlocked)} size="sm" />
+              <div className="min-w-0">
+                <p className={cn("truncate text-[12px] font-medium", badgeUnlocked ? "text-white/85" : "text-white/35")}>
+                  {academyBadge.title}
+                </p>
+                <p className="text-[11px] text-white/35">
+                  {badgeUnlocked ? "Earned" : "Locked"}
+                </p>
+              </div>
+            </div>
+          ) : <span />}
           <span 
             className="px-4 py-2 rounded-xl text-xs font-black whitespace-nowrap tracking-wide"
             style={{ backgroundColor: `${themeColor}20`, color: themeColor, border: `1px solid ${themeColor}40` }}

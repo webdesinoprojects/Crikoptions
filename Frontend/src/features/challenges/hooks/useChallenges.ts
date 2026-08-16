@@ -8,6 +8,7 @@ import {
   type ServerChallenge,
 } from "../services/challenges.service";
 import { ACADEMIES } from "../data/challenges-data";
+import { ACADEMY_BADGES, unlockedAcademyIds } from "../data/academy-badges";
 
 export type { ServerChallenge };
 
@@ -63,6 +64,22 @@ export function useChallenges() {
     .filter((c) => c.claimed)
     .reduce((sum, c) => sum + c.reward, 0);
 
+  const unlockedIds = useMemo(() => unlockedAcademyIds(challenges), [challenges]);
+  const badges = useMemo(
+    () =>
+      ACADEMY_BADGES.map((badge) => ({
+        ...badge,
+        unlocked: unlockedIds.has(badge.academyId),
+      })),
+    [unlockedIds],
+  );
+  const unlockedBadgeCount = badges.filter((b) => b.unlocked).length;
+
+  const isAcademyDone = useCallback(
+    (academyId: string) => unlockedIds.has(academyId),
+    [unlockedIds],
+  );
+
   return {
     academies: ACADEMIES,
     challenges,
@@ -75,5 +92,8 @@ export function useChallenges() {
     completedCount,
     totalChallenges: challenges.length,
     totalEarned,
+    badges,
+    unlockedBadgeCount,
+    isAcademyDone,
   };
 }
