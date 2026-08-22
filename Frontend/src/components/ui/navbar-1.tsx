@@ -8,10 +8,11 @@ import { useEffect, useState } from "react"
 import { useAuthStore } from "@/features/auth/hooks/useAuth"
 
 const navItems = [
+  { label: "How It Works", href: "#flow" },
   { label: "Features", href: "#features" },
-  { label: "Terminal", href: "#terminal" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "Docs", href: "#docs" },
+  { label: "Board", href: "#terminal" },
+  { label: "CricCoins", href: "#criccoins" },
+  { label: "Simulator", href: "#simulator" },
   { label: "FAQ", href: "#faq" },
 ]
 
@@ -20,7 +21,7 @@ export function Navbar1() {
   const { user, isAuthenticated } = useAuthStore()
 
   const primaryHref = isAuthenticated ? "/dashboard" : "/register"
-  const primaryLabel = isAuthenticated ? "Workspace" : "Start trading"
+  const primaryLabel = isAuthenticated ? "Workspace" : "Start with CricCoins"
 
   useEffect(() => {
     if (!isOpen) return

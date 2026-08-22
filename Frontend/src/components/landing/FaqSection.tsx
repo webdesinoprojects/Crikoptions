@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { HelpCircle, ChevronDown, Search, AlertCircle } from "lucide-react";
+import { AlertCircle, ChevronDown, HelpCircle, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface FaqItem {
@@ -17,95 +17,95 @@ export const FAQ_LIST: FaqItem[] = [
     category: "General",
     question: "What is CricOptions?",
     answer:
-      "CricOptions is a social options trading game where you can trade cricket-based options during live T20 and ODI matches. It is designed for options enthusiasts to test their trading skills in a fun, competitive environment using virtual coins.",
+      "CricOptions is a live cricket strategy game powered by CricCoins. It combines ball-by-ball match context, prediction picks, option-style thinking, score tracking, and leaderboards so users can practice smarter cricket decisions.",
   },
   {
     id: "faq-2",
     category: "Safety & Coins",
     question: "Is my real money at stake?",
     answer:
-      "No. CricOptions is a social game. All trades are executed using virtual coins, and no real money is involved. You cannot deposit, withdraw, or lose real money on the platform.",
+      "No. CricOptions is a social cricket strategy game. All picks use CricCoins, and no real money is involved. You cannot deposit, withdraw, or lose real money on the platform.",
   },
   {
     id: "faq-3",
     category: "Safety & Coins",
     question: "Can I win real cash or prizes?",
     answer:
-      "No. CricOptions does not offer cash rewards for trading. Your performance is reflected through virtual profits, rankings, achievements, badges, and leaderboards.",
+      "No. CricOptions does not offer cash rewards. Performance is reflected through CricCoins results, rankings, achievements, badges, and leaderboards.",
   },
   {
     id: "faq-4",
-    category: "Trading Mechanics",
-    question: "Why are there only Call Options and no Put Options?",
+    category: "Game Mechanics",
+    question: "What can I predict on CricOptions?",
     answer:
-      "Cricket scores can only move upwards as runs are scored—they never decrease. Since the underlying value only moves in one direction, CricOptions offers Call Options only, making the trading experience simple and intuitive.",
+      "The current product focuses on cricket outcomes such as innings totals, run milestones, chase targets, over momentum, and similar score-driven match moments. The option-style layer teaches timing, probability, and risk-reward without real money.",
   },
   {
     id: "faq-5",
-    category: "Trading Mechanics",
-    question: "When does trading start?",
+    category: "Game Mechanics",
+    question: "When can I start making picks?",
     answer:
-      "Trading begins after the first ball of the innings is delivered. No trades can be placed before the match starts.",
+      "For live match games, picks begin after match data is available and the game marks the moment as playable. Simulator games can also be replayed from historical ball events for practice.",
   },
   {
     id: "faq-6",
-    category: "Trading Mechanics",
-    question: "Can I trade throughout the entire match?",
+    category: "Game Mechanics",
+    question: "Can I play throughout the entire match?",
     answer:
-      "Yes. You can trade during the live innings until the exchange stops accepting new orders before settlement.",
+      "Yes. You can make picks during a live innings until the game stops accepting new picks before settlement.",
   },
   {
     id: "faq-7",
     category: "Safety & Coins",
-    question: "What are virtual coins?",
+    question: "What are CricCoins?",
     answer:
-      "Virtual coins are the in-game currency used to buy and sell options on CricOptions. They have no monetary value and are intended solely for gameplay and learning.",
+      "CricCoins are the in-game currency used to back picks on CricOptions. They have no monetary value and are intended solely for gameplay, learning, and strategy practice.",
   },
   {
     id: "faq-8",
     category: "General",
     question: "Is CricOptions suitable for beginners?",
     answer:
-      "Yes. Whether you're new to options trading or an experienced trader, CricOptions provides a risk-free environment to learn strategies, practise decision-making, and improve your trading skills.",
+      "Yes. Whether you are new to options-style strategy or already understand probability games, CricOptions provides a virtual environment to practice decision-making and improve timing without risking real money.",
   },
   {
     id: "faq-9",
-    category: "Trading Mechanics",
-    question: "How are option prices determined?",
+    category: "Game Mechanics",
+    question: "How do pick costs and multipliers move?",
     answer:
-      "Option prices are determined by the CricOptions exchange based on the live match situation, including factors such as the current score, overs remaining, wickets in hand, and market demand.",
+      "Pick costs and multipliers are produced by the CricOptions game layer using match state, score context, overs remaining, wickets, and player demand. The strategy board shows the current moment before you confirm a pick.",
   },
   {
     id: "faq-10",
-    category: "Trading Mechanics",
-    question: "What happens when an option expires?",
+    category: "Game Mechanics",
+    question: "What happens when a pick settles?",
     answer:
-      "At the end of the innings, all open positions are automatically settled by the exchange based on the final match outcome and the option's settlement value.",
+      "At the end of the relevant match moment or innings, open picks settle based on the final cricket outcome and update your CricCoins result.",
   },
   {
     id: "faq-11",
     category: "Strategies",
     question: "Can I practice option strategies like Iron Fly or Iron Condor?",
     answer:
-      "Yes. CricOptions allows you to practice a variety of option trading strategies, including Long Calls, Call Selling, Bull Call Spreads, Ratio Spreads, Iron Fly, and Iron Condor, all without risking real money.",
+      "Yes. CricOptions can help users understand option-style structures such as long calls, call selling, spreads, ratio spreads, Iron Fly, and Iron Condor using CricCoins.",
   },
   {
     id: "faq-12",
     category: "Safety & Coins",
     question: "Is CricOptions a gambling or betting platform?",
     answer:
-      "No. CricOptions is a social trading game designed for entertainment and educational purposes. It does not involve wagering or winning real money.",
+      "No. CricOptions is a social cricket strategy game designed for entertainment and educational purposes. It does not involve wagering or winning real money.",
   },
   {
     id: "faq-13",
     category: "General",
-    question: "Do I need prior experience in options trading?",
+    question: "Is there a mobile version?",
     answer:
-      "Not at all. You can start with simple Call Option trades and gradually unlock more advanced strategies as you gain experience on the platform.",
+      "The web app is responsive and can be used on smaller screens, but the full strategy-board experience is strongest on desktop and tablet-sized screens where the match, picks, score, and CricCoins panels can stay visible together.",
   },
 ];
 
-const CATEGORIES = ["All", "General", "Trading Mechanics", "Safety & Coins", "Strategies"];
+const CATEGORIES = ["All", "General", "Game Mechanics", "Safety & Coins", "Strategies"];
 
 export function FaqSection() {
   const [openId, setOpenId] = useState<string | null>("faq-1");
@@ -139,30 +139,27 @@ export function FaqSection() {
 
   return (
     <section id="faq" className="relative scroll-mt-20 border-t border-white/10 bg-[#040a16] px-4 py-20 sm:px-6 lg:px-8">
-      {/* Schema.org FAQ Structured Data */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
-      {/* Background Ambient Glow */}
+
       <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-cyan-500/10 to-transparent opacity-60" />
 
       <div className="mx-auto max-w-5xl">
-        {/* Header */}
         <div className="text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-400/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-sky-300">
             <HelpCircle className="size-4" aria-hidden="true" />
             Frequently Asked Questions
           </div>
           <h2 className="mt-4 text-3xl font-black leading-tight text-slate-50 sm:text-4xl lg:text-5xl">
-            Everything you need to know
+            Game rules and CricCoins basics
           </h2>
           <p className="mt-4 text-base text-slate-400 sm:text-lg">
-            Have questions about trading cricket options, virtual coins, or platform rules? We&apos;ve got answers.
+            Clear answers about cricket predictions, CricCoins, strategy, and safety rules.
           </p>
         </div>
 
-        {/* Filter Tabs & Search */}
         <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((cat) => (
@@ -194,7 +191,6 @@ export function FaqSection() {
           </div>
         </div>
 
-        {/* Accordion Items */}
         <div className="mt-8 space-y-3">
           {filteredFaqs.length > 0 ? (
             filteredFaqs.map((faq) => {
@@ -246,14 +242,13 @@ export function FaqSection() {
           )}
         </div>
 
-        {/* Disclaimer Banner */}
         <div className="mt-12 rounded-xl border border-amber-500/20 bg-amber-500/5 p-5 backdrop-blur-md">
           <div className="flex items-start gap-3">
             <AlertCircle className="mt-0.5 size-5 shrink-0 text-amber-400" />
             <div>
               <h4 className="text-xs font-black uppercase tracking-wider text-amber-300">Disclaimer</h4>
-              <p className="mt-1 text-xs text-amber-200/80 leading-relaxed">
-                CricOptions is a social game intended for entertainment and educational purposes only. All trades use virtual coins, and no real money, securities, or financial instruments are traded.
+              <p className="mt-1 text-xs leading-relaxed text-amber-200/80">
+                CricOptions is a social game intended for entertainment and educational purposes only. All picks use CricCoins with no monetary value, and no real money, securities, or financial instruments are traded.
               </p>
             </div>
           </div>

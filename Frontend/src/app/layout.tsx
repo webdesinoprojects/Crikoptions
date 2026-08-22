@@ -26,20 +26,20 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://cricoptions.com"),
   title: {
-    default: "CricOptions | Live Cricket Options Trading & Analytics Platform",
+    default: "CricOptions | Cricket Prediction Strategy Game",
     template: "%s | CricOptions",
   },
   description:
-    "Trade live cricket Call options during T20 & ODI matches. Test option strategies, track real-time match depth, and rank on global leaderboards with virtual coins.",
+    "Use CricCoins to make live cricket predictions, learn option-style strategy, replay match moments, and compete on matchday leaderboards without real money.",
   keywords: [
     "Cricket Options",
-    "Cricket Derivatives",
-    "Live Match Trading",
-    "T20 Options Chain",
-    "Virtual Options Simulator",
-    "Options Trading Game",
+    "Cricket Prediction Game",
+    "CricCoins",
+    "Live Cricket Strategy",
+    "Cricket Strategy Game",
+    "Options Learning Game",
     "Cricket Analytics",
-    "Option Call Trading",
+    "Matchday Leaderboard",
   ],
   authors: [{ name: "CricOptions Team" }],
   creator: "CricOptions",
@@ -53,23 +53,23 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://cricoptions.com",
     siteName: "CricOptions",
-    title: "CricOptions | Social Live Cricket Options Trading",
+    title: "CricOptions | Cricket Prediction Strategy Game",
     description:
-      "Trade cricket Call options during live T20 and ODI matches. Test option strategies risk-free with virtual coins.",
+      "Use CricCoins to make live cricket predictions, learn option-style strategy, and compete without real money.",
     images: [
       {
         url: "/cricoptions_logo.jpg",
         width: 1200,
         height: 630,
-        alt: "CricOptions Trading Terminal",
+        alt: "CricOptions Matchday Strategy Game",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CricOptions | Live Cricket Options Trading",
+    title: "CricOptions | Cricket Prediction Strategy Game",
     description:
-      "Trade cricket Call options during live T20 & ODI matches with virtual coins.",
+      "Use CricCoins to make live cricket predictions, learn strategy, and compete without real money.",
     images: ["/cricoptions_logo.jpg"],
   },
   robots: {

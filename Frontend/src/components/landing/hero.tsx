@@ -1,208 +1,230 @@
 "use client"
 
-import React from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, BarChart3, Crosshair, ShieldCheck, TrendingUp } from "lucide-react"
+import { ArrowRight, CircleDollarSign, RadioTower, ShieldCheck } from "lucide-react"
 import { motion } from "framer-motion"
 
-const featureSignals = [
-  {
-    icon: BarChart3,
-    title: "Real-time odds",
-    body: "Live, non-delayed market data",
-  },
-  {
-    icon: Crosshair,
-    title: "Ball-by-ball",
-    body: "Granular markets on every delivery",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Risk engine",
-    body: "Portfolio protection built in",
-  },
-]
-
-const stats = [
-  { label: "Active traders", value: "18,842", color: "#16e6a7" },
-  { label: "Markets live", value: "2,341", color: "#0ea5e9" },
-  { label: "24h volume", value: "$7.48M", color: "#ffd700" },
+const predictionRows = [
+  { pick: "Chase over 165", cost: "1.50", trend: "Rising", signal: "Strong" },
+  { pick: "Next over 8+", cost: "1.28", trend: "Hot", signal: "Medium" },
+  { pick: "Batter 50", cost: "1.74", trend: "Steady", signal: "Open" },
+  { pick: "Late surge", cost: "2.10", trend: "Volatile", signal: "Bold" },
 ]
 
 const orderRows = [
-  ["2.28", "$12,340", "2.30", "$8,910"],
-  ["2.26", "$9,120", "2.32", "$7,230"],
-  ["2.24", "$15,670", "2.34", "$11,230"],
-  ["2.22", "$10,980", "2.36", "$9,880"],
-  ["2.20", "$8,770", "2.38", "$12,450"],
+  ["1.50", "710", "1.56", "520"],
+  ["1.46", "620", "1.60", "480"],
+  ["1.42", "390", "1.64", "610"],
+  ["1.38", "440", "1.68", "700"],
 ]
 
-function Sparkline({ color }: { color: string }) {
+function HeroStrategyBoard() {
   return (
-    <svg viewBox="0 0 72 28" className="h-7 w-16" aria-hidden>
-      <path
-        d="M2 22 L12 21 L19 13 L27 18 L36 8 L45 14 L55 10 L70 4"
-        fill="none"
-        stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M2 22 L12 21 L19 13 L27 18 L36 8 L45 14 L55 10 L70 4"
-        fill="none"
-        stroke={color}
-        strokeOpacity="0.2"
-        strokeWidth="7"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
-
-function MiniCandleChart() {
-  const bars = [26, 34, 22, 42, 31, 48, 38, 54, 45, 62, 50, 67, 58, 71, 64, 78, 61, 70]
-
-  return (
-    <div className="relative h-44 overflow-hidden rounded-xl bg-[#050a14] p-4">
-      <div
-        aria-hidden
-        className="absolute inset-0 opacity-25"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(56,189,248,0.14) 1px, transparent 1px), linear-gradient(90deg, rgba(56,189,248,0.14) 1px, transparent 1px)",
-          backgroundSize: "38px 34px",
-        }}
-      />
-      <div className="relative flex h-full items-end gap-2">
-        {bars.map((height, index) => {
-          const positive = index % 4 !== 2
-          return (
-            <span
-              key={index}
-              className={positive ? "bg-emerald-400" : "bg-red-400"}
-              style={{
-                height: `${height}%`,
-                width: "8px",
-                boxShadow: positive
-                  ? "0 0 16px rgba(52,211,153,0.25)"
-                  : "0 0 16px rgba(248,113,113,0.24)",
-              }}
-            />
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-function OrderBookPanel() {
-  return (
-    <div className="rounded-2xl border border-sky-300/12 bg-[#071020]/92 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-      <div className="mb-3 flex items-center justify-between text-[10px] font-black uppercase tracking-normal text-slate-100">
-        <span>Order book</span>
-        <span className="font-semibold text-slate-400">Lay</span>
-      </div>
-      <div className="space-y-1.5">
-        {orderRows.map(([back, backSize, lay, laySize]) => (
-          <div key={`${back}-${lay}`} className="grid grid-cols-4 items-center gap-2 text-[11px]">
-            <span className="rounded bg-sky-400/22 px-2 py-1 font-black text-sky-200">
-              {back}
-            </span>
-            <span className="text-right text-sky-300/75">{backSize}</span>
-            <span className="rounded bg-red-400/18 px-2 py-1 font-black text-red-200">
-              {lay}
-            </span>
-            <span className="text-right text-slate-400">{laySize}</span>
-          </div>
-        ))}
-      </div>
-      <div className="mt-3 flex items-end gap-1">
-        {Array.from({ length: 18 }).map((_, index) => (
-          <span
-            key={index}
-            className="w-1 rounded-t bg-sky-400"
-            style={{ height: `${6 + index * 2}px`, opacity: 0.28 + index * 0.035 }}
-          />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function MatchPanel() {
-  return (
-    <div className="rounded-2xl border border-sky-300/14 bg-[#071020]/92 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-      <div className="mb-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-normal text-emerald-300">
-        <span className="size-1.5 rounded-full bg-emerald-400" />
-        Live match
-      </div>
-      <div className="space-y-3">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="flex size-9 items-center justify-center rounded-full bg-white text-sm font-black text-slate-950">
-              IND
-            </span>
-            <span className="text-base font-black text-white">IND</span>
-          </div>
-          <div className="text-right">
-            <div className="text-2xl font-black text-white">186/4</div>
-            <div className="text-[11px] text-slate-400">(19.2 overs)</div>
-          </div>
-        </div>
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="flex size-9 items-center justify-center rounded-full bg-emerald-400 text-sm font-black text-slate-950">
-              AUS
-            </span>
-            <span className="text-base font-black text-white">AUS</span>
-          </div>
-          <div className="text-right">
-            <div className="text-2xl font-black text-white">208</div>
-            <div className="text-[11px] text-slate-400">(50 overs)</div>
-          </div>
-        </div>
-      </div>
-      <p className="mt-4 text-xs font-semibold text-sky-300">IND needs 23 runs in 30 balls</p>
-    </div>
-  )
-}
-
-function OrderTicket() {
-  return (
-    <div className="rounded-2xl border border-sky-300/12 bg-[#071020]/95 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.38)] backdrop-blur-xl">
-      <div className="mb-4 grid grid-cols-2 rounded-lg bg-white/4 p-1 text-center text-xs font-black">
-        <span className="rounded-md bg-sky-400/18 py-2 text-sky-200">Back</span>
-        <span className="py-2 text-slate-400">Lay</span>
-      </div>
-      <div className="space-y-3">
+    <div className="relative mx-auto w-full max-w-4xl overflow-hidden rounded-lg border border-cyan-200/15 bg-[#050b15]/94 shadow-[0_36px_120px_rgba(0,0,0,0.56)] backdrop-blur-xl">
+      <div className="flex items-center justify-between border-b border-white/10 bg-[#081322] px-4 py-3">
         <div>
-          <p className="text-xs text-slate-400">Odds</p>
-          <p className="text-2xl font-black text-white">2.28</p>
+          <div className="flex items-center gap-2 text-sm font-black text-white">
+            <span>CricOptions</span>
+            <span className="rounded border border-emerald-300/25 bg-emerald-400/10 px-2 py-0.5 text-[10px] uppercase text-emerald-300">
+              CricCoins only
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-slate-400">Live match strategy board</p>
         </div>
-        <div>
-          <p className="text-xs text-slate-400">Stake (USD)</p>
-          <p className="text-2xl font-black text-white">1,000</p>
+        <div className="hidden items-center gap-2 sm:flex">
+          <span className="rounded border border-amber-300/25 bg-amber-300/10 px-2.5 py-1 text-xs font-black text-amber-200">
+            ₵125,000
+          </span>
+          <span className="inline-flex items-center gap-2 text-xs font-semibold text-cyan-200">
+            <span className="size-1.5 rounded-full bg-emerald-400" />
+            Live Match
+          </span>
         </div>
-        <button
-          type="button"
-          className="w-full rounded-xl bg-sky-400 px-4 py-3 text-sm font-black text-slate-950 shadow-[0_16px_36px_rgba(14,165,233,0.25)]"
-        >
-          Place Back
-        </button>
       </div>
-      <div className="mt-3 flex items-center justify-between text-sm font-semibold">
-        <span className="text-sky-300">Est. Payout</span>
-        <span className="text-sky-200">$2,280.00</span>
+
+      <div className="relative h-40 overflow-hidden border-b border-white/10 sm:h-52 lg:h-56">
+        <Image
+          src="/cricoptions-hero-trading.png"
+          alt="CricOptions matchday strategy workspace"
+          fill
+          priority
+          sizes="(min-width: 1024px) 55vw, 100vw"
+          className="object-cover object-[56%_42%]"
+        />
+        <div aria-hidden className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,11,21,0.92)_0%,rgba(5,11,21,0.5)_42%,rgba(5,11,21,0.18)_100%)]" />
+        <div aria-hidden className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#050b15] to-transparent" />
+        <div className="absolute left-4 top-4 max-w-[220px] rounded-md border border-white/10 bg-[#071120]/78 p-3 shadow-[0_18px_44px_rgba(0,0,0,0.35)] backdrop-blur-md sm:left-5 sm:top-5">
+          <p className="text-[10px] font-black uppercase tracking-wide text-amber-300">
+            Matchday view
+          </p>
+          <p className="mt-1 text-sm font-black leading-5 text-white">
+            Cricket, picks, and CricCoins in one live game surface.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid gap-px bg-white/10 lg:grid-cols-[1.08fr_0.92fr]">
+        <div className="bg-[#050b15] p-4">
+          <div className="rounded-md border border-white/10 bg-[#081423] p-4">
+            <div className="grid grid-cols-3 items-end gap-3">
+              <div>
+                <p className="text-[10px] font-black uppercase text-cyan-300">Batting</p>
+                <p className="mt-1 text-3xl font-black text-white">162/4</p>
+                <p className="text-xs text-slate-400">18.2 overs</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs font-semibold text-slate-400">Need 47 from 34</p>
+                <div className="mt-3 grid grid-cols-6 gap-1">
+                  {["1", "4", "1", "6", "W", "0"].map((ball, index) => (
+                    <span
+                      key={`${ball}-${index}`}
+                      className="flex aspect-square items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-xs font-black text-slate-100"
+                    >
+                      {ball}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-black uppercase text-amber-300">Target</p>
+                <p className="mt-1 text-3xl font-black text-white">209</p>
+                <p className="text-xs text-slate-400">ODI chase</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-3 grid gap-3 md:grid-cols-[1.1fr_0.9fr]">
+            <div className="overflow-hidden rounded-md border border-white/10">
+              <div className="border-b border-white/10 bg-[#0a1829] px-3 py-2 text-xs font-black text-white">
+                Prediction Board
+              </div>
+              <table className="w-full text-sm">
+                <thead className="bg-[#071120] text-[10px] uppercase text-slate-500">
+                  <tr>
+                    <th className="px-3 py-2 text-left">Pick</th>
+                    <th className="px-3 py-2 text-right">Cost</th>
+                    <th className="px-3 py-2 text-right">Trend</th>
+                    <th className="px-3 py-2 text-right">Signal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {predictionRows.map((row) => (
+                    <tr key={row.pick} className="border-t border-white/6 odd:bg-white/[0.025]">
+                      <td className="px-3 py-2 font-black text-white">{row.pick}</td>
+                      <td className="px-3 py-2 text-right font-mono text-amber-300">{row.cost}</td>
+                      <td className="px-3 py-2 text-right text-xs text-emerald-300">{row.trend}</td>
+                      <td className="px-3 py-2 text-right text-xs text-cyan-200">{row.signal}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="rounded-md border border-white/10 bg-[#071120] p-3">
+              <div className="grid grid-cols-2 rounded-md bg-white/[0.04] p-1 text-center text-xs font-black">
+                <span className="rounded bg-emerald-400/18 py-2 text-emerald-200">Back</span>
+                <span className="py-2 text-slate-400">Skip</span>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-xs text-slate-500">Pick</p>
+                  <p className="mt-1 font-black text-white">Chase 165+</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500">Multiplier</p>
+                  <p className="mt-1 font-mono font-black text-white">1.50</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500">Stake</p>
+                  <p className="mt-1 font-mono font-black text-white">100</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500">CricCoins</p>
+                  <p className="mt-1 font-mono font-black text-amber-300">₵125,000</p>
+                </div>
+              </div>
+              <div className="mt-4 rounded-md border border-amber-300/15 bg-amber-300/8 px-3 py-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400">Pick cost</span>
+                  <span className="font-mono font-black text-amber-200">₵150</span>
+                </div>
+                <div className="mt-1 flex items-center justify-between text-xs">
+                  <span className="text-slate-400">Balance after</span>
+                  <span className="font-mono font-black text-slate-100">₵124,850</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="mt-4 w-full rounded-md bg-emerald-400 px-4 py-3 text-sm font-black text-slate-950"
+              >
+                Preview pick
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-px bg-white/10">
+          <div className="bg-[#071120] p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-black text-white">Match Pulse</p>
+              <p className="text-xs text-slate-500">How the crowd is leaning</p>
+            </div>
+            <div className="mt-3 space-y-2">
+              {orderRows.map(([bid, bidSize, ask, askSize]) => (
+                <div key={`${bid}-${ask}`} className="grid grid-cols-4 gap-2 text-xs">
+                  <span className="rounded bg-emerald-400/12 px-2 py-1 font-mono text-emerald-300">{bid}</span>
+                  <span className="text-right text-slate-400">{bidSize}</span>
+                  <span className="rounded bg-red-400/12 px-2 py-1 font-mono text-red-300">{ask}</span>
+                  <span className="text-right text-slate-400">{askSize}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-[#071120] p-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-black text-white">Match Score</p>
+                <p className="mt-1 text-xs text-slate-500">Your CricCoins result updates live</p>
+              </div>
+              <p className="font-mono text-lg font-black text-emerald-300">+3,860</p>
+            </div>
+            <svg viewBox="0 0 320 112" className="mt-3 h-28 w-full" aria-hidden="true">
+              <path
+                d="M6 88 C32 74 44 83 64 61 C82 41 100 69 123 46 C144 23 163 50 188 32 C212 15 225 34 244 24 C268 11 286 18 314 8"
+                fill="none"
+                stroke="#34d399"
+                strokeWidth="4"
+                strokeLinecap="round"
+              />
+              <path
+                d="M6 88 C32 74 44 83 64 61 C82 41 100 69 123 46 C144 23 163 50 188 32 C212 15 225 34 244 24 C268 11 286 18 314 8 V112 H6 Z"
+                fill="url(#pnlFill)"
+              />
+              <defs>
+                <linearGradient id="pnlFill" x1="160" x2="160" y1="8" y2="112" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#34d399" stopOpacity="0.25" />
+                  <stop offset="1" stopColor="#34d399" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
-export const HeroSection = () => {
+const proofPoints = [
+  { icon: RadioTower, label: "Live match moments" },
+  { icon: CircleDollarSign, label: "CricCoins wallet" },
+  { icon: ShieldCheck, label: "CricCoins only" },
+]
+
+export function HeroSection() {
   return (
-    <section className="relative min-h-[100dvh] w-full overflow-x-hidden bg-[#020711] px-4 pb-20 pt-28 text-white sm:px-6 lg:px-8 lg:pb-10 lg:pt-28">
+    <section className="relative min-h-[94dvh] overflow-hidden bg-[#020711] px-4 pb-16 pt-24 text-white sm:px-6 lg:px-8 lg:pt-28">
       <Image
         src="/Backgroun_land.png"
         alt=""
@@ -213,167 +235,76 @@ export const HeroSection = () => {
         className="z-0 object-cover object-center"
       />
 
-      <div aria-hidden className="absolute inset-0 z-[1] pointer-events-none">
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,7,17,0.96)_0%,rgba(2,7,17,0.82)_34%,rgba(2,7,17,0.36)_68%,rgba(2,7,17,0.58)_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,7,17,0.88)_0%,rgba(2,7,17,0.18)_36%,rgba(2,7,17,0.34)_70%,rgba(2,7,17,0.92)_100%)]" />
-        <div className="absolute inset-x-0 top-0 h-px bg-white/10" />
+      <div aria-hidden className="absolute inset-0 z-[1]">
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,7,17,0.98)_0%,rgba(2,7,17,0.88)_36%,rgba(2,7,17,0.44)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,7,17,0.78)_0%,rgba(2,7,17,0.18)_42%,rgba(2,7,17,0.95)_100%)]" />
       </div>
 
-      <div className="relative z-10 mx-auto grid min-h-[calc(100dvh-8rem)] w-full max-w-[1500px] items-center gap-10 lg:min-h-[calc(100dvh-10rem)] lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] xl:gap-14">
+      <div className="relative z-10 mx-auto grid min-h-[calc(94dvh-7rem)] max-w-[1500px] items-center gap-10 lg:grid-cols-[0.82fr_1.18fr]">
         <motion.div
-          className="relative z-20 max-w-[620px] pt-4 lg:pt-0"
-          initial={{ opacity: 0, y: 26 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.75, ease: "easeOut" }}
+          transition={{ duration: 0.7, ease: "easeOut" }}
         >
-          <div className="mb-6 inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/[0.045] p-1 text-sm font-bold text-slate-300 shadow-[0_14px_42px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/18 bg-emerald-400/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-normal text-emerald-300">
-              <span className="size-1.5 rounded-full bg-emerald-400" />
-              Live markets
-            </span>
-            <span className="pr-3 text-xs sm:text-sm">IND vs AUS - 2nd ODI</span>
-          </div>
-
-          <h1 className="landing-reveal max-w-[620px] text-[3.25rem] font-black leading-[0.98] tracking-normal text-white drop-shadow-2xl sm:text-[4rem] lg:text-[4.05rem] xl:text-[4.35rem]">
-            Trade cricket
-            <br />
-            options{" "}
-            <span className="bg-linear-to-r from-sky-300 via-cyan-300 to-[#ffe45c] bg-clip-text text-transparent">
-              with
-              <br />
-              terminal control
-            </span>
-          </h1>
-
-          <p className="landing-reveal landing-reveal-delay-1 mt-6 max-w-[540px] text-base leading-7 text-slate-300 sm:text-lg">
-            Live odds, ball data, and portfolio risk - all in one execution
-            workspace.
+          <p className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/8 px-3 py-1.5 text-xs font-black uppercase text-cyan-200">
+            <span className="size-1.5 rounded-full bg-emerald-400" />
+            CricOptions Matchday Game
           </p>
 
-          <div className="landing-reveal landing-reveal-delay-2 mt-8 flex flex-col gap-4 sm:flex-row">
+          <h1 className="mt-6 max-w-3xl text-5xl font-black leading-[0.98] tracking-normal text-white sm:text-6xl lg:text-7xl">
+            Every ball becomes a decision
+          </h1>
+
+          <p className="mt-6 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+            Use CricCoins to back cricket outcomes, shape your match score,
+            and compete in a live strategy game inspired by options thinking.
+            No real money. Just cricket, skill, and timing.
+          </p>
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/register"
-              className="group inline-flex items-center justify-center gap-3 rounded-xl bg-sky-400 px-7 py-4 text-base font-black text-slate-950 shadow-[0_20px_46px_rgba(14,165,233,0.28)] transition hover:bg-sky-300 active:translate-y-px"
+              className="group inline-flex items-center justify-center gap-3 rounded-lg bg-cyan-300 px-6 py-3.5 text-sm font-black text-slate-950 shadow-[0_18px_44px_rgba(34,211,238,0.24)] transition hover:bg-cyan-200 active:translate-y-px"
             >
-              Start trading
-              <span className="flex size-7 items-center justify-center rounded-full bg-white/18 transition-transform group-hover:translate-x-1">
-                <ArrowRight className="size-4" />
-              </span>
+              Start with CricCoins
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
             </Link>
             <Link
               href="#terminal"
-              className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/[0.035] px-7 py-4 text-base font-bold text-slate-300 transition hover:border-sky-300/35 hover:text-white"
+              className="inline-flex items-center justify-center rounded-lg border border-white/12 bg-white/[0.035] px-6 py-3.5 text-sm font-bold text-slate-200 transition hover:border-cyan-300/35 hover:text-white"
             >
-              Explore terminal
+              See how it works
             </Link>
           </div>
 
-          <div className="mt-10 grid gap-5 sm:grid-cols-3">
-            {featureSignals.map((item) => {
-              const Icon = item.icon
-
-              return (
-                <div key={item.title} className="grid grid-cols-[42px_1fr] gap-3">
-                  <span className="flex size-11 items-center justify-center rounded-full border border-sky-300/20 bg-sky-400/10 text-sky-300">
-                    <Icon className="size-5" />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-black text-white">{item.title}</span>
-                    <span className="mt-1 block text-sm leading-6 text-slate-400">{item.body}</span>
-                  </span>
-                </div>
-              )
-            })}
-          </div>
-
-          <div className="mt-8 grid gap-4 rounded-2xl border border-white/10 bg-white/[0.045] p-5 shadow-[0_22px_70px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:grid-cols-3">
-            {stats.map((item) => (
-              <div key={item.label} className="flex items-end justify-between gap-3">
-                <div>
-                  <p className="text-sm font-medium text-slate-400">{item.label}</p>
-                  <p className="mt-1 text-2xl font-black text-white">{item.value}</p>
-                </div>
-                <Sparkline color={item.color} />
+          <div className="mt-9 grid gap-3 sm:grid-cols-3">
+            {proofPoints.map(({ icon: Icon, label }) => (
+              <div key={label} className="flex items-center gap-3">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/[0.04] text-cyan-300">
+                  <Icon className="size-4" aria-hidden="true" />
+                </span>
+                <span className="text-sm font-semibold leading-5 text-slate-300">{label}</span>
               </div>
             ))}
           </div>
+
+          <p className="mt-8 max-w-xl text-xs leading-5 text-slate-500">
+            CricOptions uses CricCoins for entertainment, education, and
+            strategy practice. No cash deposits, withdrawals, or wagering.
+          </p>
         </motion.div>
 
         <motion.div
-          className="relative z-10 min-h-[620px] w-full lg:min-h-[660px] flex items-center justify-center"
-          initial={{ opacity: 0, x: 34 }}
+          initial={{ opacity: 0, x: 28 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.85, ease: "easeOut", delay: 0.12 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
+          className="relative"
         >
-          <div className="absolute left-[3%] top-[9%] hidden w-[32%] lg:block">
-            <MatchPanel />
-          </div>
-
-          <div className="absolute right-[1%] top-[4%] hidden w-[31%] lg:block">
-            <OrderBookPanel />
-          </div>
-
-          <div className="absolute bottom-[12%] left-[11%] hidden w-[54%] rounded-2xl border border-sky-300/12 bg-[#071020]/95 p-4 shadow-[0_30px_90px_rgba(0,0,0,0.44)] backdrop-blur-xl lg:block">
-            <div className="mb-4 flex items-center justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-black text-white">IND Win</span>
-                  <span className="rounded-full border border-white/10 px-2 py-0.5 text-xs text-slate-400">
-                    In play
-                  </span>
-                </div>
-                <div className="mt-2 flex items-end gap-3">
-                  <span className="text-4xl font-black text-white">2.28</span>
-                  <span className="pb-1 text-sm font-black text-emerald-300">+3.21%</span>
-                </div>
-              </div>
-              <div className="flex size-10 items-center justify-center rounded-xl bg-white/[0.06] text-sky-300">
-                <TrendingUp className="size-5" />
-              </div>
-            </div>
-            <MiniCandleChart />
-          </div>
-
-          <div className="absolute bottom-[12%] right-[2%] hidden w-[32%] lg:block">
-            <OrderTicket />
-          </div>
-
-          <div className="absolute bottom-[1%] left-[10%] right-[2%] hidden grid-cols-4 gap-3 lg:grid">
-            {[
-              ["Next ball", "55%", "Batting side"],
-              ["Run rate", "9.61", "Current"],
-              ["Over trend", "6 1 0 4 2", "Last five"],
-              ["Partnership", "42 (28)", "Kohli & Hardik"],
-            ].map(([label, value, detail]) => (
-              <div
-                key={label}
-                className="rounded-2xl border border-sky-300/10 bg-[#071020]/88 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.32)] backdrop-blur-xl"
-              >
-                <p className="text-sm font-medium text-slate-400">{label}</p>
-                <p className="mt-2 text-2xl font-black text-white">{value}</p>
-                <p className="mt-1 text-xs text-sky-300">{detail}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="relative mx-auto overflow-hidden rounded-2xl border border-sky-300/12 bg-[#071020]/90 p-3 shadow-[0_32px_96px_rgba(0,0,0,0.42),0_0_50px_rgba(14,165,233,0.15)] backdrop-blur-xl lg:hidden mt-20 sm:mt-10">
-            <Image
-              src="/cricoptions-hero-trading.png"
-              alt="CricOptions cricket options trading workstation"
-              width={1792}
-              height={1024}
-              priority
-              className="aspect-[16/10] w-full rounded-xl object-cover object-[55%_40%] shadow-2xl"
-            />
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <MatchPanel />
-              <OrderTicket />
-            </div>
-          </div>
+          <HeroStrategyBoard />
         </motion.div>
       </div>
 
-      <div aria-hidden className="absolute bottom-0 left-0 z-20 h-32 w-full bg-gradient-to-t from-[#05070b] to-transparent pointer-events-none" />
+      <div aria-hidden className="absolute inset-x-0 bottom-0 z-20 h-24 bg-gradient-to-t from-[#020617] to-transparent" />
     </section>
   )
 }
