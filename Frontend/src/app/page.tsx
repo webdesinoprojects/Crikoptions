@@ -11,76 +11,11 @@ import {
   WalletCards,
 } from "lucide-react"
 
-import { DataTable, type DataTableColumn } from "@/components/data-table"
 import { Footer } from "@/components/footer"
 import { FaqSection } from "@/components/landing/FaqSection"
 import { HeroSection } from "@/components/landing/hero"
 import { LandingMotionSections } from "@/components/landing/landing-motion-sections"
 import { Navbar1 } from "@/components/ui/navbar-1"
-
-type MarketRow = {
-  prediction: string
-  cost: string
-  shift: string
-  moment: string
-}
-
-const marketRows: MarketRow[] = [
-  {
-    prediction: "Chase total over 165",
-    cost: "₵150",
-    shift: "Rising",
-    moment: "Live chase",
-  },
-  {
-    prediction: "Next over 8+ runs",
-    cost: "₵90",
-    shift: "Hot",
-    moment: "Over 18",
-  },
-  {
-    prediction: "Batter reaches 50",
-    cost: "₵120",
-    shift: "Steady",
-    moment: "Set batter",
-  },
-  {
-    prediction: "Death-over surge",
-    cost: "₵180",
-    shift: "Bold",
-    moment: "Final overs",
-  },
-]
-
-const marketColumns: DataTableColumn<MarketRow>[] = [
-  {
-    key: "prediction",
-    header: "Prediction",
-    accessor: "prediction",
-    cellClassName: "font-medium text-slate-100",
-  },
-  {
-    key: "cost",
-    header: "Cost",
-    accessor: "cost",
-    align: "right",
-    cellClassName: "font-mono text-amber-300",
-  },
-  {
-    key: "shift",
-    header: "Shift",
-    accessor: "shift",
-    align: "right",
-    cellClassName: "text-cyan-200",
-  },
-  {
-    key: "moment",
-    header: "Moment",
-    accessor: "moment",
-    align: "right",
-    cellClassName: "text-slate-400",
-  },
-]
 
 function PrimaryLink({
   href,
@@ -103,8 +38,8 @@ function PrimaryLink({
 const accessItems = [
   "Create an account and receive a CricCoins balance",
   "Follow live or simulated match moments",
-  "Make practice picks with visible ₵ cost and confidence",
-  "Track open picks, challenges, and leaderboard progress in ₵",
+  "Trade option contracts with real-time ₵ order execution",
+  "Track open positions, challenges, and leaderboard progress in ₵",
 ]
 
 export default function Home() {
@@ -117,33 +52,7 @@ export default function Home() {
 
         <LandingMotionSections />
 
-        <section id="terminal" className="relative z-10 scroll-mt-20 border-t border-white/10 bg-[#071120] px-4 py-24 sm:px-6 lg:px-8">
-          <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
-            <div>
-              <div className="flex size-12 items-center justify-center rounded-md border border-cyan-300/30 bg-cyan-300/10 text-cyan-300">
-                <BarChart3 className="size-6" aria-hidden="true" />
-              </div>
-              <h2 className="mt-6 text-3xl font-black leading-tight text-slate-50 sm:text-4xl">
-                A prediction board that keeps the match easy to read
-              </h2>
-              <p className="mt-5 max-w-xl text-base leading-7 text-slate-400">
-                The preview should feel like a cricket game surface first:
-                live score state, simple picks, CricCoins cost, and match
-                momentum close enough to compare without losing the cricket
-                context.
-              </p>
-            </div>
-
-            <DataTable
-              caption="Sample prediction board for product preview"
-              columns={marketColumns}
-              data={marketRows}
-              getRowKey={(row) => row.prediction}
-            />
-          </div>
-        </section>
-
-        <section id="criccoins" className="scroll-mt-20 bg-[#020617] px-4 py-20 sm:px-6 lg:px-8">
+        <section id="criccoins" className="scroll-mt-20 border-t border-white/10 bg-[#020617] px-4 py-20 sm:px-6 lg:px-8">
           <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
             <div>
               <p className="text-xs font-black uppercase tracking-wide text-amber-300">CricCoins</p>
@@ -151,7 +60,7 @@ export default function Home() {
                 CricCoins make the game simple
               </h2>
               <p className="mt-5 max-w-xl text-base leading-7 text-slate-400">
-                Users get a clear practice balance, every pick shows its ₵
+                Users get a clear practice balance, every order shows its ₵
                 cost, and results stay tied to the game instead of real money.
               </p>
             </div>
@@ -166,9 +75,9 @@ export default function Home() {
                 },
                 {
                   icon: BarChart3,
-                  title: "Spend on picks",
-                  body: "The pick preview shows cost and balance after confirmation, so the next action is obvious.",
-                  value: "₵150",
+                  title: "Trade contracts",
+                  body: "The order execution panel shows cost and balance after confirmation, so the next action is obvious.",
+                  value: "₵5,400",
                 },
                 {
                   icon: WalletCards,
@@ -231,13 +140,13 @@ export default function Home() {
               },
               {
                 icon: LineChart,
-                title: "Strategy Board",
-                body: "Prediction picks, match pulse, CricCoins stake, and live result tracking.",
+                title: "Trading Terminal",
+                body: "Live option chains, order book depth, CricCoins stake, and P&L tracking.",
               },
               {
                 icon: WalletCards,
                 title: "Score Room",
-                body: "Open picks, wallet state, CricCoins result curve, and matchday history.",
+                body: "Open positions, wallet state, CricCoins result curve, and matchday history.",
               },
               {
                 icon: ShieldCheck,

@@ -52,7 +52,7 @@ export function Footer() {
               />
             </Link>
             <p className="max-w-sm text-xs leading-relaxed text-slate-400">
-              A CricCoins cricket strategy game for live match predictions,
+              A CricCoins cricket strategy game for live match option trading,
               option-style learning, and leaderboard competition.
             </p>
 

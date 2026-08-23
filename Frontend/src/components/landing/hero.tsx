@@ -5,18 +5,18 @@ import Link from "next/link"
 import { ArrowRight, CircleDollarSign, RadioTower, ShieldCheck } from "lucide-react"
 import { motion } from "framer-motion"
 
-const predictionRows = [
-  { pick: "Chase over 165", cost: "1.50", trend: "Rising", signal: "Strong" },
-  { pick: "Next over 8+", cost: "1.28", trend: "Hot", signal: "Medium" },
-  { pick: "Batter 50", cost: "1.74", trend: "Steady", signal: "Open" },
-  { pick: "Late surge", cost: "2.10", trend: "Volatile", signal: "Bold" },
+const optionChainRows = [
+  { contract: "IND Win Match", callPrice: "68.50", putPrice: "31.50", change: "+4.2%" },
+  { contract: "Over 18.5 Runs > 10.5", callPrice: "54.00", putPrice: "46.00", change: "+12.5%" },
+  { contract: "Next Wicket < 15 Runs", callPrice: "38.00", putPrice: "62.00", change: "-6.1%" },
+  { contract: "Kohli 50+ Runs", callPrice: "76.00", putPrice: "24.00", change: "+8.4%" },
 ]
 
-const orderRows = [
-  ["1.50", "710", "1.56", "520"],
-  ["1.46", "620", "1.60", "480"],
-  ["1.42", "390", "1.64", "610"],
-  ["1.38", "440", "1.68", "700"],
+const orderBookRows = [
+  ["54.00", "710", "54.50", "520"],
+  ["53.50", "620", "55.00", "480"],
+  ["53.00", "390", "55.50", "610"],
+  ["52.50", "440", "56.00", "700"],
 ]
 
 function HeroStrategyBoard() {
@@ -27,17 +27,17 @@ function HeroStrategyBoard() {
           <div className="flex items-center gap-2 text-sm font-black text-white">
             <span>CricOptions</span>
             <span className="rounded border border-emerald-300/25 bg-emerald-400/10 px-2 py-0.5 text-[10px] uppercase text-emerald-300">
-              CricCoins only
+              CricCoins Trading Terminal
             </span>
           </div>
-          <p className="mt-1 text-xs text-slate-400">Live match strategy board</p>
+          <p className="mt-1 text-xs text-slate-400">Live Cricket Options Terminal</p>
         </div>
         <div className="hidden items-center gap-2 sm:flex">
           <span className="rounded border border-amber-300/25 bg-amber-300/10 px-2.5 py-1 text-xs font-black text-amber-200">
             ₵125,000
           </span>
           <span className="inline-flex items-center gap-2 text-xs font-semibold text-cyan-200">
-            <span className="size-1.5 rounded-full bg-emerald-400" />
+            <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
             Live Match
           </span>
         </div>
@@ -46,7 +46,7 @@ function HeroStrategyBoard() {
       <div className="relative h-40 overflow-hidden border-b border-white/10 sm:h-52 lg:h-56">
         <Image
           src="/cricoptions-hero-trading.png"
-          alt="CricOptions matchday strategy workspace"
+          alt="CricOptions matchday trading workspace"
           fill
           priority
           sizes="(min-width: 1024px) 55vw, 100vw"
@@ -54,17 +54,17 @@ function HeroStrategyBoard() {
         />
         <div aria-hidden className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,11,21,0.92)_0%,rgba(5,11,21,0.5)_42%,rgba(5,11,21,0.18)_100%)]" />
         <div aria-hidden className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#050b15] to-transparent" />
-        <div className="absolute left-4 top-4 max-w-[220px] rounded-md border border-white/10 bg-[#071120]/78 p-3 shadow-[0_18px_44px_rgba(0,0,0,0.35)] backdrop-blur-md sm:left-5 sm:top-5">
-          <p className="text-[10px] font-black uppercase tracking-wide text-amber-300">
-            Matchday view
+        <div className="absolute left-4 top-4 max-w-[240px] rounded-md border border-white/10 bg-[#071120]/85 p-3 shadow-[0_18px_44px_rgba(0,0,0,0.35)] backdrop-blur-md sm:left-5 sm:top-5">
+          <p className="text-[10px] font-black uppercase tracking-wide text-cyan-300">
+            Matchday Terminal
           </p>
           <p className="mt-1 text-sm font-black leading-5 text-white">
-            Cricket, picks, and CricCoins in one live game surface.
+            Live option chains, order book, and instant execution.
           </p>
         </div>
       </div>
 
-      <div className="grid gap-px bg-white/10 lg:grid-cols-[1.08fr_0.92fr]">
+      <div className="grid gap-px bg-white/10 lg:grid-cols-[1.15fr_0.85fr]">
         <div className="bg-[#050b15] p-4">
           <div className="rounded-md border border-white/10 bg-[#081423] p-4">
             <div className="grid grid-cols-3 items-end gap-3">
@@ -94,27 +94,26 @@ function HeroStrategyBoard() {
             </div>
           </div>
 
-          <div className="mt-3 grid gap-3 md:grid-cols-[1.1fr_0.9fr]">
+          <div className="mt-3 grid gap-3 md:grid-cols-[1.15fr_0.85fr]">
             <div className="overflow-hidden rounded-md border border-white/10">
-              <div className="border-b border-white/10 bg-[#0a1829] px-3 py-2 text-xs font-black text-white">
-                Prediction Board
+              <div className="flex items-center justify-between border-b border-white/10 bg-[#0a1829] px-3 py-2 text-xs font-black text-white">
+                <span>Option Chain</span>
+                <span className="text-[10px] font-mono text-cyan-300">LIVE STRIKES</span>
               </div>
               <table className="w-full text-sm">
-                <thead className="bg-[#071120] text-[10px] uppercase text-slate-500">
+                <thead className="bg-[#071120] text-[10px] uppercase text-slate-400">
                   <tr>
-                    <th className="px-3 py-2 text-left">Pick</th>
-                    <th className="px-3 py-2 text-right">Cost</th>
-                    <th className="px-3 py-2 text-right">Trend</th>
-                    <th className="px-3 py-2 text-right">Signal</th>
+                    <th className="px-2.5 py-2 text-left">Contract</th>
+                    <th className="px-2.5 py-2 text-right text-emerald-400">Call</th>
+                    <th className="px-2.5 py-2 text-right text-red-400">Put</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {predictionRows.map((row) => (
-                    <tr key={row.pick} className="border-t border-white/6 odd:bg-white/[0.025]">
-                      <td className="px-3 py-2 font-black text-white">{row.pick}</td>
-                      <td className="px-3 py-2 text-right font-mono text-amber-300">{row.cost}</td>
-                      <td className="px-3 py-2 text-right text-xs text-emerald-300">{row.trend}</td>
-                      <td className="px-3 py-2 text-right text-xs text-cyan-200">{row.signal}</td>
+                  {optionChainRows.map((row) => (
+                    <tr key={row.contract} className="border-t border-white/6 odd:bg-white/[0.025] hover:bg-white/5 transition-colors">
+                      <td className="px-2.5 py-2 font-bold text-white text-xs truncate max-w-[120px]">{row.contract}</td>
+                      <td className="px-2.5 py-2 text-right font-mono text-xs font-bold text-emerald-300">₵{row.callPrice}</td>
+                      <td className="px-2.5 py-2 text-right font-mono text-xs font-bold text-red-300">₵{row.putPrice}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -122,43 +121,49 @@ function HeroStrategyBoard() {
             </div>
 
             <div className="rounded-md border border-white/10 bg-[#071120] p-3">
-              <div className="grid grid-cols-2 rounded-md bg-white/[0.04] p-1 text-center text-xs font-black">
-                <span className="rounded bg-emerald-400/18 py-2 text-emerald-200">Back</span>
-                <span className="py-2 text-slate-400">Skip</span>
+              <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                <span className="text-xs font-black text-white">Order Form</span>
+                <span className="rounded bg-emerald-400/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300">MARKET</span>
               </div>
-              <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-xs text-slate-500">Pick</p>
-                  <p className="mt-1 font-black text-white">Chase 165+</p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500">Multiplier</p>
-                  <p className="mt-1 font-mono font-black text-white">1.50</p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500">Stake</p>
-                  <p className="mt-1 font-mono font-black text-white">100</p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500">CricCoins</p>
-                  <p className="mt-1 font-mono font-black text-amber-300">₵125,000</p>
-                </div>
+
+              <div className="mt-2.5 grid grid-cols-2 rounded bg-white/[0.04] p-0.5 text-center text-xs font-bold">
+                <span className="rounded bg-emerald-400/20 py-1 text-emerald-300">BUY CALL</span>
+                <span className="py-1 text-slate-400">SELL PUT</span>
               </div>
-              <div className="mt-4 rounded-md border border-amber-300/15 bg-amber-300/8 px-3 py-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Pick cost</span>
-                  <span className="font-mono font-black text-amber-200">₵150</span>
+
+              <div className="mt-3 space-y-2 text-xs">
+                <div>
+                  <p className="text-[10px] text-slate-400">Option Strike</p>
+                  <p className="font-bold text-white truncate text-xs">Over 18.5 Runs &gt; 10.5</p>
                 </div>
-                <div className="mt-1 flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Balance after</span>
-                  <span className="font-mono font-black text-slate-100">₵124,850</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-[10px] text-slate-400">Contracts</p>
+                    <p className="font-mono font-bold text-white">100</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-400">Price/Contract</p>
+                    <p className="font-mono font-bold text-emerald-300">₵54.00</p>
+                  </div>
                 </div>
               </div>
+
+              <div className="mt-3 rounded border border-amber-300/15 bg-amber-300/8 p-2">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400">Total Stake</span>
+                  <span className="font-mono font-bold text-amber-200">₵5,400</span>
+                </div>
+                <div className="mt-1 flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400">Est. Payout</span>
+                  <span className="font-mono font-bold text-emerald-300">₵10,000</span>
+                </div>
+              </div>
+
               <button
                 type="button"
-                className="mt-4 w-full rounded-md bg-emerald-400 px-4 py-3 text-sm font-black text-slate-950"
+                className="mt-3 w-full rounded bg-cyan-400 py-2 text-xs font-black text-slate-950 shadow-[0_4px_16px_rgba(34,211,238,0.25)] transition hover:bg-cyan-300"
               >
-                Preview pick
+                Execute Order (₵5,400)
               </button>
             </div>
           </div>
@@ -167,16 +172,22 @@ function HeroStrategyBoard() {
         <div className="grid gap-px bg-white/10">
           <div className="bg-[#071120] p-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-black text-white">Match Pulse</p>
-              <p className="text-xs text-slate-500">How the crowd is leaning</p>
+              <p className="text-sm font-black text-white">Order Book</p>
+              <p className="text-xs text-slate-400">Live Bids &amp; Asks</p>
             </div>
-            <div className="mt-3 space-y-2">
-              {orderRows.map(([bid, bidSize, ask, askSize]) => (
+            <div className="mt-3 space-y-1.5">
+              <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-slate-400 pb-1 border-b border-white/5">
+                <span>Bid (₵)</span>
+                <span className="text-right">Qty</span>
+                <span>Ask (₵)</span>
+                <span className="text-right">Qty</span>
+              </div>
+              {orderBookRows.map(([bid, bidSize, ask, askSize]) => (
                 <div key={`${bid}-${ask}`} className="grid grid-cols-4 gap-2 text-xs">
-                  <span className="rounded bg-emerald-400/12 px-2 py-1 font-mono text-emerald-300">{bid}</span>
-                  <span className="text-right text-slate-400">{bidSize}</span>
-                  <span className="rounded bg-red-400/12 px-2 py-1 font-mono text-red-300">{ask}</span>
-                  <span className="text-right text-slate-400">{askSize}</span>
+                  <span className="rounded bg-emerald-400/12 px-1.5 py-0.5 font-mono text-emerald-300 font-bold">{bid}</span>
+                  <span className="text-right font-mono text-slate-400">{bidSize}</span>
+                  <span className="rounded bg-red-400/12 px-1.5 py-0.5 font-mono text-red-300 font-bold">{ask}</span>
+                  <span className="text-right font-mono text-slate-400">{askSize}</span>
                 </div>
               ))}
             </div>
@@ -185,10 +196,13 @@ function HeroStrategyBoard() {
           <div className="bg-[#071120] p-4">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-black text-white">Match Score</p>
-                <p className="mt-1 text-xs text-slate-500">Your CricCoins result updates live</p>
+                <p className="text-sm font-black text-white">Portfolio P&amp;L</p>
+                <p className="mt-1 text-xs text-slate-400">Live CricCoins Return</p>
               </div>
-              <p className="font-mono text-lg font-black text-emerald-300">+3,860</p>
+              <div className="text-right">
+                <p className="font-mono text-lg font-black text-emerald-300">+₵3,860</p>
+                <p className="text-[10px] font-mono text-emerald-400 font-bold">+14.2% today</p>
+              </div>
             </div>
             <svg viewBox="0 0 320 112" className="mt-3 h-28 w-full" aria-hidden="true">
               <path
@@ -217,9 +231,8 @@ function HeroStrategyBoard() {
 }
 
 const proofPoints = [
-  { icon: RadioTower, label: "Live match moments" },
-  { icon: CircleDollarSign, label: "CricCoins wallet" },
-  { icon: ShieldCheck, label: "CricCoins only" },
+  { icon: RadioTower, label: "Live match moments", isSymbol: false },
+  { symbol: "₵", label: "CricCoins only", isSymbol: true },
 ]
 
 export function HeroSection() {
@@ -252,7 +265,7 @@ export function HeroSection() {
           </p>
 
           <h1 className="mt-6 max-w-3xl text-5xl font-black leading-[0.98] tracking-normal text-white sm:text-6xl lg:text-7xl">
-            Every ball becomes a decision
+            Dopamine delivered ball by ball.
           </h1>
 
           <p className="mt-6 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
@@ -270,18 +283,22 @@ export function HeroSection() {
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
             </Link>
             <Link
-              href="#terminal"
+              href="/trading"
               className="inline-flex items-center justify-center rounded-lg border border-white/12 bg-white/[0.035] px-6 py-3.5 text-sm font-bold text-slate-200 transition hover:border-cyan-300/35 hover:text-white"
             >
-              See how it works
+              Launch Terminal
             </Link>
           </div>
 
-          <div className="mt-9 grid gap-3 sm:grid-cols-3">
-            {proofPoints.map(({ icon: Icon, label }) => (
+          <div className="mt-9 grid max-w-md gap-3 sm:grid-cols-2">
+            {proofPoints.map(({ icon: Icon, symbol, label, isSymbol }) => (
               <div key={label} className="flex items-center gap-3">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/[0.04] text-cyan-300">
-                  <Icon className="size-4" aria-hidden="true" />
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-md border border-amber-300/20 bg-amber-300/10 text-amber-300 font-mono text-base font-black shadow-[0_0_12px_rgba(252,211,77,0.15)]">
+                  {isSymbol ? (
+                    <span>{symbol}</span>
+                  ) : Icon ? (
+                    <Icon className="size-4 text-cyan-300" aria-hidden="true" />
+                  ) : null}
                 </span>
                 <span className="text-sm font-semibold leading-5 text-slate-300">{label}</span>
               </div>

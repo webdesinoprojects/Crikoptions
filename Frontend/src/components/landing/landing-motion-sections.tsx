@@ -63,16 +63,16 @@ const proofCards: ProofCard[] = [
     highlights: ["Live score context", "Matchday challenges", "Leaderboard"],
   },
   {
-    title: "Strategy board",
-    body: "Prediction picks, CricCoins stake, match pulse, and result tracking share one focused screen.",
+    title: "Trading terminal",
+    body: "Live option chains, CricCoins stake, order book depth, and result tracking share one focused screen.",
     icon: LineChart,
-    highlights: ["Prediction board", "Match pulse", "Pick preview"],
+    highlights: ["Option chain", "Order book", "Order execution"],
   },
   {
     title: "Score room",
-    body: "Track open picks, CricCoins results, challenge score, and your matchday history from one place.",
+    body: "Track open positions, CricCoins results, challenge score, and your matchday history from one place.",
     icon: WalletCards,
-    highlights: ["Open picks", "CricCoins score", "Match history"],
+    highlights: ["Open positions", "CricCoins score", "Match history"],
   },
   {
     title: "Match intelligence",
@@ -85,44 +85,103 @@ const proofCards: ProofCard[] = [
 function FlowVisual({ visual }: { visual: FlowCard["visual"] }) {
   if (visual === "balls") {
     return (
-      <div className="grid grid-cols-6 gap-2">
-        {["1", "4", "0", "W", "6", "2"].map((ball, index) => (
-          <span
-            key={`${ball}-${index}`}
-            className="flex aspect-square items-center justify-center rounded-full border border-white/10 bg-white/[0.04] font-mono text-sm font-black text-slate-100"
-          >
-            {ball}
-          </span>
-        ))}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between border-b border-white/10 pb-2">
+          <div className="flex items-center gap-2">
+            <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-xs font-black text-white">IND vs ENG</span>
+          </div>
+          <span className="rounded bg-cyan-400/15 px-2 py-0.5 text-[10px] font-bold text-cyan-300">T20 LIVE</span>
+        </div>
+
+        <div className="flex items-baseline justify-between">
+          <div>
+            <p className="text-2xl font-black text-white">184/5</p>
+            <p className="text-[11px] text-slate-400">19.4 overs • CRR 9.35</p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs font-bold text-emerald-300">Need 4 off 2</p>
+            <p className="text-[10px] text-slate-400">Target: 188</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-6 gap-1.5 pt-1">
+          {[
+            { ball: "1", bg: "bg-white/5 text-slate-200" },
+            { ball: "4", bg: "bg-cyan-400/20 text-cyan-300 border-cyan-400/40" },
+            { ball: "6", bg: "bg-emerald-400/25 text-emerald-300 border-emerald-400/50" },
+            { ball: "W", bg: "bg-red-400/25 text-red-300 border-red-400/50" },
+            { ball: "2", bg: "bg-white/5 text-slate-200" },
+            { ball: "4", bg: "bg-cyan-400/20 text-cyan-300 border-cyan-400/40" },
+          ].map((item, index) => (
+            <span
+              key={`${item.ball}-${index}`}
+              className={`flex aspect-square items-center justify-center rounded border font-mono text-xs font-black ${item.bg}`}
+            >
+              {item.ball}
+            </span>
+          ))}
+        </div>
       </div>
     )
   }
 
   if (visual === "chain") {
     return (
-      <div className="space-y-2">
-        {[72, 48, 88, 58].map((width, index) => (
-          <div key={width} className="grid grid-cols-[44px_1fr_48px] items-center gap-3">
-            <span className="font-mono text-xs text-slate-500">{160 + index * 5}</span>
-            <span className="h-2 rounded-full bg-cyan-300/70" style={{ width: `${width}%` }} />
-            <span className="text-right font-mono text-xs text-emerald-300">{(1.74 - index * 0.22).toFixed(2)}</span>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between text-xs">
+          <span className="font-bold text-slate-300">Match Win Probability</span>
+          <span className="font-mono text-cyan-300 font-bold">IND 64% vs ENG 36%</span>
+        </div>
+
+        <div className="h-2 w-full overflow-hidden rounded-full bg-white/10 flex">
+          <div className="h-full bg-cyan-400 transition-all duration-500" style={{ width: "64%" }} />
+          <div className="h-full bg-amber-400 transition-all duration-500" style={{ width: "36%" }} />
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 pt-1">
+          <div className="rounded border border-white/10 bg-white/[0.03] p-2 text-center">
+            <p className="text-[10px] text-slate-400">Required Rate</p>
+            <p className="font-mono text-sm font-black text-amber-300">12.00 rpo</p>
           </div>
-        ))}
+          <div className="rounded border border-white/10 bg-white/[0.03] p-2 text-center">
+            <p className="text-[10px] text-slate-400">Option Call Price</p>
+            <p className="font-mono text-sm font-black text-emerald-300">₵54.00</p>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="space-y-2">
+      <div className="flex items-center justify-between border-b border-white/10 pb-1.5 text-xs font-bold text-slate-300">
+        <span>Leaderboard</span>
+        <span className="text-[10px] font-mono text-amber-300">TOP TRADERS</span>
+      </div>
+
       {[
-        ["CricCoins", "₵125k"],
-        ["In play", "12%"],
-        ["Open score", "+₵3.8k"],
-        ["Confidence", "High"],
-      ].map(([label, value]) => (
-        <div key={label} className="rounded-md border border-white/10 bg-white/[0.035] p-3">
-          <p className="text-xs text-slate-500">{label}</p>
-          <p className="mt-2 font-mono text-lg font-black text-white">{value}</p>
+        { rank: "#1", name: "Trader_Pro", score: "₵482.5k", pnl: "+38.4%", badge: "🥇", isUser: false },
+        { rank: "#2", name: "CricketKing", score: "₵310.2k", pnl: "+24.1%", badge: "🥈", isUser: false },
+        { rank: "#3", name: "You (Demo)", score: "₵125.0k", pnl: "+14.2%", badge: "🥉", isUser: true },
+        { rank: "#4", name: "AlphaMaster", score: "₵98.4k", pnl: "+9.8%", badge: "4", isUser: false },
+      ].map((user) => (
+        <div
+          key={user.name}
+          className={`flex items-center justify-between rounded px-2.5 py-1.5 text-xs ${
+            user.isUser
+              ? "border border-cyan-400/30 bg-cyan-400/10 font-bold"
+              : "bg-white/[0.025]"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <span className="w-5 text-center font-mono text-slate-400">{user.rank}</span>
+            <span className={user.isUser ? "text-cyan-200" : "text-white"}>{user.name}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-amber-300 font-bold">{user.score}</span>
+            <span className="font-mono text-[11px] text-emerald-300">{user.pnl}</span>
+          </div>
         </div>
       ))}
     </div>
@@ -181,7 +240,7 @@ export function LandingMotionSections() {
             </div>
             <p className="max-w-2xl text-base leading-7 text-slate-400 lg:justify-self-end">
               CricOptions is easiest to understand as a game loop: read the
-              match, back a prediction with CricCoins, then watch your score and
+              match, execute option orders with CricCoins, then watch your score and
               leaderboard rank respond to every over.
             </p>
           </div>
@@ -272,7 +331,7 @@ export function LandingMotionSections() {
             {[
               {
                 title: "Practice mode",
-                body: "Make practice picks with CricCoins and learn how match movement changes your result.",
+                body: "Trade option contracts with CricCoins and learn how match movement changes your result.",
                 icon: FlaskConical,
               },
               {
@@ -310,7 +369,7 @@ export function LandingMotionSections() {
             {[
               "Live and replay match data",
               "CricCoins wallet and ledger",
-              "Prediction board with option-style pricing",
+              "Live option chains with order book depth",
               "Admin controls for game operations",
             ].map((item) => (
               <div key={item} className="flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.025] px-4 py-3 text-sm font-semibold text-slate-300">
