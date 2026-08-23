@@ -34,7 +34,7 @@ function HeroStrategyBoard() {
         </div>
         <div className="hidden items-center gap-2 sm:flex">
           <span className="rounded border border-amber-300/25 bg-amber-300/10 px-2.5 py-1 text-xs font-black text-amber-200">
-            ₵125,000
+            ₵5,000
           </span>
           <span className="inline-flex items-center gap-2 text-xs font-semibold text-cyan-200">
             <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -139,7 +139,7 @@ function HeroStrategyBoard() {
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <p className="text-[10px] text-slate-400">Contracts</p>
-                    <p className="font-mono font-bold text-white">100</p>
+                    <p className="font-mono font-bold text-white">10</p>
                   </div>
                   <div>
                     <p className="text-[10px] text-slate-400">Price/Contract</p>
@@ -151,11 +151,11 @@ function HeroStrategyBoard() {
               <div className="mt-3 rounded border border-amber-300/15 bg-amber-300/8 p-2">
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="text-slate-400">Total Stake</span>
-                  <span className="font-mono font-bold text-amber-200">₵5,400</span>
+                  <span className="font-mono font-bold text-amber-200">₵540</span>
                 </div>
                 <div className="mt-1 flex items-center justify-between text-[11px]">
                   <span className="text-slate-400">Est. Payout</span>
-                  <span className="font-mono font-bold text-emerald-300">₵10,000</span>
+                  <span className="font-mono font-bold text-emerald-300">₵1,000</span>
                 </div>
               </div>
 
@@ -163,7 +163,7 @@ function HeroStrategyBoard() {
                 type="button"
                 className="mt-3 w-full rounded bg-cyan-400 py-2 text-xs font-black text-slate-950 shadow-[0_4px_16px_rgba(34,211,238,0.25)] transition hover:bg-cyan-300"
               >
-                Execute Order (₵5,400)
+                Execute Order (₵540)
               </button>
             </div>
           </div>

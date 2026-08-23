@@ -78,12 +78,6 @@ const proofCards: ProofCard[] = [
     icon: WalletCards,
     highlights: ["Open positions", "CricCoins score", "Match history"],
   },
-  {
-    title: "Match intelligence",
-    body: "Momentum, outcome distribution, scenarios, and event impact panels help explain match movement.",
-    icon: Brain,
-    highlights: ["Momentum hub", "Scenario lab", "Pattern archive"],
-  },
 ]
 
 function FlowVisual({
@@ -240,7 +234,7 @@ function FlowVisual({
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 <span className="font-mono text-xs font-black text-amber-300">
-                  ₵{Math.round(125000 * (1 + user.roi / 100)).toLocaleString()}
+                  ₵{Math.round(5000 * (1 + user.roi / 100)).toLocaleString()}
                 </span>
                 <span className="font-mono text-[11px] font-bold text-emerald-400">
                   {formatRoi(user.roi)}
@@ -370,7 +364,7 @@ export function LandingMotionSections() {
             </p>
           </div>
 
-          <div className="proof-grid mt-12 grid gap-4 md:grid-cols-2">
+          <div className="proof-grid mt-12 grid gap-4 md:grid-cols-3">
             {proofCards.map(({ title, body, icon: Icon, highlights }) => (
               <article
                 key={title}

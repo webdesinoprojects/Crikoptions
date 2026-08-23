@@ -71,13 +71,13 @@ export default function Home() {
                   icon: CircleDollarSign,
                   title: "Start with ₵",
                   body: "A demo balance gives users room to learn the board before a high-pressure over.",
-                  value: "₵125,000",
+                  value: "₵5,000",
                 },
                 {
                   icon: BarChart3,
                   title: "Trade contracts",
                   body: "The order execution panel shows cost and balance after confirmation, so the next action is obvious.",
-                  value: "₵5,400",
+                  value: "₵540",
                 },
                 {
                   icon: WalletCards,
