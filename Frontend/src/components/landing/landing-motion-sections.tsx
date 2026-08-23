@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import {
@@ -17,6 +17,10 @@ import {
   WalletCards,
   type LucideIcon,
 } from "lucide-react"
+
+import { dashboardService } from "@/features/dashboard/services/dashboard.service"
+import { leaderboardApi, type LeaderboardEntry, formatRoi } from "@/features/leaderboard/leaderboard"
+import { type Match } from "@/types"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -82,41 +86,80 @@ const proofCards: ProofCard[] = [
   },
 ]
 
-function FlowVisual({ visual }: { visual: FlowCard["visual"] }) {
+function FlowVisual({
+  visual,
+  match,
+  leaderboard,
+}: {
+  visual: FlowCard["visual"]
+  match: Match | null
+  leaderboard: LeaderboardEntry[]
+}) {
   if (visual === "balls") {
+    const title = match
+      ? `${match.homeTeam?.shortName || match.homeTeam?.name || "IND"} vs ${match.awayTeam?.shortName || match.awayTeam?.name || "ENG"}`
+      : "IND vs ENG"
+    const score = match?.homeScore || (match?.currentScore ? `${match.currentScore}/${match.wicketsLost ?? 0}` : "184/5")
+    const overs = match?.currentOver ? `${match.currentOver} overs` : "19.4 overs"
+    const crr = "CRR 9.35"
+    const statusText = match?.status === "LIVE" ? "T20 LIVE" : "T20 LIVE"
+    const targetText = match?.targetScore ? `Target: ${match.targetScore}` : "Target: 188"
+    const needText = "Need 4 off 2"
+
+    const ballsList =
+      match?.thisOver && match.thisOver.length > 0
+        ? match.thisOver.map((b) => ({
+            ball: b.isWicket ? "W" : String(b.runs),
+            bg: b.isWicket
+              ? "bg-red-500/25 text-red-300 border-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.3)]"
+              : b.runs >= 6
+              ? "bg-emerald-400/25 text-emerald-300 border-emerald-400/50 shadow-[0_0_10px_rgba(52,211,153,0.3)]"
+              : b.runs >= 4
+              ? "bg-cyan-400/20 text-cyan-300 border-cyan-400/40 shadow-[0_0_10px_rgba(34,211,238,0.25)]"
+              : "bg-white/5 text-slate-200 border-white/10",
+          }))
+        : [
+            { ball: "1", bg: "bg-white/5 text-slate-200 border-white/10" },
+            { ball: "4", bg: "bg-cyan-400/20 text-cyan-300 border-cyan-400/40 shadow-[0_0_10px_rgba(34,211,238,0.25)]" },
+            { ball: "6", bg: "bg-emerald-400/25 text-emerald-300 border-emerald-400/50 shadow-[0_0_10px_rgba(52,211,153,0.3)]" },
+            { ball: "W", bg: "bg-red-500/25 text-red-300 border-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.3)]" },
+            { ball: "2", bg: "bg-white/5 text-slate-200 border-white/10" },
+            { ball: "4", bg: "bg-cyan-400/20 text-cyan-300 border-cyan-400/40 shadow-[0_0_10px_rgba(34,211,238,0.25)]" },
+          ]
+
     return (
-      <div className="space-y-3">
-        <div className="flex items-center justify-between border-b border-white/10 pb-2">
+      <div className="space-y-3.5 rounded-lg border border-cyan-500/20 bg-[#040a16]/90 p-4 shadow-[0_12px_40px_rgba(0,0,0,0.4)] backdrop-blur-md">
+        <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
           <div className="flex items-center gap-2">
-            <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-xs font-black text-white">IND vs ENG</span>
+            <span className="relative flex size-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex size-2.5 rounded-full bg-emerald-400" />
+            </span>
+            <span className="text-xs font-black uppercase tracking-wide text-white">{title}</span>
           </div>
-          <span className="rounded bg-cyan-400/15 px-2 py-0.5 text-[10px] font-bold text-cyan-300">T20 LIVE</span>
+          <span className="rounded-full border border-cyan-400/30 bg-cyan-400/15 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-cyan-300">
+            {statusText}
+          </span>
         </div>
 
         <div className="flex items-baseline justify-between">
           <div>
-            <p className="text-2xl font-black text-white">184/5</p>
-            <p className="text-[11px] text-slate-400">19.4 overs • CRR 9.35</p>
+            <p className="text-3xl font-black tracking-tight text-white">{score}</p>
+            <p className="mt-0.5 text-[11px] font-semibold text-slate-400">
+              {overs} • {crr}
+            </p>
           </div>
           <div className="text-right">
-            <p className="text-xs font-bold text-emerald-300">Need 4 off 2</p>
-            <p className="text-[10px] text-slate-400">Target: 188</p>
+            <p className="text-xs font-black text-emerald-300">{needText}</p>
+            <p className="mt-0.5 text-[11px] font-medium text-slate-400">{targetText}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-6 gap-1.5 pt-1">
-          {[
-            { ball: "1", bg: "bg-white/5 text-slate-200" },
-            { ball: "4", bg: "bg-cyan-400/20 text-cyan-300 border-cyan-400/40" },
-            { ball: "6", bg: "bg-emerald-400/25 text-emerald-300 border-emerald-400/50" },
-            { ball: "W", bg: "bg-red-400/25 text-red-300 border-red-400/50" },
-            { ball: "2", bg: "bg-white/5 text-slate-200" },
-            { ball: "4", bg: "bg-cyan-400/20 text-cyan-300 border-cyan-400/40" },
-          ].map((item, index) => (
+          {ballsList.map((item, index) => (
             <span
               key={`${item.ball}-${index}`}
-              className={`flex aspect-square items-center justify-center rounded border font-mono text-xs font-black ${item.bg}`}
+              className={`flex aspect-square items-center justify-center rounded-md border font-mono text-xs font-black transition-transform hover:scale-105 ${item.bg}`}
             >
               {item.ball}
             </span>
@@ -128,68 +171,113 @@ function FlowVisual({ visual }: { visual: FlowCard["visual"] }) {
 
   if (visual === "chain") {
     return (
-      <div className="space-y-3">
+      <div className="space-y-3.5 rounded-lg border border-cyan-500/20 bg-[#040a16]/90 p-4 shadow-[0_12px_40px_rgba(0,0,0,0.4)] backdrop-blur-md">
         <div className="flex items-center justify-between text-xs">
-          <span className="font-bold text-slate-300">Match Win Probability</span>
-          <span className="font-mono text-cyan-300 font-bold">IND 64% vs ENG 36%</span>
+          <span className="font-black text-slate-200">Match Win Probability</span>
+          <span className="font-mono text-xs font-black text-cyan-300">IND 64% vs ENG 36%</span>
         </div>
 
-        <div className="h-2 w-full overflow-hidden rounded-full bg-white/10 flex">
-          <div className="h-full bg-cyan-400 transition-all duration-500" style={{ width: "64%" }} />
-          <div className="h-full bg-amber-400 transition-all duration-500" style={{ width: "36%" }} />
+        <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10 flex p-0.5">
+          <div className="h-full rounded-l-full bg-gradient-to-r from-cyan-400 to-sky-400 transition-all duration-500" style={{ width: "64%" }} />
+          <div className="h-full rounded-r-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-500" style={{ width: "36%" }} />
         </div>
 
-        <div className="grid grid-cols-2 gap-2 pt-1">
-          <div className="rounded border border-white/10 bg-white/[0.03] p-2 text-center">
-            <p className="text-[10px] text-slate-400">Required Rate</p>
-            <p className="font-mono text-sm font-black text-amber-300">12.00 rpo</p>
+        <div className="grid grid-cols-2 gap-2.5 pt-1">
+          <div className="rounded-md border border-white/10 bg-white/[0.03] p-2.5 text-center">
+            <p className="text-[10px] font-bold uppercase text-slate-400">Required Rate</p>
+            <p className="mt-1 font-mono text-sm font-black text-amber-300">12.00 rpo</p>
           </div>
-          <div className="rounded border border-white/10 bg-white/[0.03] p-2 text-center">
-            <p className="text-[10px] text-slate-400">Option Call Price</p>
-            <p className="font-mono text-sm font-black text-emerald-300">₵54.00</p>
+          <div className="rounded-md border border-white/10 bg-white/[0.03] p-2.5 text-center">
+            <p className="text-[10px] font-bold uppercase text-slate-400">Option Call Price</p>
+            <p className="mt-1 font-mono text-sm font-black text-emerald-300">₵54.00</p>
           </div>
         </div>
       </div>
     )
   }
 
+  const defaultLeaderboard: LeaderboardEntry[] = [
+    { rank: 1, name: "Trader_Pro", country: "IN", roi: 38.4, winRate: 74 },
+    { rank: 2, name: "CricketKing", country: "GB", roi: 24.1, winRate: 68 },
+    { rank: 3, name: "You (Demo)", country: "IN", roi: 14.2, winRate: 62 },
+    { rank: 4, name: "AlphaMaster", country: "AU", roi: 9.8, winRate: 55 },
+  ]
+
+  const displayList = leaderboard.length > 0 ? leaderboard.slice(0, 4) : defaultLeaderboard
+
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between border-b border-white/10 pb-1.5 text-xs font-bold text-slate-300">
-        <span>Leaderboard</span>
-        <span className="text-[10px] font-mono text-amber-300">TOP TRADERS</span>
+    <div className="space-y-2 rounded-lg border border-cyan-500/20 bg-[#040a16]/90 p-3.5 shadow-[0_12px_40px_rgba(0,0,0,0.4)] backdrop-blur-md">
+      <div className="flex items-center justify-between border-b border-white/10 pb-2 text-xs font-black text-white">
+        <span className="flex items-center gap-1.5">
+          <Trophy className="size-3.5 text-amber-400" />
+          Live Leaderboard
+        </span>
+        <span className="rounded bg-amber-400/10 px-2 py-0.5 font-mono text-[10px] font-black text-amber-300">
+          TOP TRADERS
+        </span>
       </div>
 
-      {[
-        { rank: "#1", name: "Trader_Pro", score: "₵482.5k", pnl: "+38.4%", badge: "🥇", isUser: false },
-        { rank: "#2", name: "CricketKing", score: "₵310.2k", pnl: "+24.1%", badge: "🥈", isUser: false },
-        { rank: "#3", name: "You (Demo)", score: "₵125.0k", pnl: "+14.2%", badge: "🥉", isUser: true },
-        { rank: "#4", name: "AlphaMaster", score: "₵98.4k", pnl: "+9.8%", badge: "4", isUser: false },
-      ].map((user) => (
-        <div
-          key={user.name}
-          className={`flex items-center justify-between rounded px-2.5 py-1.5 text-xs ${
-            user.isUser
-              ? "border border-cyan-400/30 bg-cyan-400/10 font-bold"
-              : "bg-white/[0.025]"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <span className="w-5 text-center font-mono text-slate-400">{user.rank}</span>
-            <span className={user.isUser ? "text-cyan-200" : "text-white"}>{user.name}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="font-mono text-amber-300 font-bold">{user.score}</span>
-            <span className="font-mono text-[11px] text-emerald-300">{user.pnl}</span>
-          </div>
-        </div>
-      ))}
+      <div className="space-y-1.5 pt-1">
+        {displayList.map((user, idx) => {
+          const isTop3 = idx < 3
+          const badgeIcon = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${user.rank}`
+          const isUser = user.name.includes("You") || idx === 2
+
+          return (
+            <div
+              key={`${user.name}-${idx}`}
+              className={`flex items-center justify-between rounded-md px-2.5 py-1.5 text-xs transition-colors ${
+                isUser
+                  ? "border border-cyan-400/40 bg-cyan-400/12 font-bold shadow-[0_0_12px_rgba(34,211,238,0.15)]"
+                  : "bg-white/[0.03] hover:bg-white/[0.06]"
+              }`}
+            >
+              <div className="flex items-center gap-2.5 truncate max-w-[140px]">
+                <span className="w-4 text-center font-mono text-xs text-slate-300 font-bold">{badgeIcon}</span>
+                <span className={`truncate text-xs font-bold ${isUser ? "text-cyan-200" : "text-white"}`}>
+                  {user.name}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="font-mono text-xs font-black text-amber-300">
+                  ₵{Math.round(125000 * (1 + user.roi / 100)).toLocaleString()}
+                </span>
+                <span className="font-mono text-[11px] font-bold text-emerald-400">
+                  {formatRoi(user.roi)}
+                </span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
 
 export function LandingMotionSections() {
   const rootRef = useRef<HTMLDivElement>(null)
+  const [match, setMatch] = useState<Match | null>(null)
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+
+  useEffect(() => {
+    dashboardService
+      .getLiveMatches()
+      .then((matches) => {
+        if (matches && matches.length > 0) {
+          setMatch(matches[0])
+        }
+      })
+      .catch(() => {})
+
+    leaderboardApi
+      .getLeaderboard()
+      .then((data) => {
+        if (data && data.length > 0) {
+          setLeaderboard(data)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -259,7 +347,7 @@ export function LandingMotionSections() {
                 </div>
                 <p className="mt-5 text-sm leading-6 text-slate-400">{body}</p>
                 <div className="mt-8 rounded-lg border border-white/10 bg-[#030811] p-4">
-                  <FlowVisual visual={visual} />
+                  <FlowVisual visual={visual} match={match} leaderboard={leaderboard} />
                 </div>
               </article>
             ))}
@@ -383,3 +471,4 @@ export function LandingMotionSections() {
     </div>
   )
 }
+
