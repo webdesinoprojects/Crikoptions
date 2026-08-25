@@ -109,7 +109,7 @@ export default function RegisterForm() {
           <form onSubmit={handleSubmit} noValidate className="w-full flex flex-col items-center">
             <h3 className="mb-1 text-center font-sans text-xl font-bold uppercase tracking-wider text-white sm:text-2xl mt-4">Sign Up</h3>
             <p className="text-xs text-white/50 text-center mb-6 font-medium">
-              Create your institutional sports trading account · Get ₵1,00,000 free
+              Create your institutional sports trading account · Get ₵5,000 free
             </p>
         
             <div className="w-full shrink-0 text-center text-xs text-white/50 select-none mb-6">
@@ -227,7 +227,7 @@ export default function RegisterForm() {
               className="mt-7 w-full h-12 rounded-xl text-[#000d1a] bg-[#d4af37] hover:bg-[#ebd171] active:scale-[0.99] transition-all font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isLoading ? "Creating Account..." : "Create Account — Get ₵1,00,000 Free"}
+              {isLoading ? "Creating Account..." : "Create Account — Get ₵5,000 Free"}
             </button>
 
             {/* Divider */}
