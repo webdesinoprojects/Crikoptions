@@ -5,10 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Activity,
-  Bell,
   ChevronDown,
   Compass,
-  History,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -101,12 +99,6 @@ export default function TopNavBar() {
         <GlobalChat />
 
         <div className="hidden sm:flex items-center gap-3 border-r border-border/15 pr-4">
-          <button className="rounded-md p-2 text-muted-foreground transition-all hover:bg-muted/40 hover:text-foreground cursor-pointer">
-            <Bell className="w-4 h-4" />
-          </button>
-          <button className="rounded-md p-2 text-muted-foreground transition-all hover:bg-muted/40 hover:text-foreground cursor-pointer">
-            <History className="w-4 h-4" />
-          </button>
           <Link href="/profile" className="block rounded-md p-2 text-muted-foreground transition-all hover:bg-muted/40 hover:text-foreground">
             <Settings className="w-4 h-4" />
           </Link>

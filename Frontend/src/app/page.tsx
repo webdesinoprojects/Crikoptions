@@ -5,9 +5,13 @@ import {
   BarChart3,
   CheckCircle2,
   CircleDollarSign,
+  Diamond,
+  GitBranch,
   LayoutDashboard,
   LineChart,
   ShieldCheck,
+  TrendingDown,
+  TrendingUp,
   WalletCards,
 } from "lucide-react"
 
@@ -51,6 +55,150 @@ export default function Home() {
         <HeroSection />
 
         <LandingMotionSections />
+
+        <section id="challenges" className="scroll-mt-20 border-y border-white/10 bg-gradient-to-b from-[#020617] via-[#0b152d] to-[#020617] px-4 py-24 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="text-center">
+              <p className="text-xs font-black uppercase tracking-wide text-cyan-300">Trading Academy</p>
+              <h2 className="mt-4 text-3xl font-black leading-tight text-white sm:text-5xl">
+                Master sports option strategy
+              </h2>
+              <p className="mt-4 mx-auto max-w-2xl text-base leading-7 text-slate-300">
+                Unlock milestones, build trading discipline, and earn credentials across specialized sports trading academies.
+              </p>
+            </div>
+
+            <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                {
+                  id: "long-call",
+                  title: "Long Call Academy",
+                  window: "Bullish Strategy · Bronze Badge",
+                  desc: "Learn the fundamentals of bullish options trading. Master the first trade, profitable exits, and momentum catching.",
+                  reward: "₵9,000",
+                  gradient: "from-emerald-500/[0.08] to-transparent",
+                  border: "border-emerald-500/20 hover:border-emerald-400/50",
+                  glow: "hover:shadow-[0_0_30px_rgba(16,185,129,0.15)]",
+                  textColor: "text-emerald-400",
+                  iconColor: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20",
+                  icon: TrendingUp,
+                  status: "in-progress",
+                  img: "/powerplay_pro.png",
+                },
+                {
+                  id: "short-call",
+                  title: "Short Call Academy",
+                  window: "Bearish Strategy · Silver Badge",
+                  desc: "Discover sell-side trading. Learn to collect option premiums and profit from price consolidation or decays.",
+                  reward: "₵9,000",
+                  gradient: "from-rose-500/[0.08] to-transparent",
+                  border: "border-rose-500/20 hover:border-rose-400/50",
+                  glow: "hover:shadow-[0_0_30px_rgba(244,63,94,0.15)]",
+                  textColor: "text-rose-400",
+                  iconColor: "bg-rose-500/10 text-rose-300 border-rose-500/20",
+                  icon: TrendingDown,
+                  status: "in-progress",
+                  img: "/death_over_assassin.png",
+                },
+                {
+                  id: "bull-spread",
+                  title: "Bull Call Spread Academy",
+                  window: "Hedged Strategy · Gold Badge",
+                  desc: "Cap your downside and manage risks by building spread strategies using combinations of buy and sell calls.",
+                  reward: "₵30,500",
+                  gradient: "from-cyan-500/[0.08] to-transparent",
+                  border: "border-cyan-500/20 hover:border-cyan-400/50",
+                  glow: "hover:shadow-[0_0_30px_rgba(6,182,212,0.15)]",
+                  textColor: "text-cyan-400",
+                  iconColor: "bg-cyan-500/10 text-cyan-300 border-cyan-500/20",
+                  icon: GitBranch,
+                  status: "locked",
+                  img: "/middle_over_genius.png",
+                },
+                {
+                  id: "iron-fly",
+                  title: "Iron Fly Academy",
+                  window: "Neutral Strategy · Platinum Badge",
+                  desc: "Master high-tier delta-neutral iron butterflies to capture time decay in stable range-bound match stages.",
+                  reward: "₵28,500",
+                  gradient: "from-amber-500/[0.08] to-transparent",
+                  border: "border-amber-500/20 hover:border-amber-400/50",
+                  glow: "hover:shadow-[0_0_30px_rgba(245,158,11,0.15)]",
+                  textColor: "text-amber-400",
+                  iconColor: "bg-amber-500/10 text-amber-300 border-amber-500/20",
+                  icon: Diamond,
+                  status: "locked",
+                  img: "/last_over_hero.png",
+                },
+              ].map((c) => {
+                const Icon = c.icon;
+                return (
+                  <div
+                    key={c.id}
+                    className={`group relative overflow-hidden rounded-xl border bg-[#0e172a]/95 bg-gradient-to-b ${c.gradient} p-4 sm:p-5 shadow-lg transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl ${c.border} ${c.glow}`}
+                  >
+                    {/* Visual Asset Header */}
+                    <div className="relative mb-5 aspect-[16/10] w-full overflow-hidden rounded-lg border border-white/5 bg-slate-900 shadow-inner">
+                      <img
+                        src={c.img}
+                        alt={c.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      {/* Gradient overlay to soften bottom of image */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0e172a] via-transparent to-transparent opacity-80" />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className={`flex size-10 items-center justify-center rounded-md border ${c.iconColor}`}>
+                        <Icon className="size-5" />
+                      </span>
+                      <span className="font-mono text-xs font-black text-amber-200">Total {c.reward}</span>
+                    </div>
+
+                    <div className="mt-4">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-black text-white">{c.title}</h3>
+                        {c.status === "completed" ? (
+                          <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-300 border border-emerald-500/20">
+                            Completed
+                          </span>
+                        ) : c.status === "locked" ? (
+                          <span className="rounded bg-white/5 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-slate-400 border border-white/10">
+                            Locked
+                          </span>
+                        ) : (
+                          <span className={`rounded bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${c.textColor} border border-emerald-500/20`}>
+                            Active
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-[11px] font-semibold text-slate-400">{c.window}</p>
+                      <p className="mt-3 text-xs leading-5 text-slate-300">{c.desc}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* Daily Reward Pool Banner */}
+            <div className="mt-12 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/15 via-[#1e1b12] to-[#0f172a]/50 p-6 sm:p-8 backdrop-blur-md shadow-lg hover:shadow-amber-500/5 transition-all duration-300">
+              <div className="grid gap-6 sm:grid-cols-[1fr_auto] sm:items-center">
+                <div>
+                  <h4 className="text-lg font-black text-white">Academy Graduation Rewards</h4>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+                    Complete all tasks in any of the academies to unlock your professional credential badge and claim cumulative course rewards of up to ₵77,000 CricCoins.
+                  </p>
+                </div>
+                <Link
+                  href="/register"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-400 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-slate-950 shadow-md transition hover:bg-amber-300 active:translate-y-px"
+                >
+                  Start Learning
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <section id="criccoins" className="scroll-mt-20 border-t border-white/10 bg-[#020617] px-4 py-20 sm:px-6 lg:px-8">
           <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
