@@ -13,6 +13,7 @@ import {
 } from "@/types/match-trading";
 import { terminalPollInterval } from "../hooks/query-keys";
 import { useCreateOrder, useMarketDetail, useOptionChain, useOrderPreview } from "../hooks";
+import { marginForSide } from "../utils/margin";
 import { buildOptionRows, buildPricePayload, findAtmRow } from "../utils/terminal-context";
 import { formatMoney, formatTime } from "@/utils/format";
 import { v4 as uuidv4 } from "uuid";
@@ -93,7 +94,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const { data: orderPreview } = useOrderPreview(previewPayload);
   const localNotional = roundMoney(priceValue * qtyValue);
   const notional = orderPreview?.notional ?? localNotional;
-  const marginRequired = orderPreview?.marginRequired ?? localNotional;
+  const marginRequired = orderPreview?.marginRequired ?? roundMoney(marginForSide(localNotional, side));
   const availableBalance = orderPreview?.availableBalance ?? wallet?.availableBalance ?? 0;
   const showBalanceWarning = orderPreview ? !orderPreview.sufficientBalance : marginRequired > availableBalance;
   const previewMessage = orderPreview?.message ?? "";

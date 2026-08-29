@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
+import { SHORT_MARGIN_MULTIPLIER, marginForSide } from "@/features/trading/utils/margin";
 import type { ChainRow } from "@/features/trading/utils/terminal-context";
 import type { ReplayEvent, ReplayMatchKey } from "../types";
 
@@ -289,12 +290,16 @@ function buildSimulatorAccount(positions: SimulatorPosition[], orders: Simulator
     }, 0)
   );
   const openExposure = roundMoney(
-    openPositions.reduce((sum, position) => sum + entryPrice(position) * Math.abs(position.lots), 0)
+    openPositions.reduce(
+      (sum, position) =>
+        sum + entryPrice(position) * Math.abs(position.lots) * (position.lots < 0 ? SHORT_MARGIN_MULTIPLIER : 1),
+      0
+    )
   );
   const workingReserves = roundMoney(
     orders
       .filter((order) => order.status === "WORKING")
-      .reduce((sum, order) => sum + order.quantity * (order.limitPrice || order.price || 0), 0)
+      .reduce((sum, order) => sum + marginForSide(order.quantity * (order.limitPrice || order.price || 0), order.side), 0)
   );
   const totalPnl = roundMoney(totalRealizedPnl + totalUnrealizedPnl);
   return {
@@ -425,7 +430,7 @@ function positionPnL(position: SimulatorPosition, markPrice: number) {
 function requiredOpeningMargin(position: SimulatorPosition | undefined, side: SimulatorOrderSide, quantity: number, price: number) {
   const lots = position?.lots ?? 0;
   const closingLots = side === "BUY" && lots < 0 ? Math.min(quantity, Math.abs(lots)) : side === "SELL" && lots > 0 ? Math.min(quantity, lots) : 0;
-  return roundMoney(Math.max(0, quantity - closingLots) * price);
+  return roundMoney(marginForSide(Math.max(0, quantity - closingLots) * price, side));
 }
 
 function priceForSide(row: ChainRow, side: SimulatorOrderSide) {
