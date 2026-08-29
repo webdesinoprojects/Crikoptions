@@ -45,10 +45,10 @@ export function LiveMatchArena() {
                 Upcoming
               </div>
               <h2 className="mt-2 font-display text-xl font-black text-white sm:text-2xl">
-                Next Sportmonks fixtures
+                Next upcoming matches
               </h2>
               <p className="mt-1 text-sm font-semibold text-on-surface-variant">
-                No live match right now. Preview scheduled fixtures — trading opens at go-live.
+                No live match right now. Preview scheduled matches — trading opens at go-live.
               </p>
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
@@ -74,12 +74,12 @@ export function LiveMatchArena() {
             <span className="material-symbols-outlined text-[22px]">{isLoading ? "sync" : "sports_cricket"}</span>
           </div>
           <h2 className="font-display text-xl font-black text-white">
-            {isLoading ? "Loading provider fixtures" : "No Sportmonks fixtures"}
+            {isLoading ? "Loading upcoming matches" : "No upcoming matches"}
           </h2>
           <p className="mt-2 text-sm font-semibold leading-6 text-on-surface-variant">
             {isLoading
-              ? "Checking live and upcoming Sportmonks matches..."
-              : "The home feed has no live or upcoming provider matches right now."}
+              ? "Checking live and upcoming matches..."
+              : "The home feed has no live or upcoming matches right now."}
           </p>
           <Link href="/trading" className="mt-4 inline-flex h-10 items-center justify-center rounded-lg border border-cyan-300/25 bg-cyan-300/10 px-4 text-sm font-black text-cyan-100 hover:bg-cyan-300/15">
             Trading terminal

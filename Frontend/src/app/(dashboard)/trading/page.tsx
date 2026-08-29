@@ -38,10 +38,10 @@ export default function TradingIndexPage() {
           <Loader2 className="h-6 w-6 animate-spin" />
         </div>
         <h1 className="mt-5 font-display text-2xl font-black text-white">
-          {firstLiveMarketId ? "Opening live terminal" : "Loading fixtures"}
+          {firstLiveMarketId ? "Opening live terminal" : "Loading matches"}
         </h1>
         <p className="mt-3 text-sm font-semibold leading-6 text-on-surface-variant">
-          Checking Sportmonks live and upcoming matches...
+          Checking live and upcoming matches...
         </p>
       </TradingShell>
     );
@@ -72,9 +72,9 @@ export default function TradingIndexPage() {
             <CalendarClock className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="font-display text-xl font-black text-white sm:text-2xl">Upcoming fixtures</h1>
+            <h1 className="font-display text-xl font-black text-white sm:text-2xl">Upcoming matches</h1>
             <p className="text-sm font-semibold text-on-surface-variant">
-              No live market open yet. Preview scheduled Sportmonks matches — trading unlocks at go-live.
+              No live market open yet. Preview scheduled matches — trading unlocks at go-live.
             </p>
           </div>
         </div>

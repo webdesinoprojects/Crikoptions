@@ -73,7 +73,7 @@ export function ComingUp() {
           Coming Up
         </div>
         <p className="text-sm font-semibold text-on-surface-variant">
-          No upcoming Sportmonks fixtures in the home feed.
+          No upcoming matches in the home feed.
         </p>
       </div>
     );
