@@ -9,6 +9,7 @@ import {
   GitBranch,
   LayoutDashboard,
   LineChart,
+  MessageSquare,
   ShieldCheck,
   TrendingDown,
   TrendingUp,
@@ -293,13 +294,13 @@ export default function Home() {
               },
               {
                 icon: WalletCards,
-                title: "Score Room",
-                body: "Open positions, wallet state, CricCoins result curve, and matchday history.",
+                title: "Portfolio Analysis",
+                body: "Open positions, portfolio allocation, CricCoins ROI tracking, and detailed performance history.",
               },
               {
-                icon: ShieldCheck,
-                title: "Safe by design",
-                body: "CricCoins, no real-money stakes, and clear educational positioning.",
+                icon: MessageSquare,
+                title: "Live Matchday Chat",
+                body: "Discuss live match momentum, share options strategies, and trade alongside a real-time community.",
               },
             ].map(({ icon: Icon, title, body }) => (
               <article key={title} className="rounded-lg border border-white/10 bg-slate-950/50 p-5">

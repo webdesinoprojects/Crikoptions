@@ -2,7 +2,7 @@ import type { Match } from "@/types";
 import { matchConditionNotice } from "./match-conditions";
 
 /** How many soonest upcoming fixtures to pin beside live cards in the terminal strip. */
-export const HOME_STRIP_UPCOMING_LIMIT = 2;
+export const HOME_STRIP_UPCOMING_LIMIT = 10;
 
 export function isLiveOrBreak(match: Match): boolean {
   return match.status === "LIVE" || match.status === "INNINGS_BREAK";

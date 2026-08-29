@@ -23,6 +23,7 @@ import {
   Radio,
   RefreshCw,
   Send,
+  Share2,
   Trash2,
   WifiOff,
 } from "lucide-react";
@@ -81,6 +82,17 @@ export function GlobalChat() {
   const [reportTarget, setReportTarget] = React.useState<ChatMessage | null>(null);
   const [reportReason, setReportReason] = React.useState<ChatReportReason>("spam");
   const [reportNote, setReportNote] = React.useState("");
+  const [shareUrl, setShareUrl] = React.useState("");
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      setShareUrl(window.location.origin);
+    }
+  }, []);
+
+  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(
+    `Hey! Join me on CricOptions, the live cricket options trading platform! 🏏📈\n\nTrade live and practice matches with me here: ${shareUrl || "https://cricoptions.com"}`
+  )}`;
 
   const tradingMarketId = pathname.match(/^\/trading\/([^/]+)/)?.[1] ?? "";
   const adminMatchId = pathname.match(/^\/admin\/matches\/([^/]+)/)?.[1] ?? "";
@@ -245,14 +257,17 @@ export function GlobalChat() {
             type="button"
             aria-label={unreadCount ? `Open chat, ${unreadCount} unread messages` : "Open chat"}
             title="Community chat"
-            className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/[0.035] text-muted-foreground transition hover:border-primary/30 hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+            className="relative flex flex-col items-center gap-0.5 text-muted-foreground transition hover:text-primary focus-visible:outline-none"
           >
-            <MessageCircle className="h-4 w-4" aria-hidden />
-            {unreadCount > 0 && (
-              <span className="absolute -right-1.5 -top-1.5 min-w-4 rounded-full border border-background bg-primary px-1 text-center font-mono text-[8px] font-black leading-[14px] text-black shadow-[0_0_12px_rgba(14,165,233,0.55)]">
-                {unreadCount > 99 ? "99+" : unreadCount}
-              </span>
-            )}
+            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/[0.035] transition-all hover:border-primary/30 hover:bg-primary/10">
+              <MessageCircle className="h-4 w-4" aria-hidden />
+              {unreadCount > 0 && (
+                <span className="absolute -right-1.5 -top-1.5 min-w-4 rounded-full border border-background bg-primary px-1 text-center font-mono text-[8px] font-black leading-[14px] text-black shadow-[0_0_12px_rgba(14,165,233,0.55)]">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </div>
+            <span className="text-[9px] font-black uppercase tracking-wider">Chat</span>
           </button>
         </SheetTrigger>
 
@@ -273,7 +288,19 @@ export function GlobalChat() {
                   Global and live match conversations
                 </SheetDescription>
               </div>
-              <ConnectionBadge state={connectionState} />
+              <div className="flex items-center gap-2 shrink-0">
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Invite friends via WhatsApp"
+                  className="flex items-center gap-1.5 rounded-full border border-[#25d366]/20 bg-[#25d366]/10 px-2 py-1 font-mono text-[8px] font-black uppercase tracking-wider text-[#25d366] hover:bg-[#25d366]/20 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#25d366]"
+                >
+                  <Share2 className="h-2.5 w-2.5" />
+                  Invite
+                </a>
+                <ConnectionBadge state={connectionState} />
+              </div>
             </div>
 
             <div className="relative">

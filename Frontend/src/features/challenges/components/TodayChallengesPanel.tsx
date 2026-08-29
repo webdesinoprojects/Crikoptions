@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import { formatCC } from "../data/challenges-data";
 import { useTodayChallenges } from "../hooks/useTodayChallenges";
 import { TodayChallengeMark } from "./TodayChallengeMark";
+import { useChallenges } from "../hooks/useChallenges";
+import { BadgeTrophySlot } from "./BadgeTrophySlot";
 
 interface TodayChallengesPanelProps {
   compact?: boolean;
@@ -15,6 +17,7 @@ interface TodayChallengesPanelProps {
 export function TodayChallengesPanel({ compact = false, showFooter = true }: TodayChallengesPanelProps) {
   const { today, completedCount, total, rewardPool, isClaimable, claimReward, claimingId } =
     useTodayChallenges();
+  const { badges } = useChallenges();
   const nextId = today.find((item) => item.status !== "COMPLETE")?.id;
 
   return (
@@ -130,6 +133,35 @@ export function TodayChallengesPanel({ compact = false, showFooter = true }: Tod
           );
         })}
       </div>
+
+      {compact && badges && badges.length > 0 && (
+        <div className="border-t border-white/10 p-4 sm:p-5">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-widest text-white/70">
+                Academy credentials
+              </h4>
+              <p className="mt-0.5 text-[10px] text-white/40">
+                Awarded when every task in an academy is complete.
+              </p>
+            </div>
+            <span className="text-[10px] text-white/40 font-data-tabular">
+              {badges.filter((badge) => badge.unlocked).length}/{badges.length}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+            {badges.map((badge) => (
+              <BadgeTrophySlot
+                key={badge.id}
+                badge={badge}
+                unlocked={badge.unlocked}
+                done={badge.done}
+                total={badge.total}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {showFooter ? (
         <div className="border-t border-white/10 px-4 py-3">

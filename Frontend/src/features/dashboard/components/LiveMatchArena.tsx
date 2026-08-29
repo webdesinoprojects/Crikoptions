@@ -32,7 +32,7 @@ export function LiveMatchArena() {
   if (!stableMatch) {
     if (upcomingMatches.length > 0) {
       return (
-        <div className="relative flex min-h-[360px] w-full overflow-hidden rounded-xl bg-[#01040a] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.5)] sm:rounded-2xl sm:p-6">
+        <div className="relative flex min-h-[360px] w-full overflow-hidden rounded-xl bg-[#01040a] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.5)] sm:rounded-2xl sm:p-6 lg:h-full lg:min-h-0">
           <img
             src="/stadium.png"
             alt="Cricket stadium"
@@ -62,7 +62,7 @@ export function LiveMatchArena() {
     }
 
     return (
-      <div className="relative flex min-h-[360px] w-full items-center justify-center overflow-hidden rounded-xl bg-[#01040a] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.5)] sm:rounded-2xl">
+      <div className="relative flex min-h-[360px] w-full items-center justify-center overflow-hidden rounded-xl bg-[#01040a] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.5)] sm:rounded-2xl lg:h-full lg:min-h-0">
         <img
           src="/stadium.png"
           alt="Cricket stadium"
@@ -112,6 +112,22 @@ export function LiveMatchArena() {
   const crr = ballsBowled > 0 ? (currentScore / (ballsBowled / 6)).toFixed(2) : "0.00";
   const rrr = need > 0 && ballsLeft > 0 ? ((need / ballsLeft) * 6).toFixed(2) : "0.00";
 
+  const isOdi = format.includes("ODI") || format.includes("ONE") || format.includes("50");
+  const projectedRuns = Math.round(parseFloat(crr) * (isOdi ? 50 : 20));
+
+  const strikerRuns = stableMatch?.liveContext?.striker?.runs ?? 0;
+  const strikerBalls = stableMatch?.liveContext?.striker?.balls ?? 0;
+  const strikerSR = strikerBalls > 0 ? ((strikerRuns / strikerBalls) * 100).toFixed(0) : "0";
+
+  const nonStrikerRuns = stableMatch?.liveContext?.nonStriker?.runs ?? 0;
+  const nonStrikerBalls = stableMatch?.liveContext?.nonStriker?.balls ?? 0;
+  const nonStrikerSR = nonStrikerBalls > 0 ? ((nonStrikerRuns / nonStrikerBalls) * 100).toFixed(0) : "0";
+
+  const bowlerRuns = stableMatch?.liveContext?.bowler?.runs ?? 0;
+  const bowlerBalls = stableMatch?.liveContext?.bowler?.balls ?? 0;
+  const bowlerOvers = bowlerBalls > 0 ? bowlerBalls / 6 : 0;
+  const bowlerEconomy = bowlerOvers > 0 ? (bowlerRuns / bowlerOvers).toFixed(2) : "0.00";
+
   const lastBall = balls.length > 0 ? balls.filter(b => b.kind !== "empty").pop() : null;
   let commentarySummary = "Match is about to begin";
   if (lastBall) {
@@ -149,7 +165,7 @@ export function LiveMatchArena() {
 
 
   return (
-    <div className="group relative min-h-[560px] w-full overflow-hidden rounded-xl shadow-[0_24px_80px_rgba(0,0,0,0.5)] sm:rounded-2xl md:h-[480px] md:min-h-0">
+    <div className="group relative min-h-[560px] w-full overflow-hidden rounded-xl shadow-[0_24px_80px_rgba(0,0,0,0.5)] sm:rounded-2xl lg:h-full lg:min-h-0">
       {/* Background Image */}
       <img
         src="/stadium.png"
@@ -162,7 +178,7 @@ export function LiveMatchArena() {
       <div className="absolute inset-0 bg-gradient-to-t from-[#000d1a]/80 via-transparent to-transparent" />
 
       {/* Content Container */}
-      <div className="relative z-10 flex min-h-[560px] w-full flex-col gap-4 p-4 sm:p-5 md:h-full md:min-h-0 md:justify-between md:gap-0 md:p-6">
+      <div className="relative z-10 flex min-h-[560px] w-full flex-col gap-4 p-4 sm:p-5 lg:h-full lg:min-h-0 lg:justify-between lg:gap-0 md:p-6">
 
         {/* Top Header / Live Indicator */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -179,6 +195,16 @@ export function LiveMatchArena() {
         <div className="relative w-full overflow-hidden rounded-xl border border-white/5 bg-black/20 p-4 shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-xl sm:max-w-sm sm:rounded-2xl sm:p-5 md:mt-4">
           {/* Subtle gradient shine inside the glass pane */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
+
+          {/* Match Title & Format info */}
+          <div className="relative z-10 mb-3 border-b border-white/5 pb-2">
+            <div className="text-[11px] font-black uppercase tracking-wider text-cyan-400">
+              {stableMatch.homeTeam?.name} vs {stableMatch.awayTeam?.name}
+            </div>
+            <div className="mt-0.5 text-[9px] font-bold text-white/50 uppercase tracking-widest">
+              {format} Match • {stableMatch.status}
+            </div>
+          </div>
 
           {/* Team Score */}
           <div className="relative z-10 mb-4 grid grid-cols-[44px_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[48px_minmax(0,1fr)] sm:gap-4">
@@ -198,7 +224,12 @@ export function LiveMatchArena() {
                 </span>
                 <span className="mb-0.5 whitespace-nowrap text-xs font-medium text-white/70 sm:text-sm">{currentOver} OV</span>
               </div>
-              <div className="text-xs text-white/50 mt-1">Target {target > 0 ? target : "--"}</div>
+              <div className="text-xs text-white/50 mt-1 flex justify-between">
+                <span>Target {target > 0 ? target : "--"}</span>
+                {stableMatch?.innings === 1 && (
+                  <span className="text-cyan-400/90 font-semibold">Projected: {projectedRuns}</span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -213,39 +244,55 @@ export function LiveMatchArena() {
           {stableMatch?.liveContext ? (
             <div className="relative z-10 mb-4 flex flex-col gap-2 sm:mb-5">
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4">
-                <div className="flex justify-between items-center bg-white/[0.02] rounded px-2 py-1.5 border border-white/5">
-                  <span className="text-[11px] font-bold text-cyan-400 truncate pr-1">{stableMatch.liveContext.striker.name}*</span>
-                  <div className="text-[11px] font-data-tabular shrink-0">
-                    <span className="text-white font-bold">{stableMatch.liveContext.striker.runs}</span> <span className="text-white/50">({stableMatch.liveContext.striker.balls})</span>
+                <div className="flex flex-col bg-white/[0.02] rounded px-2.5 py-1.5 border border-white/5">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] font-bold text-cyan-400 truncate pr-1">{stableMatch.liveContext.striker.name}*</span>
+                    <span className="text-[11px] font-data-tabular font-bold text-white shrink-0">
+                      {stableMatch.liveContext.striker.runs} <span className="text-white/40 font-normal">({stableMatch.liveContext.striker.balls})</span>
+                    </span>
+                  </div>
+                  <div className="mt-1 flex justify-between items-center text-[9px] text-white/40">
+                    <span>Strike Rate</span>
+                    <span className="font-semibold text-white/60">{strikerSR}%</span>
                   </div>
                 </div>
-                <div className="flex justify-between items-center bg-white/[0.02] rounded px-2 py-1.5 border border-white/5">
-                  <span className="text-[11px] font-bold text-cyan-400/80 truncate pr-1">{stableMatch.liveContext.nonStriker.name}</span>
-                  <div className="text-[11px] font-data-tabular shrink-0">
-                    <span className="text-white font-bold">{stableMatch.liveContext.nonStriker.runs}</span> <span className="text-white/50">({stableMatch.liveContext.nonStriker.balls})</span>
+                <div className="flex flex-col bg-white/[0.02] rounded px-2.5 py-1.5 border border-white/5">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] font-bold text-cyan-400/80 truncate pr-1">{stableMatch.liveContext.nonStriker.name}</span>
+                    <span className="text-[11px] font-data-tabular font-bold text-white shrink-0">
+                      {stableMatch.liveContext.nonStriker.runs} <span className="text-white/40 font-normal">({stableMatch.liveContext.nonStriker.balls})</span>
+                    </span>
+                  </div>
+                  <div className="mt-1 flex justify-between items-center text-[9px] text-white/40">
+                    <span>Strike Rate</span>
+                    <span className="font-semibold text-white/60">{nonStrikerSR}%</span>
                   </div>
                 </div>
               </div>
-              <div className="flex justify-between items-center bg-white/[0.02] rounded px-2 py-1.5 border border-amber-500/10">
-                <div className="flex items-center gap-1.5 truncate pr-1">
-                  <span className="text-[9px] uppercase tracking-wider text-amber-500/70 shrink-0">Bowling</span>
-                  <span className="text-[11px] font-bold text-amber-400 truncate">{stableMatch.liveContext.bowler.name}</span>
+              <div className="flex flex-col bg-white/[0.02] rounded px-2.5 py-1.5 border border-amber-500/10">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-1.5 truncate pr-1">
+                    <span className="text-[9px] uppercase tracking-wider text-amber-500/70 shrink-0">Bowling</span>
+                    <span className="text-[11px] font-bold text-amber-400 truncate">{stableMatch.liveContext.bowler.name}</span>
+                  </div>
+                  <span className="text-[11px] font-data-tabular font-bold text-white shrink-0">
+                    {stableMatch.liveContext.bowler.wickets}-{stableMatch.liveContext.bowler.runs} 
+                    <span className="text-white/40 font-normal ml-1">({Math.floor(stableMatch.liveContext.bowler.balls / 6)}.{stableMatch.liveContext.bowler.balls % 6})</span>
+                  </span>
                 </div>
-                <div className="text-[11px] font-data-tabular shrink-0">
-                  <span className="text-white font-bold">{stableMatch.liveContext.bowler.wickets}</span>
-                  <span className="text-white/50 mx-0.5">-</span>
-                  <span className="text-white font-bold">{stableMatch.liveContext.bowler.runs}</span>
-                  <span className="text-white/50 ml-1">({Math.floor(stableMatch.liveContext.bowler.balls / 6)}.{stableMatch.liveContext.bowler.balls % 6})</span>
+                <div className="mt-1 flex justify-between items-center text-[9px] text-white/40">
+                  <span>Economy Rate</span>
+                  <span className="font-semibold text-white/60">{bowlerEconomy}</span>
                 </div>
               </div>
             </div>
           ) : (
             <div className="relative z-10 mb-4 flex flex-col gap-2 sm:mb-5 opacity-40">
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4">
-                <div className="h-[28px] bg-white/[0.05] rounded border border-white/5 animate-pulse" />
-                <div className="h-[28px] bg-white/[0.05] rounded border border-white/5 animate-pulse" />
+                <div className="h-[40px] bg-white/[0.05] rounded border border-white/5 animate-pulse" />
+                <div className="h-[40px] bg-white/[0.05] rounded border border-white/5 animate-pulse" />
               </div>
-              <div className="h-[28px] bg-white/[0.05] rounded border border-amber-500/10 animate-pulse" />
+              <div className="h-[40px] bg-white/[0.05] rounded border border-amber-500/10 animate-pulse" />
             </div>
           )}
 
