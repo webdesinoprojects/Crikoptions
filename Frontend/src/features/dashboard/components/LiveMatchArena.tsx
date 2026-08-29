@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { useHomeStripMatches, useLiveTicker } from "@/features/dashboard/hooks";
 import { useMarkets } from "@/features/trading/hooks";
 import Link from "next/link";
+import { Team } from "@/types";
 import { ballClassName, scoreParts } from "@/features/trading/utils/terminal-context";
 import { useStableMatchSnapshot } from "@/features/trading/hooks/useStableMatchSnapshot";
 import {
@@ -130,7 +131,7 @@ export function LiveMatchArena() {
   const displayBalls = balls.filter(b => b.kind !== "empty");
   const timelineBalls = balls;
 
-  const getTeamCode = (team: any) => {
+  const getTeamCode = (team: Team | null | undefined) => {
     if (!team) return "TBA";
     const name = team.shortName || team.name || "TBA";
     if (name.length <= 4) return name.toUpperCase();

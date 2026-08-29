@@ -116,7 +116,7 @@ export function DashboardHeader({ overview }: DashboardHeaderProps) {
               </div>
               <div className="min-w-0">
                 <div className="text-[9px] font-semibold uppercase tracking-wider text-white/35">
-                  Today's Challenge
+                  {"Today's Challenge"}
                 </div>
                 <div className="mt-0.5 text-sm font-bold tabular-nums text-white">
                   {completedCount}

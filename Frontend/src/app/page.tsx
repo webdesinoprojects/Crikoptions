@@ -54,8 +54,6 @@ export default function Home() {
       <main className="w-full max-w-full overflow-x-hidden">
         <HeroSection />
 
-        <LandingMotionSections />
-
         <section id="challenges" className="scroll-mt-20 border-y border-white/10 bg-gradient-to-b from-[#020617] via-[#0b152d] to-[#020617] px-4 py-24 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">
             <div className="text-center">
@@ -199,6 +197,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <LandingMotionSections />
 
         <section id="criccoins" className="scroll-mt-20 border-t border-white/10 bg-[#020617] px-4 py-20 sm:px-6 lg:px-8">
           <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">

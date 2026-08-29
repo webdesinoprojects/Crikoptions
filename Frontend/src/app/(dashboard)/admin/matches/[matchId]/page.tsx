@@ -83,7 +83,8 @@ export default function AdminMatchControlPage() {
     try {
       const stored = localStorage.getItem(`crikoptions_players_${matchId}`);
       if (stored) {
-        setRecentPlayers(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        setTimeout(() => setRecentPlayers(parsed), 0);
       }
     } catch {
       // ignore

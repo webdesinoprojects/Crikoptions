@@ -121,7 +121,9 @@ export default function ChallengesPage() {
     if (unlocked.length === 0) return;
     const seen = new Set(readSeenBadgeIds(user.id));
     const fresh = unlocked.find((id) => !seen.has(id));
-    if (fresh) setNewBadgeId(fresh);
+    if (fresh) {
+      setTimeout(() => setNewBadgeId(fresh), 0);
+    }
   }, [collectibles, user?.id]);
 
   const dismissNewBadge = () => {
@@ -217,7 +219,7 @@ export default function ChallengesPage() {
           <div className="rounded-2xl border border-white/8 bg-[#081225] p-5 sm:p-6">
             <div className="mb-5 flex items-end justify-between gap-3">
               <div>
-                <h2 className="text-sm font-semibold text-white">Today's badges</h2>
+                <h2 className="text-sm font-semibold text-white">{"Today's badges"}</h2>
                 <p className="mt-1 text-[12px] text-white/40">
                   Each medal stays locked until that daily task is complete.
                 </p>

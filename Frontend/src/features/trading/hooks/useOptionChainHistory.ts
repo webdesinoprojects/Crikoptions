@@ -22,7 +22,7 @@ export function useOptionChainHistory(marketId: string, rows: ChainRow[]) {
 
   useEffect(() => {
     if (!marketId) {
-      setHistory([]);
+      setTimeout(() => setHistory([]), 0);
       return;
     }
 
@@ -56,7 +56,9 @@ export function useOptionChainHistory(marketId: string, rows: ChainRow[]) {
     }
 
     if (!marketId || rows.length === 0) {
-      if (marketChanged || !marketId) setHistory([]);
+      if (marketChanged || !marketId) {
+        setTimeout(() => setHistory([]), 0);
+      }
       return;
     }
 
@@ -73,10 +75,12 @@ export function useOptionChainHistory(marketId: string, rows: ChainRow[]) {
       moneyness: row.moneyness,
     }));
 
-    setHistory((current) => {
-      const scopedCurrent = marketChanged ? [] : current.filter((point) => point.marketId === marketId);
-      return trimHistory([...scopedCurrent, ...snapshot]);
-    });
+    setTimeout(() => {
+      setHistory((current) => {
+        const scopedCurrent = marketChanged ? [] : current.filter((point) => point.marketId === marketId);
+        return trimHistory([...scopedCurrent, ...snapshot]);
+      });
+    }, 0);
   }, [marketId, rows]);
 
   const historyByStrike = useMemo(() => {

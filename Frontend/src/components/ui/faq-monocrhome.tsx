@@ -227,7 +227,7 @@ function FAQ1({ items = defaultFaqs }: FAQ1Props) {
 
   useEffect(() => {
     if (typeof window === "undefined") {
-      setIntroReady(true);
+      setTimeout(() => setIntroReady(true), 0);
       return;
     }
     const frame = window.requestAnimationFrame(() => setIntroReady(true));
@@ -277,7 +277,7 @@ function FAQ1({ items = defaultFaqs }: FAQ1Props) {
 
   useEffect(() => {
     if (typeof window === "undefined") {
-      setHasEntered(true);
+      setTimeout(() => setHasEntered(true), 0);
       return;
     }
 

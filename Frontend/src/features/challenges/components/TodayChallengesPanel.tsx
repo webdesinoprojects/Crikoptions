@@ -22,7 +22,7 @@ export function TodayChallengesPanel({ compact = false, showFooter = true }: Tod
       <div className="flex items-start justify-between gap-3 border-b border-white/10 px-4 py-4 sm:px-5">
         <div className="min-w-0">
           <div className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
-            Take today's challenge
+            {"Take today's challenge"}
           </div>
           <p className="mt-1 text-sm text-white/70">
             {completedCount === 0

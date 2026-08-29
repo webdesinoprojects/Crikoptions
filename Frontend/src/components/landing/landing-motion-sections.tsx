@@ -358,9 +358,7 @@ export function LandingMotionSections() {
               Built from real platform surfaces
             </h2>
             <p className="mt-5 text-base leading-7 text-slate-400">
-              The page should show what users actually get after signing in:
-              match arena, strategy board, CricCoins score, simulator, and
-              intelligence tools.
+              Experience the actual interfaces you will use after signing in. Explore our live match arena, interactive trading terminal, and portfolio score room.
             </p>
           </div>
 
@@ -403,9 +401,7 @@ export function LandingMotionSections() {
               Practice before matchday pressure
             </h2>
             <p className="mt-5 max-w-xl text-base leading-7 text-slate-400">
-              CricOptions is a CricCoins cricket strategy game for learning,
-              competition, and option-style thinking. The safety message should
-              be visible before the footer disclaimer.
+              Test your trading strategies in a risk-free environment. Use our simulated matching engine and historical match replays to build confidence and learn option patterns with zero financial risk.
             </p>
           </div>
 
