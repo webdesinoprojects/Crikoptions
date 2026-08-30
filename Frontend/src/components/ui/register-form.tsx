@@ -7,6 +7,7 @@ import Link from "next/link";
 import { AlertCircle, Loader2, X, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/error-message";
 import { GoogleAuthButton } from "@/features/auth/components/GoogleAuthButton";
+import { AuthVisualPanel } from "@/components/ui/auth-visual-panel";
 
 interface FieldErrors {
   name?: string;
@@ -78,21 +79,10 @@ export default function RegisterForm() {
 
   return (
     <div className="flex h-[100dvh] w-full overflow-hidden bg-[#030814] font-sans text-white">
-      {/* Left-side visual panel - Fixed and non-scrollable */}
-      <div className="hidden md:flex relative w-1/2 h-full bg-gradient-to-tr from-[#020617] via-[#09152b] to-[#030814] items-center justify-center p-6">
-        {/* Subtle radial overlay behind image */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.15),transparent_65%)] pointer-events-none" />
-        <img
-          className="w-full h-full object-contain object-center select-none z-10"
-          src="/image.png"
-          alt="Welcome to CricOptions"
-        />
-        {/* Subtle Gradient Overlays for seamless blending */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-[#020617] pointer-events-none opacity-30 z-10" />
-      </div>
+      <AuthVisualPanel />
 
       {/* Right-side form panel - Internally scrollable if needed */}
-      <div className="relative flex flex-col w-full md:w-1/2 h-full bg-gradient-to-b from-[#030814] via-[#0b152d] to-[#030814] border-l border-white/5">
+      <div className="relative flex h-full min-w-0 flex-1 flex-col bg-gradient-to-b from-[#030814] via-[#0b152d] to-[#030814] border-l border-white/5">
         
         {/* Ambient decorative glows */}
         <div className="absolute top-[15%] right-[10%] w-72 h-72 rounded-full bg-cyan-500/10 blur-[120px] pointer-events-none" />
