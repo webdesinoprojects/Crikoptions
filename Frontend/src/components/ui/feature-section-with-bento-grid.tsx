@@ -178,7 +178,7 @@ export const SkeletonTwo = () => {
             variants={imageVariants}
             key={"images-first" + idx}
             style={{
-              rotate: Math.random() * 20 - 10,
+              rotate: (idx * 7) % 20 - 10,
             }}
             whileHover="whileHover"
             whileTap="whileTap"
@@ -199,7 +199,7 @@ export const SkeletonTwo = () => {
           <motion.div
             key={"images-second" + idx}
             style={{
-              rotate: Math.random() * 20 - 10,
+              rotate: ((idx + 2) * 11) % 20 - 10,
             }}
             variants={imageVariants}
             whileHover="whileHover"
@@ -258,11 +258,11 @@ export const Globe = ({ className }: { className?: string }) => {
         { location: [-25.2744, 133.7751], size: 0.08 }, // Australia
         { location: [-30.5595, 22.9375], size: 0.07 }, // South Africa
       ],
-      onRender: (state: any) => {
+      onRender: (state: { phi: number }) => {
         state.phi = phi;
         phi += 0.005;
       },
-    } as any);
+    } as Parameters<typeof createGlobe>[1]);
 
     return () => {
       globe.destroy();

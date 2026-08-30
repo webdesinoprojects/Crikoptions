@@ -5,10 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Activity,
-  Bell,
   ChevronDown,
   Compass,
-  History,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -100,30 +98,18 @@ export default function TopNavBar() {
         <GlobalLeaderboard />
         <GlobalChat />
 
-        <div className="hidden sm:flex items-center gap-3 border-r border-border/15 pr-4">
-          <button className="rounded-md p-2 text-muted-foreground transition-all hover:bg-muted/40 hover:text-foreground cursor-pointer">
-            <Bell className="w-4 h-4" />
-          </button>
-          <button className="rounded-md p-2 text-muted-foreground transition-all hover:bg-muted/40 hover:text-foreground cursor-pointer">
-            <History className="w-4 h-4" />
-          </button>
-          <Link href="/profile" className="block rounded-md p-2 text-muted-foreground transition-all hover:bg-muted/40 hover:text-foreground">
-            <Settings className="w-4 h-4" />
-          </Link>
-        </div>
-
         <div className="flex items-center">
           {isAuthenticated && user ? (
             <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-2 cursor-pointer hover:opacity-90 select-none outline-none bg-transparent border-0 p-0 text-left">
+              <DropdownMenuTrigger className="flex items-center gap-2.5 cursor-pointer select-none outline-none bg-transparent border-0 p-0 text-left">
                 <div className="text-right hidden sm:block">
                   <p className="text-[10px] text-foreground font-semibold leading-none mb-0.5 truncate max-w-[90px]">
                     {user.name}
                   </p>
                   <p className="text-[8px] text-primary font-bold leading-none tracking-wider">{user.tier || "STANDARD"}</p>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-[#d4af37]/20 flex items-center justify-center border border-[#d4af37]/30">
-                  <span className="text-[#d4af37] text-xs font-bold font-mono">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#ffd700] via-[#d4af37] to-[#aa7c11] flex items-center justify-center border border-black/20 shadow-[0_0_10px_rgba(212,175,55,0.35)] ring-1 ring-[#ffd700]/20 transition-all hover:scale-105 hover:shadow-[0_0_15px_rgba(212,175,55,0.6)]">
+                  <span className="text-[#120c02] text-xs font-black tracking-tight leading-none">
                     {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                   </span>
                 </div>

@@ -45,6 +45,8 @@ export const MatchCard = React.memo(function MatchCard({ match, selected }: { ma
   const isSim = isSimulatorMatch(match);
   const conditionBadge = matchConditionBadge(match);
   const { data: markets = [] } = useMarkets(match.id);
+  const homeTeam = match.homeTeam?.shortName || match.homeTeam?.name || "TBA";
+  const awayTeam = match.awayTeam?.shortName || match.awayTeam?.name || "TBA";
 
   const handleClick = React.useCallback(() => {
     if (selected) return;
@@ -71,26 +73,44 @@ export const MatchCard = React.memo(function MatchCard({ match, selected }: { ma
           : "cursor-pointer border-white/10 bg-[#071123]/85 hover:border-cyan-300/25 hover:bg-[#0a172c]"
       )}
     >
-      <span
-        className={cn(
-          "inline-flex h-8 items-center justify-center gap-1 rounded-md px-2 text-[9px] font-black uppercase tracking-wide ring-1 sm:h-9 sm:gap-1.5 sm:px-2.5 sm:text-[10px]",
-          live
-            ? isSim
-              ? "bg-purple-500/15 text-purple-200 ring-purple-400/30 border border-purple-400/25"
-              : "bg-amber-400/15 text-amber-200 ring-amber-300/20"
-            : "bg-cyan-400/10 text-cyan-100 ring-cyan-300/20"
-        )}
-      >
-        {live && (
-          <span
-            className={cn(
-              "size-1.5 rounded-full",
-              isSim ? "bg-purple-300 shadow-[0_0_10px_rgba(192,132,252,0.9)]" : "bg-amber-200 shadow-[0_0_10px_rgba(253,230,138,0.9)]"
+      <div className="flex flex-col items-center gap-1 shrink-0">
+        <div className="flex -space-x-2 shrink-0">
+          <div className="w-8 h-8 rounded-full bg-yellow-500 border border-[#071123] flex items-center justify-center font-black text-[#000d1a] text-[10px] z-10 overflow-hidden">
+            {match.homeTeam?.logoUrl ? (
+              <img src={match.homeTeam.logoUrl} alt={homeTeam} className="h-full w-full object-contain" />
+            ) : (
+              homeTeam.slice(0, 3).toUpperCase()
             )}
-          />
-        )}
-        {isBreak ? "Break" : live ? (isSim ? "WARM UP" : "Live") : "Upcoming"}
-      </span>
+          </div>
+          <div className="w-8 h-8 rounded-full bg-blue-600 border border-[#071123] flex items-center justify-center font-black text-white text-[10px] overflow-hidden">
+            {match.awayTeam?.logoUrl ? (
+              <img src={match.awayTeam.logoUrl} alt={awayTeam} className="h-full w-full object-contain" />
+            ) : (
+              awayTeam.slice(0, 3).toUpperCase()
+            )}
+          </div>
+        </div>
+        <span
+          className={cn(
+            "inline-flex h-4 items-center justify-center gap-0.5 rounded px-1 text-[8px] font-black uppercase tracking-wider ring-1",
+            live
+              ? isSim
+                ? "bg-purple-500/15 text-purple-200 ring-purple-400/30 border border-purple-400/25"
+                : "bg-amber-400/15 text-amber-200 ring-amber-300/20"
+              : "bg-cyan-400/10 text-cyan-100 ring-cyan-300/20"
+          )}
+        >
+          {live && !isBreak && (
+            <span
+              className={cn(
+                "size-1 rounded-full",
+                isSim ? "bg-purple-300 shadow-[0_0_10px_rgba(192,132,252,0.9)]" : "bg-amber-200 shadow-[0_0_10px_rgba(253,230,138,0.9)]"
+              )}
+            />
+          )}
+          {isBreak ? "Break" : live ? (isSim ? "WARM UP" : "Live") : "Upcoming"}
+        </span>
+      </div>
       <div className="min-w-0 flex flex-col justify-center">
         <div className="truncate text-[12px] font-black leading-tight text-on-surface sm:text-[13px]">
           {formatMatchTitle(match.title)}

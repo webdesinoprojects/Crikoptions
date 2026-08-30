@@ -73,10 +73,10 @@ const proofCards: ProofCard[] = [
     highlights: ["Option chain", "Order book", "Order execution"],
   },
   {
-    title: "Score room",
-    body: "Track open positions, CricCoins results, challenge score, and your matchday history from one place.",
+    title: "Portfolio analysis",
+    body: "Track open positions, CricCoins results, risk exposure, and your comprehensive performance metrics from one place.",
     icon: WalletCards,
-    highlights: ["Open positions", "CricCoins score", "Match history"],
+    highlights: ["Open positions", "ROI tracking", "Trading history"],
   },
 ]
 
@@ -353,14 +353,12 @@ export function LandingMotionSections() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/20 to-transparent" />
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
-            <p className="text-xs font-black uppercase tracking-wide text-cyan-300">Product proof</p>
+            <p className="text-xs font-black uppercase tracking-wide text-cyan-300">The Arena</p>
             <h2 className="mt-4 text-4xl font-black leading-[1.04] text-white sm:text-5xl">
-              Built from real platform surfaces
+              Engineered for split-second decisions
             </h2>
             <p className="mt-5 text-base leading-7 text-slate-400">
-              The page should show what users actually get after signing in:
-              match arena, strategy board, CricCoins score, simulator, and
-              intelligence tools.
+              Explore the exact platform interface you will use: our real-time match center, live options trading terminal, and detailed portfolio analysis workspace.
             </p>
           </div>
 
@@ -403,9 +401,7 @@ export function LandingMotionSections() {
               Practice before matchday pressure
             </h2>
             <p className="mt-5 max-w-xl text-base leading-7 text-slate-400">
-              CricOptions is a CricCoins cricket strategy game for learning,
-              competition, and option-style thinking. The safety message should
-              be visible before the footer disclaimer.
+              Test your trading strategies in a risk-free environment. Use our simulated matching engine and historical match replays to build confidence and learn option patterns with zero financial risk.
             </p>
           </div>
 
@@ -442,17 +438,17 @@ export function LandingMotionSections() {
       <section id="operators" className="border-y border-white/10 bg-[#071120] px-4 py-16 text-slate-100 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:items-center">
           <div>
-            <p className="text-xs font-black uppercase tracking-wide text-cyan-300">For strategy players</p>
+            <p className="text-xs font-black uppercase tracking-wide text-cyan-300">Expert Utility</p>
             <h2 className="mt-4 text-3xl font-black leading-tight text-white sm:text-4xl">
-              Depth is there when users are ready
+              Advanced depth when you need it
             </h2>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
-              "Live and replay match data",
-              "CricCoins wallet and ledger",
+              "Options trading for live & practice matches",
+              "Unified CricCoins wallet & transaction ledger",
               "Live option chains with order book depth",
-              "Admin controls for game operations",
+              "Interactive Academy for complex strategy training",
             ].map((item) => (
               <div key={item} className="flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.025] px-4 py-3 text-sm font-semibold text-slate-300">
                 <span className="size-1.5 shrink-0 rounded-full bg-cyan-300" />

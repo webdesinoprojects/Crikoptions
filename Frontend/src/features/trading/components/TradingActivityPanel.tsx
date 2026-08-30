@@ -435,7 +435,7 @@ function InlinePositionCloseForm({
   const { mutate: createOrder, isPending } = useCreateOrder();
 
   React.useEffect(() => {
-    setPrice(liveLtp);
+    setTimeout(() => setPrice(liveLtp), 0);
   }, [liveLtp]);
 
   const handleSubmit = () => {

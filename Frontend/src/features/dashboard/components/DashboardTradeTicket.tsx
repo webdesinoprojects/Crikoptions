@@ -4,6 +4,7 @@ import React, { useMemo, useState } from "react";
 import { TerminalPanel } from "@/components/shared/TerminalComponents";
 import { useLiveTicker } from "@/features/dashboard/hooks";
 import { useMarketDetail } from "@/features/trading/hooks";
+import { marginForSide } from "@/features/trading/utils/margin";
 import { toast } from "sonner";
 
 export function DashboardTradeTicket() {
@@ -100,7 +101,9 @@ export function DashboardTradeTicket() {
             <div className="flex flex-col gap-0.5 justify-end">
               <div className="bg-surface-dim border border-outline/10 rounded p-1.5 flex justify-between items-center text-[9px]">
                 <span className="text-on-surface-variant">Margin:</span>
-                <span className="font-bold text-white font-data-tabular">₵{(qty * effectivePrice).toLocaleString("en-IN")}</span>
+                <span className="font-bold text-white font-data-tabular">
+                  ₵{marginForSide(qty * effectivePrice, side).toLocaleString("en-IN")}
+                </span>
               </div>
             </div>
           </div>

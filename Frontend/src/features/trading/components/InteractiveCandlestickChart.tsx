@@ -276,10 +276,11 @@ export function InteractiveCandlestickChart({
       chart.remove();
       chartRef.current = null;
       candleSeriesRef.current = null;
-      volumeSeriesRef.current = null;
     };
-    } catch (e: any) {
-      console.error("[DEBUG] Error in chart init:", e.message, e.stack);
+    } catch (e) {
+      const errMsg = e instanceof Error ? e.message : String(e);
+      const errStack = e instanceof Error ? e.stack : "";
+      console.error("[DEBUG] Error in chart init:", errMsg, errStack);
     }
   }, [bucketMs]);
 
@@ -346,7 +347,7 @@ export function InteractiveCandlestickChart({
         chart.timeScale().fitContent();
       }
       atLiveEdgeRef.current = true;
-      setAtLiveEdge(true);
+      setTimeout(() => setAtLiveEdge(true), 0);
     } else if (wasAtLiveEdge && previousLatestTime !== null && latestTime > previousLatestTime) {
       chart.timeScale().scrollToRealTime();
     } else if (visibleLogicalRange) {
@@ -360,16 +361,18 @@ export function InteractiveCandlestickChart({
     if (!wasPriceAuto && visiblePriceRange) {
       priceScale.setAutoScale(false);
       priceScale.setVisibleRange(visiblePriceRange);
-      setPriceAuto(false);
+      setTimeout(() => setPriceAuto(false), 0);
     } else {
       priceScale.setAutoScale(true);
-      setPriceAuto(true);
+      setTimeout(() => setPriceAuto(true), 0);
     }
 
     firstTimeRef.current = firstTime;
     latestTimeRef.current = latestTime;
-    } catch (e: any) {
-      console.error("[DEBUG] Error in data update:", e.message, e.stack);
+    } catch (e) {
+      const errMsg = e instanceof Error ? e.message : String(e);
+      const errStack = e instanceof Error ? e.stack : "";
+      console.error("[DEBUG] Error in data update:", errMsg, errStack);
     }
   }, [candles]);
 

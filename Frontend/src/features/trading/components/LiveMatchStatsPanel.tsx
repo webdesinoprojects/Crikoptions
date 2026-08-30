@@ -5,7 +5,7 @@ import NumberFlow from "@number-flow/react";
 import { Activity, Gauge, Info, Radio, Swords } from "lucide-react";
 import { BackendMarket } from "@/lib/adapters/market.adapter";
 import { cn } from "@/lib/utils";
-import { BatterStats, Match } from "@/types";
+import { BatterStats, Match, Team } from "@/types";
 import { useOnFieldMatrix } from "../hooks/useOnFieldMatrix";
 import { useStableMatchSnapshot } from "../hooks/useStableMatchSnapshot";
 import {
@@ -302,7 +302,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
   );
 }
 
-function TeamMark({ active, code, team, isSimulator }: { active: boolean; code: string; team?: any; isSimulator?: boolean }) {
+function TeamMark({ active, code, team, isSimulator }: { active: boolean; code: string; team?: Team; isSimulator?: boolean }) {
   const [imgError, setImgError] = React.useState(false);
   const showLogo = Boolean(team?.logoUrl) && !imgError && !isSimulator;
 

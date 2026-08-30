@@ -10,7 +10,7 @@ const footerNavigation = [
       { label: "Strategy Board", href: "/trading" },
       { label: "Match Simulator", href: "/simulator" },
       { label: "Live Match Arena", href: "/dashboard" },
-      { label: "Score Room", href: "/portfolio" },
+      { label: "Portfolio Analysis", href: "/portfolio" },
     ],
   },
   {

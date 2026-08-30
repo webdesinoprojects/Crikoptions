@@ -16,6 +16,7 @@ import { Match } from "@/types";
 import { useOptionChain, useOptionChainHistory } from "../hooks";
 import { ChainRow, buildOptionRows, buildPricePayload, findAtmRow } from "../utils/terminal-context";
 import { OptionChainCandlestickDialog } from "./OptionChainCandlestickDialog";
+import { buildStrikeCandles, getCandleStats } from "../utils/option-chain-candles";
 
 interface OptionChainProps {
   marketId: string;
@@ -109,6 +110,23 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
                   const isAtm = row.moneyness === "ATM";
                   const size = Math.max(row.bidQty, row.askQty);
 
+                  // Calculate stats for open, high, low
+                  const strikeHistory = getStrikeHistory(row.strike);
+                  const candles = buildStrikeCandles(strikeHistory, 15_000);
+                  const stats = getCandleStats(candles);
+                  
+                  const validBid = row.bid > 0 ? row.bid : null;
+                  const validAsk = row.ask > 0 ? row.ask : null;
+                  const quotes = [validBid, validAsk].filter((q): q is number => q !== null);
+                  
+                  const openPrice = stats.first ? stats.first.open : (quotes.length > 0 ? quotes[0] : row.premium);
+                  const highPrice = stats.high > 0 
+                    ? Math.max(stats.high, ...quotes) 
+                    : (quotes.length > 0 ? Math.max(...quotes) : row.premium);
+                  const lowPrice = stats.low > 0 
+                    ? Math.min(stats.low, ...quotes) 
+                    : (quotes.length > 0 ? Math.min(...quotes) : row.premium);
+
                   return (
                     <tr
                       key={row.strike}
@@ -149,18 +167,37 @@ export function OptionChain({ marketId, market, match, className }: OptionChainP
                               <DropdownMenuContent
                                 align="end"
                                 side="bottom"
-                                className="min-w-40 border-white/10 bg-[#071327] p-1 text-on-surface shadow-[0_16px_44px_rgba(0,0,0,0.45)]"
+                                className="min-w-44 border border-white/10 bg-[#071327] p-2 text-on-surface shadow-[0_16px_44px_rgba(0,0,0,0.45)] rounded-lg"
                               >
                                 <DropdownMenuItem
                                   onSelect={() => {
                                     selectRow(row);
                                     setCandlestickRow(row);
                                   }}
-                                  className="flex cursor-pointer items-center gap-2 rounded px-2 py-2 text-[12px] font-black text-cyan-100 focus:bg-cyan-300/10 focus:text-cyan-100"
+                                  className="flex cursor-pointer items-center gap-2 rounded px-2.5 py-2 text-[12px] font-black text-cyan-100 focus:bg-cyan-300/10 focus:text-cyan-100"
                                 >
                                   <CandlestickChart className="h-4 w-4 text-cyan-300" />
                                   View candlestick
                                 </DropdownMenuItem>
+
+                                {/* Dropdown Separator */}
+                                <div className="my-1.5 h-px bg-white/10" />
+
+                                {/* Strike Stats (Open, High, Low) */}
+                                <div className="px-2.5 py-1.5 space-y-1.5 text-[11px] font-semibold text-slate-300">
+                                  <div className="flex items-center justify-between">
+                                    <span>Open</span>
+                                    <span className="font-mono font-bold text-white">₵{openPrice.toFixed(2)}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <span>High</span>
+                                    <span className="font-mono font-bold text-emerald-400">₵{highPrice.toFixed(2)}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <span>Low</span>
+                                    <span className="font-mono font-bold text-red-400">₵{lowPrice.toFixed(2)}</span>
+                                  </div>
+                                </div>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>

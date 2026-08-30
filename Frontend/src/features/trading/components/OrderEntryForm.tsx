@@ -1,7 +1,8 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { CheckCircle2, Clock3, Loader2, RotateCcw, ShieldCheck, Zap } from "lucide-react";
+import { CheckCircle2, Clock3, Loader2, Plus, RotateCcw, ShieldCheck, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { useWallet } from "@/features/wallet/hooks";
+import { AddFundsModal } from "@/features/wallet/components/AddFundsModal";
 import { useTerminalStore } from "@/stores/terminal.store";
 import type { Match, Order } from "@/types";
 import {
@@ -12,6 +13,7 @@ import {
 } from "@/types/match-trading";
 import { terminalPollInterval } from "../hooks/query-keys";
 import { useCreateOrder, useMarketDetail, useOptionChain, useOrderPreview } from "../hooks";
+import { marginForSide } from "../utils/margin";
 import { buildOptionRows, buildPricePayload, findAtmRow } from "../utils/terminal-context";
 import { formatMoney, formatTime } from "@/utils/format";
 import { v4 as uuidv4 } from "uuid";
@@ -33,6 +35,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const [priceOverride, setPriceOverride] = useState<{ key: string; value: string } | null>(null);
   const [lastOrder, setLastOrder] = useState<Order | null>(null);
   const [lastOrderTime, setLastOrderTime] = useState<Date | null>(null);
+  const [addFundsOpen, setAddFundsOpen] = useState(false);
 
   const orderSize = useTerminalStore((state) => state.orderSize);
   const [qtyOverride, setQtyOverride] = useState<string | null>(null);
@@ -91,7 +94,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
   const { data: orderPreview } = useOrderPreview(previewPayload);
   const localNotional = roundMoney(priceValue * qtyValue);
   const notional = orderPreview?.notional ?? localNotional;
-  const marginRequired = orderPreview?.marginRequired ?? localNotional;
+  const marginRequired = orderPreview?.marginRequired ?? roundMoney(marginForSide(localNotional, side));
   const availableBalance = orderPreview?.availableBalance ?? wallet?.availableBalance ?? 0;
   const showBalanceWarning = orderPreview ? !orderPreview.sufficientBalance : marginRequired > availableBalance;
   const previewMessage = orderPreview?.message ?? "";
@@ -330,9 +333,14 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
         </div>
 
         <div className="grid min-w-0 gap-1">
-          <label className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant">
-            Quantity
-          </label>
+          <div className="flex items-center gap-2">
+            <label className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant">
+              Quantity
+            </label>
+            <span className="rounded border border-cyan-500/20 bg-cyan-500/10 px-1.5 py-0.5 text-[9px] font-black text-cyan-300 select-none">
+              1 Lot = 25
+            </span>
+          </div>
           <div className="relative w-full">
             <input
               type="number"
@@ -365,25 +373,36 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
       {lastOrder && <OrderReceipt order={lastOrder} submittedAt={lastOrderTime} />}
 
       <div className="grid grid-cols-[1fr_40px] gap-2 pt-1">
-        <button
-          type="submit"
-          disabled={submitDisabled}
-          className={`inline-flex h-11 min-w-0 shrink-0 items-center justify-center gap-2 rounded-xl px-2 text-[12px] font-black text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_8px_20px_rgba(0,0,0,0.4)] transition-all hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_12px_25px_rgba(0,0,0,0.6)] hover:-translate-y-0.5 active:translate-y-0 sm:text-[14px] ${side === "BUY" ? "bg-bull-green hover:bg-bull-green/90 shadow-bull-green/20" : "bg-bear-red hover:bg-bear-red/90 shadow-bear-red/20"
-            } disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none`}
-        >
-          {isCreatingOrder ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Routing...
-            </>
-          ) : (
-            <>
-              {willExecuteNow ? <Zap className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
-              {side === "BUY" ? "Buy" : "Sell"} {type} @ ₵{formatMoney(priceValue)}
-              {qtyValue > 1 ? ` - ${formatMoney(notional)}` : ""}
-            </>
-          )}
-        </button>
+        {showBalanceWarning ? (
+          <button
+            type="button"
+            onClick={() => setAddFundsOpen(true)}
+            className="inline-flex h-11 min-w-0 shrink-0 items-center justify-center gap-2 rounded-xl px-2 text-[11px] font-black text-black bg-[#d4af37] hover:bg-[#e6c253] shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_8px_20px_rgba(0,0,0,0.4)] transition-all hover:-translate-y-0.5 active:translate-y-0 sm:text-[13px]"
+          >
+            <Plus className="h-4 w-4" />
+            Insufficient Balance — Add Funds
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={submitDisabled}
+            className={`inline-flex h-11 min-w-0 shrink-0 items-center justify-center gap-2 rounded-xl px-2 text-[12px] font-black text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_8px_20px_rgba(0,0,0,0.4)] transition-all hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_12px_25px_rgba(0,0,0,0.6)] hover:-translate-y-0.5 active:translate-y-0 sm:text-[14px] ${side === "BUY" ? "bg-bull-green hover:bg-bull-green/90 shadow-bull-green/20" : "bg-bear-red hover:bg-bear-red/90 shadow-bear-red/20"
+              } disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none`}
+          >
+            {isCreatingOrder ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Routing...
+              </>
+            ) : (
+              <>
+                {willExecuteNow ? <Zap className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
+                {side === "BUY" ? "Buy" : "Sell"} {type} @ ₵{formatMoney(priceValue)}
+                {qtyValue > 1 ? ` - ${formatMoney(notional)}` : ""}
+              </>
+            )}
+          </button>
+        )}
         <button
           type="button"
           onClick={resetTicket}
@@ -393,6 +412,7 @@ export function OrderEntryForm({ matchId, marketId, match }: OrderEntryFormProps
           <RotateCcw className="h-4 w-4" />
         </button>
       </div>
+      <AddFundsModal isOpen={addFundsOpen} onClose={() => setAddFundsOpen(false)} />
     </form>
   );
 }

@@ -40,7 +40,7 @@ function normalizePortfolioSummary(summary: PortfolioSummary): PortfolioSummary 
     avgWin: numberOrZero(summary.avgWin),
     avgLoss: numberOrZero(summary.avgLoss),
     profitFactor: numberOrZero(summary.profitFactor),
-    streak: numberOrZero((summary as any).streak),
+    streak: numberOrZero(summary.streak),
     availableMargin: numberOrZero(summary.availableMargin),
     usedMargin: numberOrZero(summary.usedMargin),
     marginUsagePct: numberOrZero(summary.marginUsagePct),
