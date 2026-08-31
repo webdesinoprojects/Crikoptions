@@ -318,7 +318,7 @@ function TeamMark({ active, code, team, isSimulator }: { active: boolean; code: 
       >
         {showLogo ? (
           <img 
-            src={team.logoUrl} 
+            src={team?.logoUrl} 
             alt={code} 
             className="h-full w-full object-cover" 
             onError={() => setImgError(true)}
