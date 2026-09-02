@@ -49,9 +49,6 @@ export default function TradingTerminalPage({ params }: PageProps) {
   useMatchScoreStream(matchId, match?.id);
   useUserStream(matchId);
 
-  // The market id lives in the URL, so an innings settling mid-session would
-  // otherwise strand the trader on a dead contract where every order is
-  // rejected. Roll forward to the match's open market as soon as one exists.
   const { data: siblingMarkets = [] } = useMarkets(matchId);
   const marketRetired = isMarketRetired(market);
   const rolloverMarketId = React.useMemo(() => {

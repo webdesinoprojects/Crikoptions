@@ -76,14 +76,14 @@ export const MatchCard = React.memo(function MatchCard({ match, selected }: { ma
       <div className="flex flex-col items-center gap-1 shrink-0">
         <div className="flex -space-x-2 shrink-0">
           <div className="w-8 h-8 rounded-full bg-yellow-500 border border-[#071123] flex items-center justify-center font-black text-[#000d1a] text-[10px] z-10 overflow-hidden">
-            {match.homeTeam?.logoUrl ? (
+            {match.homeTeam?.logoUrl && !isSim ? (
               <img src={match.homeTeam.logoUrl} alt={homeTeam} className="h-full w-full object-contain" />
             ) : (
               homeTeam.slice(0, 3).toUpperCase()
             )}
           </div>
           <div className="w-8 h-8 rounded-full bg-blue-600 border border-[#071123] flex items-center justify-center font-black text-white text-[10px] overflow-hidden">
-            {match.awayTeam?.logoUrl ? (
+            {match.awayTeam?.logoUrl && !isSim ? (
               <img src={match.awayTeam.logoUrl} alt={awayTeam} className="h-full w-full object-contain" />
             ) : (
               awayTeam.slice(0, 3).toUpperCase()

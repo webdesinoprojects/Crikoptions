@@ -33,11 +33,11 @@ export function LiveMatchArena() {
     if (upcomingMatches.length > 0) {
       return (
         <div className="relative flex min-h-[360px] w-full overflow-hidden rounded-xl bg-[#01040a] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.5)] sm:rounded-2xl sm:p-6 lg:h-full lg:min-h-0">
-          <img
-            src="/stadium.png"
-            alt="Cricket stadium"
-            className="absolute inset-0 h-full w-full object-cover object-center opacity-30"
-          />
+        <img
+          src="/cricoptions-hero-trading.png"
+          alt="Cricket stadium"
+          className="absolute inset-0 h-full w-full object-cover object-center opacity-30"
+        />
           <div className="absolute inset-0 bg-gradient-to-br from-[#000d1a] via-[#000d1a]/88 to-[#020817]" />
           <div className="relative z-10 flex w-full flex-col gap-4">
             <div>
@@ -64,7 +64,7 @@ export function LiveMatchArena() {
     return (
       <div className="relative flex min-h-[360px] w-full items-center justify-center overflow-hidden rounded-xl bg-[#01040a] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.5)] sm:rounded-2xl lg:h-full lg:min-h-0">
         <img
-          src="/stadium.png"
+          src="/cricoptions-hero-trading.png"
           alt="Cricket stadium"
           className="absolute inset-0 h-full w-full object-cover object-center opacity-30"
         />
@@ -168,7 +168,7 @@ export function LiveMatchArena() {
     <div className="group relative min-h-[560px] w-full overflow-hidden rounded-xl shadow-[0_24px_80px_rgba(0,0,0,0.5)] sm:rounded-2xl lg:h-full lg:min-h-0">
       {/* Background Image */}
       <img
-        src="/stadium.png"
+        src="/cricoptions-hero-trading.png"
         alt="Live Match Stadium"
         className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-1000 group-hover:scale-105"
       />
@@ -192,7 +192,7 @@ export function LiveMatchArena() {
         </div>
 
         {/* Main Scorecard Glass Pane */}
-        <div className="relative w-full overflow-hidden rounded-xl border border-white/5 bg-black/20 p-4 shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-xl sm:max-w-sm sm:rounded-2xl sm:p-5 md:mt-4">
+        <div className="relative w-full overflow-hidden rounded-xl border border-white/5 bg-black/20 p-4 shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-xl sm:max-w-sm sm:rounded-2xl sm:p-5 md:mt-4 transform-gpu backface-hidden">
           {/* Subtle gradient shine inside the glass pane */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
 
