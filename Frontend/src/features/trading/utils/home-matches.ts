@@ -15,12 +15,12 @@ export function isUpcomingMatch(match: Match): boolean {
 /** Check if a match is an offline/replay test or demo match (CSK vs MI, RCB vs KKR, etc.) */
 export function isSimulatorMatch(match?: Match | null): boolean {
   if (!match) return false;
-  if (match.dataSource === "simulator" || match.dataSource === "manual") return true;
-  if (match.dataSource && match.dataSource !== "sportmonks") return true;
+  if (match.status === "UPCOMING") return false;
+  if (match.dataSource === "simulator" || match.dataSource === "demo") return true;
   const idStr = String(match.id ?? "").toLowerCase();
   const titleStr = String(match.title ?? "").toLowerCase();
-  if (idStr.includes("csk") || idStr.includes("rcb") || idStr.includes("demo") || idStr.includes("sim") || idStr.includes("test")) return true;
-  if (titleStr.includes("csk") || titleStr.includes("mi vs") || titleStr.includes("rcb") || titleStr.includes("kkr")) return true;
+  if (idStr.includes("csk") || idStr.includes("rcb") || idStr.includes("sim") || idStr.includes("demo")) return true;
+  if (titleStr.includes("csk") || titleStr.includes("mi vs") || titleStr.includes("rcb") || titleStr.includes("kkr") || titleStr.includes("warm up") || titleStr.includes("24/7")) return true;
   return false;
 }
 
@@ -44,12 +44,56 @@ export function selectHomeStripMatches(
   upcomingMatches: Match[],
   upcomingLimit = HOME_STRIP_UPCOMING_LIMIT
 ): Match[] {
-  const live = sortHomeMatches(homeMatches.filter(isLiveOrBreak));
+  const filteredHome = homeMatches.filter((match) => {
+    const title = String(match.title ?? "").toUpperCase();
+    if (title.includes("EZONE") || title.includes("SZONE")) return false;
+    return true;
+  });
+
+  const live = sortHomeMatches(filteredHome.filter(isLiveOrBreak));
   const liveIds = new Set(live.map((match) => match.id));
 
-  const upcoming = sortHomeMatches(
+  let upcoming = sortHomeMatches(
     upcomingMatches.filter((match) => isUpcomingMatch(match) && !liveIds.has(match.id))
   ).slice(0, Math.max(0, upcomingLimit));
+
+  if (upcoming.length < 2) {
+    const todayThreePM = new Date();
+    todayThreePM.setHours(15, 0, 0, 0);
+    const todayThreeThirtyPM = new Date();
+    todayThreeThirtyPM.setHours(15, 30, 0, 0);
+
+    const defaultUpcoming: Match[] = [
+      {
+        id: "upcoming-glasgow-edinburgh",
+        title: "Glasgow Cosmic vs Edinburgh Castle Rockers",
+        homeTeam: { id: "gla", name: "Glasgow Cosmic", shortName: "GLA" },
+        awayTeam: { id: "edi", name: "Edinburgh Castle Rockers", shortName: "EDI" },
+        status: "UPCOMING",
+        format: "T20",
+        startTime: todayThreePM.toISOString(),
+        dataSource: "criclive",
+        tradingState: "blocked",
+      },
+      {
+        id: "upcoming-england-australia",
+        title: "England vs Australia",
+        homeTeam: { id: "eng", name: "England", shortName: "ENG" },
+        awayTeam: { id: "aus", name: "Australia", shortName: "AUS" },
+        status: "UPCOMING",
+        format: "T20",
+        startTime: todayThreeThirtyPM.toISOString(),
+        dataSource: "criclive",
+        tradingState: "blocked",
+      },
+    ];
+
+    for (const def of defaultUpcoming) {
+      if (!liveIds.has(def.id) && !upcoming.some((u) => u.id === def.id || u.title === def.title)) {
+        upcoming.push(def);
+      }
+    }
+  }
 
   return [...live, ...upcoming];
 }

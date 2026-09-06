@@ -19,26 +19,29 @@ import { cn } from "@/lib/utils";
 
 export default function TradingIndexPage() {
   const router = useRouter();
-  const { data: visible = [], isLoading } = useHomeStripMatches();
+  const { data: visible = [], isLoading: matchesLoading } = useHomeStripMatches();
   const firstLive = visible.find(isLiveOrBreak);
 
-  const { data: liveMarkets = [] } = useMarkets(firstLive?.id ?? "");
-  const firstLiveMarketId = selectPrimaryMarket(liveMarkets)?.id;
+  const { data: liveMarkets = [], isLoading: marketsLoading } = useMarkets(firstLive?.id ?? "");
+  const primaryMarket = selectPrimaryMarket(liveMarkets);
+  const targetMarketId = primaryMarket?.id;
 
   React.useEffect(() => {
-    if (firstLiveMarketId) {
-      router.replace(`/trading/${firstLiveMarketId}`);
+    if (targetMarketId) {
+      router.replace(`/trading/${targetMarketId}`);
+    } else if (!marketsLoading && firstLive?.id && liveMarkets.length === 0) {
+      router.replace(`/trading/match/${firstLive.id}`);
     }
-  }, [firstLiveMarketId, router]);
+  }, [targetMarketId, marketsLoading, firstLive?.id, liveMarkets.length, router]);
 
-  if (isLoading || firstLiveMarketId) {
+  if (matchesLoading || (firstLive && marketsLoading) || targetMarketId) {
     return (
       <TradingShell>
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
           <Loader2 className="h-6 w-6 animate-spin" />
         </div>
         <h1 className="mt-5 font-display text-2xl font-black text-white">
-          {firstLiveMarketId ? "Opening live terminal" : "Loading matches"}
+          {targetMarketId ? "Opening live terminal" : "Loading matches"}
         </h1>
         <p className="mt-3 text-sm font-semibold leading-6 text-on-surface-variant">
           Checking live and upcoming matches...

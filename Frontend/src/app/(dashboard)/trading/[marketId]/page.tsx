@@ -50,6 +50,17 @@ export default function TradingTerminalPage({ params }: PageProps) {
   useUserStream(matchId);
 
   const { data: siblingMarkets = [] } = useMarkets(matchId);
+
+  // Fallback: If marketId in URL is actually a match ID, resolve its primary market ID and redirect.
+  const { data: directMarkets = [] } = useMarkets(marketError || (!marketLoading && !market) ? marketId : "");
+  const directPrimaryMarketId = selectPrimaryMarket(directMarkets)?.id;
+
+  React.useEffect(() => {
+    if (directPrimaryMarketId && directPrimaryMarketId !== marketId) {
+      router.replace(`/trading/${directPrimaryMarketId}`);
+    }
+  }, [directPrimaryMarketId, marketId, router]);
+
   const marketRetired = isMarketRetired(market);
   const rolloverMarketId = React.useMemo(() => {
     if (!marketRetired) return null;
