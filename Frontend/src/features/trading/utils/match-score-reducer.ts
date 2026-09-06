@@ -13,8 +13,8 @@ export function classifyMatchScoreEvent(current: Match | undefined, event: Match
   if (incomingVersion > 0 && incomingVersion <= currentVersion) return "ignore";
   if (event.isCorrection) return "resync";
   if ((current?.dataSource === "criclive" || current?.dataSource === "sportmonks") && incomingVersion <= 0) return "resync";
-  const isProvider = current?.dataSource === "criclive" || current?.dataSource === "sportmonks";
-  if (!isProvider && currentVersion > 0 && incomingVersion > currentVersion + 1) return "resync";
+  const isNanosecondTimestamp = incomingVersion > 1_000_000_000;
+  if (!isNanosecondTimestamp && currentVersion > 0 && incomingVersion > currentVersion + 1) return "resync";
   return "patch";
 }
 
