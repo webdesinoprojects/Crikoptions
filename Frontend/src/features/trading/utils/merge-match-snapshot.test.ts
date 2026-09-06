@@ -9,7 +9,7 @@ const base: Match = {
   homeTeam: { id: "a", name: "Alpha", shortName: "A" },
   awayTeam: { id: "b", name: "Beta", shortName: "B" },
   startTime: "2026-07-16T12:00:00Z",
-  dataSource: "sportmonks",
+  dataSource: "criclive",
   stateVersion: 12,
   liveContext: {
     striker: { name: "Ruturaj Gaikwad", runs: 42, balls: 28 },

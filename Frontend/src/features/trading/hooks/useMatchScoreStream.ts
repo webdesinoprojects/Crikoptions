@@ -93,6 +93,7 @@ export function useMatchScoreStream(matchId: string, streamMatchId?: string) {
 }
 
 function isNewerProviderState(current: Match | undefined, incoming: Match): current is Match {
-  if (current?.dataSource !== "sportmonks" || incoming.dataSource !== "sportmonks") return false;
+  const isProv = (ds?: string) => ds === "criclive" || ds === "sportmonks";
+  if (!isProv(current?.dataSource) || !isProv(incoming.dataSource)) return false;
   return (current.stateVersion ?? 0) > (incoming.stateVersion ?? 0);
 }

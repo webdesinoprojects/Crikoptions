@@ -22,11 +22,11 @@ const baseMatch: BackendMatch = {
   updatedAt: "2026-07-16T12:10:00Z",
 };
 
-describe("Sportmonks match adapter", () => {
+describe("CricLive match adapter", () => {
   it("preserves feed and trading versions", () => {
     const match = adaptMatch({
       ...baseMatch,
-      dataSource: "sportmonks",
+      dataSource: "criclive",
       feedState: "healthy",
       tradingState: "open",
       stateVersion: 9,
@@ -36,7 +36,7 @@ describe("Sportmonks match adapter", () => {
 
     expect(match).toMatchObject({
       status: "LIVE",
-      dataSource: "sportmonks",
+      dataSource: "criclive",
       feedState: "healthy",
       tradingState: "open",
       stateVersion: 9,
@@ -58,7 +58,7 @@ describe("Sportmonks match adapter", () => {
       adaptMatch({
         ...baseMatch,
         status: "upcoming",
-        dataSource: "sportmonks",
+        dataSource: "criclive",
         feedState: "unsupported",
         currentScore: 0,
         wicketsLost: 0,

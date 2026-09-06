@@ -34,7 +34,7 @@ interface LiveMatchStatsPanelProps {
 export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStatsPanelProps) {
   const { stableMatch, balls } = useStableMatchSnapshot(match);
   const matrix = useOnFieldMatrix(stableMatch, market?.matchId ?? undefined, stableMatch?.id);
-  const isSportmonks = stableMatch?.dataSource === "sportmonks";
+  const isCriclive = stableMatch?.dataSource === "criclive" || stableMatch?.dataSource === "sportmonks";
   const isSim = isSimulatorMatch(stableMatch ?? match);
 
   const score = currentInningsScoreParts(stableMatch);
@@ -103,7 +103,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
               <span className="rounded border border-purple-400/25 bg-purple-400/10 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-purple-200">
                 24/7 Warm Up Session
               </span>
-            ) : match?.dataSource === "sportmonks" && match.status !== "UPCOMING" && feedStatusLabel(match) ? (
+            ) : (match?.dataSource === "criclive" || match?.dataSource === "sportmonks") && match.status !== "UPCOMING" && feedStatusLabel(match) ? (
               <span className="rounded border border-amber-400/20 bg-amber-400/8 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-amber-200/90">
                 {feedStatusLabel(match)}
               </span>
@@ -251,7 +251,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
                   <div className="flex items-center justify-between gap-3 py-1.5">
                     <span className="text-[10px] text-slate-400">This over</span>
                     <div className="flex flex-wrap items-center justify-end gap-1">
-                      {isSportmonks ? (
+                      {isCriclive ? (
                         matrix.thisOver.map((ball, index) => (
                           <span
                             key={`${stableMatch?.id}-${innings}-${overs}-over-${index}`}

@@ -51,13 +51,18 @@ describe("selectHomeStripMatches", () => {
       status: "UPCOMING",
       startTime: "2026-07-19T10:00:00Z",
     });
-    const other = match({
-      id: "other",
+    const other1 = match({
+      id: "other1",
       status: "UPCOMING",
       startTime: "2026-07-20T10:00:00Z",
     });
+    const other2 = match({
+      id: "other2",
+      status: "UPCOMING",
+      startTime: "2026-07-21T10:00:00Z",
+    });
 
-    const strip = selectHomeStripMatches([live], [staleUpcoming, other], 2);
-    expect(strip.map((item) => item.id)).toEqual(["same", "other"]);
+    const strip = selectHomeStripMatches([live], [staleUpcoming, other1, other2], 2);
+    expect(strip.map((item) => item.id)).toEqual(["same", "other1", "other2"]);
   });
 });
