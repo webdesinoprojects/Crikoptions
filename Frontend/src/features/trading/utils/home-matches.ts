@@ -53,47 +53,13 @@ export function selectHomeStripMatches(
   const live = sortHomeMatches(filteredHome.filter(isLiveOrBreak));
   const liveIds = new Set(live.map((match) => match.id));
 
-  let upcoming = sortHomeMatches(
+  // Every fixture shown here comes from the feed. There is deliberately no
+  // padding with invented matches when the list is short: a fabricated fixture
+  // carrying dataSource "criclive" is indistinguishable from a real one and
+  // would offer a market that cannot settle.
+  const upcoming = sortHomeMatches(
     upcomingMatches.filter((match) => isUpcomingMatch(match) && !liveIds.has(match.id))
   ).slice(0, Math.max(0, upcomingLimit));
-
-  if (upcoming.length < 2) {
-    const todayThreePM = new Date();
-    todayThreePM.setHours(15, 0, 0, 0);
-    const todayThreeThirtyPM = new Date();
-    todayThreeThirtyPM.setHours(15, 30, 0, 0);
-
-    const defaultUpcoming: Match[] = [
-      {
-        id: "upcoming-glasgow-edinburgh",
-        title: "Glasgow Cosmic vs Edinburgh Castle Rockers",
-        homeTeam: { id: "gla", name: "Glasgow Cosmic", shortName: "GLA" },
-        awayTeam: { id: "edi", name: "Edinburgh Castle Rockers", shortName: "EDI" },
-        status: "UPCOMING",
-        format: "T20",
-        startTime: todayThreePM.toISOString(),
-        dataSource: "criclive",
-        tradingState: "blocked",
-      },
-      {
-        id: "upcoming-england-australia",
-        title: "England vs Australia",
-        homeTeam: { id: "eng", name: "England", shortName: "ENG" },
-        awayTeam: { id: "aus", name: "Australia", shortName: "AUS" },
-        status: "UPCOMING",
-        format: "T20",
-        startTime: todayThreeThirtyPM.toISOString(),
-        dataSource: "criclive",
-        tradingState: "blocked",
-      },
-    ];
-
-    for (const def of defaultUpcoming) {
-      if (!liveIds.has(def.id) && !upcoming.some((u) => u.id === def.id || u.title === def.title)) {
-        upcoming.push(def);
-      }
-    }
-  }
 
   return [...live, ...upcoming];
 }

@@ -65,4 +65,17 @@ describe("selectHomeStripMatches", () => {
     const strip = selectHomeStripMatches([live], [staleUpcoming, other1, other2], 2);
     expect(strip.map((item) => item.id)).toEqual(["same", "other1", "other2"]);
   });
+
+  it("never invents fixtures when the feed returns few or none", () => {
+    expect(selectHomeStripMatches([], [], 10)).toEqual([]);
+
+    const live = match({ id: "live-1", status: "LIVE" });
+    const onlyUpcoming = match({
+      id: "up-1",
+      status: "UPCOMING",
+      startTime: "2026-07-19T14:00:00Z",
+    });
+    const strip = selectHomeStripMatches([live], [onlyUpcoming], 10);
+    expect(strip.map((item) => item.id)).toEqual(["live-1", "up-1"]);
+  });
 });
