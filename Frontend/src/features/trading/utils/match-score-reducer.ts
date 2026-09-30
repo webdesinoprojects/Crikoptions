@@ -44,6 +44,7 @@ export function patchMatchScore(current: Match, event: MatchScoreUpdateEvent): M
     liveContext: event.liveContext ?? current.liveContext,
     matchPulse: event.matchPulse ?? current.matchPulse,
     thisOver: event.thisOver ?? current.thisOver,
+    inningsSummaries: event.inningsSummaries ?? current.inningsSummaries,
     stateVersion: event.stateVersion ?? current.stateVersion,
     tradingVersion: event.tradingVersion ?? current.tradingVersion,
     feedState,

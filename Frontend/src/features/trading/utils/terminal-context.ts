@@ -196,8 +196,18 @@ export interface ScoreboardSnap {
   totalBalls: number;
 }
 
+/**
+ * Balls per innings the match is actually scheduled for. A shortened match (a
+ * rain-reduced game, or a league that plays "T20" at ten overs) is shorter than
+ * its format, and the backend's ballsLeft counts down from this figure.
+ */
+export function scheduledBallsForMatch(match?: Match) {
+  const scheduled = match?.scheduledBalls;
+  return typeof scheduled === "number" && scheduled > 0 ? scheduled : totalBallsForFormat(match?.format);
+}
+
 export function snapFromMatch(match: Match): ScoreboardSnap {
-  const totalBalls = totalBallsForFormat(match.format);
+  const totalBalls = scheduledBallsForMatch(match);
   const score = currentInningsScoreParts(match);
 
   return {

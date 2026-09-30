@@ -5,7 +5,7 @@ import { useHomeStripMatches, useLiveTicker } from "@/features/dashboard/hooks";
 import { useMarkets } from "@/features/trading/hooks";
 import Link from "next/link";
 import { Team } from "@/types";
-import { ballClassName, scoreParts } from "@/features/trading/utils/terminal-context";
+import { ballClassName, scheduledBallsForMatch, scoreParts } from "@/features/trading/utils/terminal-context";
 import { useStableMatchSnapshot } from "@/features/trading/hooks/useStableMatchSnapshot";
 import {
   formatMatchStartTime,
@@ -99,7 +99,7 @@ export function LiveMatchArena() {
   const need = stableMatch?.targetScore && stableMatch?.currentScore ? stableMatch.targetScore - stableMatch.currentScore : 0;
 
   const format = (stableMatch?.format || "T20").toUpperCase();
-  const totalBalls = format.includes("ODI") || format.includes("ONE") ? 300 : 120;
+  const totalBalls = scheduledBallsForMatch(stableMatch);
 
   const currentOverParts = currentOver.split('.');
   const overs = parseInt(currentOverParts[0] || '0', 10);
@@ -112,8 +112,7 @@ export function LiveMatchArena() {
   const crr = ballsBowled > 0 ? (currentScore / (ballsBowled / 6)).toFixed(2) : "0.00";
   const rrr = need > 0 && ballsLeft > 0 ? ((need / ballsLeft) * 6).toFixed(2) : "0.00";
 
-  const isOdi = format.includes("ODI") || format.includes("ONE") || format.includes("50");
-  const projectedRuns = Math.round(parseFloat(crr) * (isOdi ? 50 : 20));
+  const projectedRuns = Math.round(parseFloat(crr) * (totalBalls / 6));
 
   const strikerRuns = stableMatch?.liveContext?.striker?.runs ?? 0;
   const strikerBalls = stableMatch?.liveContext?.striker?.balls ?? 0;

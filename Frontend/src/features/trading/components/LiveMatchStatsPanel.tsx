@@ -21,6 +21,7 @@ import {
   battingTeamForMatch,
   bowlingTeamForMatch,
   currentInningsScoreParts,
+  scheduledBallsForMatch,
   teamCode,
 } from "../utils/terminal-context";
 import { isSimulatorMatch } from "../utils/home-matches";
@@ -42,7 +43,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
   const parsedWickets = Number.parseInt(score.wickets, 10);
   const currentScore = Number.isFinite(parsedRuns) ? parsedRuns : 0;
   const wickets = Number.isFinite(parsedWickets) ? parsedWickets : 0;
-  const totalBalls = totalBallsForFormat(stableMatch?.format);
+  const totalBalls = scheduledBallsForMatch(stableMatch);
   const ballsLeft = Math.max(0, Math.min(totalBalls, stableMatch?.ballsLeft ?? totalBalls));
   const ballsBowled = totalBalls - ballsLeft;
   const overs = stableMatch?.currentOver ?? oversTextFromBalls(ballsBowled);
@@ -463,11 +464,6 @@ function projectedFinal(currentScore: number, ballsLeft: number, crr: number, ma
   if (currentScore === 0 && market?.ltp) return Math.round(market.ltp);
   if (crr <= 0) return currentScore;
   return Math.max(currentScore, Math.round(currentScore + crr * (ballsLeft / 6)));
-}
-
-function totalBallsForFormat(format?: string) {
-  const upper = (format ?? "T20").toUpperCase();
-  return upper.includes("ODI") || upper.includes("ONE") ? 300 : 120;
 }
 
 function oversTextFromBalls(balls: number) {
