@@ -121,14 +121,19 @@ export default function TradingTerminalPage({ params }: PageProps) {
   }
 
   if (marketRetired) {
+    // Between innings the settled market is all there is: the next innings'
+    // market is created when play resumes, and the sibling poll then rolls over.
+    const inningsBreak = !rolloverMarketId && match?.status === "INNINGS_BREAK";
     return (
       <TerminalShell ref={terminalRef}>
         <TerminalNotice
-          title={rolloverMarketId ? "Opening the next innings" : "This innings has settled"}
+          title={rolloverMarketId ? "Opening the next innings" : inningsBreak ? "Innings break" : "This innings has settled"}
           body={
             rolloverMarketId
               ? "This innings settled. Taking you to the open market for this match..."
-              : "This innings settled and its market is closed. The next innings market opens shortly — positions here are settled automatically."
+              : inningsBreak
+                ? "The innings has settled and its market is closed — positions here are settled automatically. The next innings market opens when play resumes, and this page switches to it on its own."
+                : "This innings settled and its market is closed. The next innings market opens shortly — positions here are settled automatically."
           }
           action={
             rolloverMarketId ? undefined : (
