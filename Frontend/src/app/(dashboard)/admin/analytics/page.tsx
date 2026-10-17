@@ -1,12 +1,51 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Users, UserPlus, Activity, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAdminAnalyticsOverview } from "@/features/analytics/hooks";
+import {
+  useAdminAnalyticsOverview,
+  useAdminUsers,
+} from "@/features/analytics/hooks";
+import { SignupTrendChart } from "@/features/analytics/components/SignupTrendChart";
+import { UsersTable } from "@/features/analytics/components/UsersTable";
+import type { UserStatus } from "@/features/analytics/services/analytics.service";
+
+const PAGE_SIZE = 25;
 
 export default function AdminAnalyticsPage() {
   const { data, isLoading, isError } = useAdminAnalyticsOverview();
+
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [status, setStatus] = useState<UserStatus | "all">("all");
+  const [page, setPage] = useState(1);
+
+  // Debounce so typing does not fire a request per keystroke.
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // A filter change invalidates the current page number, so both are set
+  // together in the handler rather than reacting to the change afterwards.
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setPage(1);
+  };
+
+  const handleStatusChange = (value: UserStatus | "all") => {
+    setStatus(value);
+    setPage(1);
+  };
+
+  const usersQuery = useAdminUsers({
+    search: debouncedSearch || undefined,
+    status,
+    page,
+    limit: PAGE_SIZE,
+  });
 
   const tiles = data
     ? [
@@ -36,7 +75,7 @@ export default function AdminAnalyticsPage() {
             data.avgSessionMinutes > 0
               ? `${data.avgSessionMinutes.toFixed(1)} min`
               : "—",
-          sub: "approx., last 24h",
+          sub: "across active users",
           icon: Clock,
           color: "text-violet-400 bg-violet-400/10",
         },
@@ -44,26 +83,27 @@ export default function AdminAnalyticsPage() {
     : [];
 
   return (
-    <div className="container mx-auto p-6 max-w-5xl">
+    <div className="container mx-auto max-w-6xl p-6">
       <Link
         href="/admin"
-        className="mb-4 inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+        className="mb-4 inline-flex items-center gap-1 text-sm text-gray-400 transition-colors hover:text-gray-200"
       >
-        <ArrowLeft className="w-4 h-4" /> Back to Admin Console
+        <ArrowLeft className="h-4 w-4" /> Back to Admin Console
       </Link>
 
-      <h1 className="text-3xl font-bold tracking-tight mb-2">Usage Analytics</h1>
-      <p className="text-gray-400 mb-8 text-sm">
-        Daily active users and average session length are approximate — based on
-        the last authenticated request per user, not a dedicated session tracker.
+      <h1 className="mb-2 text-3xl font-bold tracking-tight">Usage Analytics</h1>
+      <p className="mb-8 text-sm text-gray-400">
+        A session is a visit: 30 minutes of inactivity starts a new one. Times
+        are measured from first to last action, so they undercount reading on a
+        final page.
       </p>
 
       {isError ? (
-        <div className="p-8 text-center text-gray-500 border border-gray-800 border-dashed rounded-lg bg-gray-950/50">
+        <div className="rounded-lg border border-dashed border-gray-800 bg-gray-950/50 p-8 text-center text-gray-500">
           Failed to load analytics. Try refreshing the page.
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {isLoading
             ? Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} className="h-[8.5rem] rounded-xl bg-gray-900" />
@@ -81,7 +121,7 @@ export default function AdminAnalyticsPage() {
                   <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
                     {tile.label}
                   </span>
-                  <span className="text-2xl font-bold tabular-nums leading-none">
+                  <span className="text-2xl font-bold leading-none tabular-nums">
                     {tile.value}
                   </span>
                   {tile.sub && (
@@ -92,8 +132,39 @@ export default function AdminAnalyticsPage() {
         </div>
       )}
 
+      <div className="mb-8 rounded-xl border border-gray-800 bg-gray-950 p-5">
+        <h2 className="mb-1 text-sm font-bold uppercase tracking-wider text-gray-400">
+          Signups per day
+        </h2>
+        <p className="mb-4 text-xs text-gray-500">Last 30 days</p>
+        {isLoading || !data ? (
+          <Skeleton className="h-56 w-full rounded-lg bg-gray-900" />
+        ) : (
+          <SignupTrendChart data={data.signupTrend} />
+        )}
+      </div>
+
+      <h2 className="mb-1 text-2xl font-bold tracking-tight">Users</h2>
+      <p className="mb-4 text-sm text-gray-400">
+        Select a user to see their full activity.
+      </p>
+
+      <UsersTable
+        rows={usersQuery.data?.users ?? []}
+        total={usersQuery.data?.total ?? 0}
+        page={page}
+        limit={PAGE_SIZE}
+        isLoading={usersQuery.isLoading}
+        isError={usersQuery.isError}
+        search={search}
+        status={status}
+        onSearchChange={handleSearchChange}
+        onStatusChange={handleStatusChange}
+        onPageChange={setPage}
+      />
+
       {data && (
-        <p className="text-xs text-gray-600">
+        <p className="mt-6 text-xs text-gray-600">
           Last updated {new Date(data.generatedAt).toLocaleTimeString()}
         </p>
       )}
