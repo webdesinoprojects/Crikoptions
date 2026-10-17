@@ -5,7 +5,7 @@ import Link from "next/link";
 import { apiClient } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Wallet, MessageSquareWarning, ChevronRight } from "lucide-react";
+import { Wallet, MessageSquareWarning, BarChart3, ChevronRight } from "lucide-react";
 
 type AdminMatch = {
   _id: string;
@@ -39,7 +39,7 @@ export default function AdminConsolePage() {
     <div className="container mx-auto p-6 max-w-5xl">
       <h1 className="text-3xl font-bold tracking-tight mb-8">Admin Console</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
         {/* Wallets Control Card */}
         <Link href="/admin/wallets">
           <div className="group border border-gray-800 rounded-xl p-6 bg-gray-950 hover:bg-gray-900 transition-colors cursor-pointer h-full flex flex-col justify-between">
@@ -69,6 +69,21 @@ export default function AdminConsolePage() {
             </div>
             <div className="mt-6 flex items-center font-medium text-amber-300 transition-transform group-hover:translate-x-1">
               Review Reports <ChevronRight className="ml-1 h-4 w-4" />
+            </div>
+          </div>
+        </Link>
+
+        <Link href="/admin/analytics">
+          <div className="group flex h-full cursor-pointer flex-col justify-between rounded-xl border border-gray-800 bg-gray-950 p-6 transition-colors hover:bg-gray-900">
+            <div>
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-violet-400/10 text-violet-400">
+                <BarChart3 className="h-6 w-6" />
+              </div>
+              <h2 className="mb-2 text-xl font-bold">Usage Analytics</h2>
+              <p className="text-sm text-gray-400">Total and active users, signup growth, and average session length.</p>
+            </div>
+            <div className="mt-6 flex items-center font-medium text-violet-400 transition-transform group-hover:translate-x-1">
+              View Analytics <ChevronRight className="ml-1 h-4 w-4" />
             </div>
           </div>
         </Link>

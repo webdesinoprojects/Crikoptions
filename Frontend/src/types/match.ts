@@ -110,7 +110,7 @@ export interface Match {
   matchPulse?: MatchPulse | null;
   thisOver?: OverBall[];
   startTime: string;
-  dataSource?: "manual" | "simulator" | "sportmonks" | string;
+  dataSource?: "manual" | "simulator" | "criclive" | string;
   providerPhase?: string;
   scheduledBalls?: number;
   /** Per-innings over limit actually in force (below the format standard when shortened). */

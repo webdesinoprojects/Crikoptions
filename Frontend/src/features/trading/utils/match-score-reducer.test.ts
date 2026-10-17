@@ -10,7 +10,7 @@ const match: Match = {
   homeTeam: { id: "a", name: "Alpha", shortName: "A" },
   awayTeam: { id: "b", name: "Beta", shortName: "B" },
   startTime: "2026-07-16T12:00:00Z",
-  dataSource: "sportmonks",
+  dataSource: "criclive",
   currentScore: 80,
   wicketsLost: 2,
   ballsLeft: 60,

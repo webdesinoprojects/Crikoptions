@@ -24,7 +24,7 @@ export function useOnFieldMatrix(
   const cacheKey = queryMatchId || match?.id;
 
   useEffect(() => {
-    if (!cacheKey || !match?.id || match.dataSource !== "sportmonks") return;
+    if (!cacheKey || !match?.id || (match.dataSource !== "criclive" && match.dataSource !== "sportmonks")) return;
     if (!shouldShowWaitingForFeed(match)) return;
 
     let cancelled = false;
