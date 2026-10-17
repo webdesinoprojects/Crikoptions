@@ -1,5 +1,5 @@
 import { socketManager } from "./socket-manager";
-import type { LiveMatchContext, MatchPulse, OverBall } from "@/types";
+import type { InningsSummary, LiveMatchContext, MatchPulse, OverBall } from "@/types";
 
 export interface MatchScoreUpdateEvent {
   eventId?: string;
@@ -14,6 +14,8 @@ export interface MatchScoreUpdateEvent {
   liveContext?: LiveMatchContext;
   matchPulse?: MatchPulse | null;
   thisOver?: OverBall[];
+  /** Per-innings batting sides; the batting team is read from here. */
+  inningsSummaries?: InningsSummary[];
   timestamp?: string;
   stateVersion?: number;
   tradingVersion?: number;

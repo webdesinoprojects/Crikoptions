@@ -63,7 +63,7 @@ export default function LoginForm() {
 
           {/* Center Form Container */}
           <div className="mx-auto my-6 flex w-full max-w-md flex-grow flex-col items-center justify-center sm:my-8 z-10">
-            <div className="w-full bg-[#0e172a]/60 border border-white/10 backdrop-blur-md rounded-2xl p-6 sm:p-8 shadow-[0_24px_64px_rgba(0,0,0,0.5)] transition-all duration-300 hover:border-white/15">
+            <div className="w-full bg-white/[0.03] border border-white/10 backdrop-blur-xl rounded-2xl p-6 sm:p-8 shadow-[0_24px_64px_rgba(0,0,0,0.5)] transition-all duration-300 hover:border-white/15">
               <form onSubmit={handleSubmit} className="w-full flex flex-col items-center">
                 <h3 className="mb-1 text-center font-sans text-xl font-bold uppercase tracking-wider text-white sm:text-2xl mt-2">Sign In</h3>
                 <p className="text-xs text-white/50 text-center mb-6 font-medium">
@@ -155,3 +155,5 @@ export default function LoginForm() {
     </div>
   );
 }
+
+

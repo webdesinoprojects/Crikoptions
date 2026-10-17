@@ -12,8 +12,9 @@ export function classifyMatchScoreEvent(current: Match | undefined, event: Match
 
   if (incomingVersion > 0 && incomingVersion <= currentVersion) return "ignore";
   if (event.isCorrection) return "resync";
-  if (current?.dataSource === "sportmonks" && incomingVersion <= 0) return "resync";
-  if (currentVersion > 0 && incomingVersion > currentVersion + 1) return "resync";
+  if ((current?.dataSource === "criclive" || current?.dataSource === "sportmonks") && incomingVersion <= 0) return "resync";
+  const isNanosecondTimestamp = incomingVersion > 1_000_000_000;
+  if (!isNanosecondTimestamp && currentVersion > 0 && incomingVersion > currentVersion + 1) return "resync";
   return "patch";
 }
 
@@ -43,6 +44,7 @@ export function patchMatchScore(current: Match, event: MatchScoreUpdateEvent): M
     liveContext: event.liveContext ?? current.liveContext,
     matchPulse: event.matchPulse ?? current.matchPulse,
     thisOver: event.thisOver ?? current.thisOver,
+    inningsSummaries: event.inningsSummaries ?? current.inningsSummaries,
     stateVersion: event.stateVersion ?? current.stateVersion,
     tradingVersion: event.tradingVersion ?? current.tradingVersion,
     feedState,

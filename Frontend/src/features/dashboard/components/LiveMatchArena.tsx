@@ -5,7 +5,7 @@ import { useHomeStripMatches, useLiveTicker } from "@/features/dashboard/hooks";
 import { useMarkets } from "@/features/trading/hooks";
 import Link from "next/link";
 import { Team } from "@/types";
-import { ballClassName, scoreParts } from "@/features/trading/utils/terminal-context";
+import { ballClassName, scheduledBallsForMatch, scoreParts } from "@/features/trading/utils/terminal-context";
 import { useStableMatchSnapshot } from "@/features/trading/hooks/useStableMatchSnapshot";
 import {
   formatMatchStartTime,
@@ -33,11 +33,11 @@ export function LiveMatchArena() {
     if (upcomingMatches.length > 0) {
       return (
         <div className="relative flex min-h-[360px] w-full overflow-hidden rounded-xl bg-[#01040a] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.5)] sm:rounded-2xl sm:p-6 lg:h-full lg:min-h-0">
-          <img
-            src="/stadium.png"
-            alt="Cricket stadium"
-            className="absolute inset-0 h-full w-full object-cover object-center opacity-30"
-          />
+        <img
+          src="/cricoptions-hero-trading.png"
+          alt="Cricket stadium"
+          className="absolute inset-0 h-full w-full object-cover object-center opacity-30"
+        />
           <div className="absolute inset-0 bg-gradient-to-br from-[#000d1a] via-[#000d1a]/88 to-[#020817]" />
           <div className="relative z-10 flex w-full flex-col gap-4">
             <div>
@@ -64,7 +64,7 @@ export function LiveMatchArena() {
     return (
       <div className="relative flex min-h-[360px] w-full items-center justify-center overflow-hidden rounded-xl bg-[#01040a] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.5)] sm:rounded-2xl lg:h-full lg:min-h-0">
         <img
-          src="/stadium.png"
+          src="/cricoptions-hero-trading.png"
           alt="Cricket stadium"
           className="absolute inset-0 h-full w-full object-cover object-center opacity-30"
         />
@@ -99,7 +99,7 @@ export function LiveMatchArena() {
   const need = stableMatch?.targetScore && stableMatch?.currentScore ? stableMatch.targetScore - stableMatch.currentScore : 0;
 
   const format = (stableMatch?.format || "T20").toUpperCase();
-  const totalBalls = format.includes("ODI") || format.includes("ONE") ? 300 : 120;
+  const totalBalls = scheduledBallsForMatch(stableMatch);
 
   const currentOverParts = currentOver.split('.');
   const overs = parseInt(currentOverParts[0] || '0', 10);
@@ -112,8 +112,7 @@ export function LiveMatchArena() {
   const crr = ballsBowled > 0 ? (currentScore / (ballsBowled / 6)).toFixed(2) : "0.00";
   const rrr = need > 0 && ballsLeft > 0 ? ((need / ballsLeft) * 6).toFixed(2) : "0.00";
 
-  const isOdi = format.includes("ODI") || format.includes("ONE") || format.includes("50");
-  const projectedRuns = Math.round(parseFloat(crr) * (isOdi ? 50 : 20));
+  const projectedRuns = Math.round(parseFloat(crr) * (totalBalls / 6));
 
   const strikerRuns = stableMatch?.liveContext?.striker?.runs ?? 0;
   const strikerBalls = stableMatch?.liveContext?.striker?.balls ?? 0;
@@ -168,7 +167,7 @@ export function LiveMatchArena() {
     <div className="group relative min-h-[560px] w-full overflow-hidden rounded-xl shadow-[0_24px_80px_rgba(0,0,0,0.5)] sm:rounded-2xl lg:h-full lg:min-h-0">
       {/* Background Image */}
       <img
-        src="/stadium.png"
+        src="/cricoptions-hero-trading.png"
         alt="Live Match Stadium"
         className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-1000 group-hover:scale-105"
       />
@@ -192,7 +191,7 @@ export function LiveMatchArena() {
         </div>
 
         {/* Main Scorecard Glass Pane */}
-        <div className="relative w-full overflow-hidden rounded-xl border border-white/5 bg-black/20 p-4 shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-xl sm:max-w-sm sm:rounded-2xl sm:p-5 md:mt-4">
+        <div className="relative w-full overflow-hidden rounded-xl border border-white/5 bg-black/20 p-4 shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-xl sm:max-w-sm sm:rounded-2xl sm:p-5 md:mt-4 transform-gpu backface-hidden">
           {/* Subtle gradient shine inside the glass pane */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
 
