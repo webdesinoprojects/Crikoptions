@@ -21,6 +21,7 @@ import {
   battingTeamForMatch,
   bowlingTeamForMatch,
   currentInningsScoreParts,
+  scheduledBallsForMatch,
   teamCode,
 } from "../utils/terminal-context";
 import { isSimulatorMatch } from "../utils/home-matches";
@@ -34,7 +35,7 @@ interface LiveMatchStatsPanelProps {
 export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStatsPanelProps) {
   const { stableMatch, balls } = useStableMatchSnapshot(match);
   const matrix = useOnFieldMatrix(stableMatch, market?.matchId ?? undefined, stableMatch?.id);
-  const isSportmonks = stableMatch?.dataSource === "sportmonks";
+  const isCriclive = stableMatch?.dataSource === "criclive" || stableMatch?.dataSource === "sportmonks";
   const isSim = isSimulatorMatch(stableMatch ?? match);
 
   const score = currentInningsScoreParts(stableMatch);
@@ -42,7 +43,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
   const parsedWickets = Number.parseInt(score.wickets, 10);
   const currentScore = Number.isFinite(parsedRuns) ? parsedRuns : 0;
   const wickets = Number.isFinite(parsedWickets) ? parsedWickets : 0;
-  const totalBalls = totalBallsForFormat(stableMatch?.format);
+  const totalBalls = scheduledBallsForMatch(stableMatch);
   const ballsLeft = Math.max(0, Math.min(totalBalls, stableMatch?.ballsLeft ?? totalBalls));
   const ballsBowled = totalBalls - ballsLeft;
   const overs = stableMatch?.currentOver ?? oversTextFromBalls(ballsBowled);
@@ -103,7 +104,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
               <span className="rounded border border-purple-400/25 bg-purple-400/10 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-purple-200">
                 24/7 Warm Up Session
               </span>
-            ) : match?.dataSource === "sportmonks" && match.status !== "UPCOMING" && feedStatusLabel(match) ? (
+            ) : (match?.dataSource === "criclive" || match?.dataSource === "sportmonks") && match.status !== "UPCOMING" && feedStatusLabel(match) ? (
               <span className="rounded border border-amber-400/20 bg-amber-400/8 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-amber-200/90">
                 {feedStatusLabel(match)}
               </span>
@@ -251,7 +252,7 @@ export function LiveMatchStatsPanel({ match, market, className }: LiveMatchStats
                   <div className="flex items-center justify-between gap-3 py-1.5">
                     <span className="text-[10px] text-slate-400">This over</span>
                     <div className="flex flex-wrap items-center justify-end gap-1">
-                      {isSportmonks ? (
+                      {isCriclive ? (
                         matrix.thisOver.map((ball, index) => (
                           <span
                             key={`${stableMatch?.id}-${innings}-${overs}-over-${index}`}
@@ -318,7 +319,7 @@ function TeamMark({ active, code, team, isSimulator }: { active: boolean; code: 
       >
         {showLogo ? (
           <img 
-            src={team.logoUrl} 
+            src={team?.logoUrl} 
             alt={code} 
             className="h-full w-full object-cover" 
             onError={() => setImgError(true)}
@@ -463,11 +464,6 @@ function projectedFinal(currentScore: number, ballsLeft: number, crr: number, ma
   if (currentScore === 0 && market?.ltp) return Math.round(market.ltp);
   if (crr <= 0) return currentScore;
   return Math.max(currentScore, Math.round(currentScore + crr * (ballsLeft / 6)));
-}
-
-function totalBallsForFormat(format?: string) {
-  const upper = (format ?? "T20").toUpperCase();
-  return upper.includes("ODI") || upper.includes("ONE") ? 300 : 120;
 }
 
 function oversTextFromBalls(balls: number) {

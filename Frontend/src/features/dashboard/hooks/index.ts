@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { dashboardService } from "../services/dashboard.service";
 import type { Match } from "@/types";
@@ -7,6 +7,9 @@ import {
   HOME_STRIP_UPCOMING_LIMIT,
   selectHomeStripMatches,
 } from "@/features/trading/utils/home-matches";
+import { useMatchScoreStream } from "@/features/trading/hooks/useMatchScoreStream";
+import { matchStream } from "@/lib/websocket/match.stream";
+import { classifyMatchScoreEvent, patchMatchScore } from "@/features/trading/utils/match-score-reducer";
 
 export const useDashboardOverview = (enabled = true) => {
   return useQuery({
@@ -28,12 +31,40 @@ export const useLiveTicker = (enabled = true) => {
 };
 
 export const useHomeMatches = (enabled = true) => {
-  return useQuery({
+  const queryClient = useQueryClient();
+  const query = useQuery({
     queryKey: ["homeMatches"],
     queryFn: dashboardService.fetchHomeMatches,
     enabled,
     refetchInterval: enabled ? 5000 : false,
   });
+
+  const liveMatchIds = useMemo(() => {
+    return (query.data ?? [])
+      .filter((m) => m.status === "LIVE" || m.status === "INNINGS_BREAK")
+      .map((m) => m.id)
+      .join(",");
+  }, [query.data]);
+
+  useEffect(() => {
+    if (!liveMatchIds) return;
+    const ids = liveMatchIds.split(",").filter(Boolean);
+    const unsubscribers = ids.map((id) =>
+      matchStream.subscribeMatchScore(id, (event) => {
+        const homeKeys = new Set([event.matchId, id].filter(Boolean));
+        queryClient.setQueryData<Match[]>(["homeMatches"], (current = []) =>
+          current.map((match) =>
+            homeKeys.has(match.id) && classifyMatchScoreEvent(match, event) === "patch"
+              ? patchMatchScore(match, event)
+              : match
+          )
+        );
+      })
+    );
+    return () => unsubscribers.forEach((unsub) => unsub());
+  }, [liveMatchIds, queryClient]);
+
+  return query;
 };
 
 export const useUpcomingMatches = (enabled = true) => {
@@ -73,7 +104,7 @@ export const useHomeStripMatches = (enabled = true) => {
 export const useMatchDetails = (matchId: string) => {
   const queryClient = useQueryClient();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ["matchDetails", matchId],
     queryFn: async () => {
       const current = queryClient.getQueryData<Match>(["matchDetails", matchId]);
@@ -94,6 +125,10 @@ export const useMatchDetails = (matchId: string) => {
     enabled: !!matchId,
     refetchInterval: 1000,
   });
+
+  useMatchScoreStream(matchId, query.data?.id);
+
+  return query;
 };
 
 export const useLiveMatches = () => {

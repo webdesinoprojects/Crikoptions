@@ -10,7 +10,7 @@ export function mergeMatchSnapshot(current: Match | undefined, incoming: Match):
   const incomingVersion = incoming.stateVersion ?? 0;
   const currentVersion = current.stateVersion ?? 0;
   const incomingIsOlder =
-    incoming.dataSource === "sportmonks" &&
+    (incoming.dataSource === "criclive" || incoming.dataSource === "sportmonks") &&
     incomingVersion > 0 &&
     currentVersion > 0 &&
     incomingVersion < currentVersion;

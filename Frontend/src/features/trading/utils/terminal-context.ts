@@ -196,8 +196,18 @@ export interface ScoreboardSnap {
   totalBalls: number;
 }
 
+/**
+ * Balls per innings the match is actually scheduled for. A shortened match (a
+ * rain-reduced game, or a league that plays "T20" at ten overs) is shorter than
+ * its format, and the backend's ballsLeft counts down from this figure.
+ */
+export function scheduledBallsForMatch(match?: Match) {
+  const scheduled = match?.scheduledBalls;
+  return typeof scheduled === "number" && scheduled > 0 ? scheduled : totalBallsForFormat(match?.format);
+}
+
 export function snapFromMatch(match: Match): ScoreboardSnap {
-  const totalBalls = totalBallsForFormat(match.format);
+  const totalBalls = scheduledBallsForMatch(match);
   const score = currentInningsScoreParts(match);
 
   return {
@@ -548,7 +558,7 @@ export function currentInningsScoreParts(match?: Match) {
   };
 }
 
-/** Extract the provider's numeric team id from a team id like "sportmonks:10". */
+/** Extract the provider's numeric team id from a team id like "criclive:10" or "criclive_10". */
 function numericTeamId(teamId?: string): number | undefined {
   if (!teamId) return undefined;
   const match = String(teamId).match(/(\d+)\s*$/);
@@ -561,7 +571,7 @@ function numericTeamId(teamId?: string): number | undefined {
  * The feed tells us the batting team explicitly via
  * `inningsSummaries[].battingTeamId` — we must NOT assume the home/team-A side
  * always bats first (that depends on the toss). Team ids arrive as
- * "sportmonks:<n>", so we compare against the numeric suffix. When the feed
+ * "criclive:<n>" or "criclive_<n>", so we compare against the numeric suffix. When the feed
  * doesn't carry a batting team id (e.g. simulator/manual matches), fall back to
  * the legacy innings-based guess.
  */

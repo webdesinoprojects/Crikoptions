@@ -118,7 +118,7 @@ export function isHealthyLiveFeed(match?: Match | null): boolean {
 }
 
 export function feedStatusLabel(match?: Match | null): string | undefined {
-  if (match?.dataSource !== "sportmonks") return undefined;
+  if (match?.dataSource !== "criclive" && match?.dataSource !== "sportmonks") return undefined;
   if (match.status === "UPCOMING") return undefined;
   // Soft sync only — visual badge, never a trade gate.
   if (match.feedState === "reconciling" || match.feedState === "warming") return "SYNCING";
