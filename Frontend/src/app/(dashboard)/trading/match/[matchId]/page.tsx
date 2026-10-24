@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { FIXTURE_LIST_HREF } from "@/features/trading/utils/terminal-selection";
 import { CalendarClock } from "lucide-react";
 import { LiveMatchStatsPanel, MatchConditionBanner, MatchScheduleStrip } from "@/features/trading/components";
 import { matchConditionNotice, scheduledOversFor } from "@/features/trading/utils/match-conditions";
@@ -101,7 +102,7 @@ export default function UpcomingMatchPreviewPage({ params }: PageProps) {
               </dl>
               <div className="mt-5">
                 <Link
-                  href="/trading"
+                  href={FIXTURE_LIST_HREF}
                   className="inline-flex h-10 items-center justify-center rounded-lg border border-cyan-300/25 bg-cyan-300/10 px-4 text-sm font-black text-cyan-100 hover:bg-cyan-300/15"
                 >
                   All fixtures
