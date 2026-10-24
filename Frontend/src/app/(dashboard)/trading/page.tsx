@@ -1,12 +1,15 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
-import { CalendarClock, Loader2, RadioTower } from "lucide-react";
+import { CalendarClock, Loader2 } from "lucide-react";
+import { useQueries } from "@tanstack/react-query";
 import { FeaturesSectionWithBentoGrid } from "@/components/ui/feature-section-with-bento-grid";
 import { useHomeStripMatches } from "@/features/dashboard/hooks";
 import { useMarkets } from "@/features/trading/hooks";
 import { selectPrimaryMarket } from "@/features/trading/utils/market-helpers";
+import { marketListQueryOptions } from "@/features/trading/hooks/useOrderBook";
+import { selectAutoOpenMarket } from "@/features/trading/utils/terminal-selection";
+import { canTradeMatch } from "@/types/match-trading";
 import {
   formatMatchStartTime,
   isLiveOrBreak,
@@ -14,40 +17,42 @@ import {
   tradingOpensMessage,
 } from "@/features/trading/utils/home-matches";
 import type { Match } from "@/types";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 export default function TradingIndexPage() {
-  const router = useRouter();
-  const { data: visible = [], isLoading: matchesLoading } = useHomeStripMatches();
-  const firstLive = visible.find(isLiveOrBreak);
+  return (
+    <React.Suspense fallback={<TradingLoading />}>
+      <TradingIndexContent />
+    </React.Suspense>
+  );
+}
 
-  const { data: liveMarkets = [], isLoading: marketsLoading } = useMarkets(firstLive?.id ?? "");
-  const primaryMarket = selectPrimaryMarket(liveMarkets);
-  const targetMarketId = primaryMarket?.id;
+function TradingIndexContent() {
+  const router = useRouter();
+  const fixturesOnly = useSearchParams().get("fixtures") === "1";
+  const { data: visible = [], isLoading: matchesLoading } = useHomeStripMatches();
+  // Query every eligible live match, rather than letting one closed/blocked
+  // fixture prevent selection of another match with an available market.
+  // Reuse useMarkets' keys and timing so the card/terminal caches stay shared.
+  const candidates = fixturesOnly ? [] : visible.filter(canTradeMatch);
+  const marketQueries = useQueries({
+    queries: candidates.map((match) => marketListQueryOptions(match.id)),
+  });
+  const targetMarketId = selectAutoOpenMarket(
+    candidates.map((match, index) => ({
+      match,
+      markets: marketQueries[index]?.isError ? [] : marketQueries[index]?.data ?? [],
+    })),
+    fixturesOnly
+  )?.id;
 
   React.useEffect(() => {
-    if (targetMarketId) {
-      router.replace(`/trading/${targetMarketId}`);
-    } else if (!marketsLoading && firstLive?.id && liveMarkets.length === 0) {
-      router.replace(`/trading/match/${firstLive.id}`);
-    }
-  }, [targetMarketId, marketsLoading, firstLive?.id, liveMarkets.length, router]);
+    if (targetMarketId) router.replace(`/trading/${targetMarketId}`);
+  }, [targetMarketId, router]);
 
-  if (matchesLoading || (firstLive && marketsLoading) || targetMarketId) {
-    return (
-      <TradingShell>
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
-          <Loader2 className="h-6 w-6 animate-spin" />
-        </div>
-        <h1 className="mt-5 font-display text-2xl font-black text-white">
-          {targetMarketId ? "Opening live terminal" : "Loading matches"}
-        </h1>
-        <p className="mt-3 text-sm font-semibold leading-6 text-on-surface-variant">
-          Checking live and upcoming matches...
-        </p>
-      </TradingShell>
-    );
+  if (matchesLoading || targetMarketId) {
+    return <TradingLoading opening={Boolean(targetMarketId)} />;
   }
 
   if (visible.length === 0) {
@@ -75,9 +80,9 @@ export default function TradingIndexPage() {
             <CalendarClock className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="font-display text-xl font-black text-white sm:text-2xl">Upcoming matches</h1>
+            <h1 className="font-display text-xl font-black text-white sm:text-2xl">Choose a match</h1>
             <p className="text-sm font-semibold text-on-surface-variant">
-              No live market open yet. Preview scheduled matches — trading unlocks at go-live.
+              Select a live match, view an innings break, or preview an upcoming fixture.
             </p>
           </div>
         </div>
@@ -149,5 +154,21 @@ function TradingShell({ children }: { children: React.ReactNode }) {
         {children}
       </section>
     </main>
+  );
+}
+
+function TradingLoading({ opening = false }: { opening?: boolean }) {
+  return (
+    <TradingShell>
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+      <h1 className="mt-5 font-display text-2xl font-black text-white">
+        {opening ? "Opening live terminal" : "Loading matches"}
+      </h1>
+      <p className="mt-3 text-sm font-semibold leading-6 text-on-surface-variant">
+        Checking live and upcoming matches...
+      </p>
+    </TradingShell>
   );
 }

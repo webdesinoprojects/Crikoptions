@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Order } from "@/types";
 import { OpenPosition } from "../types/position";
 import { cn } from "@/lib/utils";
+import { LOT_SIZE } from "@/lib/lot-size";
 import { useCancelOrder, useOpenPositions, useOrders, useOptionChain, useCreateOrder } from "../hooks";
 import { useClosedTrades } from "@/features/portfolio/hooks";
 import type { ClosedTrade } from "@/features/portfolio/types/portfolio";
@@ -599,16 +600,20 @@ function formatTime(value: string) {
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
+// Mirrors computePnL in the backend (internal/modules/positions/service.go).
+// The lot multiplier is part of the figure, not a display detail: without it
+// this re-quote lands 25x below the server's pnl, which is exactly what the
+// fallback branches here return.
 function computeLivePnl(position: OpenPosition, liveLtp: number) {
   const lots = Math.abs(position.lots);
   if (lots <= 0 || !Number.isFinite(liveLtp) || liveLtp <= 0) return position.pnl;
 
   if (position.lots > 0 && position.buyPrice > 0) {
-    return roundMoney((liveLtp - position.buyPrice) * lots);
+    return roundMoney((liveLtp - position.buyPrice) * lots * LOT_SIZE);
   }
 
   if (position.lots < 0 && position.sellPrice && position.sellPrice > 0) {
-    return roundMoney((position.sellPrice - liveLtp) * lots);
+    return roundMoney((position.sellPrice - liveLtp) * lots * LOT_SIZE);
   }
 
   return position.pnl;

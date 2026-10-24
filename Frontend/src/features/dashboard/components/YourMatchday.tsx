@@ -1,5 +1,6 @@
 import { ChevronRight, TrendingUp, TrendingDown, Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LOT_SIZE } from "@/lib/lot-size";
 import { usePositions } from "@/features/portfolio/hooks";
 import Link from "next/link";
 
@@ -13,8 +14,11 @@ export function YourMatchday() {
   const combinedPnL = positions.reduce((acc, pos) => acc + (pos.unrealizedPnL || 0), 0);
   const hasLivePositions = openPositionsCount > 0;
 
+  // quantity is a lot count, so the lot multiplier is required to get money.
+  // Without it the exposure read 25x under the margin figures it is compared
+  // against below, and the bar never moved.
   const totalExposure = positions.reduce(
-    (acc, pos) => acc + (pos.averageEntryPrice || 0) * (pos.quantity || 0),
+    (acc, pos) => acc + (pos.averageEntryPrice || 0) * (pos.quantity || 0) * LOT_SIZE,
     0
   );
   // Scale the bar against the account's real deployable capital (used + free

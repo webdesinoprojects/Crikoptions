@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { FIXTURE_LIST_HREF } from "@/features/trading/utils/terminal-selection";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { Activity, BarChart3, ListOrdered, TicketCheck } from "lucide-react";
@@ -114,7 +115,7 @@ export default function TradingTerminalPage({ params }: PageProps) {
         <TerminalNotice
           title="Market unavailable"
           body="This market is no longer available. Choose a live or upcoming match from the home feed."
-          action={<Link className="rounded-lg border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-sm font-black text-cyan-100 hover:bg-cyan-300/15" href="/trading">View matches</Link>}
+          action={<Link className="rounded-lg border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-sm font-black text-cyan-100 hover:bg-cyan-300/15" href={FIXTURE_LIST_HREF}>View matches</Link>}
         />
       </TerminalShell>
     );
@@ -137,7 +138,7 @@ export default function TradingTerminalPage({ params }: PageProps) {
           }
           action={
             rolloverMarketId ? undefined : (
-              <Link className="rounded-lg border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-sm font-black text-cyan-100 hover:bg-cyan-300/15" href="/trading">View fixtures</Link>
+              <Link className="rounded-lg border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-sm font-black text-cyan-100 hover:bg-cyan-300/15" href={FIXTURE_LIST_HREF}>View fixtures</Link>
             )
           }
         />
