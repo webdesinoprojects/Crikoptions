@@ -42,12 +42,15 @@ export const useOptionChain = (marketId: string, payload?: CalculatePricePayload
   });
 };
 
+// Shared by the single-match hook and the landing page's parallel lookup.
+export const marketListQueryOptions = (matchId: string) => ({
+  queryKey: ["markets", matchId],
+  queryFn: () => tradingService.fetchMarkets(matchId),
+  enabled: !!matchId,
+  staleTime: 5000,
+  refetchInterval: 5000,
+});
+
 export const useMarkets = (matchId: string) => {
-  return useQuery({
-    queryKey: ["markets", matchId],
-    queryFn: () => tradingService.fetchMarkets(matchId),
-    enabled: !!matchId,
-    staleTime: 5000,
-    refetchInterval: 5000,
-  });
+  return useQuery(marketListQueryOptions(matchId));
 };
